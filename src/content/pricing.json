@@ -1,0 +1,172 @@
+[
+  {
+    "name": "Signature Haircut",
+    "category": "Haircut",
+    "price": 75000,
+    "priceFrom": false,
+    "description": "Konsultasi, cut, styling",
+    "badge": "",
+    "order": 10,
+    "isActive": true
+  },
+  {
+    "name": "Haircut + Wash",
+    "category": "Haircut",
+    "price": 90000,
+    "priceFrom": false,
+    "description": "Plus keramas & blow-dry",
+    "badge": "",
+    "order": 20,
+    "isActive": true
+  },
+  {
+    "name": "Skin Fade / Taper",
+    "category": "Haircut",
+    "price": 85000,
+    "priceFrom": false,
+    "description": "",
+    "badge": "",
+    "order": 30,
+    "isActive": true
+  },
+  {
+    "name": "Kids Haircut",
+    "category": "Kids",
+    "price": 60000,
+    "priceFrom": false,
+    "description": "Di bawah 12 tahun",
+    "badge": "",
+    "order": 40,
+    "isActive": true
+  },
+  {
+    "name": "Hot Towel Shave",
+    "category": "Shaving",
+    "price": 50000,
+    "priceFrom": false,
+    "description": "",
+    "badge": "",
+    "order": 50,
+    "isActive": true
+  },
+  {
+    "name": "Beard Trim & Shape",
+    "category": "Shaving",
+    "price": 40000,
+    "priceFrom": false,
+    "description": "",
+    "badge": "",
+    "order": 60,
+    "isActive": true
+  },
+  {
+    "name": "Haircut + Shave",
+    "category": "Shaving",
+    "price": 110000,
+    "priceFrom": false,
+    "description": "",
+    "badge": "",
+    "order": 70,
+    "isActive": true
+  },
+  {
+    "name": "Hair Coloring",
+    "category": "Coloring",
+    "price": 150000,
+    "priceFrom": true,
+    "description": "Full color",
+    "badge": "",
+    "order": 80,
+    "isActive": true
+  },
+  {
+    "name": "Highlight / Bleaching",
+    "category": "Coloring",
+    "price": 250000,
+    "priceFrom": true,
+    "description": "",
+    "badge": "",
+    "order": 90,
+    "isActive": true
+  },
+  {
+    "name": "Perming",
+    "category": "Coloring",
+    "price": 250000,
+    "priceFrom": true,
+    "description": "Wavy / curly",
+    "badge": "",
+    "order": 100,
+    "isActive": true
+  },
+  {
+    "name": "Down Perm",
+    "category": "Coloring",
+    "price": 120000,
+    "priceFrom": false,
+    "description": "",
+    "badge": "",
+    "order": 110,
+    "isActive": true
+  },
+  {
+    "name": "Hair Spa",
+    "category": "Treatment",
+    "price": 100000,
+    "priceFrom": false,
+    "description": "Nutrisi & scalp care",
+    "badge": "",
+    "order": 120,
+    "isActive": true
+  },
+  {
+    "name": "Hair Tattoo",
+    "category": "Treatment",
+    "price": 25000,
+    "priceFrom": true,
+    "description": "",
+    "badge": "",
+    "order": 130,
+    "isActive": true
+  },
+  {
+    "name": "Hair Wash & Styling",
+    "category": "Treatment",
+    "price": 35000,
+    "priceFrom": false,
+    "description": "",
+    "badge": "",
+    "order": 140,
+    "isActive": true
+  },
+  {
+    "name": "Student Deal",
+    "category": "Paket",
+    "price": 60000,
+    "priceFrom": false,
+    "description": "Signature Haircut\nTunjukkan kartu pelajar/KTM\nSenin – Kamis",
+    "badge": "",
+    "order": 150,
+    "isActive": true
+  },
+  {
+    "name": "Cutless Pass",
+    "category": "Paket",
+    "price": 260000,
+    "priceFrom": false,
+    "description": "4x Signature Haircut\nBerlaku 60 hari\nPrioritas jadwal booking",
+    "badge": "Best Seller",
+    "order": 160,
+    "isActive": true
+  },
+  {
+    "name": "Groom Package",
+    "category": "Paket",
+    "price": 450000,
+    "priceFrom": false,
+    "description": "Haircut + Hot Towel Shave\nHair Spa & facial ringan\nStyling di hari H",
+    "badge": "",
+    "order": 170,
+    "isActive": true
+  }
+]

@@ -1,15 +1,16 @@
 # Dependencies & build output
 node_modules/
 dist/
-build/
 
-# Env & secrets (contoh nilai ada di *.env.example)
+# Env lokal (tidak ada env yang wajib)
 .env
 .env.*
-!.env.example
 *.local
 
-# Folder lama hasil migrasi (duplikat dari frontend/), hapus manual
+# File sementara optimasi gambar
+*.tmp.webp
+
+# Folder lama hasil migrasi (duplikat), hapus manual
 cutless-react/
 
 # Log & OS

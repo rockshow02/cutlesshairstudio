@@ -1,0 +1,390 @@
+# Konfigurasi Pages CMS (https://pagescms.org) untuk website Cutless Hair Studio.
+# Admin login di https://app.pagescms.org dengan akun GitHub (harus kolaborator repo ini).
+# Setiap "Simpan" = 1 commit ke branch main → Cloudflare Pages build & deploy otomatis (±1–2 menit).
+#
+# Skema field harus sama dengan src/content/schema.ts (validasi Zod saat build).
+
+media:
+  - name: barbers
+    label: Foto Barber
+    input: public/uploads/barbers
+    output: /uploads/barbers
+    categories: [image]
+    rename: safe
+  - name: gallery
+    label: Foto Galeri
+    input: public/uploads/gallery
+    output: /uploads/gallery
+    categories: [image]
+    rename: safe
+  - name: promos
+    label: Gambar Promo
+    input: public/uploads/promos
+    output: /uploads/promos
+    categories: [image]
+    rename: safe
+  - name: site
+    label: Logo
+    input: public/uploads/site
+    output: /uploads/site
+    categories: [image]
+    rename: safe
+
+content:
+  # ------------------------------------------------------------------ Daftar Harga
+  - name: pricing
+    label: Daftar Harga
+    type: file
+    path: src/content/pricing.json
+    format: json
+    list: true
+    fields:
+      - name: name
+        label: Nama layanan
+        type: string
+        required: true
+        description: "Contoh: Signature Haircut"
+        options:
+          maxlength: 80
+      - name: category
+        label: Kategori
+        type: select
+        required: true
+        default: Haircut
+        description: "Pilih \"Paket\" untuk paket/membership (tampil sebagai kartu)."
+        options:
+          values: [Haircut, Shaving, Coloring, Treatment, Kids, Paket]
+      - name: price
+        label: Harga (Rupiah)
+        type: number
+        required: true
+        description: "Angka saja, tanpa titik dan tanpa \"Rp\". Contoh: 75000"
+        options:
+          min: 0
+      - name: priceFrom
+        label: Harga mulai
+        type: boolean
+        default: false
+        description: "Aktifkan bila harga bisa lebih tinggi (tampil \"mulai Rp ...\")."
+      - name: description
+        label: Keterangan
+        type: text
+        description: "Opsional. Untuk kategori Paket, tulis isi paket satu baris per poin."
+      - name: badge
+        label: Label khusus
+        type: select
+        description: "Opsional. Kosongkan bila tidak perlu."
+        options:
+          values: [Best Seller, Baru, Promo]
+      - name: order
+        label: Urutan
+        type: number
+        default: 0
+        description: "Angka kecil tampil lebih dulu (10, 20, 30, ...)."
+        options:
+          min: 0
+      - name: isActive
+        label: Tampilkan di website
+        type: boolean
+        default: true
+        description: "Matikan untuk menyembunyikan tanpa menghapus."
+
+  # ------------------------------------------------------------------ Barber
+  - name: barbers
+    label: Barber
+    type: file
+    path: src/content/barbers.json
+    format: json
+    list: true
+    fields:
+      - name: name
+        label: Nama panggilan
+        type: string
+        required: true
+        options:
+          maxlength: 60
+      - name: role
+        label: Jabatan
+        type: string
+        description: "Opsional, mis. Head Hairstylist."
+        options:
+          maxlength: 60
+      - name: photo
+        label: Foto
+        type: image
+        required: true
+        description: "Foto potret (tegak), wajah jelas. Otomatis dikompres ke WebP maks. 800 px."
+        options:
+          media: barbers
+      - name: specialty
+        label: Spesialisasi
+        type: string
+        description: "Pisahkan dengan koma. Contoh: Skin fade, Pompadour"
+        options:
+          maxlength: 120
+      - name: whatsappNumber
+        label: WhatsApp pribadi
+        type: string
+        description: "Opsional, format 628xxxxxxxxxx (tanpa +, spasi, strip). Kosong = pakai nomor utama."
+        pattern:
+          regex: "^(62\\d{8,13})?$"
+          message: Format harus 628xxxxxxxxxx, contoh 6281234567890
+      - name: instagram
+        label: Link Instagram
+        type: string
+        description: "Opsional, link lengkap. Contoh: https://instagram.com/namabarber"
+        pattern:
+          regex: "^(https?://.+)?$"
+          message: Harus diawali https://
+      - name: order
+        label: Urutan
+        type: number
+        default: 0
+        description: "Posisi tampil (angka kecil = paling kiri)."
+        options:
+          min: 0
+      - name: isActive
+        label: Tampilkan di website
+        type: boolean
+        default: true
+        description: "Matikan bila barber cuti/resign, tanpa menghapus data."
+
+  # ------------------------------------------------------------------ Galeri
+  - name: gallery
+    label: Galeri
+    type: file
+    path: src/content/gallery.json
+    format: json
+    list: true
+    fields:
+      - name: image
+        label: Foto
+        type: image
+        required: true
+        description: "Foto tegak tampil tinggi, foto lebar tampil lebar (otomatis). Dikompres ke WebP maks. 1600 px."
+        options:
+          media: gallery
+      - name: altText
+        label: Deskripsi foto
+        type: string
+        required: true
+        description: "Wajib. Jelaskan isi foto, mis. \"Mid fade dengan textured crop\"."
+        options:
+          maxlength: 150
+      - name: styleCategory
+        label: Gaya rambut
+        type: select
+        default: Lainnya
+        options:
+          values: [Fade, Pompadour, Crop, Coloring, Perming, Lainnya]
+      - name: caption
+        label: Keterangan singkat
+        type: string
+        description: "Opsional, tampil saat foto diperbesar."
+        options:
+          maxlength: 120
+      - name: order
+        label: Urutan
+        type: number
+        default: 0
+        options:
+          min: 0
+      - name: isActive
+        label: Tampilkan di website
+        type: boolean
+        default: true
+
+  # ------------------------------------------------------------------ Promo
+  - name: promos
+    label: Promo
+    type: file
+    path: src/content/promos.json
+    format: json
+    list: true
+    fields:
+      - name: title
+        label: Judul promo
+        type: string
+        required: true
+        description: "Contoh: Diskon 20% Haircut Weekday"
+        options:
+          maxlength: 80
+      - name: description
+        label: Deskripsi
+        type: text
+        description: "Syarat & ketentuan singkat."
+      - name: image
+        label: Gambar
+        type: image
+        description: "Opsional. Gambar lebar (16:10) paling bagus."
+        options:
+          media: promos
+      - name: ctaLabel
+        label: Teks tombol
+        type: string
+        default: Ambil Promo
+        options:
+          maxlength: 40
+      - name: waMessage
+        label: Pesan WhatsApp
+        type: text
+        description: "Pesan otomatis saat tombol diklik. Boleh pakai {brand} dan {promo}. Contoh: Halo {brand}, saya mau pakai promo {promo} untuk [hari/jam]."
+      - name: startDate
+        label: Mulai
+        type: date
+        required: true
+        description: "Tanggal & jam mulai (WIB)."
+        options:
+          time: true
+          format: "yyyy-MM-dd'T'HH:mm"
+      - name: endDate
+        label: Selesai
+        type: date
+        required: true
+        description: "Harus setelah tanggal mulai. Promo hilang otomatis setelah waktu ini (WIB)."
+        options:
+          time: true
+          format: "yyyy-MM-dd'T'HH:mm"
+      - name: isActive
+        label: Aktif
+        type: boolean
+        default: true
+        description: "Matikan untuk menghentikan promo lebih cepat."
+
+  # ------------------------------------------------------------------ Pengumuman
+  - name: announcements
+    label: Pengumuman
+    type: file
+    path: src/content/announcements.json
+    format: json
+    list: true
+    fields:
+      - name: message
+        label: Pesan
+        type: string
+        required: true
+        description: "Maks. 160 karakter. Tampil sebagai bar tipis di atas menu."
+        options:
+          maxlength: 160
+      - name: type
+        label: Jenis
+        type: select
+        required: true
+        default: Info
+        description: '"Tutup" tampil paling menonjol.'
+        options:
+          values: [Info, Tutup, Jam Khusus]
+      - name: startDate
+        label: Mulai tampil
+        type: date
+        default: ""
+        description: "Opsional (WIB). Kosong = langsung tampil."
+        options:
+          time: true
+          format: "yyyy-MM-dd'T'HH:mm"
+      - name: endDate
+        label: Selesai tampil
+        type: date
+        default: ""
+        description: "Opsional (WIB). Kosong = tampil sampai dimatikan."
+        options:
+          time: true
+          format: "yyyy-MM-dd'T'HH:mm"
+      - name: isActive
+        label: Aktif
+        type: boolean
+        default: true
+
+  # ------------------------------------------------------------------ Pengaturan Situs
+  - name: settings
+    label: Pengaturan Situs
+    type: file
+    path: src/content/settings.json
+    format: json
+    fields:
+      - name: logo
+        label: Logo footer
+        type: image
+        description: "PNG/WebP transparan, versi putih."
+        options:
+          media: site
+      - name: siteName
+        label: Nama usaha
+        type: string
+        required: true
+        options:
+          maxlength: 80
+      - name: mainWhatsappNumber
+        label: Nomor WhatsApp utama
+        type: string
+        required: true
+        description: "Dipakai semua tombol booking. Format 628xxxxxxxxxx, contoh 6281234567890."
+        pattern:
+          regex: "^62\\d{8,13}$"
+          message: Format harus 628xxxxxxxxxx (tanpa +, spasi, atau strip)
+      - name: defaultWaMessage
+        label: Pesan booking default
+        type: text
+        description: "Boleh pakai {brand}. Contoh: Halo {brand}, saya mau booking haircut untuk [hari/jam]."
+      - name: instagramUrl
+        label: Link Instagram
+        type: string
+        description: "Kosongkan untuk menyembunyikan ikon."
+        pattern:
+          regex: "^(https?://.+)?$"
+          message: Harus diawali https://
+      - name: tiktokUrl
+        label: Link TikTok
+        type: string
+        description: "Kosongkan untuk menyembunyikan ikon."
+        pattern:
+          regex: "^(https?://.+)?$"
+          message: Harus diawali https://
+      - name: googleMapsUrl
+        label: Link Google Maps
+        type: string
+        description: "Dipakai tombol \"Petunjuk Arah\"."
+        pattern:
+          regex: "^(https?://.+)?$"
+          message: Harus diawali https://
+      - name: address
+        label: Alamat lengkap
+        type: text
+      - name: footerText
+        label: Teks footer
+        type: text
+        description: "Kalimat singkat di bawah logo footer."
+      - name: openingHours
+        label: Jam buka
+        type: object
+        description: "Satu baris per hari, urut Senin–Minggu. Format jam 24 jam, mis. 10:00."
+        list:
+          max: 7
+          collapsible:
+            collapsed: true
+            summary: "{day}: {openTime}–{closeTime}"
+        fields:
+          - name: day
+            label: Hari
+            type: select
+            required: true
+            options:
+              values: [Senin, Selasa, Rabu, Kamis, Jumat, Sabtu, Minggu]
+          - name: openTime
+            label: Jam buka
+            type: string
+            description: "Format HH:MM, mis. 10:00"
+            pattern:
+              regex: "^(([01]\\d|2[0-3]):[0-5]\\d)?$"
+              message: Format HH:MM, contoh 10:00
+          - name: closeTime
+            label: Jam tutup
+            type: string
+            description: "Format HH:MM, mis. 21:00"
+            pattern:
+              regex: "^(([01]\\d|2[0-3]):[0-5]\\d)?$"
+              message: Format HH:MM, contoh 21:00
+          - name: isClosed
+            label: Tutup seharian
+            type: boolean
+            default: false

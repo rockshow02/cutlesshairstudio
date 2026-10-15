@@ -1,0 +1,49 @@
+# Mengompres gambar baru dari Pages CMS (public/uploads) ke WebP, lalu commit hasilnya.
+# Berjalan di runner gratis GitHub Actions (repo publik: gratis tanpa batas; privat: 2.000 menit/bulan,
+# satu run ±1 menit). Commit dari GITHUB_TOKEN tidak memicu workflow lagi, jadi tidak ada loop.
+name: Optimasi gambar
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'public/uploads/**'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: optimize-images
+  cancel-in-progress: false
+
+jobs:
+  optimize:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: npm
+
+      - name: Install dependensi
+        run: npm ci --no-audit --no-fund
+
+      - name: Kompres gambar ke WebP
+        run: npm run optimize-images
+
+      - name: Commit hasil (bila ada perubahan)
+        run: |
+          if [ -n "$(git status --porcelain -- public/uploads src/content)" ]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add public/uploads src/content
+            git commit -m "chore(media): optimasi gambar ke WebP"
+            git pull --rebase --autostash
+            git push
+          else
+            echo "Tidak ada gambar baru."
+          fi

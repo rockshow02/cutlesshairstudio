@@ -1,0 +1,55 @@
+{
+  "logo": "/uploads/site/cutless-logo-putih.webp",
+  "siteName": "Cutless Hair Studio",
+  "mainWhatsappNumber": "6281234567890",
+  "defaultWaMessage": "Halo {brand}, saya mau booking haircut untuk [hari/jam].",
+  "instagramUrl": "https://www.instagram.com/cutlesshairstudio/",
+  "tiktokUrl": "https://www.tiktok.com/@cutlesshairstudio",
+  "googleMapsUrl": "https://maps.app.goo.gl/7aYPRv1HzyUxaGP37",
+  "address": "Jl Pandawa Raya No.4 Blk B1, RT.07/RW.15, Bantarjati, Kec. Bogor Utara, Kota Bogor, Jawa Barat 16152",
+  "footerText": "Hair studio di Kota Bogor. Goodstyle, goodmood.",
+  "openingHours": [
+    {
+      "day": "Senin",
+      "openTime": "10:00",
+      "closeTime": "21:00",
+      "isClosed": false
+    },
+    {
+      "day": "Selasa",
+      "openTime": "10:00",
+      "closeTime": "21:00",
+      "isClosed": false
+    },
+    {
+      "day": "Rabu",
+      "openTime": "10:00",
+      "closeTime": "21:00",
+      "isClosed": false
+    },
+    {
+      "day": "Kamis",
+      "openTime": "10:00",
+      "closeTime": "21:00",
+      "isClosed": false
+    },
+    {
+      "day": "Jumat",
+      "openTime": "13:00",
+      "closeTime": "21:00",
+      "isClosed": false
+    },
+    {
+      "day": "Sabtu",
+      "openTime": "09:00",
+      "closeTime": "22:00",
+      "isClosed": false
+    },
+    {
+      "day": "Minggu",
+      "openTime": "09:00",
+      "closeTime": "22:00",
+      "isClosed": false
+    }
+  ]
+}

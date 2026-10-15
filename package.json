@@ -1,12 +1,32 @@
 {
   "name": "cutless-hair-studio",
   "private": true,
-  "description": "Monorepo Cutless Hair Studio: frontend (Vite React) + cms (Strapi v5)",
+  "version": "1.0.0",
+  "type": "module",
   "scripts": {
-    "dev:cms": "npm --prefix cms run develop",
-    "dev:frontend": "npm --prefix frontend run dev",
-    "seed": "npm --prefix cms run seed",
-    "typecheck": "npm --prefix cms run typecheck && npm --prefix frontend run typecheck",
-    "build": "npm --prefix cms run build && npm --prefix frontend run build"
+    "dev": "vite",
+    "prebuild": "node scripts/optimize-images.mjs",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc -b --noEmit",
+    "optimize-images": "node scripts/optimize-images.mjs"
+  },
+  "dependencies": {
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "swiper": "^11.2.8"
+  },
+  "devDependencies": {
+    "@types/node": "^20.19.43",
+    "@types/react": "^18.3.23",
+    "@types/react-dom": "^18.3.7",
+    "@vitejs/plugin-react": "^4.5.2",
+    "sharp": "^0.35.4",
+    "typescript": "~5.8.3",
+    "vite": "^6.3.5",
+    "zod": "^4.6.5"
+  },
+  "engines": {
+    "node": ">=20.19"
   }
 }

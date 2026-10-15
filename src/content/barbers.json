@@ -1,0 +1,42 @@
+[
+  {
+    "name": "Raka",
+    "role": "Head Hairstylist",
+    "photo": "/uploads/barbers/raka.webp",
+    "specialty": "Skin fade, Pompadour",
+    "whatsappNumber": "",
+    "instagram": "",
+    "order": 10,
+    "isActive": true
+  },
+  {
+    "name": "Dimas",
+    "role": "Senior Hairstylist",
+    "photo": "/uploads/barbers/dimas.webp",
+    "specialty": "Beard, Classic cut",
+    "whatsappNumber": "",
+    "instagram": "",
+    "order": 20,
+    "isActive": true
+  },
+  {
+    "name": "Bayu",
+    "role": "Color Specialist",
+    "photo": "/uploads/barbers/bayu.webp",
+    "specialty": "Coloring, Perming",
+    "whatsappNumber": "",
+    "instagram": "",
+    "order": 30,
+    "isActive": true
+  },
+  {
+    "name": "Fajar",
+    "role": "Hairstylist",
+    "photo": "/uploads/barbers/fajar.webp",
+    "specialty": "Hair tattoo, Textured crop",
+    "whatsappNumber": "",
+    "instagram": "",
+    "order": 40,
+    "isActive": true
+  }
+]

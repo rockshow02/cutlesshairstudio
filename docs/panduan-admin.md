@@ -2,88 +2,96 @@
 
 Panduan ini untuk pemilik dan staf. Tidak perlu keahlian teknis.
 
-**Alamat panel admin:** `https://cms.cutlesshairstudio.id/admin` *(alamat pasti diberikan developer)*
+**Panel admin:** https://app.pagescms.org
+**Login:** pakai akun **GitHub** Anda (gratis).
 
-> Perubahan yang disimpan akan muncul di website paling lama **5 menit** kemudian. Untuk cek lebih cepat, buka website lalu tekan *refresh*.
+> **Kapan perubahan tampil?** Setiap kali Anda klik **Save**, website diperbarui otomatis dalam **sekitar 1–2 menit**. Setelah itu buka website dan tekan *refresh*.
 
 ---
 
-## Sebelum mulai
+## Sebelum mulai (sekali saja)
 
-- **Login** dengan email dan password Anda. Lupa password? Klik *Forgot your password?* di halaman login.
-- **Ganti bahasa ke Indonesia:** klik nama Anda di pojok kiri bawah → **Profile** → **Interface language** → *Bahasa Indonesia* → **Save**.
-- Semua konten ada di menu **Content Manager** (ikon pena di kiri).
+1. **Buat akun GitHub** di https://github.com/signup (gratis). Catat username Anda.
+2. Kirim username/email GitHub ke pemilik/developer. Anda akan diundang sebagai **kolaborator**.
+3. Buka email dari GitHub berjudul *"invited you to collaborate"* → klik **View invitation** → **Accept invitation**.
+
+## Cara login
+
+1. Buka **https://app.pagescms.org**.
+2. Klik **Sign in with GitHub** → izinkan akses (sekali saja).
+3. Pilih repo **cutlesshairstudio** → branch **main**.
+4. Menu konten ada di kiri: **Daftar Harga, Barber, Galeri, Promo, Pengumuman, Pengaturan Situs**.
+
+Tips umum:
 - Setiap kolom punya keterangan kecil di bawahnya. Baca dulu bila ragu.
-- **Owner** bisa mengubah semua menu di panduan ini. **Staff** hanya Daftar Harga, Galeri, dan Pengumuman.
+- Daftar berisi beberapa entri (mis. harga). Klik entri untuk membuka, **Add an entry** untuk menambah, ikon tempat sampah untuk menghapus, tarik ikon titik-titik untuk mengubah urutan tampilan di panel.
+- Jangan lupa klik **Save** di kanan atas.
+- Ingin menyembunyikan sesuatu sementara? Matikan **Tampilkan di website** / **Aktif**. Datanya tidak hilang.
 
 ---
 
 ## 1. Mengubah harga
 
-1. **Content Manager** → **Daftar Harga**.
-2. Klik layanan yang mau diubah, misalnya *Signature Haircut*.
-3. Ubah **Harga (Rupiah)**: tulis angka saja, **tanpa titik dan tanpa "Rp"**. Contoh: `85000` (akan tampil *Rp 85.000*).
-4. Klik **Save**.
+1. Klik **Daftar Harga** → buka layanan yang mau diubah, misalnya *Signature Haircut*.
+2. Ubah **Harga (Rupiah)**: tulis **angka saja, tanpa titik dan tanpa "Rp"**. Contoh: `85000` (tampil *Rp 85.000*).
+3. Klik **Save**.
 
-Tips:
-- **Harga mulai**: aktifkan bila harga bisa lebih mahal tergantung rambut. Website akan menulis *mulai Rp 150.000*.
-- **Label khusus**: pilih *Best Seller*, *Baru*, atau *Promo* untuk menampilkan label kecil di samping nama.
-- **Urutan**: angka kecil tampil lebih dulu.
-- **Sembunyikan sementara**: matikan **Tampilkan di website**. Datanya tidak hilang.
-- **Tambah layanan baru**: klik **Create new entry** di kanan atas, isi nama, kategori, harga, lalu **Save**.
-- **Paket/membership**: pilih kategori **Paket**. Di kolom **Keterangan**, tulis isi paket **satu poin per baris**, misalnya:
+Lainnya:
+- **Harga mulai**: aktifkan bila harga bisa lebih mahal (tampil *mulai Rp 150.000*).
+- **Label khusus**: *Best Seller*, *Baru*, atau *Promo*. Kosongkan bila tidak perlu.
+- **Urutan**: angka kecil tampil lebih dulu (pakai kelipatan 10 agar mudah menyisipkan: 10, 20, 30).
+- **Tambah layanan**: **Add an entry** → isi nama, kategori, harga → **Save**.
+- **Paket/membership**: pilih kategori **Paket**. Di **Keterangan**, tulis isi paket **satu poin per baris**:
   ```
   4x Signature Haircut
   Berlaku 60 hari
   Prioritas jadwal booking
   ```
-  Paket dengan label *Best Seller* tampil sebagai kartu yang menonjol.
+  Paket berlabel *Best Seller* tampil sebagai kartu yang menonjol.
 
 ---
 
-## 2. Menambah barber *(Owner)*
+## 2. Menambah atau menonaktifkan barber
 
-1. **Content Manager** → **Barber** → **Create new entry**.
-2. Isi:
-   - **Nama panggilan**, contoh `Raka`
-   - **Jabatan** (boleh kosong), contoh `Senior Hairstylist`
-   - **Foto**: klik kotak foto → **Add new assets** → pilih file dari komputer/HP → **Upload** → pilih foto → **Finish**. Gunakan foto **tegak** (potret), wajah jelas, latar rapi.
-   - **Spesialisasi**: pisahkan dengan koma, contoh `Skin fade, Pompadour`
-   - **WhatsApp pribadi** (boleh kosong): format `628xxxxxxxxxx`, **tanpa +, spasi, atau strip**. Bila diisi, tombol "Booking Raka" langsung ke nomor ini. Bila kosong, ke nomor utama studio.
-   - **Urutan**: posisi tampil (1 = paling kiri).
-3. Klik **Save**.
+**Menambah:**
+1. Klik **Barber** → **Add an entry**.
+2. Isi **Nama panggilan** (mis. `Raka`) dan **Jabatan** (opsional, mis. `Senior Hairstylist`).
+3. **Foto**: klik kotak foto → **Upload** → pilih foto dari HP/komputer. Pakai foto **tegak** (potret), wajah jelas. Foto otomatis dikecilkan, jadi tidak perlu diedit dulu.
+4. **Spesialisasi**: pisahkan dengan koma, mis. `Skin fade, Pompadour`.
+5. **WhatsApp pribadi** (opsional): format `628xxxxxxxxxx`, **tanpa +, spasi, atau strip**. Kosongkan untuk memakai nomor studio.
+6. **Urutan**: posisi tampil (angka kecil = paling kiri).
+7. **Save**.
 
-Barber resign? Matikan **Tampilkan di website**, tidak perlu dihapus.
+**Menonaktifkan** (cuti/resign): buka barbernya → matikan **Tampilkan di website** → **Save**.
 
 ---
 
 ## 3. Upload foto galeri
 
-1. **Content Manager** → **Galeri** → **Create new entry**.
-2. **Foto**: upload foto hasil potongan. Foto tegak otomatis tampil tinggi, foto lebar otomatis tampil lebar.
-3. **Deskripsi foto** *(wajib)*: jelaskan isi foto dalam satu kalimat, contoh `Mid fade dengan textured crop, tampak samping`. Ini membantu Google dan pengunjung tunanetra.
+1. Klik **Galeri** → **Add an entry**.
+2. **Foto**: upload foto hasil potongan. Foto tegak tampil tinggi, foto lebar tampil lebar (otomatis).
+3. **Deskripsi foto** *(wajib)*: jelaskan isi foto, mis. `Mid fade dengan textured crop, tampak samping`.
 4. **Gaya rambut**: pilih Fade, Pompadour, Crop, Coloring, Perming, atau Lainnya.
 5. **Keterangan singkat** (opsional): tampil saat foto diperbesar.
-6. Klik **Save**.
+6. **Save**.
 
-Tips foto: terang, fokus ke rambut, ukuran file di bawah 5 MB. Foto dari HP sudah cukup.
+Foto dari HP langsung bisa dipakai. Sistem otomatis mengompresnya beberapa menit setelah upload (Anda mungkin melihat perubahan kecil tercatat atas nama *github-actions*; itu normal).
 
 ---
 
-## 4. Membuat promo *(Owner)*
+## 4. Membuat promo
 
-1. **Content Manager** → **Promo** → **Create new entry**.
+1. Klik **Promo** → **Add an entry**.
 2. Isi:
-   - **Judul promo**, contoh `Diskon 20% Haircut Weekday`
-   - **Deskripsi**: syarat singkat, contoh `Berlaku Senin–Kamis, tunjukkan postingan ini.`
-   - **Gambar** (opsional): gambar lebar paling bagus.
-   - **Teks tombol**, contoh `Ambil Promo`
-   - **Pesan WhatsApp**: pesan otomatis saat pengunjung klik tombol. Tulis `{brand}` untuk nama studio dan `{promo}` untuk judul promo. Contoh:
-     `Halo {brand}, saya mau pakai promo {promo} untuk [hari/jam].`
-   - **Mulai** dan **Selesai**: tanggal & jam promo (WIB). **Selesai harus setelah Mulai**.
-3. Klik **Save**, lalu klik **Publish**. Promo **tidak tampil sebelum di-Publish**.
+   - **Judul promo**, mis. `Diskon 20% Haircut Weekday`
+   - **Deskripsi**: syarat singkat
+   - **Gambar** (opsional): gambar lebar paling bagus
+   - **Teks tombol**, mis. `Ambil Promo`
+   - **Pesan WhatsApp**: pesan otomatis saat tombol diklik. Tulis `{brand}` untuk nama studio dan `{promo}` untuk judul promo, mis. `Halo {brand}, saya mau pakai promo {promo} untuk [hari/jam].`
+   - **Mulai** dan **Selesai**: tanggal & jam **WIB**. *Selesai* harus setelah *Mulai*.
+3. **Save**.
 
-Promo otomatis hilang dari website setelah tanggal selesai. Untuk menghentikan lebih cepat: matikan **Tampilkan di website** lalu **Save**, atau klik **Unpublish**.
+Promo otomatis **muncul tepat pada jam mulai** dan **hilang setelah jam selesai**, tanpa perlu Anda lakukan apa pun. Untuk menghentikan lebih cepat: matikan **Aktif** → **Save**.
 
 ---
 
@@ -91,36 +99,32 @@ Promo otomatis hilang dari website setelah tanggal selesai. Untuk menghentikan l
 
 Pengumuman tampil sebagai bar tipis di paling atas website. Pengunjung bisa menutupnya.
 
-1. **Content Manager** → **Pengumuman** → **Create new entry**.
-2. **Pesan**, maksimal 160 karakter. Contoh:
+1. Klik **Pengumuman** → **Add an entry**.
+2. **Pesan** (maks. 160 karakter), mis.:
    `Studio TUTUP Senin, 20 Oktober untuk renovasi. Buka kembali Selasa pukul 10.00.`
-3. **Jenis**:
-   - **Tutup**: untuk libur/tutup (tampil paling menonjol)
-   - **Jam Khusus**: mis. jam buka berubah saat Lebaran
-   - **Info**: informasi umum
-4. **Mulai tampil** / **Selesai tampil** (opsional). Contoh: mulai 18 Okt 08.00, selesai 21 Okt 10.00. Kosongkan bila ingin tampil sampai dimatikan manual.
-5. Klik **Save**, lalu **Publish**.
+3. **Jenis**: **Tutup** (paling menonjol), **Jam Khusus** (mis. jam Lebaran), atau **Info**.
+4. **Mulai tampil / Selesai tampil** (opsional, WIB), mis. mulai 18 Okt 08:00, selesai 21 Okt 10:00. Kosongkan bila ingin tampil sampai dimatikan.
+5. **Save**.
 
-Cara menurunkan pengumuman: klik **Unpublish**, atau matikan **Tampilkan di website**.
-Bila Anda mengedit pesan pengumuman, pengunjung yang sudah menutupnya akan melihatnya lagi.
+Menurunkan pengumuman: matikan **Aktif** → **Save** (atau hapus entrinya). Bila Anda mengubah isi pesan, pengunjung yang sudah menutupnya akan melihatnya lagi.
 
 ---
 
 ## 6. Pengaturan situs *(Owner)*
 
-**Content Manager** → **Pengaturan Situs** (satu halaman saja):
+Klik **Pengaturan Situs**:
 
 | Kolom | Dipakai untuk |
 |---|---|
 | Nomor WhatsApp utama | **Semua** tombol booking. Format `628xxxxxxxxxx` |
 | Pesan booking default | Pesan otomatis tombol booking umum |
-| Link Instagram / TikTok | Ikon sosial media. **Kosongkan untuk menyembunyikan ikon** |
+| Link Instagram / TikTok | Ikon sosial media. **Kosongkan untuk menyembunyikan** |
 | Link Google Maps | Tombol "Petunjuk Arah" |
 | Alamat lengkap | Footer & bagian Lokasi |
 | Teks footer | Kalimat di bawah logo footer |
-| Jam buka | Tabel jam di bagian Lokasi & footer. Satu baris per hari. Centang **Tutup seharian** untuk hari libur |
+| Jam buka | Satu baris per hari. Jam format 24 jam (`10:00`, `21:00`). Centang **Tutup seharian** untuk hari libur |
 
-Klik **Save** setelah mengubah.
+**Save** setelah mengubah.
 
 ---
 
@@ -128,10 +132,11 @@ Klik **Save** setelah mengubah.
 
 | Masalah | Solusi |
 |---|---|
-| Perubahan belum muncul | Tunggu 5 menit, lalu refresh website |
-| Promo/pengumuman tidak muncul | Sudah **Publish**? **Tampilkan di website** aktif? Tanggal mulai sudah lewat dan tanggal selesai belum lewat? |
-| "Tanggal selesai harus setelah tanggal mulai" | Periksa jam & tanggal Selesai |
+| Perubahan belum muncul | Tunggu 2 menit, refresh website. Masih belum? Lihat baris berikut |
+| Perubahan tidak pernah muncul | Kemungkinan ada isian yang salah sehingga sistem menolak memperbarui website (website tetap menampilkan versi sebelumnya, jadi aman). Hubungi developer, atau cek pesan error di Cloudflare |
+| Kolom ditolak saat Save | Baca pesan merah di bawah kolom (mis. format nomor WA atau jam) |
 | Nomor WA ditolak | Harus diawali `62`, hanya angka, contoh `6281234567890` |
-| Menu Barber/Promo/Pengaturan tidak terlihat | Akun Anda role **Staff**. Minta Owner untuk mengubahnya |
+| Salah ubah / terhapus | Tenang, semua perubahan tercatat. Hubungi developer untuk mengembalikan (rollback) |
+| Tidak bisa login | Pastikan undangan kolaborator GitHub sudah di-*Accept* |
 
-Website tetap tampil walau panel admin sedang bermasalah (memakai data cadangan). Hubungi developer bila masalah berlanjut.
+Setiap perubahan tercatat atas nama akun GitHub Anda (siapa mengubah apa dan kapan).
