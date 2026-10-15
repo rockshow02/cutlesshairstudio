@@ -21,6 +21,10 @@ import type {
   PricePackage,
   PricingContent,
   PricingCopy,
+  Product,
+  ProductCategory,
+  ProductsContent,
+  ProductsCopy,
   PromoContent,
   PromoCopy,
   SiteContent,
@@ -32,6 +36,7 @@ import type {
   GalleryEntry,
   OpeningHourEntry,
   PricingEntry,
+  ProductEntry,
   PromoEntry,
   SettingsEntry,
 } from '@/content/schema';
@@ -297,4 +302,32 @@ export function buildAnnouncements(entries: AnnouncementEntry[], now = Date.now(
       // Kunci "sudah ditutup": isi pesan + tanggal → bila admin mengubah pengumuman, ia tampil lagi
       updatedAt: `${a.type}|${a.message}|${a.startDate ?? ''}|${a.endDate ?? ''}`,
     }));
+}
+
+/* ---------- Produk ---------- */
+
+const PRODUCT_CATEGORY_ORDER: ProductCategory[] = [
+  'Pomade', 'Hair Clay', 'Hair Powder', 'Hair Tonic', 'Hair Spray', 'Shampoo & Conditioner', 'Beard Care', 'Aksesoris', 'Lainnya',
+];
+
+export function buildProducts(entries: ProductEntry[], copy: ProductsCopy): ProductsContent {
+  const items: Product[] = activeSorted(entries).map((p, index) => {
+    const image = text(p.image);
+    return {
+      id: makeId(p.name, index),
+      name: p.name,
+      category: p.category,
+      price: p.price,
+      compareAtPrice: p.compareAtPrice && p.compareAtPrice > p.price ? p.compareAtPrice : undefined,
+      size: text(p.size),
+      description: text(p.description),
+      image: image ? toImage(image, p.size ? `${p.name} ${p.size}` : p.name, { width: 1000, height: 1000 }) : undefined,
+      badge: badgeOf(p.badge),
+      inStock: p.inStock !== false,
+      shopeeUrl: text(p.shopeeUrl),
+      tokopediaUrl: text(p.tokopediaUrl),
+    };
+  });
+  const categories = PRODUCT_CATEGORY_ORDER.filter((c) => items.some((i) => i.category === c));
+  return { ...copy, categories, items };
 }

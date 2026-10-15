@@ -16,3 +16,4 @@ export { locations } from './locations';
 export { socials } from './socials';
 export { ctaBanner } from './cta';
 export { promoCopy } from './promo';
+export { productsCopy } from './products';

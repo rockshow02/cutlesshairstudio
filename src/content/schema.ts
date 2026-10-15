@@ -51,6 +51,17 @@ export const PRICE_BADGES = ['Best Seller', 'Baru', 'Promo'] as const;
 export const GALLERY_STYLES = ['Fade', 'Pompadour', 'Crop', 'Coloring', 'Perming', 'Lainnya'] as const;
 export const ANNOUNCEMENT_TYPES = ['Info', 'Tutup', 'Jam Khusus'] as const;
 export const DAYS = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'] as const;
+export const PRODUCT_CATEGORIES = [
+  'Pomade',
+  'Hair Clay',
+  'Hair Powder',
+  'Hair Tonic',
+  'Hair Spray',
+  'Shampoo & Conditioner',
+  'Beard Care',
+  'Aksesoris',
+  'Lainnya',
+] as const;
 
 /* ---------- Skema per file ---------- */
 
@@ -139,6 +150,30 @@ export const settingsSchema = z.object({
   openingHours: z.array(openingHourSchema).max(7, 'jam buka maksimal 7 baris (satu per hari)').default([]),
 });
 
+export const productSchema = z
+  .object({
+    name: z.string().trim().min(1, 'nama produk wajib diisi').max(80),
+    category: z.enum(PRODUCT_CATEGORIES, { error: `kategori harus salah satu: ${PRODUCT_CATEGORIES.join(', ')}` }),
+    price: z.number({ message: 'harga harus angka' }).int('harga harus bilangan bulat (tanpa titik/koma)').min(0),
+    /** Harga sebelum diskon (tampil dicoret). Opsional, harus lebih besar dari harga. */
+    compareAtPrice: z.number({ message: 'harga coret harus angka' }).int().min(0).nullish(),
+    /** Isi/ukuran, mis. "100 ml" atau "80 gr" */
+    size: optionalText(30),
+    description: optionalText(400),
+    image: optionalImage,
+    badge: z.union([z.enum(PRICE_BADGES), z.literal('')], { error: `badge harus kosong atau salah satu: ${PRICE_BADGES.join(', ')}` }).nullish(),
+    inStock: z.boolean().default(true),
+    shopeeUrl: optionalUrl,
+    tokopediaUrl: optionalUrl,
+    order,
+    isActive,
+  })
+  .superRefine((p, ctx) => {
+    if (p.compareAtPrice && p.compareAtPrice <= p.price) {
+      ctx.addIssue({ code: 'custom', path: ['compareAtPrice'], message: 'harga coret harus lebih besar dari harga jual (atau kosongkan)' });
+    }
+  });
+
 /** Daftar file konten & skemanya (dipakai plugin build untuk validasi) */
 export const CONTENT_FILES = {
   'pricing.json': z.array(pricingItemSchema),
@@ -147,6 +182,7 @@ export const CONTENT_FILES = {
   'promos.json': z.array(promoSchema),
   'announcements.json': z.array(announcementSchema),
   'settings.json': settingsSchema,
+  'products.json': z.array(productSchema),
 } as const;
 
 /* ---------- Tipe hasil (dipakai src/lib/content.ts) ---------- */
@@ -158,3 +194,4 @@ export type PromoEntry = z.output<typeof promoSchema>;
 export type AnnouncementEntry = z.output<typeof announcementSchema>;
 export type SettingsEntry = z.output<typeof settingsSchema>;
 export type OpeningHourEntry = z.output<typeof openingHourSchema>;
+export type ProductEntry = z.output<typeof productSchema>;

@@ -9,4 +9,13 @@ export default defineConfig({
   resolve: {
     alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) },
   },
+  build: {
+    // Multi-halaman statis: / (beranda) dan /produk/
+    rollupOptions: {
+      input: {
+        main: fileURLToPath(new URL('./index.html', import.meta.url)),
+        produk: fileURLToPath(new URL('./produk/index.html', import.meta.url)),
+      },
+    },
+  },
 });

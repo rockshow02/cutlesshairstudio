@@ -17,11 +17,13 @@ import galleryJson from '@/content/gallery.json';
 import promosJson from '@/content/promos.json';
 import announcementsJson from '@/content/announcements.json';
 import settingsJson from '@/content/settings.json';
+import productsJson from '@/content/products.json';
 import type {
   AnnouncementEntry,
   BarberEntry,
   GalleryEntry,
   PricingEntry,
+  ProductEntry,
   PromoEntry,
   SettingsEntry,
 } from '@/content/schema';
@@ -34,6 +36,7 @@ import type {
   HeroContent,
   LocationsContent,
   PricingContent,
+  ProductsContent,
   PromoContent,
   ServicesContent,
   SiteContent,
@@ -46,6 +49,7 @@ import {
   buildGallery,
   buildLocations,
   buildPricing,
+  buildProducts,
   buildPromos,
   buildSite,
   buildSocials,
@@ -65,6 +69,7 @@ const data = {
   promos: promosJson as unknown as PromoEntry[],
   announcements: announcementsJson as unknown as AnnouncementEntry[],
   settings: settingsJson as unknown as SettingsEntry,
+  products: productsJson as unknown as ProductEntry[],
 };
 
 /** Simulasi latensi untuk menguji state loading: VITE_CONTENT_DELAY=1200 npm run dev */
@@ -89,6 +94,7 @@ export const getGallery = (): Promise<GalleryContent> => resolve(() => buildGall
 /** Dievaluasi saat dipanggil (di browser) → promo muncul/hilang sesuai jam WIB tanpa build ulang */
 export const getPromos = (): Promise<PromoContent> => resolve(() => buildPromos(data.promos, local.promoCopy));
 export const getAnnouncements = (): Promise<Announcement[]> => resolve(() => buildAnnouncements(data.announcements));
+export const getProducts = (): Promise<ProductsContent> => resolve(() => buildProducts(data.products, local.productsCopy));
 
 /* ---------- Statis ---------- */
 

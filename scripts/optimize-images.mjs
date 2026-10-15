@@ -4,6 +4,7 @@
  *
  * Mengompres gambar baru di public/uploads/ menjadi WebP:
  *   - barbers/, site/ : lebar maks. 800 px
+ *   - products/       : lebar maks. 1000 px
  *   - gallery/, promos/ (dan folder lain): lebar maks. 1600 px
  * Lalu memperbarui path gambar di src/content/*.json (mis. foto.jpg → foto.webp).
  *
@@ -22,7 +23,7 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const UPLOADS = path.join(ROOT, 'public', 'uploads');
 const CONTENT = path.join(ROOT, 'src', 'content');
 
-const MAX_WIDTH = { barbers: 800, site: 800, gallery: 1600, promos: 1600 };
+const MAX_WIDTH = { barbers: 800, site: 800, products: 1000, gallery: 1600, promos: 1600 };
 const DEFAULT_MAX_WIDTH = 1600;
 const QUALITY = 78;
 const CONVERTIBLE = /\.(jpe?g|png|gif|tiff?|avif|webp)$/i;

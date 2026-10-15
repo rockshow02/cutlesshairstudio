@@ -2,13 +2,15 @@ import type { ImageAsset } from './common';
 
 export interface NavItem {
   label: string;
-  /** id section tujuan, tanpa "#" */
-  sectionId: string;
+  /** id section di halaman utama, tanpa "#" (mis. "harga") */
+  sectionId?: string;
+  /** Atau: halaman lain, path relatif root situs (mis. "/produk/") */
+  href?: string;
 }
 
 /**
  * Template pesan WhatsApp.
- * Placeholder yang didukung: {brand} {service} {barber} {branch} {package}
+ * Placeholder yang didukung: {brand} {service} {barber} {branch} {package} {product}
  */
 export interface WhatsAppConfig {
   /** Format internasional tanpa +, 0 di depan, spasi, atau strip. Contoh: 6281234567890 */
@@ -22,6 +24,10 @@ export interface WhatsAppConfig {
     branch: string;
     package: string;
     question: string;
+    /** Pesan produk */
+    product: string;
+    /** Tanya produk yang stoknya habis */
+    productRestock: string;
   };
 }
 

@@ -5,6 +5,7 @@ import { useFabZone } from '@/lib/fabZones';
 import { asset } from '@/lib/asset';
 import { bookingLink, fillTemplate } from '@/lib/whatsapp';
 import { formatAddress } from '@/lib/format';
+import { isHomePage, navHref, navKey, pageUrl } from '@/lib/navigation';
 import { Container } from '@/components/ui/Container';
 import { Icon } from '@/components/ui/Icon';
 import styles from './Footer.module.css';
@@ -22,7 +23,7 @@ export function Footer() {
       <Container>
         <div className={styles.grid}>
           <div className={styles.brand}>
-            <a href="#top" className={styles.logo}>
+            <a href={isHomePage() ? '#top' : pageUrl('/')} className={styles.logo}>
               <img src={asset(logo.stacked.src)} width={logo.stacked.width} height={logo.stacked.height} alt={logo.stacked.alt} loading="lazy" />
             </a>
             <p>{footer.description}</p>
@@ -68,8 +69,8 @@ export function Footer() {
             <h2 className={styles.colTitle}>{footer.exploreTitle}</h2>
             <ul className={styles.links}>
               {site.nav.map((item) => (
-                <li key={item.sectionId}>
-                  <a href={`#${item.sectionId}`}>{item.label}</a>
+                <li key={navKey(item)}>
+                  <a href={navHref(item)}>{item.label}</a>
                 </li>
               ))}
             </ul>

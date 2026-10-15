@@ -26,7 +26,7 @@ type MessageKind = keyof SiteContent['whatsapp']['templates'];
 export function bookingMessage(
   site: SiteContent,
   kind: MessageKind,
-  vars: { service?: string; barber?: string; branch?: string; package?: string } = {},
+  vars: { service?: string; barber?: string; branch?: string; package?: string; product?: string } = {},
 ): string {
   return fillTemplate(site.whatsapp.templates[kind], { brand: site.brandName, ...vars });
 }

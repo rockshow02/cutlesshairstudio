@@ -23,6 +23,12 @@ media:
     output: /uploads/promos
     categories: [image]
     rename: safe
+  - name: products
+    label: Foto Produk
+    input: public/uploads/products
+    output: /uploads/products
+    categories: [image]
+    rename: safe
   - name: site
     label: Logo
     input: public/uploads/site
@@ -294,6 +300,93 @@ content:
         label: Aktif
         type: boolean
         default: true
+
+  # ------------------------------------------------------------------ Produk
+  - name: products
+    label: Produk
+    type: file
+    path: src/content/products.json
+    format: json
+    list: true
+    fields:
+      - name: name
+        label: Nama produk
+        type: string
+        required: true
+        description: "Contoh: Water Based Pomade"
+        options:
+          maxlength: 80
+      - name: category
+        label: Kategori
+        type: select
+        required: true
+        default: Pomade
+        options:
+          values: [Pomade, Hair Clay, Hair Powder, Hair Tonic, Hair Spray, Shampoo & Conditioner, Beard Care, Aksesoris, Lainnya]
+      - name: price
+        label: Harga jual (Rupiah)
+        type: number
+        required: true
+        description: "Angka saja, tanpa titik dan tanpa Rp. Contoh: 95000"
+        options:
+          min: 0
+      - name: compareAtPrice
+        label: Harga coret (opsional)
+        type: number
+        description: "Harga sebelum diskon, tampil dicoret. Harus lebih besar dari harga jual. Kosongkan bila tidak diskon."
+        options:
+          min: 0
+      - name: size
+        label: Isi / ukuran
+        type: string
+        description: "Contoh: 100 ml atau 80 gr"
+        options:
+          maxlength: 30
+      - name: description
+        label: Deskripsi singkat
+        type: text
+        description: "Manfaat & cocok untuk siapa (maks. 400 karakter)."
+      - name: image
+        label: Foto produk
+        type: image
+        description: "Foto persegi (1:1), latar polos. Dikompres otomatis ke WebP maks. 1000 px. Kosong = gambar logo."
+        options:
+          media: products
+      - name: badge
+        label: Label khusus
+        type: select
+        description: "Opsional. Kosongkan bila tidak perlu."
+        options:
+          values: [Best Seller, Baru, Promo]
+      - name: inStock
+        label: Stok tersedia
+        type: boolean
+        default: true
+        description: "Matikan bila stok habis: produk tetap tampil dengan label Stok habis dan tombol Tanya stok."
+      - name: shopeeUrl
+        label: Link Shopee (opsional)
+        type: string
+        pattern:
+          regex: "^(https?://.+)?$"
+          message: Harus diawali https://
+      - name: tokopediaUrl
+        label: Link Tokopedia (opsional)
+        type: string
+        pattern:
+          regex: "^(https?://.+)?$"
+          message: Harus diawali https://
+      - name: order
+        label: Urutan
+        type: number
+        default: 0
+        description: "Angka kecil tampil lebih dulu (10, 20, 30, ...)."
+        options:
+          min: 0
+      - name: isActive
+        label: Tampilkan di website
+        type: boolean
+        default: true
+        description: "Matikan untuk menyembunyikan tanpa menghapus."
 
   # ------------------------------------------------------------------ Pengaturan Situs
   - name: settings

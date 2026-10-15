@@ -3,6 +3,8 @@ import { useSite } from '@/lib/SiteContext';
 import { useActiveSection } from '@/lib/useActiveSection';
 import { asset } from '@/lib/asset';
 import { bookingLink } from '@/lib/whatsapp';
+import { isCurrentPage, isHomePage, navHref, navKey, pageUrl } from '@/lib/navigation';
+import type { NavItem } from '@/types';
 import { Button } from '@/components/ui/Button';
 import { Container } from '@/components/ui/Container';
 import { Icon } from '@/components/ui/Icon';
@@ -16,7 +18,11 @@ export function Navbar() {
   const [open, setOpen] = useState(false);
   const toggleRef = useRef<HTMLButtonElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
-  const active = useActiveSection(site.nav.map((n) => n.sectionId));
+  const home = isHomePage();
+  // Scroll-spy hanya di halaman utama (section-nya ada di sana)
+  const active = useActiveSection(home ? site.nav.flatMap((n) => (n.sectionId ? [n.sectionId] : [])) : []);
+  const current = (item: NavItem): 'true' | 'page' | undefined =>
+    isCurrentPage(item) ? 'page' : item.sectionId && active === item.sectionId ? 'true' : undefined;
   const waHref = bookingLink(site, 'general');
 
   useEffect(() => {
@@ -76,7 +82,7 @@ export function Navbar() {
       </a>
       <header className={styles.header} data-solid={scrolled || open || undefined}>
         <Container fluid className={styles.inner}>
-          <a className={styles.logo} href="#top" onClick={() => setOpen(false)}>
+          <a className={styles.logo} href={home ? '#top' : pageUrl('/')} onClick={() => setOpen(false)}>
             <img
               src={asset(site.logo.horizontal.src)}
               width={site.logo.horizontal.width}
@@ -88,8 +94,8 @@ export function Navbar() {
           <nav className={styles.desktopNav} aria-label={site.ui.mainNavigation}>
             <ul>
               {site.nav.map((item) => (
-                <li key={item.sectionId}>
-                  <a href={`#${item.sectionId}`} aria-current={active === item.sectionId ? 'true' : undefined}>
+                <li key={navKey(item)}>
+                  <a href={navHref(item)} aria-current={current(item)}>
                     {item.label}
                   </a>
                 </li>
@@ -122,8 +128,8 @@ export function Navbar() {
         <nav aria-label={site.ui.mainNavigation}>
           <ul className={styles.panelList}>
             {site.nav.map((item) => (
-              <li key={item.sectionId}>
-                <a href={`#${item.sectionId}`} onClick={() => close(false)} aria-current={active === item.sectionId ? 'true' : undefined}>
+              <li key={navKey(item)}>
+                <a href={navHref(item)} onClick={() => close(false)} aria-current={current(item)}>
                   {item.label}
                 </a>
               </li>

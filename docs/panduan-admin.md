@@ -20,7 +20,7 @@ Panduan ini untuk pemilik dan staf. Tidak perlu keahlian teknis.
 1. Buka **https://app.pagescms.org**.
 2. Klik **Sign in with GitHub** → izinkan akses (sekali saja).
 3. Pilih repo **cutlesshairstudio** → branch **main**.
-4. Menu konten ada di kiri: **Daftar Harga, Barber, Galeri, Promo, Pengumuman, Pengaturan Situs**.
+4. Menu konten ada di kiri: **Daftar Harga, Barber, Galeri, Promo, Pengumuman, Produk, Pengaturan Situs**.
 
 Tips umum:
 - Setiap kolom punya keterangan kecil di bawahnya. Baca dulu bila ragu.
@@ -110,7 +110,30 @@ Menurunkan pengumuman: matikan **Aktif** → **Save** (atau hapus entrinya). Bil
 
 ---
 
-## 6. Pengaturan situs *(Owner)*
+## 6. Mengelola produk (pomade, hair tonic, dll.)
+
+Produk tampil di halaman **/produk** dan 4 produk teratas juga tampil di halaman utama. Pembeli memesan lewat tombol WhatsApp (pesan otomatis berisi nama produk).
+
+**Menambah produk:**
+1. Klik **Produk** → **Add an entry**.
+2. Isi **Nama produk** (mis. `Water Based Pomade`), **Kategori**, dan **Harga jual** (angka saja, mis. `95000`).
+3. **Isi / ukuran** (mis. `100 gr`) dan **Deskripsi singkat** (manfaat, cocok untuk siapa).
+4. **Foto produk**: upload foto **persegi** dengan latar polos. Foto otomatis dikecilkan. Tanpa foto, tampil gambar logo Cutless.
+5. **Save**.
+
+**Diskon:** isi **Harga coret** dengan harga normal (lebih besar dari harga jual), lalu pilih **Label khusus → Promo**. Website menampilkan ~~Rp 100.000~~ **Rp 85.000**. Kosongkan harga coret setelah diskon selesai.
+
+**Stok habis:** matikan **Stok tersedia**. Produk tetap tampil dengan label *Stok habis* dan tombolnya menjadi *Tanya stok*. Nyalakan lagi saat barang datang.
+
+**Jual juga di marketplace?** Isi **Link Shopee / Tokopedia** (opsional); tautannya tampil kecil di bawah tombol pesan.
+
+**Berhenti menjual:** matikan **Tampilkan di website** (data tidak hilang) atau hapus entrinya.
+
+> Produk bertanda **(contoh)** adalah contoh dari developer. Ganti atau hapus sebelum website dipromosikan.
+
+---
+
+## 7. Pengaturan situs *(Owner)*
 
 Klik **Pengaturan Situs**:
 

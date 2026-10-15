@@ -1,0 +1,298 @@
+/* ---------- Halaman /produk/: ruang untuk navbar fixed di atas ---------- */
+.page {
+  padding-top: calc(var(--header-offset) + var(--nav-safe-top) + var(--space-8));
+}
+
+.pageHead {
+  max-width: 44rem;
+  margin-bottom: var(--space-7);
+}
+.pageTitle {
+  font-size: clamp(2rem, 1.2rem + 4vw, 4rem);
+  line-height: 1.02;
+  letter-spacing: -0.03em;
+  text-transform: uppercase;
+}
+.pageIntro {
+  max-width: 34rem;
+  margin-top: var(--space-4);
+  color: var(--c-bone-dim);
+}
+
+/* ---------- Filter kategori ---------- */
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-bottom: var(--space-6);
+}
+.chip {
+  min-height: 40px;
+  padding: 0 var(--space-4);
+  border: 1px solid var(--c-line-light);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--c-bone-dim);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color var(--dur) var(--ease), color var(--dur) var(--ease), border-color var(--dur) var(--ease);
+}
+.chip:hover {
+  border-color: var(--c-sand);
+  color: var(--c-bone);
+}
+.chip[aria-pressed='true'] {
+  background: var(--c-bone);
+  border-color: var(--c-bone);
+  color: var(--c-ink);
+}
+
+.empty {
+  padding: var(--space-7) var(--space-5);
+  border: 1px dashed var(--c-line-light);
+  border-radius: var(--radius);
+  text-align: center;
+  color: var(--c-bone-dim);
+}
+
+/* ---------- Grid: 2 kolom di HP, 3 di tablet, 4 di desktop. Kartu rata tinggi. ---------- */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3);
+}
+.grid > li {
+  min-width: 0;
+}
+
+.card {
+  padding: 0;
+  overflow: hidden;
+  container-type: inline-size;
+}
+.card:hover {
+  border-color: rgba(165, 151, 137, 0.45);
+}
+
+/* Gambar & label ditumpuk di satu sel grid */
+.media {
+  display: grid;
+  aspect-ratio: 1 / 1;
+  background: var(--c-ink);
+  overflow: hidden;
+}
+.media > * {
+  grid-area: 1 / 1;
+  min-width: 0;
+  min-height: 0;
+}
+.img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform var(--dur-slow) var(--ease);
+}
+.card:hover .img {
+  transform: scale(1.04);
+}
+
+.placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  background:
+    radial-gradient(circle at 50% 40%, rgba(165, 151, 137, 0.18), transparent 60%),
+    linear-gradient(160deg, #1b2026, var(--c-ink));
+  color: var(--c-sand);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  text-align: center;
+  padding: var(--space-3);
+}
+.placeholder img {
+  width: 28%;
+  max-width: 64px;
+  height: auto;
+  opacity: 0.85;
+}
+
+.chipTag {
+  align-self: start;
+  margin: var(--space-2);
+  padding: 2px var(--space-2);
+  border-radius: 2px;
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  line-height: 1.6;
+}
+.badge {
+  justify-self: start;
+  background: var(--c-sand);
+  color: var(--c-ink);
+}
+.stock {
+  justify-self: end;
+  background: var(--c-ink);
+  color: var(--c-bone);
+  border: 1px solid var(--c-line-light);
+}
+.out .img,
+.out .placeholder {
+  filter: grayscale(1);
+  opacity: 0.6;
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  gap: var(--space-2);
+  min-width: 0;
+  padding: var(--space-4) var(--space-3) var(--space-4);
+}
+.meta {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--c-sand);
+}
+.name {
+  font-family: var(--f-body);
+  font-stretch: normal;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  letter-spacing: 0;
+  line-height: 1.35;
+}
+.desc {
+  display: none;
+  font-size: var(--fs-sm);
+  color: var(--c-bone-dim);
+}
+.price {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 var(--space-2);
+  margin-top: var(--space-1);
+}
+.price strong {
+  font-size: 1rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.price s {
+  font-size: 0.8125rem;
+  color: var(--c-bone-dim);
+}
+
+.foot {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding-top: var(--space-3);
+}
+.markets {
+  font-size: var(--fs-xs);
+  color: var(--c-bone-dim);
+  text-align: center;
+}
+.markets a {
+  color: var(--c-bone);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* Tombol: teks pendek di kartu sempit, panjang di kartu lebar */
+.longLabel {
+  display: none;
+}
+@container (min-width: 230px) {
+  .longLabel {
+    display: inline;
+  }
+  .shortLabel {
+    display: none;
+  }
+  .body {
+    padding-inline: var(--space-4);
+  }
+  .name {
+    font-size: 1rem;
+  }
+  .desc {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+}
+
+/* ---------- Cara pesan ---------- */
+.howTo {
+  margin-top: var(--section-head-gap);
+  padding-top: var(--space-7);
+  border-top: 1px solid var(--c-line-light);
+}
+.howToTitle {
+  margin-bottom: var(--space-5);
+  font-size: clamp(1.3rem, 1rem + 1.2vw, 1.8rem);
+}
+.steps {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-4);
+}
+.steps li {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  column-gap: var(--space-4);
+  padding: var(--space-5);
+  border: 1px solid var(--c-line-light);
+  border-radius: var(--radius);
+}
+.stepNo {
+  grid-row: 1 / 3;
+  font-family: var(--f-display);
+  font-stretch: 125%;
+  font-weight: 800;
+  font-size: 1.6rem;
+  line-height: 1;
+  color: var(--c-sand);
+}
+.steps strong {
+  font-weight: 700;
+}
+.steps li > span:last-child {
+  font-size: var(--fs-sm);
+  color: var(--c-bone-dim);
+}
+
+@media (min-width: 640px) {
+  .grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--space-4);
+  }
+}
+
+@media (min-width: 900px) {
+  .steps {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1024px) {
+  .grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: var(--space-5);
+  }
+}

@@ -45,10 +45,13 @@ src/content/
   promos.json               Promo               ← Pages CMS
   announcements.json        Pengumuman          ← Pages CMS
   settings.json             Pengaturan Situs    ← Pages CMS
+  products.json             Produk              ← Pages CMS
   schema.ts                 skema Zod keenam file di atas (acuan tunggal)
   *.ts                      teks statis: hero, about, layanan, testimoni, label UI, SEO, judul section
 public/uploads/
-  barbers/  gallery/  promos/  site/    gambar dari Pages CMS (WebP)
+  barbers/  gallery/  promos/  products/  site/    gambar dari Pages CMS (WebP)
+index.html                  halaman utama (/)
+produk/index.html           halaman produk (/produk/), SEO sendiri
 src/lib/content.ts          lapisan data: getPricing(), getBarbers(), ... (signature tidak berubah)
 src/lib/contentTransforms.ts  filter isActive, urut order, gabung dengan teks statis
 scripts/optimize-images.mjs   kompres gambar (sharp)
@@ -64,6 +67,7 @@ scripts/vite-content-plugin.ts  validasi konten saat build + ukuran gambar
 | `gallery.json` | `image`, `altText`, `styleCategory` (Fade \| Pompadour \| Crop \| Coloring \| Perming \| Lainnya), `caption`, `order`, `isActive` |
 | `promos.json` | `title`, `description`, `image`, `ctaLabel`, `waMessage`, `startDate`, `endDate`, `isActive` |
 | `announcements.json` | `message` (maks. 160), `type` (Info \| Tutup \| Jam Khusus), `startDate`, `endDate`, `isActive` |
+| `products.json` | `name`, `category` (Pomade \| Hair Clay \| Hair Powder \| Hair Tonic \| Hair Spray \| Shampoo & Conditioner \| Beard Care \| Aksesoris \| Lainnya), `price`, `compareAtPrice` (harga coret, opsional), `size`, `description`, `image`, `badge`, `inStock`, `shopeeUrl`, `tokopediaUrl`, `order`, `isActive` |
 | `settings.json` | `logo`, `siteName`, `mainWhatsappNumber`, `defaultWaMessage`, `instagramUrl`, `tiktokUrl`, `googleMapsUrl`, `address`, `footerText`, `openingHours[]` (`day`, `openTime`, `closeTime`, `isClosed`) |
 
 ### Aturan
@@ -80,7 +84,7 @@ scripts/vite-content-plugin.ts  validasi konten saat build + ukuran gambar
 
 ## 3. Gambar
 
-- Upload lewat Pages CMS masuk ke `public/uploads/<jenis>/`.
+- Upload lewat Pages CMS masuk ke `public/uploads/<jenis>/`. Lebar maks.: galeri & promo 1600 px, produk 1000 px, barber & logo 800 px.
 - Workflow **`.github/workflows/optimize-images.yml`** berjalan otomatis saat ada file baru di `public/uploads/**`: kompres ke **WebP** (maks. 1600 px galeri/promo, 800 px barber/logo), hapus file asli, perbarui path di JSON, lalu commit.
 - Bila admin memilih foto lalu baru menyimpan entrinya setelah foto itu dikonversi, path lama (`.jpg`) otomatis diperbaiki ke `.webp` oleh script yang sama (workflow juga berjalan saat `src/content/*.json` berubah).
 - `npm run build` juga menjalankan optimasi (`prebuild`), jadi situs yang dideploy selalu memakai gambar teroptimasi walau workflow belum selesai.
@@ -136,7 +140,17 @@ Semua perubahan dari Pages CMS adalah commit Git:
 - **Kembali ke versi lama satu file:** buka file di commit lama → salin isinya → edit file sekarang → commit.
 - **Darurat (situs rusak):** Cloudflare Pages → **Deployments** → pilih deploy lama yang baik → **Rollback to this deployment** (instan, tanpa build).
 
-## 7. Arsitektur
+## 7. Halaman
+
+| URL | Isi | Entry |
+|---|---|---|
+| `/` | Landing page (termasuk section ringkas 4 produk) | `index.html` → `src/main.tsx` → `App.tsx` |
+| `/produk/` | Semua produk + filter kategori + cara pesan | `produk/index.html` → `src/produk.tsx` |
+
+Situs statis multi-halaman (Vite multi-page, tanpa router). Kerangka bersama (navbar, footer, preloader, tombol WA) ada di `src/components/layout/SiteShell.tsx`. Menu di `src/content/site.ts`: item dengan `sectionId` menuju section beranda (`/#harga`), item dengan `href` menuju halaman lain (`/produk/`).
+Pemesanan produk lewat WhatsApp (template `product` & `productRestock` di `site.ts`), tanpa keranjang/payment gateway agar tetap Rp0.
+
+## 8. Arsitektur
 
 ```
 Admin ─▶ Pages CMS ─commit─▶ GitHub (src/content/*.json, public/uploads/*)

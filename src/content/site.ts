@@ -20,6 +20,7 @@ export const site: SiteContent = {
     { label: 'Harga', sectionId: 'harga' },
     { label: 'Hairstylist', sectionId: 'hairstylist' },
     { label: 'Galeri', sectionId: 'galeri' },
+    { label: 'Produk', href: '/produk/' },
     { label: 'Lokasi', sectionId: 'lokasi' },
     { label: 'Kontak', sectionId: 'kontak' },
   ],
@@ -35,6 +36,8 @@ export const site: SiteContent = {
       branch: 'Halo {brand} cabang {branch}, saya mau booking haircut untuk [hari/jam].',
       package: 'Halo {brand}, saya mau ambil paket {package}. Bisa dibantu?',
       question: 'Halo {brand}, saya mau tanya-tanya dulu.',
+      product: 'Halo {brand}, saya mau pesan {product}. Masih ada stoknya?',
+      productRestock: 'Halo {brand}, kapan {product} ready lagi? Saya mau pesan.',
     },
   },
   // TODO: ganti email bisnis
