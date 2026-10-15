@@ -2,10 +2,9 @@
   {
     "name": "Signature Haircut",
     "category": "Haircut",
-    "price": 75000,
+    "price": 100000,
     "priceFrom": false,
     "description": "Konsultasi, cut, styling",
-    "badge": "",
     "order": 10,
     "isActive": true
   },
@@ -15,7 +14,6 @@
     "price": 90000,
     "priceFrom": false,
     "description": "Plus keramas & blow-dry",
-    "badge": "",
     "order": 20,
     "isActive": true
   },
@@ -24,8 +22,6 @@
     "category": "Haircut",
     "price": 85000,
     "priceFrom": false,
-    "description": "",
-    "badge": "",
     "order": 30,
     "isActive": true
   },
@@ -35,7 +31,6 @@
     "price": 60000,
     "priceFrom": false,
     "description": "Di bawah 12 tahun",
-    "badge": "",
     "order": 40,
     "isActive": true
   },
@@ -44,8 +39,6 @@
     "category": "Shaving",
     "price": 50000,
     "priceFrom": false,
-    "description": "",
-    "badge": "",
     "order": 50,
     "isActive": true
   },
@@ -54,8 +47,6 @@
     "category": "Shaving",
     "price": 40000,
     "priceFrom": false,
-    "description": "",
-    "badge": "",
     "order": 60,
     "isActive": true
   },
@@ -64,8 +55,6 @@
     "category": "Shaving",
     "price": 110000,
     "priceFrom": false,
-    "description": "",
-    "badge": "",
     "order": 70,
     "isActive": true
   },
@@ -75,7 +64,6 @@
     "price": 150000,
     "priceFrom": true,
     "description": "Full color",
-    "badge": "",
     "order": 80,
     "isActive": true
   },
@@ -84,8 +72,6 @@
     "category": "Coloring",
     "price": 250000,
     "priceFrom": true,
-    "description": "",
-    "badge": "",
     "order": 90,
     "isActive": true
   },
@@ -95,7 +81,6 @@
     "price": 250000,
     "priceFrom": true,
     "description": "Wavy / curly",
-    "badge": "",
     "order": 100,
     "isActive": true
   },
@@ -104,8 +89,6 @@
     "category": "Coloring",
     "price": 120000,
     "priceFrom": false,
-    "description": "",
-    "badge": "",
     "order": 110,
     "isActive": true
   },
@@ -115,7 +98,6 @@
     "price": 100000,
     "priceFrom": false,
     "description": "Nutrisi & scalp care",
-    "badge": "",
     "order": 120,
     "isActive": true
   },
@@ -124,8 +106,6 @@
     "category": "Treatment",
     "price": 25000,
     "priceFrom": true,
-    "description": "",
-    "badge": "",
     "order": 130,
     "isActive": true
   },
@@ -134,8 +114,6 @@
     "category": "Treatment",
     "price": 35000,
     "priceFrom": false,
-    "description": "",
-    "badge": "",
     "order": 140,
     "isActive": true
   },
@@ -145,7 +123,6 @@
     "price": 60000,
     "priceFrom": false,
     "description": "Signature Haircut\nTunjukkan kartu pelajar/KTM\nSenin – Kamis",
-    "badge": "",
     "order": 150,
     "isActive": true
   },
@@ -165,7 +142,6 @@
     "price": 450000,
     "priceFrom": false,
     "description": "Haircut + Hot Towel Shave\nHair Spa & facial ringan\nStyling di hari H",
-    "badge": "",
     "order": 170,
     "isActive": true
   }
