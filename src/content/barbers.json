@@ -5,7 +5,7 @@
     "photo": "/uploads/barbers/raka.webp",
     "specialty": "Skin fade, Pompadour",
     "order": 10,
-    "isActive": true
+    "isActive": false
   },
   {
     "name": "Dimas",
