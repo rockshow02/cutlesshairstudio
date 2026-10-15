@@ -73,7 +73,9 @@ export async function validateContent(root: string): Promise<string[]> {
     const images: { path: string; at: string }[] = [];
     collectImages(data, file, images);
     for (const img of images) {
-      if (img.path.startsWith('/') && !existsSync(path.join(publicDir, img.path))) {
+      const webp = img.path.replace(/\.(jpe?g|png|gif|tiff?|avif)$/i, '.webp');
+      const found = existsSync(path.join(publicDir, img.path)) || existsSync(path.join(publicDir, webp));
+      if (img.path.startsWith('/') && !found) {
         problems.push(`  • ${img.at}: gambar tidak ditemukan di public${img.path}`);
       }
     }

@@ -57,8 +57,11 @@ function activeSorted<T extends { isActive?: boolean | null; order?: number | nu
 
 /** Path gambar → ImageAsset dengan ukuran asli (dari virtual:image-meta) */
 export function toImage(src: string, alt: string, fallback = { width: 800, height: 800 }): ImageAsset {
-  const size = imageMeta[src] ?? fallback;
-  return { src, alt, width: size.width, height: size.height };
+  // File asli (jpg/png) yang sudah dikonversi workflow → pakai versi .webp-nya
+  const webp = src.replace(/\.(jpe?g|png|gif|tiff?|avif)$/i, '.webp');
+  const resolved = imageMeta[src] ? src : imageMeta[webp] ? webp : src;
+  const size = imageMeta[resolved] ?? fallback;
+  return { src: resolved, alt, width: size.width, height: size.height };
 }
 
 /** Stabil & unik untuk key React: slug + index */

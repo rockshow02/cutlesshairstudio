@@ -82,6 +82,7 @@ scripts/vite-content-plugin.ts  validasi konten saat build + ukuran gambar
 
 - Upload lewat Pages CMS masuk ke `public/uploads/<jenis>/`.
 - Workflow **`.github/workflows/optimize-images.yml`** berjalan otomatis saat ada file baru di `public/uploads/**`: kompres ke **WebP** (maks. 1600 px galeri/promo, 800 px barber/logo), hapus file asli, perbarui path di JSON, lalu commit.
+- Bila admin memilih foto lalu baru menyimpan entrinya setelah foto itu dikonversi, path lama (`.jpg`) otomatis diperbaiki ke `.webp` oleh script yang sama (workflow juga berjalan saat `src/content/*.json` berubah).
 - `npm run build` juga menjalankan optimasi (`prebuild`), jadi situs yang dideploy selalu memakai gambar teroptimasi walau workflow belum selesai.
 - Ukuran asli gambar dibaca saat build (modul `virtual:image-meta`) → tidak ada layout shift, layout galeri tegak/lebar otomatis. Semua gambar tetap lazy-load dengan alt text dari data.
 - Kuota GitHub Actions: repo **publik** gratis tanpa batas; repo **privat** 2.000 menit/bulan (satu run ±1 menit).

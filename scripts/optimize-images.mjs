@@ -10,6 +10,7 @@
  * Aman dijalankan berulang: file .webp yang sudah tidak melebihi lebar maks. dilewati.
  * Dijalankan otomatis oleh GitHub Actions saat ada gambar baru di-commit, dan sebelum build.
  */
+import { existsSync } from 'node:fs';
 import { readdir, readFile, rename, rm, stat, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -98,6 +99,33 @@ async function updateContentReferences(changes) {
   return touched;
 }
 
+/**
+ * Perbaiki referensi yang menunjuk ke file asli (jpg/png) yang sudah dikonversi menjadi .webp.
+ * Terjadi bila admin memilih foto di Pages CMS (foto langsung ter-upload & dioptimasi workflow)
+ * lalu baru menyimpan entrinya beberapa saat kemudian dengan path lama.
+ */
+async function repairContentReferences() {
+  const touched = [];
+  const pattern = /"(\/uploads\/[^"]+?)\.(jpe?g|png|gif|tiff?|avif)"/gi;
+  for (const name of (await readdir(CONTENT)).filter((f) => f.endsWith('.json'))) {
+    const file = path.join(CONTENT, name);
+    const original = await readFile(file, 'utf8');
+    const next = original.replace(pattern, (match, base) => {
+      const publicDir = path.join(ROOT, 'public');
+      const exists = (url) => existsSync(path.join(publicDir, url));
+      const originalUrl = match.slice(1, -1);
+      if (exists(originalUrl) || !exists(`${base}.webp`)) return match;
+      console.log(`✓ ${name}: ${originalUrl} → ${base}.webp (referensi diperbaiki)`);
+      return `"${base}.webp"`;
+    });
+    if (next !== original) {
+      await writeFile(file, next);
+      touched.push(name);
+    }
+  }
+  return touched;
+}
+
 const kb = (n) => `${Math.round(n / 1024)} KB`;
 
 async function main() {
@@ -115,8 +143,8 @@ async function main() {
       process.exitCode = 1;
     }
   }
-  const touched = await updateContentReferences(changes);
-  if (touched.length) console.log(`Path gambar diperbarui di: ${touched.join(', ')}`);
+  const touched = new Set([...(await updateContentReferences(changes)), ...(await repairContentReferences())]);
+  if (touched.size) console.log(`Path gambar diperbarui di: ${[...touched].join(', ')}`);
   console.log(changes.length ? `Selesai: ${changes.length} gambar dioptimasi.` : 'Tidak ada gambar baru untuk dioptimasi.');
 }
 

@@ -1,4 +1,5 @@
-# Mengompres gambar baru dari Pages CMS (public/uploads) ke WebP, lalu commit hasilnya.
+# Mengompres gambar baru dari Pages CMS (public/uploads) ke WebP, memperbaiki referensi gambar
+# di src/content/*.json, lalu commit hasilnya.
 # Berjalan di runner gratis GitHub Actions (repo publik: gratis tanpa batas; privat: 2.000 menit/bulan,
 # satu run ±1 menit). Commit dari GITHUB_TOKEN tidak memicu workflow lagi, jadi tidak ada loop.
 name: Optimasi gambar
@@ -8,6 +9,8 @@ on:
     branches: [main]
     paths:
       - 'public/uploads/**'
+      # Perbaiki referensi gambar bila entri disimpan setelah fotonya dikonversi ke WebP
+      - 'src/content/*.json'
   workflow_dispatch:
 
 permissions:
