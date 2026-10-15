@@ -1,0 +1,197 @@
+.skip {
+  position: fixed;
+  top: var(--space-3);
+  left: var(--space-3);
+  z-index: var(--z-preloader);
+  padding: var(--space-3) var(--space-4);
+  background: var(--c-bone);
+  color: var(--c-ink);
+  font-weight: 700;
+  transform: translateY(-200%);
+}
+.skip:focus {
+  transform: none;
+}
+
+/* Navbar fixed, tepat di bawah AnnouncementBar (top = --announce-h).
+   Konten di bawahnya diberi offset --header-offset (baris pertama hero, scroll-padding). */
+.header {
+  position: fixed;
+  inset: var(--announce-h) 0 auto;
+  z-index: var(--z-nav);
+  padding-top: var(--nav-safe-top);
+  transition: background-color var(--dur) var(--ease), box-shadow var(--dur) var(--ease);
+}
+.header[data-solid] {
+  background: rgba(12, 16, 20, 0.92);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 1px 0 var(--c-line-light);
+}
+
+.inner {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  height: var(--nav-h);
+}
+
+.logo {
+  flex: none;
+  display: block;
+}
+.logo img {
+  width: auto;
+  height: 34px;
+}
+
+.desktopNav {
+  display: none;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-left: auto;
+}
+
+.longLabel { display: none; }
+.shortLabel { display: inline; }
+
+.toggle {
+  display: grid;
+  place-items: center;
+  width: var(--touch);
+  height: var(--touch);
+  padding: 0;
+  border: 1px solid var(--c-line-light);
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--c-bone);
+  cursor: pointer;
+}
+
+/* ---- Panel menu mobile ---- */
+.panel {
+  position: fixed;
+  inset: calc(var(--header-offset) + var(--nav-safe-top)) 0 0;
+  z-index: var(--z-menu);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  padding: var(--space-4) var(--gutter) calc(var(--space-6) + env(safe-area-inset-bottom, 0px));
+  overflow-y: auto;
+  background: var(--c-ink);
+  border-top: 1px solid var(--c-line-light);
+  animation: panelIn var(--dur) var(--ease);
+}
+.panel[hidden] {
+  display: none;
+}
+
+.panelList li {
+  border-bottom: 1px solid var(--c-line-light);
+}
+.panelList a {
+  display: flex;
+  align-items: center;
+  min-height: 56px;
+  font-family: var(--f-display);
+  font-stretch: 125%;
+  font-weight: 700;
+  font-size: 1.15rem;
+}
+.panelList a[aria-current='true'] {
+  color: var(--c-sand);
+}
+
+.panelFoot {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  margin-top: auto;
+}
+
+.panelSocials {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-5);
+}
+.panelSocials a {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: var(--touch);
+  color: var(--c-bone-dim);
+  font-size: var(--fs-sm);
+}
+
+@keyframes panelIn {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: none; }
+}
+
+@media (min-width: 420px) {
+  .longLabel { display: inline; }
+  .shortLabel { display: none; }
+}
+
+@media (min-width: 1024px) {
+  .logo img { height: 42px; }
+
+  .desktopNav {
+    display: block;
+    margin-left: auto;
+  }
+  .desktopNav ul {
+    display: flex;
+    gap: var(--space-1);
+  }
+  .desktopNav a {
+    position: relative;
+    display: block;
+    padding: var(--space-2) var(--space-3);
+    font-size: var(--fs-sm);
+    font-weight: 500;
+    color: var(--c-bone-dim);
+    transition: color var(--dur) var(--ease);
+  }
+  .desktopNav a::after {
+    content: '';
+    position: absolute;
+    left: var(--space-3);
+    right: var(--space-3);
+    bottom: 2px;
+    height: 1px;
+    background: var(--c-sand);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform var(--dur) var(--ease);
+  }
+  .desktopNav a:hover,
+  .desktopNav a[aria-current='true'] {
+    color: var(--c-bone);
+  }
+  .desktopNav a:hover::after,
+  .desktopNav a[aria-current='true']::after {
+    transform: scaleX(1);
+  }
+
+  .actions {
+    margin-left: var(--space-4);
+  }
+  .toggle,
+  .panel {
+    display: none;
+  }
+}
+
+@media (min-width: 1280px) {
+  .inner {
+    padding-inline: var(--space-7);
+  }
+  .desktopNav a {
+    padding-inline: var(--space-4);
+  }
+}

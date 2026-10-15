@@ -1,0 +1,130 @@
+.footer {
+  position: relative;
+  z-index: var(--z-content);
+  background: var(--c-ink-3);
+  color: var(--c-bone-dim);
+  font-size: 0.9375rem;
+  padding-top: var(--section-y);
+  scroll-margin-top: var(--header-offset);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-7) var(--space-6);
+  padding-bottom: var(--space-7);
+}
+
+.brand {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-5);
+}
+.logo img {
+  width: 132px;
+  height: auto;
+}
+
+.socials {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+.socials a {
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  border: 1px solid var(--c-line-light);
+  border-radius: 50%;
+  color: var(--c-bone);
+  transition: background-color var(--dur) var(--ease), color var(--dur) var(--ease);
+}
+.socials a:hover {
+  background: var(--c-bone);
+  color: var(--c-ink);
+}
+
+.colTitle {
+  margin-bottom: var(--space-4);
+  font-family: var(--f-body);
+  font-stretch: normal;
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--c-bone);
+}
+
+.contact,
+.links,
+.hours {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.contact li {
+  display: grid;
+  grid-template-columns: 18px 1fr;
+  gap: var(--space-3);
+  align-items: start;
+}
+.contact svg {
+  margin-top: 4px;
+  color: var(--c-sand);
+}
+.contact a,
+.links a {
+  overflow-wrap: anywhere;
+  transition: color var(--dur) var(--ease);
+}
+.contact a:hover,
+.links a:hover {
+  color: var(--c-bone);
+}
+.links a {
+  display: inline-block;
+  padding-block: 2px;
+}
+
+.hours li {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+.hours li span:last-child {
+  color: var(--c-bone);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* Bagian bawah: ruang ekstra di mobile agar tidak pernah ada konten di bawah posisi FAB */
+.bottom {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: var(--space-2) var(--space-5);
+  padding-block: var(--space-5) calc(var(--fab-safe) + env(safe-area-inset-bottom, 0px));
+  border-top: 1px solid var(--c-line-light);
+  font-size: 0.8125rem;
+}
+.bottom a {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+@media (min-width: 640px) {
+  .grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1024px) {
+  .grid {
+    grid-template-columns: minmax(0, 1.3fr) minmax(0, 1.1fr) minmax(0, 0.7fr) minmax(0, 1fr);
+  }
+  .bottom {
+    padding-bottom: var(--space-6);
+  }
+}

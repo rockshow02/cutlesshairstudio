@@ -1,0 +1,16 @@
+.section {
+  position: relative;
+  z-index: var(--z-content);
+  padding-block: var(--section-y);
+  scroll-margin-top: var(--header-offset);
+}
+
+.dark {
+  background: var(--c-ink);
+  color: var(--c-bone);
+}
+
+.light {
+  background: var(--c-paper);
+  color: var(--c-ink);
+}

@@ -1,0 +1,102 @@
+/* Grid kartu rata tinggi: semua baris setinggi kartu tertinggi (grid-auto-rows: 1fr) */
+.grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-auto-rows: 1fr;
+  gap: var(--space-4);
+}
+.grid > li {
+  min-width: 0;
+}
+
+.card:hover {
+  background: #1b2026;
+  border-color: rgba(165, 151, 137, 0.45);
+}
+
+.photo {
+  width: 100%;
+  margin-bottom: var(--space-5);
+  aspect-ratio: 16 / 10;
+  object-fit: cover;
+  border-radius: var(--radius);
+}
+
+.top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+  margin-bottom: var(--space-6);
+}
+.icon {
+  color: var(--c-sand);
+  transition: transform var(--dur) var(--ease);
+}
+.card:hover .icon {
+  transform: translateY(-4px);
+}
+.no {
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  color: var(--c-concrete);
+}
+
+.name {
+  margin-bottom: var(--space-3);
+  font-size: var(--fs-h3);
+  line-height: 1.2;
+}
+.desc {
+  font-size: 0.9375rem;
+  color: var(--c-bone-dim);
+}
+
+.foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2) var(--space-4);
+  margin-top: auto;
+  border-top: 1px solid var(--c-line-light);
+  padding-top: var(--space-4);
+}
+.price {
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--c-sand-light);
+}
+.link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: var(--touch);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  transition: color var(--dur) var(--ease);
+}
+.link svg {
+  transition: transform var(--dur) var(--ease);
+}
+.link:hover {
+  color: var(--c-sand);
+}
+.link:hover svg {
+  transform: translateX(4px);
+}
+
+@media (min-width: 560px) {
+  .grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1024px) {
+  .grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}

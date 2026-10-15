@@ -1,0 +1,39 @@
+.card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-width: 0;
+  padding: var(--space-6) var(--space-5);
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  transition: background-color var(--dur) var(--ease), border-color var(--dur) var(--ease);
+}
+
+.dark {
+  background: var(--c-ink-2);
+  border-color: var(--c-line-light);
+  color: var(--c-bone);
+}
+
+.light {
+  background: var(--c-paper-2);
+  border-color: var(--c-line-dark);
+  color: var(--c-ink);
+}
+
+.featured {
+  background: var(--c-ink);
+  border-color: var(--c-ink);
+  color: var(--c-bone);
+}
+
+.plain {
+  padding: 0;
+  background: transparent;
+}
+
+/* Footer selalu di dasar kartu */
+.footer {
+  margin-top: auto;
+  padding-top: var(--space-5);
+}

@@ -1,0 +1,202 @@
+/*
+  Hero = grid 3 baris: [ruang navbar][konten][highlight].
+  Media & overlay menempati ketiga baris (grid-row 1 / -1), konten tidak pernah berada di bawah navbar.
+*/
+.hero {
+  position: relative;
+  z-index: var(--z-content);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: calc(var(--header-offset) + var(--nav-safe-top)) 1fr auto;
+  min-height: 100vh;
+  min-height: 100svh;
+  background: var(--c-ink);
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.media,
+.overlay {
+  grid-column: 1;
+  grid-row: 1 / -1;
+}
+
+.media {
+  z-index: -2;
+  min-height: 0;
+  /* Ukuran foto tidak ikut menentukan tinggi hero */
+  contain: size;
+  overflow: hidden;
+}
+.media picture {
+  display: contents;
+}
+.mediaEl {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 62% 25%;
+}
+
+/* Gradien kuat di bagian teks agar selalu terbaca di atas foto apapun */
+.overlay {
+  z-index: -1;
+  background:
+    linear-gradient(180deg, rgba(12, 16, 20, 0.7) 0%, rgba(12, 16, 20, 0) 22%),
+    linear-gradient(0deg, rgba(12, 16, 20, 0.97) 0%, rgba(12, 16, 20, 0.88) 38%, rgba(12, 16, 20, 0.35) 70%, rgba(12, 16, 20, 0.15) 100%);
+}
+
+.content {
+  grid-column: 1;
+  grid-row: 2;
+  align-self: end;
+  min-width: 0;
+  padding-top: var(--space-8);
+}
+
+.kicker {
+  margin-bottom: var(--space-4);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--c-sand-light);
+}
+
+.title {
+  margin-bottom: var(--space-5);
+  font-size: var(--fs-display);
+  line-height: 0.98;
+  letter-spacing: -0.02em;
+  text-transform: uppercase;
+  text-shadow: 0 2px 24px rgba(0, 0, 0, 0.35);
+}
+.title span {
+  display: block;
+}
+
+.subtitle {
+  max-width: 34rem;
+  margin-bottom: var(--space-6);
+  font-size: clamp(0.9375rem, 0.85rem + 0.35vw, 1.125rem);
+  color: rgba(242, 239, 234, 0.82);
+}
+
+.ctas {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.meta {
+  grid-column: 1;
+  grid-row: 3;
+  min-width: 0;
+}
+.highlights {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-5);
+  margin-top: var(--space-7);
+  padding-block: var(--space-5) calc(var(--space-5) + env(safe-area-inset-bottom, 0px));
+  border-top: 1px solid var(--c-line-light);
+  font-size: 0.8125rem;
+  color: var(--c-bone-dim);
+}
+.highlights li {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+.star {
+  color: var(--c-star);
+}
+
+/* Entrance setelah preloader selesai (html[data-ready]) */
+.anim {
+  opacity: 0;
+}
+:global(html[data-ready]) .anim {
+  animation: fadeUp 0.9s var(--ease) var(--d, 0s) both;
+}
+
+@media (min-width: 560px) {
+  .ctas {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+}
+
+@media (min-width: 768px) {
+  .mediaEl {
+    object-position: 75% 30%;
+  }
+  .overlay {
+    background:
+      linear-gradient(180deg, rgba(12, 16, 20, 0.6) 0%, rgba(12, 16, 20, 0) 22%),
+      linear-gradient(90deg, rgba(12, 16, 20, 0.95) 0%, rgba(12, 16, 20, 0.75) 40%, rgba(12, 16, 20, 0.1) 72%),
+      linear-gradient(0deg, rgba(12, 16, 20, 0.85) 0%, rgba(12, 16, 20, 0) 35%);
+  }
+  .content {
+    align-self: center;
+  }
+  /* Teks dibatasi di sisi kiri agar tidak menimpa subjek foto di kanan */
+  .content > * {
+    max-width: min(40rem, 62%);
+  }
+  .content > .title {
+    max-width: min(52rem, 75%);
+  }
+}
+
+/* ---- Marquee ---- */
+.marquee {
+  overflow: hidden;
+  padding-block: var(--space-4);
+  border-block: 1px solid var(--c-line-light);
+  background: var(--c-ink);
+}
+.track {
+  display: flex;
+  width: max-content;
+  animation: marquee 32s linear infinite;
+}
+.group {
+  display: flex;
+}
+.group span {
+  display: inline-flex;
+  align-items: center;
+  padding-right: 0.9em;
+  font-family: var(--f-display);
+  font-stretch: 125%;
+  font-weight: 800;
+  font-size: clamp(1.4rem, 1rem + 2.4vw, 3.2rem);
+  line-height: 1;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: transparent;
+  -webkit-text-stroke: 1px var(--c-sand);
+}
+.group span::after {
+  content: '';
+  width: 0.32em;
+  height: 0.32em;
+  margin-left: 0.9em;
+  background: var(--c-taupe);
+  transform: rotate(45deg);
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translate3d(0, 20px, 0); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes marquee {
+  to { transform: translateX(-50%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .track { animation: none; }
+  .anim { opacity: 1; }
+}

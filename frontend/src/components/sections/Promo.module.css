@@ -1,0 +1,98 @@
+.section {
+  border-bottom: 1px solid var(--c-line-light);
+}
+
+.list {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-4);
+}
+.list > li {
+  min-width: 0;
+}
+
+/* Kartu: gambar + isi. Rata tinggi, tombol di dasar kartu. */
+.card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  height: 100%;
+  overflow: hidden;
+  border: 1px solid rgba(165, 151, 137, 0.45);
+  border-radius: var(--radius);
+  background: var(--c-ink-2);
+}
+
+.media {
+  min-height: 0;
+}
+.img {
+  width: 100%;
+  height: 100%;
+  aspect-ratio: 16 / 10;
+  object-fit: cover;
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  min-width: 0;
+  padding: var(--space-6) var(--space-5);
+}
+
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  align-self: flex-start;
+  padding: var(--space-1) var(--space-3);
+  border-radius: 2px;
+  background: var(--c-sand);
+  color: var(--c-ink);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.title {
+  font-size: clamp(1.4rem, 1.1rem + 1.4vw, 2.2rem);
+  line-height: 1.1;
+}
+
+.desc {
+  color: var(--c-bone-dim);
+}
+
+.valid {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: 0.8125rem;
+  color: var(--c-sand-light);
+}
+
+.cta {
+  margin-top: auto;
+  padding-top: var(--space-3);
+}
+
+@media (min-width: 768px) {
+  /* Satu promo: gambar kiri, teks kanan */
+  .list[data-count='1'] .card[data-has-image] {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+  .list[data-count='1'] .img {
+    aspect-ratio: auto;
+    min-height: 100%;
+  }
+  .body {
+    padding: var(--space-7) var(--space-6);
+  }
+}
+
+@media (min-width: 1024px) {
+  .list[data-count='2'] {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

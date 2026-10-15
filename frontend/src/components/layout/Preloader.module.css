@@ -1,0 +1,47 @@
+.preloader {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-preloader);
+  display: grid;
+  place-items: center;
+  background: var(--c-ink);
+  /* Failsafe: apapun yang terjadi, hilang di detik 1,5 */
+  animation: hide 0.35s var(--ease) 1.15s forwards;
+}
+
+.preloader[data-done] {
+  animation: hide 0.35s var(--ease) forwards;
+}
+
+.inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.mark {
+  width: 64px;
+  height: auto;
+  animation: markIn 0.6s var(--ease) both;
+}
+
+.line {
+  width: 64px;
+  height: 2px;
+  background: var(--c-sand);
+  transform: scaleX(0);
+  transform-origin: left;
+  animation: line 0.7s var(--ease) 0.2s forwards;
+}
+
+@keyframes markIn {
+  from { opacity: 0; transform: translateY(10px) scale(0.94); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes line {
+  to { transform: scaleX(1); }
+}
+@keyframes hide {
+  to { opacity: 0; visibility: hidden; }
+}

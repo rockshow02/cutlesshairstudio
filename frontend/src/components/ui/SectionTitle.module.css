@@ -1,0 +1,73 @@
+.head {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  margin-bottom: var(--section-head-gap);
+}
+
+.text {
+  min-width: 0;
+  max-width: 44rem;
+}
+
+.kicker {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+  font-family: var(--f-body);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--c-sand);
+}
+.kicker::before {
+  content: '';
+  flex: none;
+  width: 28px;
+  height: 1px;
+  background: currentColor;
+}
+/* Kicker di latar terang: taupe gelap agar kontras AA */
+.kickerLight {
+  color: var(--c-taupe-dark);
+}
+.center {
+  justify-content: center;
+}
+
+.title {
+  font-size: var(--fs-h2);
+  line-height: 1.08;
+  letter-spacing: -0.025em;
+}
+
+.aside {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-4);
+  min-width: 0;
+}
+
+.intro {
+  max-width: 26rem;
+  color: var(--c-bone-dim);
+}
+.introLight {
+  color: var(--c-ink-dim);
+}
+
+@media (min-width: 1024px) {
+  .head {
+    flex-direction: row;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: var(--space-7);
+  }
+  .aside {
+    flex: 0 1 26rem;
+    align-items: flex-start;
+  }
+}

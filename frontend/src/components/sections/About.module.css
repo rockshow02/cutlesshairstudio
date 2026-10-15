@@ -1,0 +1,110 @@
+.grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-7);
+  align-items: center;
+}
+
+/* Caption di bawah foto (dulu absolute menimpa foto) */
+.figure {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.img {
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  object-fit: cover;
+  border-radius: var(--radius);
+}
+.figure figcaption {
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--c-taupe-dark);
+}
+
+.text {
+  min-width: 0;
+}
+.title {
+  font-size: var(--fs-h2);
+  line-height: 1.08;
+  letter-spacing: -0.025em;
+}
+.lead {
+  margin-top: var(--space-5);
+  font-size: clamp(1.0625rem, 1rem + 0.3vw, 1.1875rem);
+  line-height: 1.6;
+}
+.body {
+  margin-top: var(--space-4);
+  color: var(--c-ink-dim);
+}
+
+.values {
+  margin-top: var(--space-6);
+  border-top: 1px solid var(--c-line-dark);
+}
+.values li {
+  display: grid;
+  grid-template-columns: 18px 1fr;
+  gap: var(--space-3);
+  padding-block: var(--space-4);
+  border-bottom: 1px solid var(--c-line-dark);
+}
+.values svg {
+  margin-top: 4px;
+  color: var(--c-taupe-dark);
+}
+.values strong {
+  display: block;
+  font-weight: 700;
+}
+.values span {
+  font-size: 0.9375rem;
+  color: var(--c-ink-dim);
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-6) var(--space-4);
+  margin: var(--space-8) 0 0;
+  padding-top: var(--space-6);
+  border-top: 1px solid var(--c-line-dark);
+}
+/* Angka di atas, label di bawah, tanpa mengubah urutan semantik dt/dd */
+.stat {
+  display: flex;
+  flex-direction: column-reverse;
+  gap: var(--space-2);
+}
+.stat dt {
+  font-size: 0.8125rem;
+  color: var(--c-ink-dim);
+}
+.stat dd {
+  margin: 0;
+  font-family: var(--f-display);
+  font-stretch: 125%;
+  font-weight: 800;
+  font-size: clamp(1.9rem, 1.3rem + 2.4vw, 3.2rem);
+  line-height: 1;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (min-width: 768px) {
+  .grid {
+    grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+    gap: var(--space-8);
+  }
+}
+
+@media (min-width: 1024px) {
+  .stats {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}

@@ -1,0 +1,99 @@
+/* ==========================================================================
+   Design tokens Cutless Hair Studio
+   Palet diambil dari feed Instagram Cutless (disetujui di eksekusi pertama).
+   Ubah warna/spacing/z-index HANYA di sini.
+   ========================================================================== */
+
+:root {
+  /* ---- Warna brand ---- */
+  --c-ink: #0c1014;          /* hitam kebiruan, latar utama */
+  --c-ink-2: #15191e;        /* permukaan kartu di section gelap */
+  --c-ink-3: #080b0e;        /* footer */
+  --c-charcoal: #1f1e1c;
+  --c-taupe: #7a6756;        /* aksen hangat */
+  --c-taupe-dark: #5e4f42;   /* aksen untuk teks kecil di latar terang (kontras AA) */
+  --c-sand: #a59789;         /* aksen di latar gelap */
+  --c-sand-light: #cfc2b3;
+  --c-concrete: #7e7d82;
+  --c-paper: #efebe5;        /* latar section terang */
+  --c-paper-2: #f7f5f1;      /* kartu di section terang */
+  --c-bone: #f2efea;         /* teks utama di latar gelap */
+  --c-bone-dim: rgba(242, 239, 234, 0.7);
+  --c-ink-dim: rgba(12, 16, 20, 0.72);
+  --c-line-light: rgba(242, 239, 234, 0.14);
+  --c-line-dark: rgba(12, 16, 20, 0.14);
+  --c-wa: #25d366;
+  --c-wa-ink: #0b3d1f;
+  --c-star: #f5b301;
+  --c-skeleton-dark: rgba(242, 239, 234, 0.08);
+  --c-skeleton-light: rgba(12, 16, 20, 0.07);
+
+  /* ---- Tipografi ---- */
+  --f-display: 'Archivo', 'Arial Black', 'Helvetica Neue', Arial, sans-serif;
+  --f-body: 'Plus Jakarta Sans', system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
+  --fs-xs: 0.75rem;   /* 12 */
+  --fs-sm: 0.875rem;  /* 14 */
+  --fs-md: 1rem;      /* 16 */
+  --fs-lg: 1.125rem;  /* 18 */
+  --fs-h3: clamp(1.15rem, 1rem + 0.6vw, 1.45rem);
+  --fs-h2: clamp(1.75rem, 1.2rem + 2.6vw, 3.2rem);
+  --fs-display: clamp(2.1rem, 1rem + 6vw, 5.25rem);
+
+  /* ---- Skala spacing (dipakai konsisten di semua komponen) ---- */
+  --space-1: 0.25rem;  /* 4 */
+  --space-2: 0.5rem;   /* 8 */
+  --space-3: 0.75rem;  /* 12 */
+  --space-4: 1rem;     /* 16 */
+  --space-5: 1.5rem;   /* 24 */
+  --space-6: 2rem;     /* 32 */
+  --space-7: 3rem;     /* 48 */
+  --space-8: 4rem;     /* 64 */
+  --space-9: 6rem;     /* 96 */
+  --section-y: clamp(4rem, 2.5rem + 6vw, 8rem);   /* jarak atas/bawah section */
+  --section-head-gap: clamp(2.5rem, 2rem + 2vw, 4rem); /* judul section -> konten */
+
+  /* ---- Layout ---- */
+  --container: 1200px;
+  --gutter: 1.25rem;
+  --radius: 3px;
+  --radius-lg: 8px;
+  --nav-h: 64px;
+  /* Tinggi AnnouncementBar (diisi otomatis oleh komponen; 0 bila tidak ada pengumuman) */
+  --announce-h: 0px;
+  /* Total area fixed di atas: pengumuman + navbar. Dipakai untuk semua offset konten. */
+  --header-offset: calc(var(--nav-h) + var(--announce-h));
+  /* Safe-area atas iPhone ditangani navbar, atau oleh AnnouncementBar bila tampil */
+  --nav-safe-top: env(safe-area-inset-top, 0px);
+  --fab-size: 56px;
+  --fab-offset: 16px;
+  /* Ruang aman di bawah halaman agar FAB tidak menutupi konten terakhir */
+  --fab-safe: calc(var(--fab-size) + var(--fab-offset) * 2);
+  --touch: 44px;
+
+  /* ---- Skala z-index ---- */
+  --z-base: 0;
+  --z-content: 1;
+  --z-nav: 50;          /* navbar + bar pengumuman */
+  --z-fab: 60;
+  --z-menu: 70;
+  --z-preloader: 100;
+
+  /* ---- Motion ---- */
+  --ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --dur-fast: 0.2s;
+  --dur: 0.35s;
+  --dur-slow: 0.8s;
+}
+
+@media (min-width: 768px) {
+  :root {
+    --gutter: 2rem;
+    --fab-offset: 24px;
+  }
+}
+
+@media (min-width: 1024px) {
+  :root {
+    --nav-h: 80px;
+  }
+}

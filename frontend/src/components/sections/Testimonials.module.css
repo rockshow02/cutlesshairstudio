@@ -1,0 +1,125 @@
+/* Rangkuman rating Google: badge "Contoh" di dalam alur, bukan menimpa sudut */
+.summary {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-4) var(--space-5);
+  border: 1px solid var(--c-line-light);
+  border-radius: var(--radius);
+}
+.gLogo {
+  flex: none;
+  color: var(--c-bone);
+}
+.summaryText {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+.summaryTop {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+}
+.summaryTop strong {
+  font-family: var(--f-display);
+  font-stretch: 125%;
+  font-size: 1.9rem;
+  line-height: 1;
+}
+.summaryCount {
+  font-size: 0.8125rem;
+  color: var(--c-bone-dim);
+}
+
+/* Slider memotong di batas container → tidak ada scroll horizontal di body */
+.swiper {
+  width: 100%;
+}
+.slide {
+  display: flex;
+  height: auto;
+}
+
+/* Semua kartu setinggi slide tertinggi */
+.card {
+  width: 100%;
+  gap: var(--space-4);
+  border-radius: var(--radius-lg);
+}
+.head {
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-3);
+}
+.avatar {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--c-taupe);
+  color: #fff;
+  font-weight: 700;
+  object-fit: cover;
+}
+.who h3 {
+  font-family: var(--f-body);
+  font-stretch: normal;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  letter-spacing: 0;
+}
+.who p {
+  font-size: var(--fs-xs);
+  color: var(--c-bone-dim);
+}
+.source {
+  color: var(--c-bone-dim);
+}
+.text {
+  margin: 0;
+  font-size: 0.9375rem;
+  color: rgba(242, 239, 234, 0.88);
+}
+.badgeRow {
+  margin-top: auto;
+  display: flex;
+}
+
+.cta {
+  display: flex;
+  justify-content: center;
+  margin-top: var(--space-6);
+}
+
+/* Pagination Swiper bergaya brand (selector lebih spesifik dari CSS bawaan Swiper) */
+.swiper :global(.swiper-pagination) {
+  position: static;
+  display: flex;
+  justify-content: center;
+  gap: var(--space-1);
+  margin-top: var(--space-6);
+}
+.swiper :global(.swiper-pagination-bullet) {
+  position: relative;
+  width: 28px;
+  height: 28px;
+  margin: 0;
+  border-radius: 0;
+  background: transparent;
+  opacity: 1;
+}
+.swiper :global(.swiper-pagination-bullet)::before {
+  content: '';
+  position: absolute;
+  inset: 50% 6px auto;
+  height: 2px;
+  background: var(--c-line-light);
+  transition: background-color var(--dur) var(--ease);
+}
+.swiper :global(.swiper-pagination-bullet-active)::before {
+  background: var(--c-sand);
+}

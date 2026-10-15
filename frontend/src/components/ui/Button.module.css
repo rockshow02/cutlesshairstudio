@@ -1,0 +1,52 @@
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  min-height: 50px;
+  max-width: 100%;
+  padding: var(--space-2) var(--space-5);
+  font-family: var(--f-body);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-align: center;
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: background-color var(--dur) var(--ease), color var(--dur) var(--ease), border-color var(--dur) var(--ease);
+}
+
+/* Label boleh turun baris di layar sempit, jadi tidak pernah meluber keluar kontainer */
+.label {
+  min-width: 0;
+}
+
+.iconEnd {
+  transition: transform var(--dur) var(--ease);
+}
+.btn:hover .iconEnd {
+  transform: translateX(4px);
+}
+
+.sm { min-height: 40px; padding-inline: var(--space-4); font-size: var(--fs-xs); }
+.md { }
+.lg { min-height: 58px; padding-inline: var(--space-6); font-size: var(--fs-sm); }
+.block { display: flex; width: 100%; }
+
+.light { background: var(--c-bone); color: var(--c-ink); }
+.light:hover { background: var(--c-sand-light); }
+
+.ghost { border-color: rgba(242, 239, 234, 0.45); color: var(--c-bone); }
+.ghost:hover { background: var(--c-bone); border-color: var(--c-bone); color: var(--c-ink); }
+
+.dark { background: var(--c-ink); color: var(--c-bone); }
+.dark:hover { background: var(--c-taupe-dark); }
+
+.outline-dark { border-color: var(--c-ink); color: var(--c-ink); }
+.outline-dark:hover { background: var(--c-ink); color: var(--c-bone); }
+
+.whatsapp { background: var(--c-wa); color: var(--c-wa-ink); }
+.whatsapp:hover { background: #3be07a; }

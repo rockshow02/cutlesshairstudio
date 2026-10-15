@@ -1,0 +1,18 @@
+# Dependencies & build output
+node_modules/
+dist/
+build/
+
+# Env & secrets (contoh nilai ada di *.env.example)
+.env
+.env.*
+!.env.example
+*.local
+
+# Folder lama hasil migrasi (duplikat dari frontend/), hapus manual
+cutless-react/
+
+# Log & OS
+*.log
+.DS_Store
+Thumbs.db

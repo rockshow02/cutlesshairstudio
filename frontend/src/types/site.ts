@@ -1,0 +1,100 @@
+import type { ImageAsset } from './common';
+
+export interface NavItem {
+  label: string;
+  /** id section tujuan, tanpa "#" */
+  sectionId: string;
+}
+
+/**
+ * Template pesan WhatsApp.
+ * Placeholder yang didukung: {brand} {service} {barber} {branch} {package}
+ */
+export interface WhatsAppConfig {
+  /** Format internasional tanpa +, 0 di depan, spasi, atau strip. Contoh: 6281234567890 */
+  number: string;
+  /** Nomor yang ditampilkan ke pengunjung. Contoh: 0812-3456-7890 */
+  displayNumber: string;
+  templates: {
+    general: string;
+    service: string;
+    barber: string;
+    branch: string;
+    package: string;
+    question: string;
+  };
+}
+
+/** Label UI generik (tombol, aria-label, state kosong) agar komponen bebas teks hardcode. */
+export interface UiLabels {
+  skipToContent: string;
+  mainNavigation: string;
+  openMenu: string;
+  closeMenu: string;
+  bookNow: string;
+  bookNowShort: string;
+  book: string;
+  /** Mendukung placeholder {name} */
+  bookWithBarber: string;
+  floatingWhatsApp: string;
+  floatingWhatsAppLabel: string;
+  loading: string;
+  empty: string;
+  error: string;
+  placeholderBadge: string;
+  priceFrom: string;
+  previous: string;
+  next: string;
+  close: string;
+  /** Mendukung placeholder {current} dan {total} */
+  counter: string;
+  opensInNewTab: string;
+  /** Pesan aksesibilitas bullet slider. Placeholder Swiper: {{index}} */
+  goToSlide: string;
+  /** Label wilayah yang bisa di-scroll horizontal (barber di mobile) */
+  scrollHint: string;
+  socialLinks: string;
+  /** aria-label tombol tutup pengumuman */
+  dismissAnnouncement: string;
+  announcementRegion: string;
+}
+
+export interface SeoConfig {
+  title: string;
+  description: string;
+  /** URL kanonis situs */
+  url: string;
+  ogImage: string;
+  locale: string;
+}
+
+export interface FooterContent {
+  description: string;
+  contactTitle: string;
+  exploreTitle: string;
+  hoursTitle: string;
+  hoursSummary: { label: string; value: string }[];
+  /** Mendukung placeholder {year} dan {brand} */
+  copyright: string;
+  /** Kredit template Colorlib (wajib dipertahankan sesuai lisensi CC BY 3.0) */
+  credit: { prefix: string; label: string; href: string };
+}
+
+export interface SiteContent {
+  brandName: string;
+  city: string;
+  logo: {
+    horizontal: ImageAsset;
+    stacked: ImageAsset;
+    mark: ImageAsset;
+  };
+  nav: NavItem[];
+  whatsapp: WhatsAppConfig;
+  email: string;
+  /** Alamat utama (CMS Site Settings → address) */
+  address?: string;
+  priceRange: string;
+  seo: SeoConfig;
+  ui: UiLabels;
+  footer: FooterContent;
+}

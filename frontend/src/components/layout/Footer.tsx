@@ -1,0 +1,104 @@
+import { useSite } from '@/lib/SiteContext';
+import { useContent } from '@/lib/useContent';
+import { getLocations } from '@/lib/content';
+import { useFabZone } from '@/lib/fabZones';
+import { asset } from '@/lib/asset';
+import { bookingLink, fillTemplate } from '@/lib/whatsapp';
+import { formatAddress } from '@/lib/format';
+import { Container } from '@/components/ui/Container';
+import { Icon } from '@/components/ui/Icon';
+import styles from './Footer.module.css';
+
+export function Footer() {
+  const { site, socials } = useSite();
+  const locations = useContent(getLocations);
+  const zoneRef = useFabZone<HTMLElement>(0);
+  const primary = locations.status === 'success' ? locations.data.items[0] : undefined;
+  const address = site.address ?? (primary ? formatAddress(primary.address) : undefined);
+  const { footer, logo } = site;
+
+  return (
+    <footer id="kontak" ref={zoneRef} className={styles.footer}>
+      <Container>
+        <div className={styles.grid}>
+          <div className={styles.brand}>
+            <a href="#top" className={styles.logo}>
+              <img src={asset(logo.stacked.src)} width={logo.stacked.width} height={logo.stacked.height} alt={logo.stacked.alt} loading="lazy" />
+            </a>
+            <p>{footer.description}</p>
+            <ul className={styles.socials} aria-label={site.ui.socialLinks}>
+              {socials.map((s) => (
+                <li key={s.platform}>
+                  <a href={s.url} target="_blank" rel="noopener noreferrer" aria-label={`${s.label} ${s.handle}`}>
+                    <Icon name={s.platform} size={19} />
+                  </a>
+                </li>
+              ))}
+              <li>
+                <a href={bookingLink(site, 'question')} target="_blank" rel="noopener noreferrer" aria-label={`WhatsApp ${site.whatsapp.displayNumber}`}>
+                  <Icon name="whatsapp" size={19} />
+                </a>
+              </li>
+            </ul>
+          </div>
+
+          <div>
+            <h2 className={styles.colTitle}>{footer.contactTitle}</h2>
+            <ul className={styles.contact}>
+              {address && (
+                <li>
+                  <Icon name="pin" />
+                  <span>{address}</span>
+                </li>
+              )}
+              <li>
+                <Icon name="whatsapp" />
+                <a href={bookingLink(site, 'question')} target="_blank" rel="noopener noreferrer">
+                  {site.whatsapp.displayNumber}
+                </a>
+              </li>
+              <li>
+                <Icon name="mail" />
+                <a href={`mailto:${site.email}`}>{site.email}</a>
+              </li>
+            </ul>
+          </div>
+
+          <nav aria-label={footer.exploreTitle}>
+            <h2 className={styles.colTitle}>{footer.exploreTitle}</h2>
+            <ul className={styles.links}>
+              {site.nav.map((item) => (
+                <li key={item.sectionId}>
+                  <a href={`#${item.sectionId}`}>{item.label}</a>
+                </li>
+              ))}
+            </ul>
+          </nav>
+
+          <div>
+            <h2 className={styles.colTitle}>{footer.hoursTitle}</h2>
+            <ul className={styles.hours}>
+              {footer.hoursSummary.map((h) => (
+                <li key={h.label}>
+                  <span>{h.label}</span>
+                  <span>{h.value}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+
+        <div className={styles.bottom}>
+          <p>{fillTemplate(footer.copyright, { year: new Date().getFullYear(), brand: site.brandName })}</p>
+          {/* Link back to Colorlib can't be removed. Template is licensed under CC BY 3.0. */}
+          <p>
+            {footer.credit.prefix}{' '}
+            <a href={footer.credit.href} target="_blank" rel="noopener noreferrer">
+              {footer.credit.label}
+            </a>
+          </p>
+        </div>
+      </Container>
+    </footer>
+  );
+}

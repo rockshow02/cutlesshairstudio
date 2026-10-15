@@ -1,0 +1,140 @@
+.categories {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-7) var(--space-8);
+}
+
+.categoryName {
+  padding-bottom: var(--space-3);
+  border-bottom: 2px solid var(--c-ink);
+  font-size: var(--fs-md);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+/* Nama kiri (boleh turun baris), harga kanan (tidak pernah terpotong) */
+.row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: baseline;
+  gap: var(--space-4);
+  padding-block: var(--space-4);
+  border-bottom: 1px solid var(--c-line-dark);
+}
+.itemName {
+  font-weight: 600;
+}
+.itemName small {
+  display: block;
+  margin-top: 2px;
+  font-size: 0.8125rem;
+  font-weight: 400;
+  color: var(--c-ink-dim);
+}
+.badge {
+  display: inline-block;
+  margin-left: var(--space-2);
+  padding: 1px var(--space-2);
+  border-radius: 2px;
+  background: var(--c-ink);
+  color: var(--c-bone);
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  vertical-align: 2px;
+  white-space: nowrap;
+}
+.itemPrice {
+  font-weight: 700;
+  text-align: right;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.packagesTitle {
+  margin: var(--space-8) 0 var(--space-5);
+  font-size: clamp(1.25rem, 1rem + 1vw, 1.75rem);
+}
+
+.packages {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-4);
+}
+.packages > li {
+  min-width: 0;
+}
+
+.tag {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--c-taupe-dark);
+}
+.featured .tag {
+  color: var(--c-sand);
+}
+.pkgName {
+  margin: var(--space-3) 0 var(--space-2);
+  font-size: 1.35rem;
+}
+.pkgPrice {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 var(--space-2);
+  margin-bottom: var(--space-5);
+  font-family: var(--f-display);
+  font-stretch: 125%;
+  font-weight: 800;
+  font-size: clamp(1.5rem, 1.2rem + 1vw, 1.9rem);
+  letter-spacing: -0.02em;
+}
+.pkgPrice small {
+  font-family: var(--f-body);
+  font-stretch: normal;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  letter-spacing: 0;
+  white-space: nowrap;
+  opacity: 0.75;
+}
+
+.features li {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+  padding-block: var(--space-2);
+  border-top: 1px solid var(--c-line-dark);
+  font-size: 0.9375rem;
+}
+.features li::before {
+  content: '';
+  flex: none;
+  width: 7px;
+  height: 7px;
+  background: var(--c-taupe);
+  transform: translateY(-1px) rotate(45deg);
+}
+.featured .features li {
+  border-color: var(--c-line-light);
+}
+.featured .features li::before {
+  background: var(--c-sand);
+}
+
+@media (min-width: 768px) {
+  .categories {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 900px) {
+  /* Kartu paket rata tinggi; kartu unggulan tidak lagi digeser (dulu translateY menimpa baris) */
+  .packages {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--space-5);
+  }
+}

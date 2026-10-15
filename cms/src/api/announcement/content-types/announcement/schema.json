@@ -1,0 +1,42 @@
+{
+  "kind": "collectionType",
+  "collectionName": "announcements",
+  "info": {
+    "singularName": "announcement",
+    "pluralName": "announcements",
+    "displayName": "Pengumuman",
+    "description": "Bar tipis di atas menu, mis. info tutup atau jam khusus."
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "message": {
+      "type": "string",
+      "required": true,
+      "maxLength": 160
+    },
+    "type": {
+      "type": "enumeration",
+      "required": true,
+      "default": "Info",
+      "enum": [
+        "Info",
+        "Tutup",
+        "Jam Khusus"
+      ]
+    },
+    "startDate": {
+      "type": "datetime"
+    },
+    "endDate": {
+      "type": "datetime"
+    },
+    "isActive": {
+      "type": "boolean",
+      "default": true,
+      "required": true
+    }
+  }
+}

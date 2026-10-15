@@ -1,0 +1,41 @@
+.skeletonWrap {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+.skeletonTitle,
+.skeletonBlock {
+  border-radius: var(--radius);
+  background: var(--sk);
+  animation: pulse 1.4s ease-in-out infinite;
+}
+
+.skeletonTitle {
+  width: min(28rem, 80%);
+  height: 3rem;
+}
+
+.skeletonGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr));
+  gap: var(--space-4);
+}
+
+.skeletonBlock {
+  aspect-ratio: 4 / 3;
+}
+
+.dark { --sk: var(--c-skeleton-dark); color: var(--c-bone-dim); }
+.light { --sk: var(--c-skeleton-light); color: var(--c-ink-dim); }
+
+.message {
+  padding: var(--space-6);
+  border: 1px dashed currentColor;
+  border-radius: var(--radius);
+  text-align: center;
+}
+
+@keyframes pulse {
+  50% { opacity: 0.5; }
+}

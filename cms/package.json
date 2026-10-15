@@ -1,0 +1,69 @@
+{
+  "name": "cutless-cms",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Headless CMS (Strapi v5) untuk website Cutless Hair Studio",
+  "scripts": {
+    "develop": "strapi develop",
+    "dev": "strapi develop",
+    "start": "strapi start",
+    "build": "strapi build",
+    "strapi": "strapi",
+    "console": "strapi console",
+    "typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p scripts/tsconfig.json",
+    "seed": "node scripts/run-seed.mjs"
+  },
+  "dependencies": {
+    "@strapi/plugin-users-permissions": "5.55.1",
+    "@strapi/provider-upload-cloudinary": "5.55.1",
+    "@strapi/strapi": "5.55.1",
+    "@strapi/utils": "5.55.1",
+    "better-sqlite3": "12.4.1",
+    "pg": "8.16.3",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "react-router-dom": "^6.30.3",
+    "styled-components": "^6.1.19"
+  },
+  "devDependencies": {
+    "@types/node": "^20.19.0",
+    "@types/react": "^18.3.23",
+    "@types/react-dom": "^18.3.7",
+    "esbuild": "0.28.2",
+    "typescript": "~5.8.3"
+  },
+  "engines": {
+    "node": ">=20.0.0 <=22.x.x",
+    "npm": ">=6.0.0"
+  },
+  "strapi": {
+    "uuid": "2ea0abd8-e32a-4227-abe8-11eb9ae1a790",
+    "telemetryDisabled": true
+  },
+  "overrides": {
+    "@strapi/admin": "5.55.1",
+    "@strapi/cloud-cli": "5.55.1",
+    "@strapi/content-manager": "5.55.1",
+    "@strapi/content-releases": "5.55.1",
+    "@strapi/content-type-builder": "5.55.1",
+    "@strapi/core": "5.55.1",
+    "@strapi/data-transfer": "5.55.1",
+    "@strapi/database": "5.55.1",
+    "@strapi/email": "5.55.1",
+    "@strapi/generators": "5.55.1",
+    "@strapi/i18n": "5.55.1",
+    "@strapi/logger": "5.55.1",
+    "@strapi/openapi": "5.55.1",
+    "@strapi/permissions": "5.55.1",
+    "@strapi/plugin-users-permissions": "5.55.1",
+    "@strapi/provider-email-sendmail": "5.55.1",
+    "@strapi/provider-upload-cloudinary": "5.55.1",
+    "@strapi/provider-upload-local": "5.55.1",
+    "@strapi/review-workflows": "5.55.1",
+    "@strapi/strapi": "5.55.1",
+    "@strapi/types": "5.55.1",
+    "@strapi/typescript-utils": "5.55.1",
+    "@strapi/upload": "5.55.1",
+    "@strapi/utils": "5.55.1"
+  }
+}
