@@ -1,9 +1,12 @@
 import type { CSSProperties } from 'react';
 import { getHero } from '@/lib/content';
 import { useContent } from '@/lib/useContent';
-import { useSite } from '@/lib/SiteContext';
 import { useFabZone } from '@/lib/fabZones';
-import { resolveCta } from '@/lib/whatsapp';
+import { useBranch } from '@/lib/BranchContext';
+import { useCtaTarget } from '@/lib/useBooking';
+import { getOpenStatus } from '@/lib/branchHours';
+import { joinIndonesian, operatingCities } from '@/lib/contentTransforms';
+import { fillTemplate } from '@/lib/whatsapp';
 import { asset } from '@/lib/asset';
 import type { HeroContent } from '@/types';
 import { Button } from '@/components/ui/Button';
@@ -29,9 +32,16 @@ export function Hero() {
 }
 
 function HeroBody({ hero }: { hero: HeroContent }) {
-  const { site } = useSite();
-  const primary = resolveCta(hero.primaryCta, site);
-  const secondary = resolveCta(hero.secondaryCta, site);
+  const { branches, selected, copy, announcements, openPicker } = useBranch();
+  const ctaTarget = useCtaTarget();
+  const primary = ctaTarget(hero.primaryCta);
+  const secondary = ctaTarget(hero.secondaryCta);
+
+  // Ringkasan dihitung dari data cabang, mis. "2 cabang · Bogor & Cibubur"
+  const cities = joinIndonesian(operatingCities(branches));
+  const operating = branches.filter((b) => b.status !== 'Segera Dibuka').length;
+  const summary = fillTemplate(copy.labels.summary, { count: operating, cities });
+  const status = selected ? getOpenStatus(selected, copy.labels, announcements) : undefined;
 
   return (
     <>
@@ -49,7 +59,7 @@ function HeroBody({ hero }: { hero: HeroContent }) {
 
       <Container className={styles.content}>
         <p className={`${styles.kicker} ${styles.anim}`} style={delay(0.1)}>
-          {hero.kicker}
+          {fillTemplate(hero.kicker, { cities })}
         </p>
         <h1 id="hero-title" className={`${styles.title} ${styles.anim}`} style={delay(0.2)}>
           {hero.titleLines.map((line) => (
@@ -60,7 +70,7 @@ function HeroBody({ hero }: { hero: HeroContent }) {
           {hero.subtitle}
         </p>
         <div className={`${styles.ctas} ${styles.anim}`} style={delay(0.4)}>
-          <Button href={primary.href} external={primary.external} variant="light" icon="whatsapp">
+          <Button href={primary.href} external={primary.external} onClick={primary.onClick} variant="light" icon="whatsapp">
             {hero.primaryCta.label}
           </Button>
           <Button href={secondary.href} external={secondary.external} variant="ghost">
@@ -69,18 +79,26 @@ function HeroBody({ hero }: { hero: HeroContent }) {
         </div>
       </Container>
 
-      {hero.highlights.length > 0 && (
-        <Container className={`${styles.meta} ${styles.anim}`} style={delay(0.55)}>
-          <ul className={styles.highlights}>
-            {hero.highlights.map((h) => (
-              <li key={h.text}>
-                <Icon name={h.icon} className={h.icon === 'star' ? styles.star : undefined} />
-                {h.text}
-              </li>
-            ))}
-          </ul>
-        </Container>
-      )}
+      <Container className={`${styles.meta} ${styles.anim}`} style={delay(0.55)}>
+        <ul className={styles.highlights}>
+          <li>
+            <Icon name="pin" />
+            {selected ? (
+              <span>
+                <strong className={styles.branchName}>{fillTemplate(copy.labels.yourBranch, { branch: selected.name })}</strong>
+                {status?.label && <span className={styles.status}> · {status.label}</span>}
+              </span>
+            ) : (
+              <span>{summary}</span>
+            )}
+          </li>
+          <li>
+            <button type="button" className={styles.pickBtn} onClick={() => openPicker()}>
+              {selected ? copy.labels.changeBranch : copy.labels.pickBranch}
+            </button>
+          </li>
+        </ul>
+      </Container>
     </>
   );
 }

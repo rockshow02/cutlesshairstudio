@@ -1,10 +1,10 @@
 [
   {
-    "name": "Water Based Pomade (contoh)",
+    "name": "Water Based Pomade",
     "category": "Pomade",
     "price": 95000,
     "size": "100 gr",
-    "description": "Contoh produk. Hold medium, kilau natural, mudah dibilas. Ganti lewat Pages CMS.",
+    "description": "Hold medium, kilau natural, mudah dibilas.",
     "image": "/uploads/products/img69502.webp",
     "badge": "Best Seller",
     "inStock": true,
@@ -12,54 +12,54 @@
     "isActive": true
   },
   {
-    "name": "Matte Hair Clay (contoh)",
+    "name": "Matte Hair Clay",
     "category": "Hair Clay",
     "price": 110000,
     "size": "80 gr",
-    "description": "Contoh produk. Hold kuat, hasil matte untuk textured crop dan messy look. Ganti lewat Pages CMS.",
+    "description": "Hold kuat, hasil matte untuk textured crop dan messy look.",
     "inStock": true,
     "order": 20,
     "isActive": true
   },
   {
-    "name": "Texture Hair Powder (contoh)",
+    "name": "Texture Hair Powder",
     "category": "Hair Powder",
     "price": 85000,
     "compareAtPrice": 100000,
     "size": "20 gr",
-    "description": "Contoh produk. Tambah volume instan dan tekstur ringan tanpa terasa berat. Ganti lewat Pages CMS.",
+    "description": "Tambah volume instan dan tekstur ringan tanpa terasa berat.",
     "badge": "Promo",
     "inStock": true,
     "order": 30,
     "isActive": true
   },
   {
-    "name": "Hair Tonic (contoh)",
+    "name": "Hair Tonic",
     "category": "Hair Tonic",
     "price": 75000,
     "size": "100 ml",
-    "description": "Contoh produk. Bantu merawat kulit kepala dan memberi sensasi segar setelah keramas. Ganti lewat Pages CMS.",
+    "description": "Bantu merawat kulit kepala dan memberi sensasi segar setelah keramas.",
     "badge": "Baru",
     "inStock": true,
     "order": 40,
     "isActive": true
   },
   {
-    "name": "Sea Salt Spray (contoh)",
+    "name": "Sea Salt Spray",
     "category": "Hair Spray",
     "price": 90000,
     "size": "150 ml",
-    "description": "Contoh produk. Pre-styling untuk tekstur beach wave sebelum blow-dry. Ganti lewat Pages CMS.",
+    "description": "Pre-styling untuk tekstur beach wave sebelum blow-dry.",
     "inStock": false,
     "order": 50,
     "isActive": true
   },
   {
-    "name": "Beard Oil (contoh)",
+    "name": "Beard Oil",
     "category": "Beard Care",
     "price": 80000,
     "size": "30 ml",
-    "description": "Contoh produk. Melembapkan jenggot dan kulit, bikin jenggot lebih rapi dan lembut. Ganti lewat Pages CMS.",
+    "description": "Melembapkan jenggot dan kulit, bikin jenggot lebih rapi dan lembut.",
     "inStock": true,
     "order": 60,
     "isActive": true

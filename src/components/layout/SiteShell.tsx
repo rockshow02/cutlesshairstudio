@@ -1,16 +1,14 @@
-import { useEffect, useMemo, useState, type ReactNode } from 'react';
-import { getSite, getSocials, FATAL_ERROR_MESSAGE } from '@/lib/content';
+import { useEffect, useState, type ReactNode } from 'react';
+import { getAnnouncements, getBranchCopy, getBranches, getSite, getSocials, FATAL_ERROR_MESSAGE } from '@/lib/content';
 import { useContent } from '@/lib/useContent';
 import { SiteProvider } from '@/lib/SiteContext';
-import { useDocumentMeta } from '@/lib/useDocumentMeta';
+import { BranchProvider } from '@/lib/BranchContext';
 import { useScrollToHash } from '@/lib/useScrollToHash';
-import type { SeoConfig } from '@/types';
 import { Preloader } from './Preloader';
 import { AnnouncementBar } from './AnnouncementBar';
 import { Navbar } from './Navbar';
 import { Footer } from './Footer';
 import { FloatingWhatsApp } from './FloatingWhatsApp';
-import { StructuredData } from './StructuredData';
 
 /** Preloader tampil min. 700 ms (agar animasi logo terlihat) dan maks. 1,5 detik. */
 const PRELOADER_MIN = 700;
@@ -19,19 +17,25 @@ const PRELOADER_MAX = 1500;
 interface SiteShellProps {
   /** Isi <main> halaman */
   children: ReactNode;
-  /** Override SEO per halaman (mis. judul halaman Produk) */
-  seo?: Partial<SeoConfig>;
+  /** Halaman cabang (/cabang/:slug/): section memakai cabang ini, bukan pilihan pengunjung */
+  pageBranchSlug?: string;
 }
 
 /**
  * Kerangka bersama semua halaman: preloader, pengumuman, navbar, footer, tombol WA melayang,
- * data terstruktur, dan meta SEO. Halaman cukup mengisi `children`.
+ * dan pemilih cabang. Halaman cukup mengisi `children`.
  */
-export function SiteShell({ children, seo }: SiteShellProps) {
+export function SiteShell({ children, pageBranchSlug }: SiteShellProps) {
   const siteState = useContent(getSite);
   const socialsState = useContent(getSocials);
+  const branchesState = useContent(getBranches);
+  const branchCopyState = useContent(getBranchCopy);
+  // Semua pengumuman aktif (dipakai menghitung status buka "Tutup"/"Jam Khusus" per cabang)
+  const announcementsState = useContent(() => getAnnouncements());
   const [preloaderDone, setPreloaderDone] = useState(false);
-  const ready = siteState.status === 'success' && socialsState.status === 'success';
+  const states = [siteState, socialsState, branchesState, branchCopyState, announcementsState];
+  const ready = states.every((st) => st.status === 'success');
+  const failed = states.some((st) => st.status === 'error');
 
   useEffect(() => {
     const t = window.setTimeout(() => setPreloaderDone(true), PRELOADER_MAX);
@@ -49,29 +53,31 @@ export function SiteShell({ children, seo }: SiteShellProps) {
     if (preloaderDone) document.documentElement.dataset.ready = 'true';
   }, [preloaderDone]);
 
-  const pageSeo = useMemo(
-    () => (siteState.data ? { ...siteState.data.seo, ...seo } : undefined),
-    [siteState.data, seo?.title, seo?.description, seo?.url],
-  );
-  useDocumentMeta(pageSeo);
+  // Title/meta/canonical tiap halaman ditulis statis saat build dari data CMS (scripts/vite-content-plugin.ts)
   // Link dari halaman lain ke section (mis. /produk/ → /#harga)
   useScrollToHash(preloaderDone && ready);
 
   return (
     <>
       <Preloader done={preloaderDone} mark={siteState.data?.logo.mark} />
-      {ready ? (
+      {ready && siteState.data && socialsState.data && branchesState.data && branchCopyState.data && announcementsState.data ? (
         <SiteProvider value={{ site: siteState.data, socials: socialsState.data }}>
-          <AnnouncementBar />
-          <Navbar />
-          <main id="main" tabIndex={-1}>
-            {children}
-          </main>
-          <Footer />
-          <FloatingWhatsApp />
-          <StructuredData />
+          <BranchProvider
+            branches={branchesState.data}
+            copy={branchCopyState.data}
+            announcements={announcementsState.data}
+            pageBranchSlug={pageBranchSlug}
+          >
+            <AnnouncementBar />
+            <Navbar />
+            <main id="main" tabIndex={-1}>
+              {children}
+            </main>
+            <Footer />
+            <FloatingWhatsApp />
+          </BranchProvider>
         </SiteProvider>
-      ) : siteState.status === 'error' || socialsState.status === 'error' ? (
+      ) : failed ? (
         <main id="main" style={{ padding: '6rem 1.25rem', textAlign: 'center' }}>
           <p role="alert">{FATAL_ERROR_MESSAGE}</p>
         </main>

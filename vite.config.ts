@@ -10,11 +10,13 @@ export default defineConfig({
     alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) },
   },
   build: {
-    // Multi-halaman statis: / (beranda) dan /produk/
+    // Multi-halaman statis: / (beranda), /produk/, /cabang/ (+ /cabang/<slug>/ hasil prerender)
     rollupOptions: {
       input: {
         main: fileURLToPath(new URL('./index.html', import.meta.url)),
         produk: fileURLToPath(new URL('./produk/index.html', import.meta.url)),
+        // Template halaman cabang: diprerender per cabang ke /cabang/<slug>/ oleh contentPlugin
+        cabang: fileURLToPath(new URL('./cabang/index.html', import.meta.url)),
       },
     },
   },

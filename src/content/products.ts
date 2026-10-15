@@ -25,6 +25,9 @@ export const productsCopy: ProductsCopy = {
     alsoAt: 'Juga di',
     viewAll: 'Lihat semua produk',
     empty: 'Belum ada produk di kategori ini.',
+    unavailableTitle: 'Produk segera hadir.',
+    unavailableText: 'Kami sedang menyiapkan katalog produk. Sementara itu, tanyakan langsung ke hairstylist saat kamu datang.',
+    backHome: 'Kembali ke beranda',
   },
   // TODO: sesuaikan cara pemesanan (ongkir, area kirim, pembayaran)
   howToOrder: {

@@ -1,0 +1,160 @@
+/* Halaman /cabang/ & /cabang/:slug/: ruang untuk navbar fixed di atas */
+.page {
+  padding-top: calc(var(--header-offset) + var(--nav-safe-top) + var(--space-8));
+}
+
+.title {
+  font-size: clamp(2rem, 1.2rem + 4vw, 4rem);
+  line-height: 1.02;
+  letter-spacing: -0.03em;
+  text-transform: uppercase;
+}
+.title span {
+  display: block;
+  color: var(--c-sand-light);
+}
+.intro {
+  max-width: 36rem;
+  margin-top: var(--space-4);
+  color: var(--c-bone-dim);
+}
+
+/* ---------- Hero halaman cabang ---------- */
+.heroGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-7);
+  align-items: center;
+}
+.crumbs {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+  font-size: var(--fs-sm);
+  color: var(--c-bone-dim);
+}
+.crumbs a {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.status {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-3);
+  margin-top: var(--space-5);
+  font-weight: 600;
+}
+.ctas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin-top: var(--space-6);
+}
+.heroPhoto {
+  min-width: 0;
+}
+.photo {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  border-radius: var(--radius);
+}
+
+.badge {
+  padding: 2px var(--space-2);
+  border-radius: 2px;
+  background: var(--c-bone);
+  color: var(--c-ink);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.badge[data-status='Segera Dibuka'] {
+  background: var(--c-sand);
+}
+.badge[data-status='Tutup Sementara'] {
+  background: var(--c-concrete);
+  color: var(--c-bone);
+}
+
+/* ---------- Daftar cabang ---------- */
+.indexHead {
+  max-width: 44rem;
+  margin-bottom: var(--space-7);
+}
+.cards {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-4);
+}
+.cards > li {
+  min-width: 0;
+}
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  height: 100%;
+  padding: var(--space-6) var(--space-5);
+  border: 1px solid var(--c-line-light);
+  border-radius: var(--radius);
+  background: var(--c-ink-2);
+}
+.cardHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+.city {
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--c-sand);
+}
+.cardTitle {
+  font-size: var(--fs-h3);
+}
+.cardTitle a:hover {
+  color: var(--c-sand-light);
+}
+.address {
+  font-size: var(--fs-sm);
+  color: var(--c-bone-dim);
+}
+.cardStatus {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+}
+.cardActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-top: auto;
+  padding-top: var(--space-3);
+}
+
+@media (min-width: 768px) {
+  .cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1024px) {
+  .heroGrid {
+    grid-template-columns: minmax(0, 6fr) minmax(0, 5fr);
+    gap: var(--space-8);
+  }
+  .cards {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}

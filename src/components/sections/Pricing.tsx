@@ -2,7 +2,9 @@ import { getPricing } from '@/lib/content';
 import { useContent } from '@/lib/useContent';
 import { useSite } from '@/lib/SiteContext';
 import { formatPrice, formatRupiah } from '@/lib/format';
-import { bookingLink } from '@/lib/whatsapp';
+import { fillTemplate } from '@/lib/whatsapp';
+import { useBranch } from '@/lib/BranchContext';
+import { useBooking } from '@/lib/useBooking';
 import { Section } from '@/components/ui/Section';
 import { SectionState } from '@/components/ui/SectionState';
 import { SectionTitle } from '@/components/ui/SectionTitle';
@@ -12,8 +14,11 @@ import { Reveal } from '@/components/ui/Reveal';
 import styles from './Pricing.module.css';
 
 export function Pricing() {
-  const state = useContent(getPricing);
+  const { effective, pageBranch, copy, openPicker } = useBranch();
+  // Harga sesuai cabang (harga khusus dari branchPrices, atau harga dasar)
+  const state = useContent(() => getPricing(effective?.slug), [effective?.slug]);
   const { site } = useSite();
+  const book = useBooking();
 
   return (
     <Section id="harga" tone="light" labelledBy="harga-title">
@@ -26,6 +31,19 @@ export function Pricing() {
         {(data) => (
           <>
             <SectionTitle heading={data.heading} id="harga-title" tone="light" />
+
+            {(data.branchName || data.hasBranchPrices) && (
+              <p className={styles.branchNote}>
+                <span>
+                  {data.branchName ? fillTemplate(copy.labels.priceFor, { branch: data.branchName }) : copy.labels.priceVaries}
+                </span>
+                {!pageBranch && (
+                  <button type="button" className={styles.branchBtn} onClick={() => openPicker()}>
+                    {data.branchName ? copy.labels.changeBranch : copy.labels.pickBranch}
+                  </button>
+                )}
+              </p>
+            )}
 
             <div className={styles.categories}>
               {data.categories
@@ -53,7 +71,9 @@ export function Pricing() {
               <>
                 <h3 className={styles.packagesTitle}>{data.packagesTitle}</h3>
                 <ul className={styles.packages}>
-                  {data.packages.map((pkg, i) => (
+                  {data.packages.map((pkg, i) => {
+                    const target = book({ kind: 'package', vars: { package: pkg.name } });
+                    return (
                     <Reveal as="li" key={pkg.id} delay={i * 0.06}>
                       <Card tone={pkg.featured ? 'featured' : 'light'} className={pkg.featured ? styles.featured : undefined}>
                         <p className={styles.tag}>{pkg.tag}</p>
@@ -69,8 +89,9 @@ export function Pricing() {
                         </ul>
                         <CardFooter>
                           <Button
-                            href={bookingLink(site, 'package', { package: pkg.name })}
-                            external
+                            href={target.href}
+                            external={target.external}
+                            onClick={target.onClick}
                             block
                             variant={pkg.featured ? 'light' : 'outline-dark'}
                           >
@@ -80,7 +101,8 @@ export function Pricing() {
                         </CardFooter>
                       </Card>
                     </Reveal>
-                  ))}
+                    );
+                  })}
                 </ul>
               </>
             )}

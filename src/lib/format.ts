@@ -1,5 +1,3 @@
-import type { Address } from '@/types';
-
 const rupiahFormatter = new Intl.NumberFormat('id-ID', {
   style: 'currency',
   currency: 'IDR',
@@ -27,14 +25,6 @@ export function formatNumber(value: number): string {
 /** "10:00" -> "10.00" (penulisan jam gaya Indonesia) */
 export function formatTime(value: string): string {
   return value.replace(':', '.');
-}
-
-/** Alamat siap tampil: pakai teks utuh dari CMS bila ada, selain itu gabungkan field terstruktur. */
-export function formatAddress(address: Address): string {
-  if (address.formatted) return address.formatted;
-  return [address.street, address.area, `${address.city}, ${address.province} ${address.postalCode}`.trim()]
-    .filter(Boolean)
-    .join(', ');
 }
 
 const jakartaDate = new Intl.DateTimeFormat('id-ID', {

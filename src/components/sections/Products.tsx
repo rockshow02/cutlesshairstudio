@@ -5,7 +5,7 @@ import { useSite } from '@/lib/SiteContext';
 import { formatRupiah } from '@/lib/format';
 import { asset } from '@/lib/asset';
 import { pageUrl } from '@/lib/navigation';
-import { bookingLink } from '@/lib/whatsapp';
+import { useBooking } from '@/lib/useBooking';
 import type { Product, ProductCategory, ProductsContent } from '@/types';
 import { Section } from '@/components/ui/Section';
 import { SectionState } from '@/components/ui/SectionState';
@@ -25,6 +25,26 @@ interface ProductsProps {
 
 export function Products({ variant }: ProductsProps) {
   const state = useContent(getProducts);
+  const { site } = useSite();
+
+  // Dimatikan dari Pengaturan Situs → section beranda hilang, halaman /produk/ hanya berisi pemberitahuan
+  if (!site.features.products) {
+    if (variant === 'teaser' || state.status !== 'success') return null;
+    return (
+      <Section id="produk" tone="dark" labelledBy="produk-title" className={styles.page}>
+        <Reveal className={styles.pageHead}>
+          <Kicker>{state.data.heading.kicker}</Kicker>
+          <h1 id="produk-title" className={styles.pageTitle}>
+            {state.data.labels.unavailableTitle}
+          </h1>
+          <p className={styles.pageIntro}>{state.data.labels.unavailableText}</p>
+        </Reveal>
+        <Button href={pageUrl('/')} variant="light" iconEnd="arrow">
+          {state.data.labels.backHome}
+        </Button>
+      </Section>
+    );
+  }
 
   if (variant === 'teaser') {
     // Section opsional di beranda: tidak dirender bila belum ada produk (tanpa ruang kosong)
@@ -136,8 +156,10 @@ function ProductGrid({ items, data }: { items: Product[]; data: ProductsContent 
 
 function ProductCard({ product, labels }: { product: Product; labels: ProductsContent['labels'] }) {
   const { site } = useSite();
+  const book = useBooking();
   const fullName = product.size ? `${product.name} (${product.size})` : product.name;
-  const waHref = bookingLink(site, product.inStock ? 'product' : 'productRestock', { product: fullName });
+  // Pesanan ke WhatsApp cabang terpilih (belum memilih → pemilih cabang dulu)
+  const order = book({ kind: product.inStock ? 'product' : 'productRestock', vars: { product: fullName } });
   const markets = [
     product.shopeeUrl && { label: 'Shopee', url: product.shopeeUrl },
     product.tokopediaUrl && { label: 'Tokopedia', url: product.tokopediaUrl },
@@ -177,7 +199,7 @@ function ProductCard({ product, labels }: { product: Product; labels: ProductsCo
         </p>
 
         <CardFooter className={styles.foot}>
-          <Button href={waHref} external size="sm" block variant={product.inStock ? 'light' : 'ghost'} icon="whatsapp">
+          <Button href={order.href} external={order.external} onClick={order.onClick} size="sm" block variant={product.inStock ? 'light' : 'ghost'} icon="whatsapp">
             <span className={styles.longLabel}>{product.inStock ? labels.order : labels.askRestock}</span>
             <span className={styles.shortLabel}>{product.inStock ? labels.orderShort : labels.askRestock}</span>
             <span className="visually-hidden"> {fullName}</span>

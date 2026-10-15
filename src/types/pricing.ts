@@ -15,6 +15,8 @@ export interface PriceItem {
   /** true = tampil "mulai Rp..." */
   priceFrom?: boolean;
   badge?: PriceBadge;
+  /** true bila belum memilih cabang dan harga berbeda antar cabang (tampil "mulai" harga terendah) */
+  varies?: boolean;
 }
 
 export interface PriceCategory {
@@ -40,6 +42,11 @@ export interface PricePackage {
 
 export interface PricingContent {
   heading: SectionHeading;
+  /** Cabang yang harganya ditampilkan (kosong = harga dasar/terendah) */
+  branchSlug?: string;
+  branchName?: string;
+  /** Ada item dengan harga khusus cabang */
+  hasBranchPrices: boolean;
   categories: PriceCategory[];
   packagesTitle: string;
   packages: PricePackage[];

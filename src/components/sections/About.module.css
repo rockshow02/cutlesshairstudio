@@ -108,3 +108,8 @@
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 }
+
+/* Angka statistik visual (teks dari data-value, bukan konten DOM) */
+.counter::before {
+  content: attr(data-value);
+}

@@ -16,6 +16,24 @@ export interface AboutStat {
   label: string;
 }
 
+/** Teks statis section Tentang (angka statistik dihitung dari data cabang/barber & pengaturan) */
+export interface AboutCopy {
+  heading: SectionHeading;
+  lead: string;
+  body: string[];
+  image: ImageAsset;
+  imageCaption: string;
+  values: AboutValue[];
+  statLabels: {
+    branches: string;
+    barbers: string;
+    customers: string;
+    foundedYear: string;
+    rating: string;
+    reviewCount: string;
+  };
+}
+
 export interface AboutContent {
   heading: SectionHeading;
   lead: string;

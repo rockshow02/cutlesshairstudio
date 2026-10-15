@@ -1,0 +1,77 @@
+[
+  {
+    "slug": "bogor-bantarjati",
+    "name": "Bogor Bantarjati",
+    "city": "Bogor",
+    "province": "Jawa Barat",
+    "address": "Jl Pandawa Raya No.4 Blk B1, RT.07/RW.15, Bantarjati, Kec. Bogor Utara, Kota Bogor, Jawa Barat 16152",
+    "googleMapsUrl": "https://maps.app.goo.gl/7aYPRv1HzyUxaGP37",
+    "latitude": "",
+    "longitude": "",
+    "whatsappNumber": "6281234567890",
+    "timezone": "Asia/Jakarta",
+    "openingHours": [
+      {
+        "day": "Senin",
+        "openTime": "10:00",
+        "closeTime": "21:00",
+        "isClosed": false
+      },
+      {
+        "day": "Selasa",
+        "openTime": "10:00",
+        "closeTime": "21:00",
+        "isClosed": false
+      },
+      {
+        "day": "Rabu",
+        "openTime": "10:00",
+        "closeTime": "21:00",
+        "isClosed": false
+      },
+      {
+        "day": "Kamis",
+        "openTime": "10:00",
+        "closeTime": "21:00",
+        "isClosed": false
+      },
+      {
+        "day": "Jumat",
+        "openTime": "13:00",
+        "closeTime": "21:00",
+        "isClosed": false
+      },
+      {
+        "day": "Sabtu",
+        "openTime": "09:00",
+        "closeTime": "22:00",
+        "isClosed": false
+      },
+      {
+        "day": "Minggu",
+        "openTime": "09:00",
+        "closeTime": "22:00",
+        "isClosed": false
+      }
+    ],
+    "status": "Aktif",
+    "photo": "/uploads/branches/bogor-bantarjati.webp",
+    "order": 10
+  },
+  {
+    "slug": "cibubur",
+    "name": "Cibubur",
+    "city": "Cibubur",
+    "province": "TODO: provinsi (DKI Jakarta / Jawa Barat)",
+    "address": "TODO: alamat lengkap cabang Cibubur",
+    "googleMapsUrl": "",
+    "latitude": "",
+    "longitude": "",
+    "whatsappNumber": "TODO: nomor WhatsApp cabang Cibubur (format 62...)",
+    "timezone": "Asia/Jakarta",
+    "openingHours": [],
+    "status": "Aktif",
+    "photo": "",
+    "order": 20
+  }
+]

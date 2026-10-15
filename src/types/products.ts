@@ -47,6 +47,10 @@ export interface ProductsCopy {
     alsoAt: string;
     viewAll: string;
     empty: string;
+    /** Halaman /produk/ saat section produk dimatikan */
+    unavailableTitle: string;
+    unavailableText: string;
+    backHome: string;
   };
   howToOrder: {
     title: string;

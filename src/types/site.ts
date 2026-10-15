@@ -11,6 +11,7 @@ export interface NavItem {
 /**
  * Template pesan WhatsApp.
  * Placeholder yang didukung: {brand} {service} {barber} {branch} {package} {product}
+ * Template booking sebaiknya memuat {branch}; bila tidak, nama cabang disisipkan otomatis setelah {brand}.
  */
 export interface WhatsAppConfig {
   /** Format internasional tanpa +, 0 di depan, spasi, atau strip. Contoh: 6281234567890 */
@@ -24,6 +25,8 @@ export interface WhatsAppConfig {
     branch: string;
     package: string;
     question: string;
+    /** Tanya harga layanan yang belum punya harga */
+    priceQuestion: string;
     /** Pesan produk */
     product: string;
     /** Tanya produk yang stoknya habis */
@@ -47,7 +50,8 @@ export interface UiLabels {
   loading: string;
   empty: string;
   error: string;
-  placeholderBadge: string;
+  /** Tombol pengganti harga "mulai" bila kategori belum punya harga */
+  askPrice: string;
   priceFrom: string;
   previous: string;
   next: string;
@@ -78,8 +82,8 @@ export interface FooterContent {
   description: string;
   contactTitle: string;
   exploreTitle: string;
-  hoursTitle: string;
-  hoursSummary: { label: string; value: string }[];
+  /** Judul kolom daftar cabang di footer */
+  branchesTitle: string;
   /** Mendukung placeholder {year} dan {brand} */
   copyright: string;
   /** Kredit template Colorlib (wajib dipertahankan sesuai lisensi CC BY 3.0) */
@@ -97,8 +101,10 @@ export interface SiteContent {
   nav: NavItem[];
   whatsapp: WhatsAppConfig;
   email: string;
-  /** Alamat utama (CMS Site Settings → address) */
-  address?: string;
+  /** Domain resmi tanpa garis miring akhir (settings.json → siteUrl) */
+  siteUrl: string;
+  /** Section yang bisa dimatikan dari Pengaturan Situs */
+  features: { testimonials: boolean; products: boolean; beforeAfter: boolean };
   priceRange: string;
   seo: SeoConfig;
   ui: UiLabels;

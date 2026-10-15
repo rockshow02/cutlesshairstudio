@@ -12,6 +12,10 @@ export interface Promo {
   /** ISO 8601 (UTC) */
   startDate: string;
   endDate: string;
+  /** Kosong = semua cabang */
+  branchSlugs: string[];
+  /** Nama cabang yang berlaku (untuk label "Berlaku di ...") */
+  branchNames: string[];
 }
 
 export interface PromoContent {

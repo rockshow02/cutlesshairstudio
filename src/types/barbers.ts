@@ -12,6 +12,9 @@ export interface Barber {
   instagram?: string;
   /** Nomor WA khusus barber (format 62...). Kosong = pakai nomor utama. */
   whatsappNumber?: string;
+  /** Cabang tempat barber bekerja */
+  branchSlug: string;
+  branchName: string;
 }
 
 export interface BarbersContent {

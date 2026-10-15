@@ -11,4 +11,7 @@ export interface Announcement {
   endDate?: string;
   /** Dipakai sebagai kunci "sudah ditutup" — pengumuman yang diedit akan tampil lagi */
   updatedAt?: string;
+  /** Kosong = semua cabang */
+  branchSlugs: string[];
+  branchNames: string[];
 }

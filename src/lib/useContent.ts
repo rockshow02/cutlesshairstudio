@@ -7,14 +7,15 @@ export type ContentState<T> =
 
 /**
  * Ambil konten async dari lapisan data (src/lib/content.ts).
- * `loader` harus referensi stabil (fungsi level modul seperti getServices).
+ * `deps`: muat ulang saat nilai ini berubah (mis. cabang terpilih). Data lama tetap tampil selama
+ * memuat ulang, jadi ganti cabang tidak menimbulkan kedipan skeleton.
  */
-export function useContent<T>(loader: () => Promise<T>): ContentState<T> {
+export function useContent<T>(loader: () => Promise<T>, deps: readonly unknown[] = []): ContentState<T> {
   const [state, setState] = useState<ContentState<T>>({ status: 'loading' });
 
   useEffect(() => {
     let active = true;
-    setState({ status: 'loading' });
+    setState((prev) => (prev.status === 'success' ? prev : { status: 'loading' }));
     loader()
       .then((data) => {
         if (active) setState({ status: 'success', data });
@@ -25,7 +26,8 @@ export function useContent<T>(loader: () => Promise<T>): ContentState<T> {
     return () => {
       active = false;
     };
-  }, [loader]);
+    // `loader` boleh berupa closure baru tiap render; yang menentukan muat ulang adalah `deps`
+  }, deps);
 
   return state;
 }

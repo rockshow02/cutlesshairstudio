@@ -20,24 +20,34 @@ export function fillTemplate(template: string, vars: Record<string, string | num
   });
 }
 
-type MessageKind = keyof SiteContent['whatsapp']['templates'];
-
-/** Buat pesan booking dari template di konten site. */
-export function bookingMessage(
-  site: SiteContent,
-  kind: MessageKind,
-  vars: { service?: string; barber?: string; branch?: string; package?: string; product?: string } = {},
-): string {
-  return fillTemplate(site.whatsapp.templates[kind], { brand: site.brandName, ...vars });
+/**
+ * Pastikan pesan booking menyebut cabang: template yang belum memuat {branch}
+ * (mis. pesan custom dari admin) disisipi "cabang {branch}" setelah {brand}.
+ */
+export function withBranchPlaceholder(template: string): string {
+  if (template.includes('{branch}')) return template;
+  return template.includes('{brand}') ? template.replace('{brand}', '{brand} cabang {branch}') : template;
 }
 
-/** Link booking siap pakai. `number` opsional untuk nomor cabang. */
-export function bookingLink(
-  site: SiteContent,
-  kind: MessageKind,
-  vars?: Parameters<typeof bookingMessage>[2],
-  number = site.whatsapp.number,
-): string {
+export type MessageKind = keyof SiteContent['whatsapp']['templates'];
+
+export interface MessageVars {
+  service?: string;
+  barber?: string;
+  branch?: string;
+  package?: string;
+  product?: string;
+  promo?: string;
+}
+
+/** Buat pesan dari template di konten site. Bila `vars.branch` diisi, nama cabang pasti tercantum. */
+export function bookingMessage(site: SiteContent, kind: MessageKind, vars: MessageVars = {}): string {
+  const template = vars.branch ? withBranchPlaceholder(site.whatsapp.templates[kind]) : site.whatsapp.templates[kind];
+  return fillTemplate(template, { brand: site.brandName, ...vars });
+}
+
+/** Link WhatsApp siap pakai. `number` default: nomor pusat (pertanyaan umum). */
+export function bookingLink(site: SiteContent, kind: MessageKind, vars?: MessageVars, number = site.whatsapp.number): string {
   return buildWhatsAppLink(number, bookingMessage(site, kind, vars));
 }
 
@@ -46,16 +56,9 @@ export interface ResolvedCta {
   external: boolean;
 }
 
-/** Ubah Cta dari konten menjadi href. */
-export function resolveCta(cta: Cta, site: SiteContent): ResolvedCta {
+/** Cta bertipe link → href. (Cta bertipe whatsapp ditangani useBooking agar memakai nomor cabang.) */
+export function resolveLinkCta(cta: Cta): ResolvedCta | null {
   const { action } = cta;
-  if (action.type === 'whatsapp') {
-    const message = action.message
-      ? fillTemplate(action.message, { brand: site.brandName })
-      : action.service
-        ? bookingMessage(site, 'service', { service: action.service })
-        : bookingMessage(site, 'general');
-    return { href: buildWhatsAppLink(site.whatsapp.number, message), external: true };
-  }
+  if (action.type !== 'link') return null;
   return { href: action.href, external: action.external ?? /^https?:/.test(action.href) };
 }

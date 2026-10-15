@@ -3,6 +3,7 @@
     "name": "James",
     "role": "Head Hairstylist",
     "photo": "/uploads/barbers/raka.webp",
+    "branchSlug": "bogor-bantarjati",
     "specialty": "Skin fade, Pompadour",
     "order": 10,
     "isActive": false
@@ -11,6 +12,7 @@
     "name": "Dimas",
     "role": "Senior Hairstylist",
     "photo": "/uploads/barbers/dimas.webp",
+    "branchSlug": "bogor-bantarjati",
     "specialty": "Beard, Classic cut",
     "order": 20,
     "isActive": true
@@ -19,6 +21,7 @@
     "name": "Bayu",
     "role": "Color Specialist",
     "photo": "/uploads/barbers/bayu.webp",
+    "branchSlug": "bogor-bantarjati",
     "specialty": "Coloring, Perming",
     "order": 30,
     "isActive": true
@@ -27,6 +30,7 @@
     "name": "Fajar",
     "role": "Hairstylist",
     "photo": "/uploads/barbers/fajar.webp",
+    "branchSlug": "bogor-bantarjati",
     "specialty": "Hair tattoo, Textured crop",
     "order": 40,
     "isActive": true
@@ -35,6 +39,7 @@
     "name": "Rockshow",
     "role": "Barbership",
     "photo": "/uploads/barbers/whatsapp-image-2026-08-30-at-082452.webp",
+    "branchSlug": "bogor-bantarjati",
     "specialty": "Spesial sasak ",
     "whatsappNumber": "628988918236",
     "order": 1,

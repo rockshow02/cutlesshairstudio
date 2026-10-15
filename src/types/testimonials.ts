@@ -3,33 +3,34 @@ import type { SectionHeading } from './common';
 export type Rating = 1 | 2 | 3 | 4 | 5;
 
 export interface RatingSummary {
-  rating: number;
-  /** Teks tampil, mis. "4,9" */
-  ratingDisplay: string;
-  /** Mis. "dari 300+ ulasan Google" */
-  reviewCountLabel: string;
-  source: 'google';
-  url: string;
+  /** Teks tampil, mis. "4,9" (kosong bila disembunyikan di pengaturan) */
+  ratingDisplay?: string;
+  rating?: number;
+  /** Mis. "dari 300 ulasan Google" (kosong bila disembunyikan) */
+  reviewCountLabel?: string;
+  /** Link halaman ulasan (Google Maps) */
+  url?: string;
   ctaLabel: string;
-  /** true = data contoh, tampil badge "Contoh" */
-  isPlaceholder?: boolean;
 }
+
+export type TestimonialSource = 'Google' | 'Instagram' | 'TikTok' | 'Langsung';
 
 export interface Testimonial {
   id: string;
   author: string;
-  /** Opsional: foto profil; bila kosong pakai inisial */
-  avatarUrl?: string;
-  avatarColor?: string;
-  /** Mis. "Local Guide" */
-  badge?: string;
-  /** Mis. "2 minggu lalu" */
-  relativeTime: string;
+  avatarColor: string;
+  /** Mis. "2 minggu lalu" (dihitung dari tanggal ulasan) */
+  relativeTime?: string;
   rating: Rating;
   text: string;
-  source: 'google' | 'instagram' | 'manual';
-  /** true = ulasan contoh, WAJIB diganti sebelum live */
-  isPlaceholder?: boolean;
+  source: TestimonialSource;
+}
+
+export interface TestimonialsCopy {
+  heading: SectionHeading;
+  ctaLabel: string;
+  /** {count} */
+  reviewCountLabel: string;
 }
 
 export interface TestimonialsContent {

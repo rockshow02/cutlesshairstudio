@@ -2,6 +2,8 @@ import { useLayoutEffect, useRef, useState } from 'react';
 import { getAnnouncements } from '@/lib/content';
 import { useContent } from '@/lib/useContent';
 import { useSite } from '@/lib/SiteContext';
+import { useBranch } from '@/lib/BranchContext';
+import { joinIndonesian } from '@/lib/contentTransforms';
 import type { Announcement, AnnouncementType, IconName } from '@/types';
 import { Icon } from '@/components/ui/Icon';
 import styles from './AnnouncementBar.module.css';
@@ -26,7 +28,9 @@ function isDismissed(a: Announcement): boolean {
  * otomatis bergeser: tidak ada konten yang tertutup.
  */
 export function AnnouncementBar() {
-  const state = useContent(getAnnouncements);
+  const { effective } = useBranch();
+  // Cabang dipilih → pengumuman semua cabang + cabang itu; belum memilih → semua (diberi nama cabang)
+  const state = useContent(() => getAnnouncements(effective?.slug), [effective?.slug]);
   const { site } = useSite();
   const [dismissed, setDismissed] = useState<string[]>([]);
   const ref = useRef<HTMLDivElement>(null);
@@ -72,7 +76,10 @@ export function AnnouncementBar() {
     <div ref={ref} className={styles.bar} data-type={current.type} role="region" aria-label={site.ui.announcementRegion}>
       <p className={styles.message}>
         <Icon name={ICON[current.type]} size={16} strokeWidth={1.8} />
-        <span>{current.message}</span>
+        <span>
+          {current.branchNames.length > 0 && !effective && <strong>{joinIndonesian(current.branchNames)}: </strong>}
+          {current.message}
+        </span>
       </p>
       <button type="button" className={styles.close} onClick={dismiss} aria-label={site.ui.dismissAnnouncement}>
         <Icon name="close" size={16} strokeWidth={1.8} />

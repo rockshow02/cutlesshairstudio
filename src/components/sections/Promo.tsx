@@ -1,8 +1,10 @@
 import { getPromos } from '@/lib/content';
 import { useContent } from '@/lib/useContent';
-import { useSite } from '@/lib/SiteContext';
+import { useBranch } from '@/lib/BranchContext';
+import { useBooking } from '@/lib/useBooking';
+import { joinIndonesian } from '@/lib/contentTransforms';
 import { formatDateTimeWIB } from '@/lib/format';
-import { bookingMessage, buildWhatsAppLink, fillTemplate } from '@/lib/whatsapp';
+import { fillTemplate } from '@/lib/whatsapp';
 import type { Promo as PromoItem, PromoContent } from '@/types';
 import { Section } from '@/components/ui/Section';
 import { SectionTitle } from '@/components/ui/SectionTitle';
@@ -17,7 +19,9 @@ import styles from './Promo.module.css';
  * atau tidak ada promo aktif (sehingga tidak ada ruang kosong / lompatan layout).
  */
 export function Promo() {
-  const state = useContent(getPromos);
+  const { effective } = useBranch();
+  // Cabang dipilih → hanya promo yang berlaku di cabang itu (promo tanpa cabang = semua cabang)
+  const state = useContent(() => getPromos(effective?.slug), [effective?.slug]);
   if (state.status !== 'success' || state.data.items.length === 0) return null;
   const data = state.data;
 
@@ -36,10 +40,12 @@ export function Promo() {
 }
 
 function PromoCard({ item, labels }: { item: PromoItem; labels: PromoContent['labels'] }) {
-  const { site } = useSite();
-  const message = item.waMessage
-    ? fillTemplate(item.waMessage, { brand: site.brandName, promo: item.title })
-    : bookingMessage(site, 'service', { service: `promo "${item.title}"` });
+  const { copy } = useBranch();
+  const book = useBooking();
+  // Promo khusus cabang → pemilih cabang hanya menawarkan cabang yang berlaku
+  const target = item.waMessage
+    ? book({ message: item.waMessage, vars: { promo: item.title }, allowedSlugs: item.branchSlugs })
+    : book({ kind: 'service', vars: { service: `promo "${item.title}"` }, allowedSlugs: item.branchSlugs });
 
   return (
     <article className={styles.card} data-has-image={item.image ? true : undefined}>
@@ -59,8 +65,14 @@ function PromoCard({ item, labels }: { item: PromoItem; labels: PromoContent['la
           <Icon name="clock" size={14} />
           {fillTemplate(labels.validUntil, { date: formatDateTimeWIB(item.endDate) })}
         </p>
+        {item.branchNames.length > 0 && (
+          <p className={styles.valid}>
+            <Icon name="pin" size={14} />
+            {fillTemplate(copy.labels.promoFor, { branches: joinIndonesian(item.branchNames) })}
+          </p>
+        )}
         <div className={styles.cta}>
-          <Button href={buildWhatsAppLink(site.whatsapp.number, message)} external variant="light" icon="whatsapp">
+          <Button href={target.href} external={target.external} onClick={target.onClick} variant="light" icon="whatsapp">
             {item.ctaLabel}
           </Button>
         </div>

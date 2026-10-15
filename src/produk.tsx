@@ -5,16 +5,10 @@ import { SiteShell } from '@/components/layout/SiteShell';
 import { Products } from '@/components/sections/Products';
 import { CtaBanner } from '@/components/sections/CtaBanner';
 
-/** SEO halaman /produk/ (judul & deskripsi juga ditulis statis di produk/index.html) */
-const PRODUCTS_SEO = {
-  title: 'Produk Perawatan Rambut | Cutless Hair Studio Bogor',
-  description:
-    'Pomade, hair clay, hair powder, hair tonic, dan perawatan jenggot pilihan hairstylist Cutless Hair Studio Bogor. Pesan via WhatsApp, ambil di studio atau dikirim.',
-};
-
+/** Halaman /produk/ (title & meta ditulis statis di produk/index.html, diisi saat build) */
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <SiteShell seo={PRODUCTS_SEO}>
+    <SiteShell>
       <Products variant="page" />
       <CtaBanner />
     </SiteShell>

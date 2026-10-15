@@ -1,0 +1,14 @@
+// Cloudflare Workers (static assets, gratis). Dipakai oleh Workers Builds saat deploy.
+// "name" harus sama dengan nama Worker di dashboard Cloudflare (subdomain *.workers.dev).
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "cutlesshairstudio",
+  "compatibility_date": "2026-09-01",
+  "assets": {
+    "directory": "./dist",
+    // /cabang/cibubur → /cabang/cibubur/ → dist/cabang/cibubur/index.html (hasil prerender)
+    "html_handling": "auto-trailing-slash",
+    // URL tak dikenal → dist/404.html (bukan beranda), agar mesin pencari tidak mengindeks halaman palsu
+    "not_found_handling": "404-page"
+  }
+}

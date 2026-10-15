@@ -1,9 +1,4 @@
-import type { Cta, IconName, ImageAsset } from './common';
-
-export interface HeroHighlight {
-  icon: IconName;
-  text: string;
-}
+import type { Cta, ImageAsset } from './common';
 
 export interface HeroContent {
   kicker: string;
@@ -16,7 +11,6 @@ export interface HeroContent {
   video?: { src: string; type: string };
   primaryCta: Cta;
   secondaryCta: Cta;
-  highlights: HeroHighlight[];
   /** Kata-kata untuk strip teks berjalan di bawah hero */
   marquee: string[];
 }

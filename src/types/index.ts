@@ -13,3 +13,4 @@ export * from './cta';
 export * from './promo';
 export * from './announcement';
 export * from './products';
+export * from './branches';

@@ -20,13 +20,38 @@ Panduan ini untuk pemilik dan staf. Tidak perlu keahlian teknis.
 1. Buka **https://app.pagescms.org**.
 2. Klik **Sign in with GitHub** → izinkan akses (sekali saja).
 3. Pilih repo **cutlesshairstudio** → branch **main**.
-4. Menu konten ada di kiri: **Daftar Harga, Barber, Galeri, Promo, Pengumuman, Produk, Pengaturan Situs**.
+4. Menu konten ada di kiri: **Cabang, Daftar Harga, Barber, Galeri, Promo, Pengumuman, Testimoni, Produk, Pengaturan Situs**.
 
 Tips umum:
 - Setiap kolom punya keterangan kecil di bawahnya. Baca dulu bila ragu.
 - Daftar berisi beberapa entri (mis. harga). Klik entri untuk membuka, **Add an entry** untuk menambah, ikon tempat sampah untuk menghapus, tarik ikon titik-titik untuk mengubah urutan tampilan di panel.
 - Jangan lupa klik **Save** di kanan atas.
 - Ingin menyembunyikan sesuatu sementara? Matikan **Tampilkan di website** / **Aktif**. Datanya tidak hilang.
+
+---
+
+## 0. Mengelola cabang *(Owner)*
+
+Semua alamat, jam buka, dan nomor WhatsApp booking ada di menu **Cabang**, satu entri per cabang.
+
+**Menambah cabang:**
+1. Klik **Cabang** → **Add an entry**.
+2. **Kode URL (slug)**: huruf kecil dan strip, mis. `depok-margonda`. Menjadi alamat halaman `/cabang/depok-margonda/`. **Jangan diubah setelah tayang**, karena barber, harga, dan promo menautkan cabang lewat kode ini.
+3. Isi **Nama cabang**, **Kota**, **Provinsi**, **Alamat lengkap**, **Link Google Maps**.
+4. **Latitude / Longitude** (disarankan): buka Google Maps → klik kanan titik lokasi → klik angka koordinat paling atas (otomatis tersalin), mis. `-6.5717, 106.8061`. Tempel angka pertama ke Latitude dan angka kedua ke Longitude. Dipakai untuk tombol **Cabang terdekat** dan peta.
+5. **Nomor WhatsApp cabang** *(wajib)*: format `628xxxxxxxxxx`. Semua booking cabang ini masuk ke nomor ini.
+6. **Zona waktu**: WIB untuk Jawa/Sumatra, WITA untuk Bali/Kalimantan Timur/Sulawesi, WIT untuk Papua/Maluku.
+7. **Jam buka**: satu baris per hari (format 24 jam, `10:00`, `21:00`). Centang **Tutup seharian** untuk hari libur.
+8. **Status**:
+   - **Aktif**: tampil dan bisa dibooking.
+   - **Segera Dibuka**: tampil dengan label *Segera Dibuka*, tanpa tombol booking. Cocok untuk cabang yang belum beroperasi.
+   - **Tutup Sementara**: tampil dengan label, tanpa tombol booking (mis. renovasi panjang).
+9. **Foto cabang** (opsional): foto lebar tampak depan/interior.
+10. **Save**.
+
+Cabang baru muncul sebagai pilihan di menu Barber, Harga, Promo, dan Pengumuman **±1 menit setelah Save** (refresh Pages CMS).
+
+> Website menolak tayang bila ada cabang **Aktif** yang belum punya nomor WA, jam buka, atau alamat, atau bila masih ada tulisan `TODO`. Bila datanya belum lengkap, pakai status **Segera Dibuka** dulu.
 
 ---
 
@@ -49,6 +74,10 @@ Lainnya:
   ```
   Paket berlabel *Best Seller* tampil sebagai kartu yang menonjol.
 
+**Harga berbeda per cabang:** **Harga (Rupiah)** adalah harga dasar untuk semua cabang. Bila satu cabang berbeda, buka **Harga khusus cabang** → **Add an entry** → pilih **Cabang** → isi **Harga di cabang ini** → **Save**. Pengunjung yang sudah memilih cabang melihat harga cabangnya; yang belum memilih melihat *mulai Rp…* (harga terendah).
+
+Harga "mulai" pada kartu **Layanan** di halaman utama dihitung otomatis dari Daftar Harga, jadi tidak perlu diubah terpisah.
+
 ---
 
 ## 2. Menambah atau menonaktifkan barber
@@ -57,10 +86,13 @@ Lainnya:
 1. Klik **Barber** → **Add an entry**.
 2. Isi **Nama panggilan** (mis. `Raka`) dan **Jabatan** (opsional, mis. `Senior Hairstylist`).
 3. **Foto**: klik kotak foto → **Upload** → pilih foto dari HP/komputer. Pakai foto **tegak** (potret), wajah jelas. Foto otomatis dikecilkan, jadi tidak perlu diedit dulu.
-4. **Spesialisasi**: pisahkan dengan koma, mis. `Skin fade, Pompadour`.
-5. **WhatsApp pribadi** (opsional): format `628xxxxxxxxxx`, **tanpa +, spasi, atau strip**. Kosongkan untuk memakai nomor studio.
-6. **Urutan**: posisi tampil (angka kecil = paling kiri).
-7. **Save**.
+4. **Cabang** *(wajib)*: cabang tempat barber bekerja. Barber hanya tampil saat pengunjung memilih cabang itu.
+5. **Spesialisasi**: pisahkan dengan koma, mis. `Skin fade, Pompadour`.
+6. **WhatsApp pribadi** (opsional): format `628xxxxxxxxxx`, **tanpa +, spasi, atau strip**. Kosongkan untuk memakai nomor cabang.
+7. **Urutan**: posisi tampil (angka kecil = paling kiri).
+8. **Save**.
+
+**Pindah cabang:** buka barbernya → ganti **Cabang** → **Save**.
 
 **Menonaktifkan** (cuti/resign): buka barbernya → matikan **Tampilkan di website** → **Save**.
 
@@ -87,24 +119,28 @@ Foto dari HP langsung bisa dipakai. Sistem otomatis mengompresnya beberapa menit
    - **Deskripsi**: syarat singkat
    - **Gambar** (opsional): gambar lebar paling bagus
    - **Teks tombol**, mis. `Ambil Promo`
-   - **Pesan WhatsApp**: pesan otomatis saat tombol diklik. Tulis `{brand}` untuk nama studio dan `{promo}` untuk judul promo, mis. `Halo {brand}, saya mau pakai promo {promo} untuk [hari/jam].`
+   - **Pesan WhatsApp**: pesan otomatis saat tombol diklik. Tulis `{brand}` untuk nama studio dan `{promo}` untuk judul promo, mis. `Halo {brand}, saya mau pakai promo {promo} untuk [hari/jam].` Nama cabang pengunjung otomatis ditambahkan.
    - **Mulai** dan **Selesai**: tanggal & jam **WIB**. *Selesai* harus setelah *Mulai*.
+   - **Berlaku di cabang**: pilih satu atau beberapa cabang. **Kosongkan bila berlaku di semua cabang.** Promo khusus cabang hanya tampil bagi pengunjung yang memilih cabang itu (atau yang belum memilih, dengan keterangan *Berlaku di cabang …*).
 3. **Save**.
 
 Promo otomatis **muncul tepat pada jam mulai** dan **hilang setelah jam selesai**, tanpa perlu Anda lakukan apa pun. Untuk menghentikan lebih cepat: matikan **Aktif** → **Save**.
 
 ---
 
-## 5. Memasang pengumuman (mis. studio tutup)
+## 5. Memasang pengumuman (mis. cabang tutup)
 
 Pengumuman tampil sebagai bar tipis di paling atas website. Pengunjung bisa menutupnya.
 
 1. Klik **Pengumuman** → **Add an entry**.
 2. **Pesan** (maks. 160 karakter), mis.:
-   `Studio TUTUP Senin, 20 Oktober untuk renovasi. Buka kembali Selasa pukul 10.00.`
+   `Cabang Cibubur TUTUP Senin, 20 Oktober untuk renovasi. Buka kembali Selasa pukul 10.00.`
 3. **Jenis**: **Tutup** (paling menonjol), **Jam Khusus** (mis. jam Lebaran), atau **Info**.
 4. **Mulai tampil / Selesai tampil** (opsional, WIB), mis. mulai 18 Okt 08:00, selesai 21 Okt 10:00. Kosongkan bila ingin tampil sampai dimatikan.
-5. **Save**.
+5. **Berlaku di cabang**: pilih cabang yang tutup/berubah jam. **Kosongkan bila untuk semua cabang.**
+6. **Save**.
+
+Pengumuman jenis **Tutup** yang sedang berlaku membuat status cabang itu menjadi *Tutup hari ini*, dan **Jam Khusus** menampilkan pesannya sebagai status, menggantikan jam buka biasa. Jam buka di menu Cabang tidak perlu diubah.
 
 Menurunkan pengumuman: matikan **Aktif** → **Save** (atau hapus entrinya). Bila Anda mengubah isi pesan, pengunjung yang sudah menutupnya akan melihatnya lagi.
 
@@ -112,7 +148,7 @@ Menurunkan pengumuman: matikan **Aktif** → **Save** (atau hapus entrinya). Bil
 
 ## 6. Mengelola produk (pomade, hair tonic, dll.)
 
-Produk tampil di halaman **/produk** dan 4 produk teratas juga tampil di halaman utama. Pembeli memesan lewat tombol WhatsApp (pesan otomatis berisi nama produk).
+Produk tampil di halaman **/produk** dan 4 produk teratas juga tampil di halaman utama, setelah **Pengaturan Situs → Tampilkan Produk** dinyalakan. Pembeli memesan lewat tombol WhatsApp (pesan otomatis berisi nama produk).
 
 **Menambah produk:**
 1. Klik **Produk** → **Add an entry**.
@@ -129,23 +165,32 @@ Produk tampil di halaman **/produk** dan 4 produk teratas juga tampil di halaman
 
 **Berhenti menjual:** matikan **Tampilkan di website** (data tidak hilang) atau hapus entrinya.
 
-> Produk bertanda **(contoh)** adalah contoh dari developer. Ganti atau hapus sebelum website dipromosikan.
+---
+
+## 7. Testimoni
+
+1. Klik **Testimoni** → **Add an entry**.
+2. Isi **Nama pemberi ulasan**, **Bintang (1–5)**, **Isi ulasan** (salin apa adanya dari Google/Instagram), **Tanggal ulasan**, **Sumber**.
+3. **Save**.
+
+Section Testimoni baru tampil setelah **Pengaturan Situs → Tampilkan section Testimoni** dinyalakan. Pakai ulasan asli saja.
 
 ---
 
-## 7. Pengaturan situs *(Owner)*
+## 8. Pengaturan situs *(Owner)*
 
-Klik **Pengaturan Situs**:
+Klik **Pengaturan Situs**. Menu ini hanya berisi data merek. Alamat dan jam buka ada di menu **Cabang**.
 
 | Kolom | Dipakai untuk |
 |---|---|
-| Nomor WhatsApp utama | **Semua** tombol booking. Format `628xxxxxxxxxx` |
-| Pesan booking default | Pesan otomatis tombol booking umum |
+| Nama usaha | Judul website, pesan WhatsApp |
+| Alamat website (domain resmi) | Link yang dibagikan di Google/WhatsApp/sosial media. Ganti **hanya** saat pindah domain, mis. `https://cutlesshairstudio.id` (tanpa `/` di akhir) |
+| Nomor WhatsApp pusat | Pertanyaan umum & kontak di footer. Booking memakai nomor cabang. Format `628xxxxxxxxxx` |
+| Pesan booking default | Pesan otomatis tombol booking. `{brand}` = nama usaha, `{branch}` = nama cabang |
 | Link Instagram / TikTok | Ikon sosial media. **Kosongkan untuk menyembunyikan** |
-| Link Google Maps | Tombol "Petunjuk Arah" |
-| Alamat lengkap | Footer & bagian Lokasi |
 | Teks footer | Kalimat di bawah logo footer |
-| Jam buka | Satu baris per hari. Jam format 24 jam (`10:00`, `21:00`). Centang **Tutup seharian** untuk hari libur |
+| Angka statistik | Jumlah pelanggan, tahun berdiri, rating & jumlah ulasan Google. **Masing-masing punya tombol Tampilkan**; nyalakan hanya bila angkanya asli. Jumlah cabang dan hairstylist dihitung otomatis |
+| Tampilkan section Testimoni / Produk / Before-After | Menyalakan atau menyembunyikan section itu (beserta menunya) |
 
 **Save** setelah mengubah.
 
@@ -158,7 +203,9 @@ Klik **Pengaturan Situs**:
 | Perubahan belum muncul | Tunggu 2 menit, refresh website. Masih belum? Lihat baris berikut |
 | Perubahan tidak pernah muncul | Kemungkinan ada isian yang salah sehingga sistem menolak memperbarui website (website tetap menampilkan versi sebelumnya, jadi aman). Hubungi developer, atau cek pesan error di Cloudflare |
 | Kolom ditolak saat Save | Baca pesan merah di bawah kolom (mis. format nomor WA atau jam) |
-| Nomor WA ditolak | Harus diawali `62`, hanya angka, contoh `6281234567890` |
+| Nomor WA ditolak | Harus diawali `62`, hanya angka, mis. `628129876xxxx` |
+| Website tidak berubah setelah menambah cabang | Pastikan cabang Aktif sudah punya nomor WA, jam buka, dan alamat, atau pakai status **Segera Dibuka** |
+| Cabang baru tidak ada di pilihan Barber/Harga | Tunggu ±1 menit setelah menyimpan cabang, lalu refresh Pages CMS |
 | Salah ubah / terhapus | Tenang, semua perubahan tercatat. Hubungi developer untuk mengembalikan (rollback) |
 | Tidak bisa login | Pastikan undangan kolaborator GitHub sudah di-*Accept* |
 

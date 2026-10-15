@@ -1,6 +1,10 @@
-import type { AboutContent } from '@/types';
+import type { AboutCopy } from '@/types';
 
-export const about: AboutContent = {
+/**
+ * Teks section Tentang. Angka statistik TIDAK ditulis di sini: jumlah cabang & hairstylist dihitung
+ * dari data aktif, angka lain (pelanggan, tahun berdiri, rating, ulasan) dari Pengaturan Situs.
+ */
+export const aboutCopy: AboutCopy = {
   heading: { kicker: 'Tentang Kami', title: 'Bukan sekadar potong rambut.' },
   // TODO: sesuaikan cerita singkat studio
   lead:
@@ -19,11 +23,12 @@ export const about: AboutContent = {
     { title: 'Detail sampai rapi', description: 'Fade halus, garis tegas, finishing bersih.' },
     { title: 'Nyaman & on time', description: 'Booking jelas, nggak pakai antre lama.' },
   ],
-  // TODO: sesuaikan angka pencapaian
-  stats: [
-    { value: 5000, suffix: '+', animate: true, label: 'Pelanggan dilayani' },
-    { value: 2021, display: '2021', label: 'Tahun berdiri' },
-    { value: 6, animate: true, label: 'Hairstylist' },
-    { value: 4.9, display: '4,9', label: 'Rating Google' },
-  ],
+  statLabels: {
+    branches: 'Cabang',
+    barbers: 'Hairstylist',
+    customers: 'Pelanggan dilayani',
+    foundedYear: 'Tahun berdiri',
+    rating: 'Rating Google',
+    reviewCount: 'Ulasan Google',
+  },
 };

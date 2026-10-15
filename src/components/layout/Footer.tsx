@@ -1,10 +1,8 @@
 import { useSite } from '@/lib/SiteContext';
-import { useContent } from '@/lib/useContent';
-import { getLocations } from '@/lib/content';
+import { useBranch } from '@/lib/BranchContext';
 import { useFabZone } from '@/lib/fabZones';
 import { asset } from '@/lib/asset';
 import { bookingLink, fillTemplate } from '@/lib/whatsapp';
-import { formatAddress } from '@/lib/format';
 import { isHomePage, navHref, navKey, pageUrl } from '@/lib/navigation';
 import { Container } from '@/components/ui/Container';
 import { Icon } from '@/components/ui/Icon';
@@ -12,11 +10,11 @@ import styles from './Footer.module.css';
 
 export function Footer() {
   const { site, socials } = useSite();
-  const locations = useContent(getLocations);
+  const { branches, copy } = useBranch();
   const zoneRef = useFabZone<HTMLElement>(0);
-  const primary = locations.status === 'success' ? locations.data.items[0] : undefined;
-  const address = site.address ?? (primary ? formatAddress(primary.address) : undefined);
   const { footer, logo } = site;
+  // Nomor pusat: pertanyaan umum (booking memakai nomor cabang)
+  const questionHref = bookingLink(site, 'question');
 
   return (
     <footer id="kontak" ref={zoneRef} className={styles.footer}>
@@ -24,7 +22,7 @@ export function Footer() {
         <div className={styles.grid}>
           <div className={styles.brand}>
             <a href={isHomePage() ? '#top' : pageUrl('/')} className={styles.logo}>
-              <img src={asset(logo.stacked.src)} width={logo.stacked.width} height={logo.stacked.height} alt={logo.stacked.alt} loading="lazy" />
+              <img src={asset(logo.stacked.src)} width={logo.stacked.width} height={logo.stacked.height} alt={logo.stacked.alt || site.brandName} loading="lazy" />
             </a>
             <p>{footer.description}</p>
             <ul className={styles.socials} aria-label={site.ui.socialLinks}>
@@ -36,7 +34,7 @@ export function Footer() {
                 </li>
               ))}
               <li>
-                <a href={bookingLink(site, 'question')} target="_blank" rel="noopener noreferrer" aria-label={`WhatsApp ${site.whatsapp.displayNumber}`}>
+                <a href={questionHref} target="_blank" rel="noopener noreferrer" aria-label={`WhatsApp ${site.whatsapp.displayNumber}`}>
                   <Icon name="whatsapp" size={19} />
                 </a>
               </li>
@@ -46,15 +44,9 @@ export function Footer() {
           <div>
             <h2 className={styles.colTitle}>{footer.contactTitle}</h2>
             <ul className={styles.contact}>
-              {address && (
-                <li>
-                  <Icon name="pin" />
-                  <span>{address}</span>
-                </li>
-              )}
               <li>
                 <Icon name="whatsapp" />
-                <a href={bookingLink(site, 'question')} target="_blank" rel="noopener noreferrer">
+                <a href={questionHref} target="_blank" rel="noopener noreferrer">
                   {site.whatsapp.displayNumber}
                 </a>
               </li>
@@ -76,17 +68,19 @@ export function Footer() {
             </ul>
           </nav>
 
-          <div>
-            <h2 className={styles.colTitle}>{footer.hoursTitle}</h2>
-            <ul className={styles.hours}>
-              {footer.hoursSummary.map((h) => (
-                <li key={h.label}>
-                  <span>{h.label}</span>
-                  <span>{h.value}</span>
+          <nav aria-label={footer.branchesTitle}>
+            <h2 className={styles.colTitle}>{footer.branchesTitle}</h2>
+            <ul className={styles.links}>
+              {branches.map((b) => (
+                <li key={b.slug}>
+                  <a href={pageUrl(b.pageUrl)}>
+                    {b.name}
+                    {b.status !== 'Aktif' && <span className={styles.badge}>{copy.labels.statusBadge[b.status]}</span>}
+                  </a>
                 </li>
               ))}
             </ul>
-          </div>
+          </nav>
         </div>
 
         <div className={styles.bottom}>

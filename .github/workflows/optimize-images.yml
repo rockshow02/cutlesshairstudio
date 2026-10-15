@@ -1,15 +1,15 @@
-# Mengompres gambar baru dari Pages CMS (public/uploads) ke WebP, memperbaiki referensi gambar
-# di src/content/*.json, lalu commit hasilnya.
-# Berjalan di runner gratis GitHub Actions (repo publik: gratis tanpa batas; privat: 2.000 menit/bulan,
-# satu run ±1 menit). Commit dari GITHUB_TOKEN tidak memicu workflow lagi, jadi tidak ada loop.
-name: Optimasi gambar
+# Sinkron konten dari Pages CMS:
+# 1. Kompres gambar baru di public/uploads ke WebP & perbaiki referensi gambar di src/content/*.json
+# 2. Salin daftar cabang (branches.json) ke pilihan cabang di .pages.yml (dropdown Barber/Harga/Promo/Pengumuman)
+# Berjalan di runner gratis GitHub Actions (repo publik: gratis; privat: 2.000 menit/bulan, 1 run ±1 menit).
+# Commit dari GITHUB_TOKEN tidak memicu workflow lagi, jadi tidak ada loop.
+name: Sinkron konten
 
 on:
   push:
     branches: [main]
     paths:
       - 'public/uploads/**'
-      # Perbaiki referensi gambar bila entri disimpan setelah fotonya dikonversi ke WebP
       - 'src/content/*.json'
   workflow_dispatch:
 
@@ -17,11 +17,11 @@ permissions:
   contents: write
 
 concurrency:
-  group: optimize-images
+  group: sync-content
   cancel-in-progress: false
 
 jobs:
-  optimize:
+  sync:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -38,15 +38,18 @@ jobs:
       - name: Kompres gambar ke WebP
         run: npm run optimize-images
 
+      - name: Sinkron pilihan cabang di .pages.yml
+        run: npm run sync-cms
+
       - name: Commit hasil (bila ada perubahan)
         run: |
-          if [ -n "$(git status --porcelain -- public/uploads src/content)" ]; then
+          if [ -n "$(git status --porcelain -- public/uploads src/content .pages.yml)" ]; then
             git config user.name "github-actions[bot]"
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git add public/uploads src/content
-            git commit -m "chore(media): optimasi gambar ke WebP"
+            git add public/uploads src/content .pages.yml
+            git commit -m "chore(cms): sinkron gambar & pilihan cabang"
             git pull --rebase --autostash
             git push
           else
-            echo "Tidak ada gambar baru."
+            echo "Tidak ada perubahan."
           fi

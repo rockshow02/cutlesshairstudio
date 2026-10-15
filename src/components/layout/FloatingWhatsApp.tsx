@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useSite } from '@/lib/SiteContext';
 import { useFabSuppressed } from '@/lib/fabZones';
-import { bookingLink } from '@/lib/whatsapp';
+import { useBooking } from '@/lib/useBooking';
 import { Icon } from '@/components/ui/Icon';
 import styles from './FloatingWhatsApp.module.css';
 
@@ -17,6 +17,8 @@ const INTERACTIVE = 'a, button, input, select, textarea, iframe, [role="tab"]';
 export function FloatingWhatsApp() {
   const { site } = useSite();
   const inZone = useFabSuppressed();
+  // Ke WA cabang terpilih; belum memilih → pemilih cabang dulu
+  const booking = useBooking()();
   const [overlapping, setOverlapping] = useState(false);
   const ref = useRef<HTMLAnchorElement>(null);
 
@@ -58,9 +60,9 @@ export function FloatingWhatsApp() {
     <a
       ref={ref}
       className={styles.fab}
-      href={bookingLink(site, 'general')}
-      target="_blank"
-      rel="noopener noreferrer"
+      href={booking.href}
+      onClick={booking.onClick}
+      {...(booking.external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
       aria-label={site.ui.floatingWhatsApp}
       data-hidden={hidden || undefined}
       tabIndex={hidden ? -1 : undefined}

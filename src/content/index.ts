@@ -6,13 +6,13 @@
  */
 export { site } from './site';
 export { hero } from './hero';
-export { about } from './about';
+export { aboutCopy } from './about';
 export { services } from './services';
 export { pricingCopy } from './pricing';
 export { barbersCopy } from './barbers';
 export { galleryCopy } from './gallery';
-export { testimonials } from './testimonials';
-export { locations } from './locations';
+export { testimonialsCopy } from './testimonials';
+export { branchesCopy } from './branches';
 export { socials } from './socials';
 export { ctaBanner } from './cta';
 export { promoCopy } from './promo';

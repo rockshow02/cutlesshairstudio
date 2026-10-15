@@ -1,7 +1,8 @@
 import type { HeroContent } from '@/types';
 
 export const hero: HeroContent = {
-  kicker: 'Hair Studio · Kota Bogor',
+  // {cities} diisi otomatis dari daftar cabang, mis. "Bogor & Cibubur"
+  kicker: 'Hair Studio · {cities}',
   titleLines: ['Good Style.', 'Good Mood.'],
   subtitle:
     'Potongan on point, dikerjain hairstylist yang ngerti bentuk wajahmu. Fade, pompadour, sampai coloring, semuanya tanpa ribet.',
@@ -19,10 +20,5 @@ export const hero: HeroContent = {
   video: undefined,
   primaryCta: { label: 'Booking via WhatsApp', action: { type: 'whatsapp' } },
   secondaryCta: { label: 'Lihat Layanan', action: { type: 'link', href: '#layanan' } },
-  highlights: [
-    // TODO: sesuaikan rating Google & jam buka
-    { icon: 'star', text: '4,9 · Google Reviews' },
-    { icon: 'clock', text: 'Buka tiap hari 10.00 – 21.00' },
-  ],
   marquee: ['On Point Always', 'We Got You', 'Goodstyle Goodmood'],
 };

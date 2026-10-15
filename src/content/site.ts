@@ -4,7 +4,8 @@ import type { SiteContent } from '@/types';
  * Konfigurasi & teks statis situs.
  * Nilai berikut DITIMPA oleh Pengaturan Situs di Pages CMS (src/content/settings.json):
  *   brandName, logo.stacked (logo footer), whatsapp.number, whatsapp.displayNumber,
- *   whatsapp.templates.general, address, footer.description, footer.hoursSummary.
+ *   whatsapp.templates.general, siteUrl, features, footer.description.
+ * Alamat & jam buka kini per cabang (src/content/branches.json).
  * Ubah nilai-nilai itu lewat Pages CMS, bukan di file ini.
  */
 export const site: SiteContent = {
@@ -25,31 +26,37 @@ export const site: SiteContent = {
     { label: 'Kontak', sectionId: 'kontak' },
   ],
   whatsapp: {
-    // TODO: ganti dengan nomor WhatsApp bisnis (format 62..., tanpa +, 0, spasi, atau strip)
-    number: '6281234567890',
-    // TODO: ganti dengan nomor yang ditampilkan
-    displayNumber: '0812-3456-7890',
+    // Diisi dari Pengaturan Situs (settings.json → mainWhatsappNumber = nomor pusat)
+    number: '',
+    displayNumber: '',
     templates: {
-      general: 'Halo {brand}, saya mau booking haircut untuk [hari/jam].',
-      service: 'Halo {brand}, saya mau booking {service} untuk [hari/jam].',
-      barber: 'Halo {brand}, saya mau booking haircut dengan {barber} untuk [hari/jam].',
+      // Template booking menyebut cabang. general ditimpa "Pesan booking default" di Pengaturan Situs.
+      general: 'Halo {brand} cabang {branch}, saya mau booking haircut untuk [hari/jam].',
+      service: 'Halo {brand} cabang {branch}, saya mau booking {service} untuk [hari/jam].',
+      barber: 'Halo {brand} cabang {branch}, saya mau booking haircut dengan {barber} untuk [hari/jam].',
       branch: 'Halo {brand} cabang {branch}, saya mau booking haircut untuk [hari/jam].',
-      package: 'Halo {brand}, saya mau ambil paket {package}. Bisa dibantu?',
+      package: 'Halo {brand} cabang {branch}, saya mau ambil paket {package}. Bisa dibantu?',
+      // Ke nomor pusat (bukan cabang)
       question: 'Halo {brand}, saya mau tanya-tanya dulu.',
-      product: 'Halo {brand}, saya mau pesan {product}. Masih ada stoknya?',
-      productRestock: 'Halo {brand}, kapan {product} ready lagi? Saya mau pesan.',
+      priceQuestion: 'Halo {brand} cabang {branch}, saya mau tanya harga {service}.',
+      product: 'Halo {brand} cabang {branch}, saya mau pesan {product}. Masih ada stoknya?',
+      productRestock: 'Halo {brand} cabang {branch}, kapan {product} ready lagi? Saya mau pesan.',
     },
   },
   // TODO: ganti email bisnis
   email: 'halo@cutlesshairstudio.id',
+  // Diisi dari Pengaturan Situs (siteUrl & toggle section)
+  siteUrl: '',
+  features: { testimonials: false, products: false, beforeAfter: false },
   // TODO: sesuaikan dengan rentang harga asli
   priceRange: 'Rp60.000 - Rp450.000',
   seo: {
-    title: 'Cutless Hair Studio Bogor | Barbershop & Hair Studio, Booking via WhatsApp',
+    // {brand} & {cities} diisi otomatis (cities dari daftar cabang, mis. "Bogor & Cibubur")
+    title: '{brand} | Barbershop & Hair Studio di {cities}',
     description:
-      'Cutless Hair Studio, hair studio di Kota Bogor untuk haircut, fade, pompadour, shaving, hair coloring, perming, dan hair spa. Booking gampang via WhatsApp.',
-    // TODO: ganti dengan domain asli (samakan juga di index.html)
-    url: 'https://cutlesshairstudio.id/',
+      '{brand}, hair studio di {cities} untuk haircut, fade, pompadour, shaving, hair coloring, perming, dan hair spa. Pilih cabang terdekat & booking via WhatsApp.',
+    // Diisi dari Pengaturan Situs → siteUrl
+    url: '',
     ogImage: '/images/og/og-cutless.jpg',
     locale: 'id_ID',
   },
@@ -67,7 +74,7 @@ export const site: SiteContent = {
     loading: 'Memuat…',
     empty: 'Konten belum tersedia. Hubungi kami via WhatsApp untuk info terbaru.',
     error: 'Konten gagal dimuat. Coba muat ulang halaman.',
-    placeholderBadge: 'Contoh',
+    askPrice: 'Tanya harga',
     priceFrom: 'mulai',
     previous: 'Sebelumnya',
     next: 'Berikutnya',
@@ -84,13 +91,7 @@ export const site: SiteContent = {
     description: 'Hair studio di Kota Bogor. Goodstyle, goodmood.',
     contactTitle: 'Kontak',
     exploreTitle: 'Jelajahi',
-    hoursTitle: 'Jam Buka',
-    // TODO: samakan dengan jam buka di locations.ts
-    hoursSummary: [
-      { label: 'Senin – Kamis', value: '10.00 – 21.00' },
-      { label: 'Jumat', value: '13.00 – 21.00' },
-      { label: 'Sabtu – Minggu', value: '09.00 – 22.00' },
-    ],
+    branchesTitle: 'Cabang',
     copyright: '© {year} {brand}. Semua hak dilindungi.',
     // Kredit template Colorlib wajib dipertahankan (lisensi CC BY 3.0), kecuali membeli lisensi.
     credit: { prefix: 'Desain dasar dari template', label: 'Colorlib', href: 'https://colorlib.com' },

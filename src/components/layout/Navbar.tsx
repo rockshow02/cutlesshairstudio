@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useSite } from '@/lib/SiteContext';
 import { useActiveSection } from '@/lib/useActiveSection';
+import { useBranch } from '@/lib/BranchContext';
+import { useBooking } from '@/lib/useBooking';
 import { asset } from '@/lib/asset';
-import { bookingLink } from '@/lib/whatsapp';
 import { isCurrentPage, isHomePage, navHref, navKey, pageUrl } from '@/lib/navigation';
 import type { NavItem } from '@/types';
 import { Button } from '@/components/ui/Button';
@@ -23,7 +24,9 @@ export function Navbar() {
   const active = useActiveSection(home ? site.nav.flatMap((n) => (n.sectionId ? [n.sectionId] : [])) : []);
   const current = (item: NavItem): 'true' | 'page' | undefined =>
     isCurrentPage(item) ? 'page' : item.sectionId && active === item.sectionId ? 'true' : undefined;
-  const waHref = bookingLink(site, 'general');
+  const { selected, copy: branchCopy, openPicker } = useBranch();
+  const booking = useBooking()();
+  const branchLabel = selected ? selected.name : branchCopy.labels.pickBranch;
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 24);
@@ -104,7 +107,16 @@ export function Navbar() {
           </nav>
 
           <div className={styles.actions}>
-            <Button href={waHref} external size="sm" variant="light" className={styles.bookBtn}>
+            <button
+              type="button"
+              className={styles.branchBtn}
+              onClick={() => openPicker()}
+              aria-label={selected ? `${branchCopy.labels.selected}: ${selected.name}. ${branchCopy.labels.changeBranch}` : branchCopy.labels.pickBranch}
+            >
+              <Icon name="pin" size={18} />
+              <span className={styles.branchLabel}>{branchLabel}</span>
+            </button>
+            <Button href={booking.href} external={booking.external} onClick={booking.onClick} size="sm" variant="light" className={styles.bookBtn}>
               <span className={styles.longLabel}>{site.ui.bookNow}</span>
               <span className={styles.shortLabel}>{site.ui.bookNowShort}</span>
             </Button>
@@ -125,6 +137,21 @@ export function Navbar() {
 
       {/* Menu mobile: di bawah navbar (top = --nav-h), z-index menu > FAB > navbar */}
       <div id={MENU_ID} ref={panelRef} className={styles.panel} hidden={!open}>
+        <button
+          type="button"
+          className={styles.panelBranch}
+          onClick={() => {
+            close(false);
+            openPicker();
+          }}
+        >
+          <Icon name="pin" size={18} />
+          <span>
+            <small>{selected ? branchCopy.labels.selected : branchCopy.labels.allBranches}</small>
+            <strong>{branchLabel}</strong>
+          </span>
+          <span className={styles.panelBranchAction}>{selected ? branchCopy.labels.changeBranch : branchCopy.labels.pickBranch}</span>
+        </button>
         <nav aria-label={site.ui.mainNavigation}>
           <ul className={styles.panelList}>
             {site.nav.map((item) => (
@@ -137,7 +164,17 @@ export function Navbar() {
           </ul>
         </nav>
         <div className={styles.panelFoot}>
-          <Button href={waHref} external variant="whatsapp" icon="whatsapp" block onClick={() => close(false)}>
+          <Button
+            href={booking.href}
+            external={booking.external}
+            variant="whatsapp"
+            icon="whatsapp"
+            block
+            onClick={(e) => {
+              close(false);
+              booking.onClick?.(e);
+            }}
+          >
             {site.ui.floatingWhatsApp}
           </Button>
           <ul className={styles.panelSocials} aria-label={site.ui.socialLinks}>

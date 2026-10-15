@@ -1,8 +1,10 @@
 import { getServices } from '@/lib/content';
 import { useContent } from '@/lib/useContent';
 import { useSite } from '@/lib/SiteContext';
+import { useBranch } from '@/lib/BranchContext';
+import { useBooking } from '@/lib/useBooking';
 import { formatPrice } from '@/lib/format';
-import { bookingLink } from '@/lib/whatsapp';
+import type { Service } from '@/types';
 import { Section } from '@/components/ui/Section';
 import { SectionState } from '@/components/ui/SectionState';
 import { SectionTitle } from '@/components/ui/SectionTitle';
@@ -13,8 +15,9 @@ import { ResponsiveImage } from '@/components/ui/ResponsiveImage';
 import styles from './Services.module.css';
 
 export function Services() {
-  const state = useContent(getServices);
-  const { site } = useSite();
+  const { effective } = useBranch();
+  // "mulai Rp..." dihitung untuk cabang terpilih (atau terendah semua cabang)
+  const state = useContent(() => getServices(effective?.slug), [effective?.slug]);
 
   return (
     <Section id="layanan" tone="dark" labelledBy="layanan-title">
@@ -25,32 +28,7 @@ export function Services() {
             <ul className={styles.grid}>
               {data.items.map((service, i) => (
                 <Reveal as="li" key={service.id} delay={(i % 4) * 0.05}>
-                  <Card className={styles.card}>
-                    {service.image && <ResponsiveImage image={service.image} className={styles.photo} />}
-                    <div className={styles.top}>
-                      <Icon name={service.icon} size={40} strokeWidth={1.4} className={styles.icon} />
-                      <span className={styles.no} aria-hidden="true">
-                        {String(i + 1).padStart(2, '0')}
-                      </span>
-                    </div>
-                    <h3 className={styles.name}>{service.name}</h3>
-                    <p className={styles.desc}>{service.description}</p>
-                    <CardFooter className={styles.foot}>
-                      {service.startingPrice !== undefined && (
-                        <span className={styles.price}>{formatPrice(service.startingPrice, true, site.ui.priceFrom)}</span>
-                      )}
-                      <a
-                        className={styles.link}
-                        href={bookingLink(site, 'service', { service: service.name })}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        {site.ui.book}
-                        <span className="visually-hidden"> {service.name}</span>
-                        <Icon name="arrow" size={16} />
-                      </a>
-                    </CardFooter>
-                  </Card>
+                  <ServiceCard service={service} index={i} />
                 </Reveal>
               ))}
             </ul>
@@ -58,5 +36,42 @@ export function Services() {
         )}
       </SectionState>
     </Section>
+  );
+}
+
+function ServiceCard({ service, index }: { service: Service; index: number }) {
+  const { site } = useSite();
+  const book = useBooking();
+  const hasPrice = service.startingPrice !== undefined;
+  // Kategori tanpa harga aktif → "Tanya harga" ke WhatsApp cabang
+  const target = hasPrice
+    ? book({ kind: 'service', vars: { service: service.name } })
+    : book({ kind: 'priceQuestion', vars: { service: service.name } });
+
+  return (
+    <Card className={styles.card}>
+      {service.image && <ResponsiveImage image={service.image} className={styles.photo} />}
+      <div className={styles.top}>
+        <Icon name={service.icon} size={40} strokeWidth={1.4} className={styles.icon} />
+        <span className={styles.no} aria-hidden="true">
+          {String(index + 1).padStart(2, '0')}
+        </span>
+      </div>
+      <h3 className={styles.name}>{service.name}</h3>
+      <p className={styles.desc}>{service.description}</p>
+      <CardFooter className={styles.foot}>
+        {hasPrice && <span className={styles.price}>{formatPrice(service.startingPrice as number, true, site.ui.priceFrom)}</span>}
+        <a
+          className={styles.link}
+          href={target.href}
+          onClick={target.onClick}
+          {...(target.external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+        >
+          {hasPrice ? site.ui.book : site.ui.askPrice}
+          <span className="visually-hidden"> {service.name}</span>
+          <Icon name="arrow" size={16} />
+        </a>
+      </CardFooter>
+    </Card>
   );
 }

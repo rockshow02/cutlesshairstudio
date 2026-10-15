@@ -13,7 +13,6 @@ import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { Icon } from '@/components/ui/Icon';
 import { Stars } from '@/components/ui/Stars';
-import { PlaceholderBadge } from '@/components/ui/PlaceholderBadge';
 import styles from './Testimonials.module.css';
 
 const reduceMotion = typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -21,13 +20,16 @@ const reduceMotion = typeof window !== 'undefined' && window.matchMedia('(prefer
 export function Testimonials() {
   const state = useContent(getTestimonials);
   const { site } = useSite();
+  // Section bisa dimatikan dari Pengaturan Situs (mis. belum ada ulasan asli)
+  if (!site.features.testimonials) return null;
+  const hasSummary = (d: { summary: RatingSummary }) => Boolean(d.summary.ratingDisplay || d.summary.reviewCountLabel);
 
   return (
     <Section id="testimoni" tone="dark" labelledBy="testimoni-title">
       <SectionState state={state} isEmpty={(d) => d.items.length === 0} skeletonCount={3}>
         {(data) => (
           <>
-            <SectionTitle heading={data.heading} id="testimoni-title" aside={<Summary summary={data.summary} />} />
+            <SectionTitle heading={data.heading} id="testimoni-title" aside={hasSummary(data) ? <Summary summary={data.summary} /> : undefined} />
             <Swiper
               className={styles.swiper}
               modules={[A11y, Autoplay, Keyboard, Pagination]}
@@ -53,11 +55,13 @@ export function Testimonials() {
                 </SwiperSlide>
               ))}
             </Swiper>
-            <div className={styles.cta}>
-              <Button href={data.summary.url} external variant="ghost" icon="google">
-                {data.summary.ctaLabel}
-              </Button>
-            </div>
+            {data.summary.url && (
+              <div className={styles.cta}>
+                <Button href={data.summary.url} external variant="ghost" icon="google">
+                  {data.summary.ctaLabel}
+                </Button>
+              </div>
+            )}
           </>
         )}
       </SectionState>
@@ -70,12 +74,13 @@ function Summary({ summary }: { summary: RatingSummary }) {
     <div className={styles.summary}>
       <Icon name="google" size={30} className={styles.gLogo} />
       <div className={styles.summaryText}>
-        <p className={styles.summaryTop}>
-          <strong>{summary.ratingDisplay}</strong>
-          <Stars rating={summary.rating} label={`${summary.ratingDisplay} / 5`} />
-        </p>
-        <p className={styles.summaryCount}>{summary.reviewCountLabel}</p>
-        {summary.isPlaceholder && <PlaceholderBadge />}
+        {summary.ratingDisplay && summary.rating && (
+          <p className={styles.summaryTop}>
+            <strong>{summary.ratingDisplay}</strong>
+            <Stars rating={summary.rating} label={`${summary.ratingDisplay} / 5`} />
+          </p>
+        )}
+        {summary.reviewCountLabel && <p className={styles.summaryCount}>{summary.reviewCountLabel}</p>}
       </div>
     </div>
   );
@@ -85,28 +90,19 @@ function ReviewCard({ review }: { review: Testimonial }) {
   return (
     <Card className={styles.card}>
       <header className={styles.head}>
-        {review.avatarUrl ? (
-          <img className={styles.avatar} src={review.avatarUrl} alt="" width={40} height={40} loading="lazy" />
-        ) : (
-          <span className={styles.avatar} style={{ background: review.avatarColor }} aria-hidden="true">
-            {review.author.charAt(0)}
-          </span>
-        )}
+        <span className={styles.avatar} style={{ background: review.avatarColor }} aria-hidden="true">
+          {review.author.charAt(0)}
+        </span>
         <div className={styles.who}>
           <h3>{review.author}</h3>
-          <p>{[review.badge, review.relativeTime].filter(Boolean).join(' · ')}</p>
+          <p>{[review.source, review.relativeTime].filter(Boolean).join(' · ')}</p>
         </div>
-        {review.source === 'google' && <Icon name="google" size={18} className={styles.source} />}
+        {review.source === 'Google' && <Icon name="google" size={18} className={styles.source} />}
       </header>
       <Stars rating={review.rating} label={`${review.rating} / 5`} />
       <blockquote className={styles.text}>
         <p>{review.text}</p>
       </blockquote>
-      {review.isPlaceholder && (
-        <div className={styles.badgeRow}>
-          <PlaceholderBadge />
-        </div>
-      )}
     </Card>
   );
 }

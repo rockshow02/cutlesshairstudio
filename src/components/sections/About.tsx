@@ -108,18 +108,14 @@ function StatValue({ stat }: { stat: AboutStat }) {
     };
   }, [stat.animate, stat.value]);
 
+  const affix = (v: string) => `${stat.prefix ?? ''}${v}${stat.suffix ?? ''}`;
+  // Nilai final hanya SATU kali di teks halaman (sr-only). Angka animasi digambar lewat CSS
+  // (::before + data-value) dan aria-hidden, sehingga screen reader maupun alat baca halaman
+  // tidak membaca "5.000+ 5.000+".
   return (
     <>
-      <span ref={ref} aria-hidden="true">
-        {stat.prefix}
-        {text}
-        {stat.suffix}
-      </span>
-      <span className="visually-hidden">
-        {stat.prefix}
-        {final}
-        {stat.suffix}
-      </span>
+      <span className="visually-hidden">{affix(final)}</span>
+      <span ref={ref} aria-hidden="true" className={styles.counter} data-value={affix(text)} />
     </>
   );
 }

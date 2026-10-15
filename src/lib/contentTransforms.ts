@@ -1,14 +1,19 @@
 /**
  * Transformasi data JSON Pages CMS → tipe frontend (src/types).
  * Data sudah divalidasi Zod saat build, jadi di sini cukup menyaring (isActive), mengurutkan (order),
- * dan menggabungkan dengan teks statis.
+ * menghitung nilai turunan (harga per cabang, statistik), dan menggabungkan dengan teks statis.
  */
 import imageMeta from 'virtual:image-meta';
 import type {
+  AboutContent,
+  AboutCopy,
+  AboutStat,
   Announcement,
   Barber,
   BarbersContent,
   BarbersCopy,
+  Branch,
+  BranchCopy,
   GalleryContent,
   GalleryCopy,
   GalleryLayout,
@@ -27,21 +32,29 @@ import type {
   ProductsCopy,
   PromoContent,
   PromoCopy,
+  Rating,
+  ServicesContent,
   SiteContent,
   SocialLink,
+  Testimonial,
+  TestimonialsContent,
+  TestimonialsCopy,
 } from '@/types';
 import type {
   AnnouncementEntry,
   BarberEntry,
+  BranchEntry,
   GalleryEntry,
   OpeningHourEntry,
   PricingEntry,
   ProductEntry,
   PromoEntry,
   SettingsEntry,
+  TestimonialEntry,
 } from '@/content/schema';
-import { formatTime } from './format';
-import { isActiveNow, toIsoWIB } from './dates';
+import { formatNumber } from './format';
+import { isActiveNow, parseWIB, toIsoWIB } from './dates';
+import { fillTemplate } from './whatsapp';
 
 /* ---------- Helper umum ---------- */
 
@@ -88,124 +101,91 @@ function splitList(value: string | null | undefined, separator: RegExp): string[
     .filter(Boolean);
 }
 
-/* ---------- Daftar Harga ---------- */
-
-const CATEGORY_ORDER: Exclude<PriceCategoryKey, 'Paket'>[] = ['Haircut', 'Kids', 'Shaving', 'Coloring', 'Treatment'];
-const badgeOf = (b: PricingEntry['badge']): PriceBadge | undefined => (b ? b : undefined);
-
-export function buildPricing(entries: PricingEntry[], copy: PricingCopy): PricingContent {
-  const items = activeSorted(entries);
-
-  const categories: PriceCategory[] = CATEGORY_ORDER.map((key) => ({
-    id: key,
-    name: copy.categoryLabels[key],
-    items: items
-      .filter((i) => i.category === key)
-      .map((i, index) => ({
-        id: makeId(i.name, index),
-        name: i.name,
-        description: text(i.description),
-        price: i.price,
-        priceFrom: Boolean(i.priceFrom),
-        badge: badgeOf(i.badge),
-      })),
-  })).filter((c) => c.items.length > 0);
-
-  const packages: PricePackage[] = items
-    .filter((i) => i.category === 'Paket')
-    .map((i, index) => ({
-      id: makeId(i.name, index),
-      name: i.name,
-      tag: badgeOf(i.badge) ?? copy.packageDefaultTag,
-      price: i.price,
-      // Isi paket ditulis satu baris per poin di "Keterangan"
-      features: splitList(i.description, /\r?\n/),
-      featured: i.badge === 'Best Seller',
-      badge: badgeOf(i.badge),
-      ctaLabel: copy.packageCtaLabel,
-    }));
-
-  return { heading: copy.heading, categories, packagesTitle: copy.packagesTitle, packages };
+/** ["Bogor", "Cibubur", "Bandung"] → "Bogor, Cibubur & Bandung" */
+export function joinIndonesian(items: string[]): string {
+  if (items.length <= 1) return items.join('');
+  return `${items.slice(0, -1).join(', ')} & ${items[items.length - 1]}`;
 }
 
-/* ---------- Barber ---------- */
+const isBranchEntryBookable = (b: Pick<BranchEntry, 'status' | 'whatsappNumber'>) =>
+  b.status === 'Aktif' && /^62\d{8,13}$/.test(b.whatsappNumber);
 
-export function buildBarbers(entries: BarberEntry[], copy: BarbersCopy): BarbersContent {
-  const items: Barber[] = activeSorted(entries).map((b, index) => {
-    const role = text(b.role);
-    return {
-      id: makeId(b.name, index),
-      name: b.name,
-      role,
-      specialties: splitList(b.specialty, /[,\n]/),
-      photo: toImage(b.photo, role ? `Foto ${b.name}, ${role}` : `Foto ${b.name}`, { width: 600, height: 800 }),
-      instagram: text(b.instagram),
-      whatsappNumber: text(b.whatsappNumber),
-    };
-  });
-  return { ...copy, items };
-}
-
-/* ---------- Galeri ---------- */
-
-/** Layout grid otomatis dari rasio foto: tegak → tinggi, lebar → lebar */
-function layoutFromRatio(width: number, height: number): GalleryLayout {
-  const ratio = width / height;
-  if (ratio >= 1.35) return 'wide';
-  if (ratio <= 0.8) return 'tall';
-  return 'square';
-}
-
-export function buildGallery(entries: GalleryEntry[], copy: GalleryCopy): GalleryContent {
-  const items = activeSorted(entries).map((g, index) => {
-    const image = toImage(g.image, g.altText);
-    return {
-      id: makeId(g.altText, index),
-      image,
-      caption: text(g.caption),
-      layout: layoutFromRatio(image.width, image.height),
-      styleCategory: g.styleCategory,
-    };
-  });
-  return { ...copy, items };
-}
-
-/* ---------- Pengaturan Situs ---------- */
+/* ---------- Cabang ---------- */
 
 const DAY_INDEX: Record<OpeningHourEntry['day'], OpeningHour['day']> = {
   Minggu: 0, Senin: 1, Selasa: 2, Rabu: 3, Kamis: 4, Jumat: 5, Sabtu: 6,
 };
+const DAY_ORDER: OpeningHour['day'][] = [1, 2, 3, 4, 5, 6, 0];
 
 export function toOpeningHours(hours: OpeningHourEntry[]): OpeningHour[] {
-  return hours.map((h) => ({
-    day: DAY_INDEX[h.day],
-    label: h.day,
-    open: text(h.openTime),
-    close: text(h.closeTime),
-    closed: Boolean(h.isClosed) || !h.openTime || !h.closeTime,
-  }));
+  return hours
+    .map((h) => ({
+      day: DAY_INDEX[h.day],
+      label: h.day,
+      open: text(h.openTime),
+      close: text(h.closeTime),
+      closed: Boolean(h.isClosed) || !h.openTime || !h.closeTime,
+    }))
+    .sort((a, b) => DAY_ORDER.indexOf(a.day) - DAY_ORDER.indexOf(b.day));
 }
 
-/** Ringkas jam buka untuk footer: hari berurutan dengan jam sama digabung ("Senin – Kamis") */
-export function summarizeHours(hours: OpeningHour[], closedLabel: string): SiteContent['footer']['hoursSummary'] {
-  const value = (h: OpeningHour) => (h.closed || !h.open || !h.close ? closedLabel : `${formatTime(h.open)} – ${formatTime(h.close)}`);
-  const groups: { first: string; last: string; value: string }[] = [];
-  hours.forEach((h) => {
-    const v = value(h);
-    const prev = groups[groups.length - 1];
-    if (prev && prev.value === v) prev.last = h.label;
-    else groups.push({ first: h.label, last: h.label, value: v });
-  });
-  return groups.map((g) => ({ label: g.first === g.last ? g.first : `${g.first} – ${g.last}`, value: g.value }));
+export function buildBranches(entries: BranchEntry[], brand: string): Branch[] {
+  return entries
+    .map((b, index) => ({ b, index }))
+    .sort((x, y) => (x.b.order ?? 0) - (y.b.order ?? 0) || x.index - y.index)
+    .map(({ b }) => {
+      const address = text(b.address);
+      const hasGeo = b.latitude !== null && b.longitude !== null && b.latitude !== undefined && b.longitude !== undefined;
+      const place = hasGeo ? `${b.latitude},${b.longitude}` : `${brand} ${b.name}, ${address ?? `${b.city}, ${b.province}`}`;
+      const photo = text(b.photo);
+      return {
+        slug: b.slug,
+        name: b.name,
+        city: b.city,
+        province: b.province,
+        address,
+        googleMapsUrl: text(b.googleMapsUrl),
+        latitude: hasGeo ? (b.latitude as number) : undefined,
+        longitude: hasGeo ? (b.longitude as number) : undefined,
+        whatsappNumber: b.whatsappNumber,
+        phoneDisplay: /^62\d+$/.test(b.whatsappNumber) ? formatPhoneDisplay(b.whatsappNumber) : '',
+        timezone: b.timezone,
+        hours: toOpeningHours(b.openingHours ?? []),
+        status: b.status,
+        photo: photo ? toImage(photo, `Studio ${brand} cabang ${b.name}`, { width: 1600, height: 1000 }) : undefined,
+        order: b.order ?? 0,
+        bookable: isBranchEntryBookable(b),
+        pageUrl: `/cabang/${b.slug}/`,
+        mapEmbedUrl: `https://www.google.com/maps?q=${encodeURIComponent(place)}&z=16&output=embed`,
+        directionsUrl:
+          text(b.googleMapsUrl) ?? `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(place)}`,
+      };
+    });
 }
 
-export function buildSite(s: SettingsEntry, base: SiteContent, closedLabel: string): SiteContent {
-  const hours = toOpeningHours(s.openingHours ?? []);
+/** Kota unik dari cabang yang sudah beroperasi (bukan "Segera Dibuka"), mis. "Bogor & Cibubur" */
+export function operatingCities(branches: Branch[]): string[] {
+  const operating = branches.filter((b) => b.status !== 'Segera Dibuka');
+  return [...new Set((operating.length ? operating : branches).map((b) => b.city))];
+}
+
+export function buildLocations(branches: Branch[], copy: BranchCopy): LocationsContent {
+  return { heading: copy.heading, labels: copy.labels, items: branches };
+}
+
+/* ---------- Pengaturan situs ---------- */
+
+export function buildSite(s: SettingsEntry, base: SiteContent, branches: Branch[]): SiteContent {
   const logo = text(s.logo);
+  const vars = { brand: s.siteName, cities: joinIndonesian(operatingCities(branches)) };
+  const features = { testimonials: s.showTestimonials, products: s.showProducts, beforeAfter: s.showBeforeAfter };
   return {
     ...base,
     brandName: s.siteName,
-    // Logo dari CMS dipakai di footer (versi tumpuk). Logo navbar & preloader tetap aset statis.
+    siteUrl: s.siteUrl,
+    features,
+    // Link menu ikut hilang bila section-nya dimatikan
+    nav: base.nav.filter((item) => !(item.href?.startsWith('/produk') && !features.products)),
     logo: logo ? { ...base.logo, stacked: toImage(logo, s.siteName, base.logo.stacked) } : base.logo,
     whatsapp: {
       ...base.whatsapp,
@@ -213,12 +193,13 @@ export function buildSite(s: SettingsEntry, base: SiteContent, closedLabel: stri
       displayNumber: formatPhoneDisplay(s.mainWhatsappNumber),
       templates: { ...base.whatsapp.templates, general: text(s.defaultWaMessage) ?? base.whatsapp.templates.general },
     },
-    address: text(s.address) ?? base.address,
-    footer: {
-      ...base.footer,
-      description: text(s.footerText) ?? base.footer.description,
-      hoursSummary: hours.length > 0 ? summarizeHours(hours, closedLabel) : base.footer.hoursSummary,
+    seo: {
+      ...base.seo,
+      title: fillTemplate(base.seo.title, vars),
+      description: fillTemplate(base.seo.description, vars),
+      url: `${s.siteUrl}/`,
     },
+    footer: { ...base.footer, description: text(s.footerText) ?? base.footer.description },
   };
 }
 
@@ -234,48 +215,158 @@ export function buildSocials(s: SettingsEntry, base: SocialLink[]): SocialLink[]
   const urls: Partial<Record<SocialLink['platform'], string | null | undefined>> = {
     instagram: s.instagramUrl,
     tiktok: s.tiktokUrl,
-    google: s.googleMapsUrl,
   };
   return base.flatMap((link) => {
     if (!(link.platform in urls)) return [link];
     const url = text(urls[link.platform]);
     if (!url) return [];
-    const handle = link.platform === 'google' ? link.handle : (handleFromUrl(url) ?? link.handle);
-    return [{ ...link, url, handle }];
+    return [{ ...link, url, handle: handleFromUrl(url) ?? link.handle }];
   });
 }
 
-/** Cabang utama mengambil alamat, nomor, jam buka, dan link Maps dari settings. */
-export function buildLocations(s: SettingsEntry, base: LocationsContent): LocationsContent {
-  if (base.items.length === 0) return base;
-  const [primary, ...others] = base.items;
-  const hours = toOpeningHours(s.openingHours ?? []);
-  const address = text(s.address);
-  const maps = text(s.googleMapsUrl);
+/* ---------- Harga (dengan harga khusus cabang) ---------- */
+
+const CATEGORY_ORDER: Exclude<PriceCategoryKey, 'Paket'>[] = ['Haircut', 'Kids', 'Shaving', 'Coloring', 'Treatment'];
+const badgeOf = (b: PricingEntry['badge']): PriceBadge | undefined => (b ? b : undefined);
+
+/**
+ * Harga efektif sebuah item:
+ * - cabang dipilih → harga khusus cabang itu, atau harga dasar;
+ * - belum memilih  → harga terendah dari harga dasar & semua harga cabang (varies = ada perbedaan).
+ */
+export function effectivePrice(item: PricingEntry, branchSlug?: string): { price: number; varies: boolean } {
+  const branchPrices = item.branchPrices ?? [];
+  if (branchSlug) return { price: branchPrices.find((p) => p.branchSlug === branchSlug)?.price ?? item.price, varies: false };
+  const all = [item.price, ...branchPrices.map((p) => p.price)];
+  return { price: Math.min(...all), varies: new Set(all).size > 1 };
+}
+
+export function buildPricing(entries: PricingEntry[], copy: PricingCopy, branches: Branch[], branchSlug?: string): PricingContent {
+  const items = activeSorted(entries);
+  const branch = branches.find((b) => b.slug === branchSlug);
+
+  const categories: PriceCategory[] = CATEGORY_ORDER.map((key) => ({
+    id: key,
+    name: copy.categoryLabels[key],
+    items: items
+      .filter((i) => i.category === key)
+      .map((i, index) => {
+        const { price, varies } = effectivePrice(i, branch?.slug);
+        return {
+          id: makeId(i.name, index),
+          name: i.name,
+          description: text(i.description),
+          price,
+          priceFrom: Boolean(i.priceFrom) || varies,
+          varies,
+          badge: badgeOf(i.badge),
+        };
+      }),
+  })).filter((c) => c.items.length > 0);
+
+  const packages: PricePackage[] = items
+    .filter((i) => i.category === 'Paket')
+    .map((i, index) => ({
+      id: makeId(i.name, index),
+      name: i.name,
+      tag: badgeOf(i.badge) ?? copy.packageDefaultTag,
+      price: effectivePrice(i, branch?.slug).price,
+      features: splitList(i.description, /\r?\n/),
+      featured: i.badge === 'Best Seller',
+      badge: badgeOf(i.badge),
+      ctaLabel: copy.packageCtaLabel,
+    }));
+
+  return {
+    heading: copy.heading,
+    branchSlug: branch?.slug,
+    branchName: branch?.name,
+    hasBranchPrices: items.some((i) => (i.branchPrices ?? []).length > 0),
+    categories,
+    packagesTitle: copy.packagesTitle,
+    packages,
+  };
+}
+
+/** Harga "mulai" per kategori: harga efektif terendah item aktif (untuk cabang, atau semua cabang) */
+export function startingPrices(entries: PricingEntry[], branchSlug?: string): Partial<Record<PriceCategoryKey, number>> {
+  const result: Partial<Record<PriceCategoryKey, number>> = {};
+  for (const item of activeSorted(entries)) {
+    const { price } = effectivePrice(item, branchSlug);
+    const current = result[item.category];
+    result[item.category] = current === undefined ? price : Math.min(current, price);
+  }
+  return result;
+}
+
+export function buildServices(base: ServicesContent, pricing: PricingEntry[], branchSlug?: string): ServicesContent {
+  const prices = startingPrices(pricing, branchSlug);
   return {
     ...base,
-    items: [
-      {
-        ...primary,
-        address: address ? { ...primary.address, formatted: address } : primary.address,
-        phoneDisplay: formatPhoneDisplay(s.mainWhatsappNumber),
-        whatsappNumber: s.mainWhatsappNumber,
-        hours: hours.length > 0 ? hours : primary.hours,
-        map: maps ? { ...primary.map, directionsUrl: maps } : primary.map,
-      },
-      ...others,
-    ],
+    items: base.items.map((s) => ({ ...s, startingPrice: s.pricingCategory ? prices[s.pricingCategory] : undefined })),
   };
+}
+
+/* ---------- Barber ---------- */
+
+export function buildBarbers(entries: BarberEntry[], copy: BarbersCopy, branches: Branch[], branchSlug?: string): BarbersContent {
+  const branchName = new Map(branches.map((b) => [b.slug, b.name]));
+  const items: Barber[] = activeSorted(entries)
+    .filter((b) => !branchSlug || b.branchSlug === branchSlug)
+    .map((b, index) => {
+      const role = text(b.role);
+      return {
+        id: makeId(b.name, index),
+        name: b.name,
+        role,
+        specialties: splitList(b.specialty, /[,\n]/),
+        photo: toImage(b.photo, role ? `Foto ${b.name}, ${role}` : `Foto ${b.name}`, { width: 600, height: 800 }),
+        instagram: text(b.instagram),
+        whatsappNumber: text(b.whatsappNumber),
+        branchSlug: b.branchSlug,
+        branchName: branchName.get(b.branchSlug) ?? b.branchSlug,
+      };
+    });
+  return { ...copy, items };
+}
+
+/* ---------- Galeri ---------- */
+
+/** Layout grid otomatis dari rasio foto: tegak → tinggi, lebar → lebar */
+function layoutFromRatio(width: number, height: number): GalleryLayout {
+  const ratio = width / height;
+  if (ratio >= 1.35) return 'wide';
+  if (ratio <= 0.8) return 'tall';
+  return 'square';
+}
+
+export function buildGallery(entries: GalleryEntry[], copy: GalleryCopy, showBeforeAfter: boolean): GalleryContent {
+  const items = activeSorted(entries).map((g, index) => {
+    const image = toImage(g.image, g.altText);
+    return {
+      id: makeId(g.altText, index),
+      image,
+      caption: text(g.caption),
+      layout: layoutFromRatio(image.width, image.height),
+      styleCategory: g.styleCategory,
+    };
+  });
+  return { ...copy, beforeAfter: showBeforeAfter ? copy.beforeAfter : [], items };
 }
 
 /* ---------- Promo & Pengumuman (filter tanggal di browser, saat halaman dibuka) ---------- */
 
-export function buildPromos(entries: PromoEntry[], copy: PromoCopy, now = Date.now()): PromoContent {
+const appliesTo = (slugs: string[] | null | undefined, branchSlug?: string) =>
+  !branchSlug || !slugs || slugs.length === 0 || slugs.includes(branchSlug);
+
+export function buildPromos(entries: PromoEntry[], copy: PromoCopy, branches: Branch[], branchSlug?: string, now = Date.now()): PromoContent {
+  const names = new Map(branches.map((b) => [b.slug, b.name]));
   const items = entries
-    .filter((p) => p.isActive !== false && isActiveNow(p.startDate, p.endDate, now))
-    .sort((a, b) => Date.parse(toIsoWIB(a.endDate, true)) - Date.parse(toIsoWIB(b.endDate, true)))
+    .filter((p) => p.isActive !== false && isActiveNow(p.startDate, p.endDate, now) && appliesTo(p.branchSlugs, branchSlug))
+    .sort((a, b) => parseWIB(a.endDate, true) - parseWIB(b.endDate, true))
     .map((p, index) => {
       const image = text(p.image);
+      const slugs = p.branchSlugs ?? [];
       return {
         id: makeId(p.title, index),
         title: p.title,
@@ -285,23 +376,92 @@ export function buildPromos(entries: PromoEntry[], copy: PromoCopy, now = Date.n
         waMessage: text(p.waMessage),
         startDate: toIsoWIB(p.startDate),
         endDate: toIsoWIB(p.endDate, true),
+        branchSlugs: slugs,
+        branchNames: slugs.map((s) => names.get(s) ?? s),
       };
     });
   return { ...copy, items };
 }
 
-export function buildAnnouncements(entries: AnnouncementEntry[], now = Date.now()): Announcement[] {
+export function buildAnnouncements(entries: AnnouncementEntry[], branches: Branch[], branchSlug?: string, now = Date.now()): Announcement[] {
+  const names = new Map(branches.map((b) => [b.slug, b.name]));
   return entries
-    .filter((a) => a.isActive !== false && isActiveNow(a.startDate, a.endDate, now))
-    .map((a, index) => ({
-      id: makeId(a.message.slice(0, 40), index),
-      message: a.message,
-      type: a.type,
-      startDate: a.startDate ? toIsoWIB(a.startDate) : undefined,
-      endDate: a.endDate ? toIsoWIB(a.endDate, true) : undefined,
-      // Kunci "sudah ditutup": isi pesan + tanggal → bila admin mengubah pengumuman, ia tampil lagi
-      updatedAt: `${a.type}|${a.message}|${a.startDate ?? ''}|${a.endDate ?? ''}`,
-    }));
+    .filter((a) => a.isActive !== false && isActiveNow(a.startDate, a.endDate, now) && appliesTo(a.branchSlugs, branchSlug))
+    .map((a, index) => {
+      const slugs = a.branchSlugs ?? [];
+      return {
+        id: makeId(a.message.slice(0, 40), index),
+        message: a.message,
+        type: a.type,
+        startDate: a.startDate ? toIsoWIB(a.startDate) : undefined,
+        endDate: a.endDate ? toIsoWIB(a.endDate, true) : undefined,
+        // Kunci "sudah ditutup": isi pesan + tanggal → bila admin mengubah pengumuman, ia tampil lagi
+        updatedAt: `${a.type}|${a.message}|${a.startDate ?? ''}|${a.endDate ?? ''}|${slugs.join(',')}`,
+        branchSlugs: slugs,
+        branchNames: slugs.map((s) => names.get(s) ?? s),
+      };
+    });
+}
+
+/* ---------- Testimoni ---------- */
+
+const AVATAR_COLORS = ['#7a6756', '#5b554f', '#8a7a6b', '#44403a', '#63626a'];
+
+function relativeTime(date: string | null | undefined, now = Date.now()): string | undefined {
+  if (!date) return undefined;
+  const days = Math.max(0, Math.floor((now - parseWIB(date)) / 86_400_000));
+  if (days < 1) return 'hari ini';
+  if (days < 7) return `${days} hari lalu`;
+  if (days < 30) return `${Math.floor(days / 7)} minggu lalu`;
+  if (days < 365) return `${Math.floor(days / 30)} bulan lalu`;
+  return `${Math.floor(days / 365)} tahun lalu`;
+}
+
+export function buildTestimonials(entries: TestimonialEntry[], copy: TestimonialsCopy, s: SettingsEntry): TestimonialsContent {
+  const stats = s.stats;
+  const items: Testimonial[] = activeSorted(entries).map((t, index) => ({
+    id: makeId(t.author, index),
+    author: t.author,
+    avatarColor: AVATAR_COLORS[index % AVATAR_COLORS.length],
+    relativeTime: relativeTime(t.date),
+    rating: t.rating as Rating,
+    text: t.text,
+    source: t.source,
+  }));
+  return {
+    heading: copy.heading,
+    summary: {
+      rating: stats.showRating && stats.rating ? stats.rating : undefined,
+      ratingDisplay: stats.showRating && stats.rating ? stats.rating.toLocaleString('id-ID', { maximumFractionDigits: 1 }) : undefined,
+      reviewCountLabel:
+        stats.showReviewCount && stats.reviewCount ? fillTemplate(copy.reviewCountLabel, { count: formatNumber(stats.reviewCount) }) : undefined,
+      url: text(stats.reviewsUrl),
+      ctaLabel: copy.ctaLabel,
+    },
+    items,
+  };
+}
+
+/* ---------- Tentang: angka statistik ---------- */
+
+export function buildAbout(copy: AboutCopy, s: SettingsEntry, branches: Branch[], barbers: BarberEntry[]): AboutContent {
+  const stats = s.stats;
+  const activeBranches = branches.filter((b) => b.status === 'Aktif');
+  const activeSlugs = new Set(activeBranches.map((b) => b.slug));
+  const activeBarbers = barbers.filter((b) => b.isActive !== false && activeSlugs.has(b.branchSlug));
+  const L = copy.statLabels;
+
+  const list: AboutStat[] = [];
+  if (activeBranches.length > 0) list.push({ value: activeBranches.length, animate: true, label: L.branches });
+  if (activeBarbers.length > 0) list.push({ value: activeBarbers.length, animate: true, label: L.barbers });
+  if (stats.showCustomers && stats.customers) list.push({ value: stats.customers, suffix: '+', animate: true, label: L.customers });
+  if (stats.showFoundedYear && stats.foundedYear) list.push({ value: stats.foundedYear, display: String(stats.foundedYear), label: L.foundedYear });
+  if (stats.showRating && stats.rating)
+    list.push({ value: stats.rating, display: stats.rating.toLocaleString('id-ID', { maximumFractionDigits: 1 }), label: L.rating });
+  if (stats.showReviewCount && stats.reviewCount) list.push({ value: stats.reviewCount, suffix: '+', animate: true, label: L.reviewCount });
+
+  const { statLabels: _labels, ...rest } = copy;
+  return { ...rest, stats: list };
 }
 
 /* ---------- Produk ---------- */

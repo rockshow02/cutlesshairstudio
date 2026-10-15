@@ -108,8 +108,34 @@
   align-items: center;
   gap: var(--space-2);
 }
-.star {
-  color: var(--c-star);
+.highlights svg {
+  flex: none;
+  color: var(--c-sand);
+}
+.branchName {
+  color: var(--c-bone);
+  font-weight: 600;
+}
+.status {
+  color: var(--c-sand-light);
+}
+.pickBtn {
+  min-height: 36px;
+  padding: 0 var(--space-3);
+  border: 1px solid rgba(242, 239, 234, 0.45);
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--c-bone);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background-color var(--dur) var(--ease), color var(--dur) var(--ease);
+}
+.pickBtn:hover {
+  background: var(--c-bone);
+  color: var(--c-ink);
 }
 
 /* Entrance setelah preloader selesai (html[data-ready]) */
