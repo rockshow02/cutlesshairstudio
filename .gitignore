@@ -2,10 +2,16 @@
 node_modules/
 dist/
 
-# Env lokal (tidak ada env yang wajib)
+# Env: .env.development/.env.staging/.env.production/.env.example DI-COMMIT (tanpa rahasia).
+# Override pribadi tidak di-commit.
 .env
-.env.*
+.env.local
+.env.*.local
 *.local
+
+# Wrangler (wrangler dev)
+.wrangler/
+.dev.vars*
 
 # File sementara optimasi gambar
 *.tmp.webp

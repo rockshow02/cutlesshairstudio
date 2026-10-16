@@ -31,7 +31,7 @@ const CONVERTIBLE = /\.(jpe?g|png|gif|tiff?|avif|webp)$/i;
 const toPublicUrl = (abs) => '/' + path.relative(path.join(ROOT, 'public'), abs).split(path.sep).join('/');
 
 async function walk(dir) {
-  let entries = [];
+  let entries;
   try {
     entries = await readdir(dir, { withFileTypes: true });
   } catch {

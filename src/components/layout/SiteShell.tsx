@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from 'react';
+import { lazy, Suspense, useEffect, useState, type ReactNode } from 'react';
 import { getAnnouncements, getBranchCopy, getBranches, getSite, getSocials, FATAL_ERROR_MESSAGE } from '@/lib/content';
 import { useContent } from '@/lib/useContent';
 import { SiteProvider } from '@/lib/SiteContext';
@@ -9,6 +9,9 @@ import { AnnouncementBar } from './AnnouncementBar';
 import { Navbar } from './Navbar';
 import { Footer } from './Footer';
 import { FloatingWhatsApp } from './FloatingWhatsApp';
+
+/** Badge DEV/STAGING: syarat ini diganti konstanta saat build, jadi kodenya tidak ikut ke bundle produksi. */
+const EnvBadge = import.meta.env.VITE_APP_ENV !== 'production' ? lazy(() => import('./EnvBadge')) : null;
 
 /** Preloader tampil min. 700 ms (agar animasi logo terlihat) dan maks. 1,5 detik. */
 const PRELOADER_MIN = 700;
@@ -83,6 +86,11 @@ export function SiteShell({ children, pageBranchSlug }: SiteShellProps) {
         </main>
       ) : (
         <main id="main" aria-busy="true" />
+      )}
+      {EnvBadge && (
+        <Suspense fallback={null}>
+          <EnvBadge />
+        </Suspense>
       )}
     </>
   );

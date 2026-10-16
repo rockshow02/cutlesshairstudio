@@ -1,14 +1,29 @@
 // Cloudflare Workers (static assets, gratis). Dipakai oleh Workers Builds saat deploy.
+//   Produksi: npm run build         && npx wrangler deploy               → Worker "cutlesshairstudio"
+//   Staging : npm run build:staging && npx wrangler deploy --env staging → Worker "cutlesshairstudio-staging"
 // "name" harus sama dengan nama Worker di dashboard Cloudflare (subdomain *.workers.dev).
+// Uji lokal: npm run preview:worker (build staging + wrangler dev di http://localhost:8787)
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "cutlesshairstudio",
-  "compatibility_date": "2026-09-01",
+  "compatibility_date": "2026-05-01", // Worker hanya static assets; tanggal ini didukung wrangler dev lokal (Node 20)
   "assets": {
     "directory": "./dist",
     // /cabang/cibubur → /cabang/cibubur/ → dist/cabang/cibubur/index.html (hasil prerender)
     "html_handling": "auto-trailing-slash",
     // URL tak dikenal → dist/404.html (bukan beranda), agar mesin pencari tidak mengindeks halaman palsu
     "not_found_handling": "404-page"
+  },
+  "env": {
+    // Worker terpisah: URL, versi, dan pengaturan (mis. Cloudflare Access) tidak tercampur dengan produksi.
+    // dist/ hasil build staging sudah berisi robots.txt "Disallow: /" dan header X-Robots-Tag: noindex (dist/_headers).
+    "staging": {
+      "name": "cutlesshairstudio-staging",
+      "assets": {
+        "directory": "./dist",
+        "html_handling": "auto-trailing-slash",
+        "not_found_handling": "404-page"
+      }
+    }
   }
 }

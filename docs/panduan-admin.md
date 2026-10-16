@@ -20,6 +20,7 @@ Panduan ini untuk pemilik dan staf. Tidak perlu keahlian teknis.
 1. Buka **https://app.pagescms.org**.
 2. Klik **Sign in with GitHub** → izinkan akses (sekali saja).
 3. Pilih repo **cutlesshairstudio** → branch **main**.
+   Branch **main** = website asli. Branch **staging** hanya untuk uji coba (hasilnya tampil di alamat staging berlabel *STAGING*, tidak dilihat pelanggan). Bila ragu, pakai **main**.
 4. Menu konten ada di kiri: **Cabang, Daftar Harga, Barber, Galeri, Promo, Pengumuman, Testimoni, Produk, Pengaturan Situs**.
 
 Tips umum:

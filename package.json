@@ -4,11 +4,16 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "vite --mode development",
+    "dev:sync": "node scripts/dev-sync.mjs",
     "prebuild": "node scripts/optimize-images.mjs",
-    "build": "tsc -b && vite build",
+    "build": "tsc -b && vite build --mode production",
+    "build:staging": "node scripts/optimize-images.mjs && tsc -b && vite build --mode staging",
     "preview": "vite preview",
+    "preview:worker": "npm run build:staging && wrangler dev --env staging --port 8787",
     "typecheck": "tsc -b --noEmit",
+    "lint": "eslint .",
+    "check:content": "node scripts/check-content.mjs",
     "optimize-images": "node scripts/optimize-images.mjs",
     "sync-cms": "node scripts/sync-pages-config.mjs"
   },
@@ -18,13 +23,20 @@
     "swiper": "^11.2.8"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "@types/node": "^20.19.43",
     "@types/react": "^18.3.23",
     "@types/react-dom": "^18.3.7",
     "@vitejs/plugin-react": "^4.5.2",
+    "eslint": "^10.12.0",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "eslint-plugin-react-refresh": "^0.5.7",
+    "globals": "^17.13.0",
     "sharp": "^0.35.4",
     "typescript": "~5.8.3",
+    "typescript-eslint": "^8.71.2",
     "vite": "^6.3.5",
+    "wrangler": "^4.86.0",
     "zod": "^4.6.5"
   },
   "engines": {

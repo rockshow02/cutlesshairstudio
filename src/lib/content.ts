@@ -90,7 +90,8 @@ const data = {
 function normalizeSettings(s: SettingsEntry): SettingsEntry {
   return {
     ...s,
-    siteUrl: (s.siteUrl ?? '').replace(/\/+$/, ''),
+    // Per environment (.env.<mode> → VITE_SITE_URL); produksi: kosong → Pengaturan Situs
+    siteUrl: (import.meta.env.VITE_SITE_URL || s.siteUrl || '').replace(/\/+$/, ''),
     stats: {
       ...s.stats,
       rating: s.stats?.rating === undefined || s.stats?.rating === null || (s.stats.rating as unknown) === ''
