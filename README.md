@@ -10,29 +10,40 @@ Website Vite + React 18 + TypeScript + CSS Modules untuk beberapa cabang (saat i
 | Kompres gambar & sinkron dropdown CMS | GitHub Actions | Gratis (lihat kuota di bawah) |
 | Peta, booking, lokasi terdekat | Google Maps embed, link `wa.me`, Geolocation API browser | Gratis |
 
+| Environment | Branch | URL |
+|---|---|---|
+| **Produksi** | `main` | https://cutlesshairstudio.adi-yansyaaah.workers.dev |
+| **Staging** (noindex) | `staging` | https://cutlesshairstudio-staging.adi-yansyaaah.workers.dev |
+| Lokal | apa saja | http://localhost:5173 (`npm run dev`) · http://localhost:8787 (`npm run preview:worker`) |
+
+Alur kerja **feature → staging → main**, sinkron konten main → staging, dan checklist rilis: **[CONTRIBUTING.md](CONTRIBUTING.md)**.
+
 > Versi lama dengan Strapi diarsipkan di branch [`archive/strapi`](../../tree/archive/strapi).
 
 ---
 
 ## 1. Menjalankan lokal
 
-Kebutuhan: Node.js 20.19+ (disarankan 22, lihat `.node-version`). **Tidak ada variabel env yang wajib.**
+Kebutuhan: Node.js 20.19+ (Cloudflare & CI memakai 22, lihat `.node-version`). Variabel environment sudah ada di `.env.development` / `.env.staging` / `.env.production` (tanpa rahasia, lihat `.env.example`).
 
 ```bash
 npm install
-npm run dev        # http://localhost:5173
-npm run build      # optimasi gambar → type-check → validasi konten → build + prerender ke dist/
-npm run preview    # cek hasil build (http://localhost:4173)
+npm run dev              # http://localhost:5173, badge DEV
+npm run dev:sync         # dev + tarik perubahan Pages CMS dari branch staging tiap 15 detik
+npm run preview:worker   # build staging + Worker lokal (wrangler dev) di http://localhost:8787
 ```
 
 | Perintah | Fungsi |
 |---|---|
-| `npm run dev` | Dev server. Konten tidak valid ditampilkan sebagai overlay error |
-| `npm run build` | Build produksi. **Gagal** bila konten tidak sesuai skema atau belum siap tayang (lihat §2 Aturan) |
-| `CONTENT_CHECK=warn npm run build` | Khusus uji lokal dengan data belum lengkap: masalah "siap tayang" hanya diberi peringatan. **Jangan dipakai di Cloudflare** |
+| `npm run dev` | Dev server (mode development). Konten tidak valid tampil sebagai overlay error di browser |
+| `npm run dev:sync` | Hanya di branch `staging` tanpa perubahan lokal: `git fetch` + `git merge --ff-only origin/staging` setiap 15 detik sambil menjalankan Vite. Edit di Pages CMS (branch staging) tampil di localhost dalam ±15 detik. Tidak pernah menimpa perubahan lokal |
+| `npm run preview:worker` | Menguji Worker sungguhan: redirect `/cabang/x` → `/cabang/x/`, halaman cabang prerender, `/produk/`, `_headers`, halaman 404 |
+| `npm run build` | Build **produksi**. Gagal bila konten tidak valid atau belum siap tayang (lihat §2 Aturan) |
+| `npm run build:staging` | Build **staging**: siteUrl staging, noindex, badge STAGING; masalah siap tayang hanya peringatan |
+| `npm run check:content` | Validasi konten tanpa build (dipakai CI). `CONTENT_CHECK=warn` = longgar |
+| `npm run typecheck` / `npm run lint` | TypeScript / ESLint |
 | `npm run optimize-images` | Kompres gambar baru di `public/uploads/` ke WebP & perbarui path di JSON |
 | `npm run sync-cms` | Menyalin daftar cabang dari `branches.json` ke dropdown cabang di `.pages.yml` |
-| `npm run typecheck` | Cek TypeScript |
 
 Opsional: `VITE_CONTENT_DELAY=1500 npm run dev` untuk mensimulasikan loading.
 
@@ -88,7 +99,7 @@ Jam buka dan alamat **hanya** ada di data cabang. `settings.json` berisi data me
   ```
   Cloudflare tetap menayangkan versi terakhir yang berhasil, jadi kesalahan input tidak pernah tayang.
 - **Relasi.** Slug cabang yang tidak dikenal di `barbers.branchSlug`, `pricing.branchPrices`, `promos/announcements.branchSlugs`, atau slug cabang ganda → build gagal.
-- **Siap tayang.** Build juga gagal bila konten yang tayang masih berisi nomor contoh `6281234567890`, kata `TODO` atau `contoh`; bila ada cabang **Aktif** tanpa nomor WA, jam buka, atau alamat; bila tidak ada satu pun cabang Aktif; bila toggle section aktif tetapi datanya kosong; atau bila angka statistik ditampilkan tetapi kosong. (`isActive: false` tidak ikut dicek.)
+- **Siap tayang.** Build **produksi** dan CI untuk PR ke `main` juga gagal bila konten yang tayang masih berisi nomor contoh `6281234567890`, kata `TODO` atau `contoh`; bila ada cabang **Aktif** tanpa nomor WA, jam buka, atau alamat; bila tidak ada satu pun cabang Aktif; bila toggle section aktif tetapi datanya kosong; atau bila angka statistik ditampilkan tetapi kosong. (`isActive: false` tidak ikut dicek.) Di development/staging masalah ini hanya peringatan dan tampil di badge DEV/STAGING (klik untuk melihat daftarnya).
 - Cabang **Segera Dibuka** / **Tutup Sementara** tetap tampil dengan badge, tetapi tidak bisa dipilih untuk booking.
 - `isActive: false` disembunyikan; urutan memakai `order` (kecil → besar).
 - **Tanggal promo & pengumuman** dibaca sebagai **WIB** dan difilter **di browser**, jadi muncul/hilang tepat waktu tanpa build ulang. Hanya-tanggal sebagai tanggal selesai berarti sampai 23:59:59 WIB.
@@ -116,17 +127,39 @@ Pages CMS belum bisa membuat dropdown dari isi file lain, jadi daftar cabang dis
 
 ## 5. Deploy ke Cloudflare Workers (gratis)
 
-Situs saat ini: **https://cutlesshairstudio.adi-yansyaaah.workers.dev**
+Dua Worker terpisah dari repo yang sama (`wrangler.jsonc` → environment `staging`). URL, versi, dan pengaturan tidak tercampur.
 
-1. [dash.cloudflare.com](https://dash.cloudflare.com) → **Workers & Pages → Create → Import a repository** → pilih `cutlesshairstudio`, branch **`main`**.
-2. Build command **`npm run build`**, deploy command **`npx wrangler deploy`** (bawaan). Environment variable **tidak perlu**. **Jangan** isi `CONTENT_CHECK`.
-3. `wrangler.jsonc` menyajikan `dist/` sebagai static assets:
-   - `auto-trailing-slash`: `/cabang/cibubur` → `dist/cabang/cibubur/index.html` (hasil prerender), aman di-refresh.
-   - `404-page`: URL tidak dikenal → `dist/404.html` (bukan beranda).
-4. Setiap commit ke `main`, termasuk setiap **Save** di Pages CMS, otomatis build & deploy (±1–2 menit).
-5. **Domain:** cukup ubah **Pengaturan Situs → Alamat website**. Canonical, `og:url`, `og:image`, `twitter:image`, `sitemap.xml`, `robots.txt`, dan JSON-LD semuanya dibuat dari kolom ini saat build. Domain sendiri: Worker → **Settings → Domains & Routes → Add → Custom domain** (DNS di Cloudflare, gratis; domain dibeli terpisah).
+| | Produksi | Staging |
+|---|---|---|
+| Worker | `cutlesshairstudio` | `cutlesshairstudio-staging` |
+| Branch | `main` | `staging` |
+| Build command | `npm run build` | `npm run build:staging` |
+| Deploy command | `npx wrangler deploy` | `npx wrangler deploy --env staging` |
+| URL | https://cutlesshairstudio.adi-yansyaaah.workers.dev | https://cutlesshairstudio-staging.adi-yansyaaah.workers.dev |
+
+**Setup Workers Builds (sekali):**
+
+1. **Produksi** (sudah ada): Workers & Pages → `cutlesshairstudio` → **Settings → Build**:
+   - Branch control → production branch **`main`**; matikan **Builds for non-production branches** (agar push ke staging/feature tidak ikut dibuild di Worker produksi).
+   - Build command `npm run build`, deploy command `npx wrangler deploy`. Environment variable **tidak perlu** (ada di `.env.production`); **jangan** isi `CONTENT_CHECK`.
+2. **Staging** (baru): **Workers & Pages → Create → Import a repository** → repo `cutlesshairstudio`:
+   - Project name **`cutlesshairstudio-staging`** (harus sama dengan `env.staging.name`).
+   - Production branch **`staging`**, matikan builds for non-production branches.
+   - Build command **`npm run build:staging`**, deploy command **`npx wrangler deploy --env staging`**.
+   - **Save and Deploy**. URL: `https://cutlesshairstudio-staging.<subdomain-workers>.workers.dev`. Bila subdomain akun berbeda dari `adi-yansyaaah`, sesuaikan `VITE_SITE_URL` di `.env.staging`.
+3. Setiap push/merge ke `main` → produksi, ke `staging` → staging (±1–2 menit). Build yang gagal tidak mengganti versi yang sedang tayang.
+
+**Domain produksi:** ubah **Pengaturan Situs → Alamat website**. Canonical, `og:url`, `og:image`, `twitter:image`, `sitemap.xml`, `robots.txt`, dan JSON-LD dibuat dari kolom ini saat build produksi (`.env.production` → `VITE_SITE_URL` kosong). Domain sendiri: Worker → **Settings → Domains & Routes → Add → Custom domain**.
+
+**Staging tidak terindeks:** `robots.txt` → `Disallow: /`, `<meta name="robots" content="noindex, nofollow">`, dan header `X-Robots-Tag: noindex, nofollow` dari Worker (`dist/_headers` versi staging). Judul tab diawali `[STAGING]`.
+
+**Opsional: kunci staging dengan Cloudflare Access** (Zero Trust, gratis s.d. 50 pengguna): Worker staging → **Settings → Domains & Routes** → pada baris `workers.dev` klik **Enable Cloudflare Access** → **Manage Cloudflare Access** → policy *Allow* dengan *Emails* = email tim → metode login **One-time PIN** (kode dikirim ke email). Cloudflare meminta login sebelum halaman staging tampil. Produksi tidak terpengaruh.
+
+**Opsional: Web Analytics (gratis, tanpa cookie), hanya produksi:** Cloudflare → **Analytics & Logs → Web Analytics → Add a site** → salin token → isi `VITE_CF_ANALYTICS_TOKEN` di `.env.production` → commit lewat alur staging → main. Skrip hanya disisipkan pada build produksi.
 
 `public/_headers` mengatur cache file statis di CDN Cloudflare.
+
+**Deploy lewat GitHub Actions (alternatif, bila tidak memakai Workers Builds):** buat API token Cloudflare (template *Edit Cloudflare Workers*), simpan di **GitHub → Settings → Secrets and variables → Actions** sebagai `CLOUDFLARE_API_TOKEN` (+ `CLOUDFLARE_ACCOUNT_ID`), lalu jalankan `npm run build:staging && npx wrangler deploy --env staging` di workflow. Repo ini memakai Workers Builds, jadi tidak ada token yang perlu disimpan.
 
 ## 6. Menambah admin
 
@@ -148,6 +181,9 @@ Pages CMS mengikuti izin GitHub: siapa pun yang bisa menulis ke repo bisa menged
 Pengamannya: **setiap perubahan tercatat sebagai commit** dan bisa di-rollback; validasi build menolak data rusak. Kontrol lebih ketat (gratis): **branch protection** pada `main` + pull request yang disetujui Owner.
 
 ## 7. Rollback konten
+
+(Untuk perubahan kode, pakai alur di [CONTRIBUTING.md](CONTRIBUTING.md); konten produksi tetap bisa di-rollback seperti di bawah.)
+
 
 - **Lihat riwayat:** GitHub → repo → **Commits** (atau buka file → **History**).
 - **Batalkan satu perubahan:** buka commit → **⋯ → Revert** (atau `git revert <sha>` lalu push). Cloudflare otomatis deploy ulang.
@@ -258,7 +294,27 @@ Harga efektif satu layanan di satu cabang: `COALESCE(bp.price, pi.price)` dari `
 - [ ] Coba booking dari HP untuk tiap cabang: pesan WA menyebut cabang yang benar dan masuk ke nomor yang benar
 - [ ] Buka `/cabang/<slug>/` tiap cabang, `/sitemap.xml`, lalu daftarkan sitemap di Google Search Console (gratis)
 
-## 11. Arsitektur
+## 11. Alur kerja & staging (ringkas)
+
+Detail lengkap: **[CONTRIBUTING.md](CONTRIBUTING.md)**.
+
+1. **Fitur:** `feature/<nama>` dari `staging` → `npm run dev` → PR ke `staging` (CI: typecheck, lint, validasi konten, build).
+2. **Uji:** merge ke `staging` → otomatis tayang di URL staging (badge STAGING, tidak diindeks).
+3. **Rilis:** PR `staging → main`. CI **wajib lolos** (konten ketat + build produksi), lalu merge → produksi.
+4. **Sinkron balik:** workflow harian membuka PR `main → staging` berisi edit konten pemilik; bentrok → label `conflict`.
+
+**Menguji konten lewat Pages CMS di staging:** app.pagescms.org → repo → pilih branch **staging** → edit → Save. Hasilnya tayang di URL staging ±2 menit, atau di laptop dalam ±15 detik dengan `npm run dev:sync` (branch lokal `staging`). Pemilik tetap di branch **main**.
+
+**Checklist sebelum merge ke main:**
+- [ ] Badge STAGING menunjukkan 0 konten belum siap tayang
+- [ ] Tampilan mobile 360 px rapi (tanpa scroll horizontal / elemen bertumpuk)
+- [ ] Semua link WhatsApp mengarah ke nomor cabang yang benar (tiap cabang, tiap tombol booking)
+- [ ] `/cabang/<slug>/` tiap cabang bisa di-refresh di URL staging
+- [ ] Transisi aman dengan `prefers-reduced-motion: reduce`
+- [ ] Lighthouse mobile ≥ 85
+- [ ] PR sinkron `main → staging` sudah di-merge, CI hijau
+
+## 12. Arsitektur
 
 ```
 Admin ─▶ Pages CMS ─commit─▶ GitHub (src/content/*.json, public/uploads/*)
@@ -266,7 +322,8 @@ Admin ─▶ Pages CMS ─commit─▶ GitHub (src/content/*.json, public/upload
                                  │                └─▶ GitHub Actions "Sinkron konten":
                                  │                     kompres gambar + dropdown cabang → commit
                                  ▼
-                   Cloudflare Workers Builds: npm run build
+     Cloudflare Workers Builds: main → npm run build → Worker cutlesshairstudio (produksi)
+                                staging → npm run build:staging → Worker cutlesshairstudio-staging
      (optimasi gambar → tsc → validasi Zod + relasi + siap tayang → vite build
       → sitemap/robots → prerender /cabang/<slug>/) ─▶ CDN *.workers.dev
                                  ▼

@@ -1,0 +1,75 @@
+# Sinkron main → staging: konten yang diedit pemilik di produksi (Pages CMS di branch main)
+# dibawa ke staging lewat Pull Request, agar staging tidak tertinggal dan tidak menimpa konten produksi saat merge balik.
+# Jalan setiap hari 03.00 WIB + bisa dijalankan manual (Actions → Sinkron main → staging → Run workflow).
+# Bila bentrok, PR tetap dibuat dan diberi label "conflict" (selesaikan manual, lihat CONTRIBUTING.md).
+#
+# Catatan: jadwal (schedule) hanya berjalan dari file di branch default (main).
+# Perlu: Settings → Actions → General → Workflow permissions → centang
+#        "Allow GitHub Actions to create and approve pull requests".
+name: Sinkron main → staging
+
+on:
+  schedule:
+    - cron: '0 20 * * *' # 20.00 UTC = 03.00 WIB
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write # membuat/memasang label
+
+concurrency:
+  group: sync-main-to-staging
+  cancel-in-progress: false
+
+jobs:
+  pr:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Buat / perbarui PR main → staging
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          git fetch --quiet origin main staging
+
+          behind=$(git rev-list --count origin/staging..origin/main)
+          if [ "$behind" -eq 0 ]; then
+            echo "staging sudah memuat semua commit main. Tidak ada yang perlu disinkronkan."
+            exit 0
+          fi
+          echo "$behind commit di main belum ada di staging."
+
+          gh label create conflict --color B60205 \
+            --description "PR sinkron main → staging bentrok; selesaikan manual" 2>/dev/null || true
+
+          pr=$(gh pr list --base staging --head main --state open --json number --jq '.[0].number // empty')
+          if [ -z "$pr" ]; then
+            body=$(printf '%s\n' \
+              "Sinkron otomatis: membawa $behind commit dari \`main\` (produksi, termasuk edit konten Pages CMS) ke \`staging\`." \
+              "" \
+              "**Merge dengan \"Create a merge commit\"** (bukan squash/rebase) agar riwayat main & staging tetap nyambung." \
+              "" \
+              "Bila berlabel \`conflict\`: ikuti CONTRIBUTING.md → *Menyelesaikan konflik sinkron*.")
+            url=$(gh pr create --base staging --head main \
+              --title "chore(sync): main → staging" --body "$body")
+            pr=${url##*/}
+            echo "PR dibuat: $url"
+          else
+            echo "PR #$pr sudah ada; diperbarui otomatis karena head = main."
+          fi
+
+          # Cek bentrok secara lokal (andal; status mergeable dari GitHub bisa belum siap)
+          if git merge-tree --write-tree origin/staging origin/main >/dev/null 2>&1; then
+            gh pr edit "$pr" --remove-label conflict >/dev/null 2>&1 || true
+            echo "Tidak ada konflik."
+          else
+            gh pr edit "$pr" --add-label conflict
+            files=$(git merge-tree --write-tree --name-only origin/staging origin/main | sed -n '2,/^$/p' | sed '/^$/d' | head -20 || true)
+            echo "::warning::PR #$pr bentrok. File: $files"
+          fi

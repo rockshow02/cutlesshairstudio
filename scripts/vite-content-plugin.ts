@@ -1,12 +1,16 @@
 /**
  * Plugin Vite untuk konten Pages CMS:
  * 1. Validasi src/content/*.json (skema Zod + relasi cabang + kesiapan launch) saat build.
- *    Konten tidak valid / belum siap tayang → build GAGAL dengan pesan jelas.
- *    Uji lokal dengan data belum lengkap: CONTENT_CHECK=warn npm run build (JANGAN dipakai di produksi).
+ *    Konten tidak valid → build GAGAL. Konten belum siap tayang → GAGAL bila CONTENT_CHECK=strict
+ *    (default produksi, .env.production), hanya peringatan + badge bila warn (development/staging).
+ *    Di dev server, konten tidak valid (mis. dari Pages CMS) tampil sebagai overlay error di browser.
  * 2. Memastikan setiap gambar yang dirujuk konten benar-benar ada di public/.
  * 3. Modul virtual `virtual:image-meta`: ukuran asli tiap gambar di public/uploads.
  * 4. Head HTML dari settings.json → siteUrl adalah SATU-SATUNYA sumber domain
  *    (canonical, og:url, og:image, twitter:image, sitemap.xml, robots.txt).
+ *    VITE_SITE_URL (.env.development/.env.staging) menggantinya per environment.
+ * 6. Environment selain produksi: noindex (meta, robots.txt Disallow, header X-Robots-Tag), judul berawalan
+ *    [DEV]/[STAGING], modul `virtual:content-status` untuk badge. Web Analytics hanya di produksi.
  * 5. Prerender /cabang/<slug>/index.html per cabang (title/meta unik + JSON-LD HairSalon + ringkasan statis).
  */
 import { readdir, readFile, mkdir, writeFile } from 'node:fs/promises';
@@ -14,11 +18,13 @@ import { existsSync } from 'node:fs';
 import path from 'node:path';
 import sharp from 'sharp';
 import { z } from 'zod';
-import type { Plugin, ViteDevServer } from 'vite';
+import { loadEnv, type Plugin, type ViteDevServer } from 'vite';
 import { CONTENT_FILES, crossCheck, type BranchEntry, type ContentBundle, type ContentIssue } from '../src/content/schema';
 
 const VIRTUAL_ID = 'virtual:image-meta';
 const RESOLVED_ID = `\0${VIRTUAL_ID}`;
+const STATUS_ID = 'virtual:content-status';
+const RESOLVED_STATUS_ID = `\0${STATUS_ID}`;
 const IMAGE_KEYS = new Set(['photo', 'image', 'logo']);
 const OG_IMAGE = '/images/og/og-cutless.jpg';
 const BRANCH_ROUTE = /^\/cabang\/([a-z0-9-]+)\/?(?:index\.html)?(?:[?#].*)?$/;
@@ -43,7 +49,7 @@ function collectImages(value: unknown, at: string, out: { path: string; at: stri
 function formatIssues(file: string, data: unknown, error: z.ZodError): string[] {
   return error.issues.map((issue) => {
     const [first, ...rest] = issue.path;
-    let where = '';
+    let where: string;
     if (typeof first === 'number' && Array.isArray(data)) {
       const entry = data[first] as Record<string, unknown> | undefined;
       const label = entry?.name ?? entry?.title ?? entry?.message ?? entry?.author ?? entry?.altText ?? entry?.slug;
@@ -255,7 +261,30 @@ function sitemap(bundle: ContentBundle): string {
   return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${body}\n</urlset>\n`;
 }
 
-const robots = (bundle: ContentBundle) => `User-agent: *\nAllow: /\n\nSitemap: ${bundle.settings.siteUrl}/sitemap.xml\n`;
+const robots = (bundle: ContentBundle, indexable: boolean) =>
+  indexable
+    ? `User-agent: *\nAllow: /\n\nSitemap: ${bundle.settings.siteUrl}/sitemap.xml\n`
+    : '# Bukan produksi: jangan diindeks\nUser-agent: *\nDisallow: /\n';
+
+/* ---------- Environment ---------- */
+
+type AppEnv = 'development' | 'staging' | 'production';
+const ENV_TAG: Record<AppEnv, string> = { development: '[DEV] ', staging: '[STAGING] ', production: '' };
+
+/** Penanda environment di HTML (idempoten: aman dipanggil dua kali pada halaman yang sama) */
+function applyEnv(html: string, env: AppEnv, analyticsToken: string): string {
+  if (env === 'production') {
+    if (!analyticsToken || html.includes('cloudflareinsights')) return html;
+    const beacon = `<script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='${JSON.stringify({ token: analyticsToken })}'></script>`;
+    return html.replace('</body>', `    ${beacon}\n  </body>`);
+  }
+  let out = html;
+  if (!out.includes('name="robots"')) out = out.replace('<meta charset="UTF-8" />', '<meta charset="UTF-8" />\n    <meta name="robots" content="noindex, nofollow" />');
+  if (!out.includes(`<title>${ENV_TAG[env]}`)) out = out.replace('<title>', `<title>${ENV_TAG[env]}`);
+  return out;
+}
+
+const NOINDEX_HEADERS = '\n# Bukan produksi (ditambahkan saat build): jangan diindeks mesin pencari\n/*\n  X-Robots-Tag: noindex, nofollow\n';
 
 /* ---------- Plugin ---------- */
 
@@ -266,22 +295,41 @@ export function contentPlugin(): Plugin {
   let outDir = 'dist';
   let isBuild = false;
   let bundle: ContentBundle | undefined;
-  const lenient = process.env.CONTENT_CHECK === 'warn';
+  let appEnv: AppEnv = 'production';
+  let siteUrlOverride = '';
+  let analyticsToken = '';
+  let lenient = false;
+  /** Masalah "siap tayang" terakhir (untuk badge DEV/STAGING) */
+  let launchIssues: string[] = [];
+  /** Pesan konten tidak valid terakhir di dev server (dikirim ulang ke browser yang baru terhubung) */
+  let devError: string | null = null;
 
   const refresh = async () => {
     const result = await loadContent(root);
+    if (result.bundle && siteUrlOverride) {
+      result.bundle = { ...result.bundle, settings: { ...result.bundle.settings, siteUrl: siteUrlOverride } };
+    }
     bundle = result.bundle ?? bundle;
+    launchIssues = result.bundle ? result.launch : launchIssues;
     return result;
   };
 
+  const sendOverlay = (server: ViteDevServer) => {
+    if (devError) server.ws.send({ type: 'error', err: { message: devError, stack: '', plugin: 'cutless-content' } });
+  };
+
   const revalidate = async (server: ViteDevServer) => {
+    const before = launchIssues.join('\n');
     const { errors, launch } = await refresh();
-    const messages = [
-      ...(errors.length ? [header('Konten tidak valid', errors.length) + errors.join('\n')] : []),
-      ...(launch.length ? [header('Konten belum siap tayang', launch.length) + launch.join('\n')] : []),
-    ];
-    for (const message of messages) server.config.logger.warn(message);
-    if (errors.length) server.ws.send({ type: 'error', err: { message: messages[0], stack: '', plugin: 'cutless-content' } });
+    devError = errors.length ? header('Konten tidak valid', errors.length) + errors.join('\n') : null;
+    if (devError) server.config.logger.warn(devError);
+    if (launch.length) server.config.logger.warn(header('Konten belum siap tayang', launch.length) + launch.join('\n'));
+    if (devError) return sendOverlay(server);
+    if (launchIssues.join('\n') !== before) {
+      const mod = server.moduleGraph.getModuleById(RESOLVED_STATUS_ID);
+      if (mod) server.moduleGraph.invalidateModule(mod);
+      server.ws.send({ type: 'full-reload' });
+    }
   };
 
   return {
@@ -290,6 +338,14 @@ export function contentPlugin(): Plugin {
       root = config.root;
       outDir = path.resolve(config.root, config.build.outDir);
       isBuild = config.command === 'build';
+      // .env.<mode> (+ variabel proses, yang selalu menang): VITE_APP_ENV, VITE_SITE_URL, CONTENT_CHECK, ...
+      const env = loadEnv(config.mode, config.envDir || config.root, '');
+      appEnv = (['development', 'staging', 'production'] as const).find((e) => e === env.VITE_APP_ENV)
+        ?? (config.mode === 'production' ? 'production' : 'development');
+      siteUrlOverride = (env.VITE_SITE_URL ?? '').trim().replace(/\/+$/, '');
+      analyticsToken = (env.VITE_CF_ANALYTICS_TOKEN ?? '').trim();
+      lenient = (env.CONTENT_CHECK || (appEnv === 'production' ? 'strict' : 'warn')) === 'warn';
+      if (isBuild) console.log(`• Environment: ${appEnv} · siteUrl: ${siteUrlOverride || '(Pengaturan Situs)'} · cek siap tayang: ${lenient ? 'warn' : 'strict'}`);
     },
 
     async buildStart() {
@@ -297,22 +353,28 @@ export function contentPlugin(): Plugin {
       if (errors.length) {
         const message = header('Konten tidak valid', errors.length) + errors.join('\n');
         if (isBuild) this.error(message);
-        else this.warn(message);
+        devError = message;
+        this.warn(message);
       }
       if (launch.length) {
         const message =
           header('Konten belum siap tayang', launch.length) +
           launch.join('\n') +
-          (lenient ? '\n  (CONTENT_CHECK=warn: diabaikan untuk uji lokal, JANGAN dipakai di produksi)' : '');
+          (lenient ? `\n  (CONTENT_CHECK=warn [${appEnv}]: hanya peringatan. Produksi memakai strict: build akan gagal)` : '');
         if (isBuild && !lenient) this.error(message);
         else this.warn(message);
       }
     },
 
     resolveId(id) {
-      return id === VIRTUAL_ID ? RESOLVED_ID : null;
+      if (id === VIRTUAL_ID) return RESOLVED_ID;
+      if (id === STATUS_ID) return RESOLVED_STATUS_ID;
+      return null;
     },
     async load(id) {
+      if (id === RESOLVED_STATUS_ID) {
+        return `export default ${JSON.stringify({ issues: appEnv === 'production' ? [] : launchIssues })};`;
+      }
       if (id !== RESOLVED_ID) return null;
       return `export default ${JSON.stringify(await readImageMeta(root))};`;
     },
@@ -327,26 +389,36 @@ export function contentPlugin(): Plugin {
         if (branch && bundle) {
           out = out.replace(HEAD_REGION, branchHead(branch, bundle)).replace('<!--cutless:body-->', branchBody(branch, bundle));
         }
-        return out;
+        return applyEnv(out, appEnv, analyticsToken);
       },
     },
 
     generateBundle() {
       if (!bundle) return;
       this.emitFile({ type: 'asset', fileName: 'sitemap.xml', source: sitemap(bundle) });
-      this.emitFile({ type: 'asset', fileName: 'robots.txt', source: robots(bundle) });
+      this.emitFile({ type: 'asset', fileName: 'robots.txt', source: robots(bundle, appEnv === 'production') });
     },
 
     /** Prerender halaman per cabang dari dist/cabang/index.html */
     async closeBundle() {
       if (!isBuild || !bundle) return;
+      // Staging: header X-Robots-Tag dari Worker (static assets membaca dist/_headers)
+      const headersFile = path.join(outDir, '_headers');
+      if (appEnv !== 'production' && existsSync(headersFile)) {
+        const current = await readFile(headersFile, 'utf8');
+        if (!current.includes('X-Robots-Tag')) await writeFile(headersFile, current.trimEnd() + '\n' + NOINDEX_HEADERS);
+      }
       const template = path.join(outDir, 'cabang', 'index.html');
       if (!existsSync(template)) return;
       const html = await readFile(template, 'utf8');
       for (const branch of bundle.branches) {
         const dir = path.join(outDir, 'cabang', branch.slug);
         await mkdir(dir, { recursive: true });
-        const page = html.replace(HEAD_REGION, branchHead(branch, bundle)).replace('<!--cutless:body-->', branchBody(branch, bundle));
+        const page = applyEnv(
+          html.replace(HEAD_REGION, branchHead(branch, bundle)).replace('<!--cutless:body-->', branchBody(branch, bundle)),
+          appEnv,
+          analyticsToken,
+        );
         await writeFile(path.join(dir, 'index.html'), page);
       }
       console.log(`✓ ${bundle.branches.length} halaman cabang diprerender`);
@@ -361,6 +433,8 @@ export function contentPlugin(): Plugin {
         next();
       });
       server.watcher.add(uploadsDir);
+      // Browser yang baru dibuka/di-refresh tetap melihat overlay bila konten masih tidak valid
+      server.ws.on('connection', () => sendOverlay(server));
       server.watcher.on('all', (_event, file) => {
         if (file.startsWith(uploadsDir)) {
           const mod = server.moduleGraph.getModuleById(RESOLVED_ID);

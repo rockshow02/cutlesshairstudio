@@ -3,11 +3,12 @@
 # 2. Salin daftar cabang (branches.json) ke pilihan cabang di .pages.yml (dropdown Barber/Harga/Promo/Pengumuman)
 # Berjalan di runner gratis GitHub Actions (repo publik: gratis; privat: 2.000 menit/bulan, 1 run ±1 menit).
 # Commit dari GITHUB_TOKEN tidak memicu workflow lagi, jadi tidak ada loop.
+# Berjalan di main (edit pemilik) dan staging (uji konten); hasilnya di-commit ke branch yang sama.
 name: Sinkron konten
 
 on:
   push:
-    branches: [main]
+    branches: [main, staging]
     paths:
       - 'public/uploads/**'
       - 'src/content/*.json'
@@ -17,7 +18,7 @@ permissions:
   contents: write
 
 concurrency:
-  group: sync-content
+  group: sync-content-${{ github.ref_name }}
   cancel-in-progress: false
 
 jobs:

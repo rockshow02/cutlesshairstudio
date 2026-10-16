@@ -76,6 +76,7 @@
   --z-nav: 50;          /* navbar + bar pengumuman */
   --z-fab: 60;
   --z-menu: 70;
+  --z-env: 90;          /* badge DEV/STAGING (tidak ada di produksi) */
   --z-preloader: 100;
 
   /* ---- Motion ---- */
