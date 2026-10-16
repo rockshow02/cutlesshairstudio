@@ -56,8 +56,8 @@
         {
           "binding": "DB",
           "database_name": "cutless-staging",
-          // Isi dengan ID dari: npx wrangler d1 create cutless-staging (lihat docs/booking-setup.md)
-          "database_id": "00000000-0000-0000-0000-000000000001",
+          // npx wrangler d1 create cutless-staging (dibuat 16 Okt 2026)
+          "database_id": "2c0e9afc-085c-4bb9-8d54-57284639e5cd",
           "migrations_dir": "migrations"
         }
       ],
