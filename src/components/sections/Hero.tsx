@@ -19,6 +19,7 @@ import { Parallax } from '@/components/motion/Parallax';
 import { TextReveal } from '@/components/motion/TextReveal';
 import { useIntroDone } from '@/components/motion/Preloader';
 import { useSnap } from '@/components/motion/smoothScroll';
+import { usePauseOffscreen } from '@/lib/usePauseOffscreen';
 import styles from './Hero.module.css';
 
 export function Hero() {
@@ -139,9 +140,11 @@ function HeroBody({ hero }: { hero: HeroContent }) {
 }
 
 function Marquee({ words }: { words: string[] }) {
-  // Diduplikasi agar loop mulus; salinan kedua disembunyikan dari screen reader.
+  // Diduplikasi agar loop mulus; salinan kedua disembunyikan dari screen reader. Dijeda saat di luar layar.
+  const ref = useRef<HTMLDivElement>(null);
+  usePauseOffscreen(ref);
   return (
-    <div className={styles.marquee} data-tone="dark" aria-hidden="true">
+    <div ref={ref} className={styles.marquee} data-tone="dark" aria-hidden="true">
       <div className={styles.track}>
         {[0, 1].map((copy) => (
           <div key={copy} className={styles.group}>

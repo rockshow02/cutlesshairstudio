@@ -19,6 +19,8 @@ export const DURATION = {
   fast: 0.2,
   base: 0.45,
   slow: 0.8,
+  /** Muncul saat di-scroll (dibuat singkat agar scroll cepat tidak meninggalkan area kosong) */
+  reveal: 0.6,
   /** Teks naik dari balik garis (per baris) */
   textLine: 0.9,
   /** Zoom-out foto hero 1.1 → 1 */
@@ -34,7 +36,7 @@ export const STAGGER = {
   /** Baris judul hero */
   line: 0.12,
   /** Batas maksimum total jeda agar elemen ke-20 tidak menunggu terlalu lama */
-  max: 0.35,
+  max: 0.25,
 };
 
 /** Jarak geser saat muncul (px) */

@@ -15,24 +15,51 @@ export interface RevealProps {
 }
 
 /*
- * Satu IntersectionObserver untuk SEMUA elemen Reveal (bukan satu per elemen) + transisi CSS
- * (opacity & transform). Jauh lebih ringan daripada komponen motion per elemen saat halaman berisi
- * puluhan kartu. Elemen baru disembunyikan setelah observer aktif (html[data-reveal-ready]), jadi bila
- * skrip ini gagal, isi tetap terlihat.
+ * Satu IntersectionObserver untuk SEMUA elemen Reveal + transisi CSS (opacity & transform).
+ *
+ * - Muncul begitu tepi atas elemen melewati garis 10% dari bawah layar (threshold 0, bukan persentase
+ *   tinggi elemen), jadi elemen yang lebih tinggi dari layar tetap muncul.
+ * - Area pengamatan diperluas jauh ke ATAS layar: elemen yang sudah terlewati (scroll cepat, lompat lewat
+ *   menu/anchor, atau halaman dibuka di tengah) langsung dianggap terlihat dan tampil TANPA animasi.
+ * - Setelah klik link #section / menu, semua yang muncul dalam ±1,5 detik tampil tanpa animasi
+ *   (tidak ada area kosong saat mendarat di section tujuan).
+ * - Elemen baru disembunyikan setelah observer aktif (html[data-reveal-ready]); bila skrip gagal, isi tetap terlihat.
  */
+const INSTANT_MS = 1500;
 let observer: IntersectionObserver | null = null;
+let instantUntil = 0;
+
+function markInstant() {
+  instantUntil = performance.now() + INSTANT_MS;
+}
+
 function getObserver(): IntersectionObserver | null {
   if (observer) return observer;
   if (typeof window === 'undefined' || !('IntersectionObserver' in window)) return null;
   observer = new IntersectionObserver(
     (entries) => {
+      const instantWindow = performance.now() < instantUntil;
       for (const entry of entries) {
         if (!entry.isIntersecting) continue;
-        (entry.target as HTMLElement).dataset.reveal = 'in';
-        observer?.unobserve(entry.target);
+        const el = entry.target as HTMLElement;
+        // Sudah di atas layar saat terdeteksi, atau baru lompat lewat anchor → tampil langsung
+        if (instantWindow || entry.boundingClientRect.bottom <= 0) el.dataset.revealInstant = '';
+        el.dataset.reveal = 'in';
+        observer?.unobserve(el);
       }
     },
-    { rootMargin: '0px 0px -8% 0px' },
+    { rootMargin: '100000px 0px -10% 0px', threshold: 0 },
+  );
+  // Dibuka langsung ke /#section, atau berpindah lewat link #section / menu
+  if (window.location.hash) markInstant();
+  window.addEventListener('hashchange', markInstant);
+  document.addEventListener(
+    'click',
+    (e) => {
+      const a = (e.target as Element | null)?.closest?.('a[href*="#"]') as HTMLAnchorElement | null;
+      if (a && new URL(a.href, window.location.href).pathname === window.location.pathname) markInstant();
+    },
+    true,
   );
   document.documentElement.dataset.revealReady = '';
   return observer;
@@ -40,6 +67,7 @@ function getObserver(): IntersectionObserver | null {
 
 /**
  * Muncul halus (fade + geser naik) saat masuk viewport, sekali saja (once).
+ * Dipakai hanya untuk judul section, paragraf editorial, dan kartu galeri.
  * "Kurangi gerakan" → fade saja (CSS di motion.module.css).
  */
 export function Reveal({ as = 'div', className, delay = 0, index, y = DISTANCE.reveal, children }: RevealProps) {
@@ -61,7 +89,7 @@ export function Reveal({ as = 'div', className, delay = 0, index, y = DISTANCE.r
   const style = {
     '--reveal-delay': `${delay + (index !== undefined ? stagger(index) : 0)}s`,
     '--reveal-y': `${y}px`,
-    '--reveal-dur': `${DURATION.slow}s`,
+    '--reveal-dur': `${DURATION.reveal}s`,
   } as CSSProperties;
 
   return (

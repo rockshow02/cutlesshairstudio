@@ -65,13 +65,13 @@ function AboutBody({ about }: { about: AboutContent }) {
           {about.values.length > 0 && (
             <ul className={styles.values}>
               {about.values.map((v) => (
-                <Reveal as="li" key={v.title} index={order++}>
+                <li key={v.title}>
                   <Icon name="check" strokeWidth={2} />
                   <div>
                     <strong>{v.title}</strong>
                     <span>{v.description}</span>
                   </div>
-                </Reveal>
+                </li>
               ))}
             </ul>
           )}
@@ -80,13 +80,13 @@ function AboutBody({ about }: { about: AboutContent }) {
 
       {about.stats.length > 0 && (
         <dl className={styles.stats}>
-          {about.stats.map((stat, i) => (
-            <Reveal key={stat.label} className={styles.stat} index={i}>
+          {about.stats.map((stat) => (
+            <div key={stat.label} className={styles.stat}>
               <dt>{stat.label}</dt>
               <dd>
                 <StatValue stat={stat} />
               </dd>
-            </Reveal>
+            </div>
           ))}
         </dl>
       )}

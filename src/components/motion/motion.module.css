@@ -11,6 +11,10 @@
   opacity: 0;
   transform: translate3d(0, var(--reveal-y, 24px), 0);
 }
+/* Sudah terlewati / mendarat lewat anchor: tampil langsung tanpa animasi */
+.reveal[data-reveal-instant] {
+  transition: none !important;
+}
 @media (prefers-reduced-motion: reduce) {
   :global(html[data-reveal-ready]) .reveal[data-reveal='out'] {
     transform: none;
@@ -66,7 +70,8 @@
 }
 .marquee:hover .marqueeTrack,
 .marquee:focus-within .marqueeTrack,
-.marquee[data-paused] .marqueeTrack {
+.marquee[data-paused] .marqueeTrack,
+.marquee[data-offscreen] .marqueeTrack {
   animation-play-state: paused;
 }
 @keyframes marqueeX {
@@ -270,5 +275,5 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .marqueeTrack { animation: none; }
+  .marqueeTrack { animation: none; animation-play-state: paused; }
 }

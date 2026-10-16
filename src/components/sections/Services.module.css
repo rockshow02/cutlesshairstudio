@@ -41,7 +41,8 @@
   font-size: var(--fs-xs);
   font-weight: 600;
   letter-spacing: 0.1em;
-  color: var(--c-concrete);
+  /* Sedikit lebih terang dari --c-concrete agar kontras ≥ 4.5:1 di atas kartu gelap */
+  color: #858489;
 }
 
 .name {

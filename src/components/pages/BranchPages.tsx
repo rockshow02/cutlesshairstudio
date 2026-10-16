@@ -8,7 +8,6 @@ import { Section } from '@/components/ui/Section';
 import { Kicker } from '@/components/ui/SectionTitle';
 import { Button } from '@/components/ui/Button';
 import { Icon } from '@/components/ui/Icon';
-import { Reveal } from '@/components/motion/Reveal';
 import { ResponsiveImage } from '@/components/ui/ResponsiveImage';
 import { BranchPanel } from '@/components/sections/Location';
 import { Promo } from '@/components/sections/Promo';
@@ -67,7 +66,7 @@ function BranchHero({ branch, brand }: { branch: Branch; brand: string }) {
   return (
     <Section id="top" tone="dark" className={styles.page} labelledBy="cabang-title">
       <div className={styles.heroGrid}>
-        <Reveal className={styles.heroText}>
+        <div className={styles.heroText}>
           <p className={styles.crumbs}>
             <a href={pageUrl('/cabang/')}>{copy.labels.allBranches}</a>
             <Icon name="chevron-right" size={14} />
@@ -93,11 +92,11 @@ function BranchHero({ branch, brand }: { branch: Branch; brand: string }) {
               {copy.labels.directions}
             </Button>
           </div>
-        </Reveal>
+        </div>
         {branch.photo && (
-          <Reveal className={styles.heroPhoto} delay={0.08}>
+          <div className={styles.heroPhoto}>
             <ResponsiveImage image={branch.photo} className={styles.photo} priority />
-          </Reveal>
+          </div>
         )}
       </div>
     </Section>
@@ -111,19 +110,19 @@ export function BranchesIndex() {
 
   return (
     <Section id="cabang" tone="dark" className={styles.page} labelledBy="cabang-title">
-      <Reveal className={styles.indexHead}>
+      <div className={styles.indexHead}>
         <Kicker>{copy.indexHeading.kicker}</Kicker>
         <h1 id="cabang-title" className={styles.title}>
           {copy.indexHeading.title}
         </h1>
         {copy.indexHeading.intro && <p className={styles.intro}>{copy.indexHeading.intro}</p>}
-      </Reveal>
+      </div>
       <ul className={styles.cards}>
-        {branches.map((b, i) => {
+        {branches.map((b) => {
           const status = getOpenStatus(b, copy.labels, announcements);
           const target = book({ kind: 'general', branchSlug: b.slug });
           return (
-            <Reveal as="li" key={b.slug} delay={(i % 3) * 0.06}>
+            <li key={b.slug}>
               <article className={styles.card}>
                 <div className={styles.cardHead}>
                   <p className={styles.city}>
@@ -154,7 +153,7 @@ export function BranchesIndex() {
                   )}
                 </div>
               </article>
-            </Reveal>
+            </li>
           );
         })}
       </ul>
