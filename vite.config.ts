@@ -7,7 +7,11 @@ export default defineConfig({
   // contentPlugin: validasi konten Pages CMS (Zod) saat build + ukuran gambar untuk frontend
   plugins: [react(), contentPlugin()],
   resolve: {
-    alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) },
+    alias: {
+      '@': fileURLToPath(new URL('./src', import.meta.url)),
+      // Kode bersama frontend & Worker (skema Zod, mesin slot, format nomor)
+      '@shared': fileURLToPath(new URL('./shared', import.meta.url)),
+    },
   },
   build: {
     // Satu file CSS untuk semua halaman (lebih sedikit request yang memblokir render)
