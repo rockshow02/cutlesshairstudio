@@ -9,6 +9,7 @@ import { ApiError } from './lib/errors';
 import { publicRoutes } from './routes/public';
 import { authRoutes } from './routes/auth';
 import { meRoutes } from './routes/me';
+import { bookingRoutes } from './routes/bookings';
 
 export const app = createRouter();
 
@@ -28,6 +29,7 @@ app.get('/api/health', async (c) => {
 app.route('/api', publicRoutes);
 app.route('/api', authRoutes);
 app.route('/api', meRoutes);
+app.route('/api', bookingRoutes);
 
 app.all('/api/*', (c) => c.json({ error: { code: 'NOT_FOUND', message: 'Endpoint tidak ditemukan.' } }, 404));
 

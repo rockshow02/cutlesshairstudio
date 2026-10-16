@@ -26,6 +26,8 @@ export async function verifyTurnstile(c: Context<AppEnv>, token: string | undefi
  * Satu baris per IP per jendela; dibersihkan Cron.
  */
 export async function rateLimit(c: Context<AppEnv>, action: string, limit: number, windowMinutes: number): Promise<void> {
+  // Lokal: semua request dari IP yang sama (tes berulang) → batas IP tidak dipakai. Staging & produksi tetap.
+  if (c.env.APP_ENV === 'development') return;
   const ip = c.req.header('cf-connecting-ip') ?? 'local';
   const windowMs = windowMinutes * 60_000;
   const windowStart = new Date(Math.floor(Date.now() / windowMs) * windowMs).toISOString();

@@ -10,7 +10,6 @@
     "build": "tsc -b && vite build --mode production",
     "build:staging": "node scripts/optimize-images.mjs && tsc -b && vite build --mode staging",
     "preview": "vite preview",
-    "preview:worker": "npm run build:staging && wrangler dev --env staging --port 8787",
     "typecheck": "tsc -b --noEmit",
     "lint": "eslint .",
     "check:content": "node scripts/check-content.mjs",
@@ -20,7 +19,11 @@
     "db:migrate:staging": "wrangler d1 migrations apply DB --env staging --remote",
     "db:seed:local": "node scripts/seed-d1.mjs --out seed/seed.local.sql --test-data --dev-admin --apply local",
     "db:seed:staging": "node scripts/seed-d1.mjs --out seed/seed.staging.sql --test-data --apply staging",
-    "test": "vitest run"
+    "test": "vitest run",
+    "dev:api": "wrangler dev --env staging --port 8787",
+    "dev:worker": "npm run build:staging && wrangler dev --env staging --port 8787",
+    "preview:worker": "npm run dev:worker",
+    "e2e": "playwright test"
   },
   "dependencies": {
     "arctic": "^3.7.0",
