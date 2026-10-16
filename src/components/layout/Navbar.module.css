@@ -20,7 +20,14 @@
   inset: var(--announce-h) 0 auto;
   z-index: var(--z-nav);
   padding-top: var(--nav-safe-top);
-  transition: background-color var(--dur) var(--ease), box-shadow var(--dur) var(--ease);
+  transition:
+    transform 0.45s var(--ease),
+    background-color var(--dur) var(--ease),
+    box-shadow var(--dur) var(--ease);
+}
+/* Sembunyi saat scroll ke bawah, muncul saat scroll ke atas (transform saja) */
+.header[data-hidden] {
+  transform: translate3d(0, calc(-100% - var(--announce-h) - 2px), 0);
 }
 .header[data-solid] {
   background: rgba(12, 16, 20, 0.92);
@@ -38,11 +45,40 @@
 
 .logo {
   flex: none;
-  display: block;
+  display: grid;
 }
 .logo img {
+  grid-area: 1 / 1;
   width: auto;
   height: 34px;
+  transition: opacity var(--dur) var(--ease);
+}
+/* Versi gelap = logo putih yang dibalik warnanya; tampil di atas section terang */
+.logoDark {
+  filter: invert(1);
+  opacity: 0;
+}
+
+/* ---- Navbar di atas section terang ---- */
+.header[data-tone='light'][data-solid] {
+  background: rgba(239, 235, 229, 0.94);
+  box-shadow: 0 1px 0 var(--c-line-dark);
+}
+.header[data-tone='light'] .logoLight { opacity: 0; }
+.header[data-tone='light'] .logoDark { opacity: 1; }
+.header[data-tone='light'] .branchBtn,
+.header[data-tone='light'] .toggle {
+  border-color: var(--c-line-dark);
+  color: var(--c-ink);
+}
+.header[data-tone='light'] .branchBtn svg {
+  color: var(--c-taupe-dark);
+}
+.header[data-tone='light'] .bookBtn {
+  background: var(--c-ink);
+  color: var(--c-bone);
+  --fill: var(--c-taupe-dark);
+  --fill-ink: var(--c-bone);
 }
 
 .desktopNav {
@@ -251,6 +287,17 @@
   .desktopNav a[aria-current='true']::after,
   .desktopNav a[aria-current='page']::after {
     transform: scaleX(1);
+  }
+  .header[data-tone='light'] .desktopNav a {
+    color: var(--c-ink-dim);
+  }
+  .header[data-tone='light'] .desktopNav a:hover,
+  .header[data-tone='light'] .desktopNav a[aria-current='true'],
+  .header[data-tone='light'] .desktopNav a[aria-current='page'] {
+    color: var(--c-ink);
+  }
+  .header[data-tone='light'] .desktopNav a::after {
+    background: var(--c-taupe-dark);
   }
 
   .actions {

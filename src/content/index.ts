@@ -17,3 +17,4 @@ export { socials } from './socials';
 export { ctaBanner } from './cta';
 export { promoCopy } from './promo';
 export { productsCopy } from './products';
+export { showcaseCopy } from './showcase';

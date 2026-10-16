@@ -13,6 +13,8 @@ import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { Icon } from '@/components/ui/Icon';
 import { Stars } from '@/components/ui/Stars';
+import { CountUp } from '@/components/motion/CountUp';
+import { Reveal } from '@/components/motion/Reveal';
 import styles from './Testimonials.module.css';
 
 const reduceMotion = typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -49,9 +51,12 @@ export function Testimonials() {
                 paginationBulletMessage: site.ui.goToSlide,
               }}
             >
-              {data.items.map((review) => (
+              {data.items.map((review, i) => (
                 <SwiperSlide key={review.id} className={styles.slide}>
-                  <ReviewCard review={review} />
+                  {/* Kartu muncul bertahap (3 pertama yang terlihat) */}
+                  <Reveal index={i % 3} className={styles.reveal}>
+                    <ReviewCard review={review} />
+                  </Reveal>
                 </SwiperSlide>
               ))}
             </Swiper>
@@ -76,7 +81,9 @@ function Summary({ summary }: { summary: RatingSummary }) {
       <div className={styles.summaryText}>
         {summary.ratingDisplay && summary.rating && (
           <p className={styles.summaryTop}>
-            <strong>{summary.ratingDisplay}</strong>
+            <strong>
+              <CountUp value={summary.rating} decimals={Number.isInteger(summary.rating) ? 0 : 1} display={summary.ratingDisplay} />
+            </strong>
             <Stars rating={summary.rating} label={`${summary.ratingDisplay} / 5`} />
           </p>
         )}

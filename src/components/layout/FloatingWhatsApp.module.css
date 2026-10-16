@@ -18,6 +18,28 @@
 .fab:hover {
   transform: translateY(-3px);
 }
+.fab:active {
+  transform: scale(0.95);
+}
+
+/* Denyut halus SATU kali setelah halaman dimuat (cincin membesar & memudar), tidak berulang */
+.fab::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: 0 0 0 2px var(--c-wa);
+  opacity: 0;
+  pointer-events: none;
+  animation: pulse 1.4s var(--ease) 2.2s 1 both;
+}
+@keyframes pulse {
+  0% { opacity: 0.7; transform: scale(1); }
+  100% { opacity: 0; transform: scale(1.45); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .fab::after { animation: none; }
+}
 
 .fab[data-hidden],
 :global(html[data-menu-open]) .fab {

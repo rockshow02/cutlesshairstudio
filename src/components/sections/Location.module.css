@@ -1,14 +1,19 @@
-.tabs {
+/* ---------- Chip pemilih cabang ---------- */
+.chips {
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-2);
   margin-bottom: var(--space-6);
 }
-.tab {
+.chip {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
   min-height: var(--touch);
   padding: 0 var(--space-5);
+  overflow: hidden;
   border: 1px solid var(--c-ink);
-  border-radius: var(--radius);
+  border-radius: 999px;
   background: transparent;
   color: var(--c-ink);
   font-size: var(--fs-xs);
@@ -16,10 +21,45 @@
   letter-spacing: 0.08em;
   text-transform: uppercase;
   cursor: pointer;
+  isolation: isolate;
+  transition: color var(--dur) var(--ease);
 }
-.tab[aria-selected='true'] {
+/* Isi warna dari bawah saat aktif/hover (transform saja) */
+.chip::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
   background: var(--c-ink);
+  transform: translateY(101%);
+  transition: transform var(--dur) var(--ease);
+}
+.chip[aria-selected='true'] {
   color: var(--c-bone);
+}
+.chip[aria-selected='true']::before {
+  transform: none;
+}
+@media (hover: hover) {
+  .chip:hover { color: var(--c-bone); }
+  .chip:hover::before { transform: none; }
+}
+.chip:active {
+  transform: scale(0.97);
+}
+
+/* ---------- Panggung: info cabang (berganti) + foto hairstylist berjalan ---------- */
+.stage {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-7);
+}
+.stagePanel {
+  position: relative;
+  min-width: 0;
+}
+.swap {
+  width: 100%;
 }
 
 .panel {
@@ -124,28 +164,167 @@
 }
 
 @media (min-width: 1024px) {
-  .panel {
+  .panel[data-layout='split'] {
     grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
     gap: var(--space-8);
     align-items: stretch;
   }
-  .map {
+  .panel[data-layout='split'] .map {
     aspect-ratio: auto;
     min-height: 100%;
   }
+  .stage {
+    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+    gap: var(--space-8);
+    align-items: stretch;
+  }
+}
+.panel[data-layout='stacked'] {
+  gap: var(--space-6);
+}
+.panel[data-layout='stacked'] .map {
+  aspect-ratio: 16 / 9;
+}
+
+/* ---------- Layanan cabang ---------- */
+.services {
+  margin-bottom: var(--space-6);
+}
+.servicesTitle {
+  padding-bottom: var(--space-3);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--c-taupe-dark);
+}
+.services ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+.services li {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 0 var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--c-line-dark);
+  border-radius: 999px;
+  font-size: var(--fs-sm);
+  font-weight: 600;
+}
+.servicePrice {
+  font-weight: 500;
+  color: var(--c-taupe-dark);
+}
+
+/* ---------- Foto hairstylist berjalan (marquee) ---------- */
+.barbers {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  min-width: 0;
+}
+.columns {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  overflow: hidden;
+  border-radius: var(--radius);
+}
+.column {
+  /* Pinggir memudar (statis, bukan animasi) */
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+}
+.column > div > div {
+  gap: var(--space-3);
+  padding-right: var(--space-3);
+}
+.photo {
+  position: relative;
+  flex: none;
+  width: 150px;
+  overflow: hidden;
+  border-radius: var(--radius);
+  background: var(--c-ink-2);
+}
+.photoImg {
+  display: block;
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  object-fit: cover;
+}
+.photo figcaption {
+  position: absolute;
+  inset: auto 0 0;
+  padding: var(--space-5) var(--space-3) var(--space-2);
+  background: linear-gradient(180deg, transparent, rgba(12, 16, 20, 0.85));
+  color: var(--c-bone);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.pause {
+  display: inline-flex;
+  align-self: flex-start;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: var(--touch);
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--c-ink);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+@media (min-width: 768px) {
+  .columns {
+    grid-template-columns: repeat(var(--cols, 2), minmax(0, 1fr));
+    gap: var(--space-3);
+    height: clamp(460px, 60vh, 640px);
+  }
+  .columns[data-count='3'] { --cols: 3; }
+  .column {
+    height: 100%;
+    -webkit-mask-image: linear-gradient(180deg, transparent, #000 10%, #000 90%, transparent);
+    mask-image: linear-gradient(180deg, transparent, #000 10%, #000 90%, transparent);
+  }
+  .column > div > div {
+    padding-right: 0;
+    padding-bottom: var(--space-3);
+  }
+  .photo {
+    width: 100%;
+  }
+}
+@media (min-width: 1024px) {
+  .barbers {
+    position: sticky;
+    top: calc(var(--header-offset) + var(--space-5));
+    align-self: start;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pause { display: none; }
 }
 
 /* ---------- Multi-cabang ---------- */
-.tabBadge {
+.chipBadge {
   margin-left: var(--space-2);
   padding: 1px var(--space-2);
-  border-radius: 2px;
+  border-radius: 999px;
   background: var(--c-taupe-dark);
   color: var(--c-bone);
   font-size: 0.625rem;
   letter-spacing: 0.08em;
 }
-.tab[aria-selected='true'] .tabBadge {
+.chip[aria-selected='true'] .chipBadge {
   background: var(--c-sand);
   color: var(--c-ink);
 }

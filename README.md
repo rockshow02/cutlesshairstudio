@@ -314,7 +314,34 @@ Detail lengkap: **[CONTRIBUTING.md](CONTRIBUTING.md)**.
 - [ ] Lighthouse mobile ≥ 85
 - [ ] PR sinkron `main → staging` sudah di-merge, CI hijau
 
-## 12. Arsitektur
+## 12. Animasi & transisi
+
+Library: **Motion for React** (`motion`, LazyMotion + `domAnimation`) dan **Lenis** (smooth scroll, desktop saja, dimuat dinamis). Tambahan JS ±47 KB gzip (motion ±39 KB di bundle utama, Lenis ±8 KB hanya di desktop); Swiper (±30 KB gzip) kini hanya dimuat bila section Testimoni aktif, sehingga di HP bundle awal hanya naik ±11 KB.
+
+- **Pengaturan rasa animasi** (durasi, easing, stagger, jarak, intensitas parallax, skala kartu, kecepatan marquee): `src/styles/motion.ts`.
+- **Komponen** di `src/components/motion/`: `Reveal`, `TextReveal`, `Parallax`, `Marquee`, `CountUp`, `ExpandingCard`, `PageTransition`, `Preloader`, `ToneShift`, `MotionProvider` (+ `smoothScroll.ts`, `useScrollProgress.ts`). Semua teks & gambar tetap dari `src/lib/content.ts`.
+
+| Pola | Dipakai di |
+|---|---|
+| Preloader: logo naik dari balik garis + penghitung 0–100% → tirai membuka (≤ 1,5 dtk, sekali per sesi) | Semua halaman (kunjungan pertama). Toggle & video opsional: Pengaturan Situs |
+| Judul per baris dari balik garis, subjudul & tombol menyusul, foto zoom 1.1 → 1 + parallax, indikator "Scroll" | Hero |
+| Editorial: foto portrait + judul besar menumpuk, parallax beda kecepatan, paragraf muncul bertahap | Tentang Kami |
+| Kartu foto membesar jadi lebar penuh (radius → 0) + tagline crossfade, scroll-linked | Section `#studio` (foto = foto cabang pertama di CMS) |
+| Chip cabang + panel info berganti (fade + geser), kolom foto hairstylist berjalan berlawanan arah (HP: satu baris) | Lokasi |
+| Kartu muncul bertahap, hover terangkat + ikon membesar | Layanan, Harga, Testimoni |
+| Hitung naik sekali (nilai final tetap untuk screen reader) | Statistik Tentang, rating Testimoni |
+| Warna latar berpindah halus gelap ↔ terang (CSS scroll-driven) | Antar-section |
+| Navbar ikut warna section di bawahnya, sembunyi saat scroll turun & muncul saat naik | Semua halaman |
+| Tirai antarhalaman (≤ 400 ms) | Beranda ↔ /cabang/… ↔ /produk/ |
+| Tombol isi warna saat hover & mengecil saat ditekan; tombol WA berdenyut sekali | Semua tombol |
+
+**Aturan:** hanya `transform` & `opacity`; animasi masuk viewport sekali (`once`); scroll snap `y proximity` hanya di hero, Tentang Kami, dan kartu studio; `prefers-reduced-motion` → tanpa preloader, parallax, marquee, scroll-linked, dan tirai (fade sederhana saja).
+
+**Performa (HP):** section di bawah hero dirender bertahap setelah hero tampil (`components/ui/Deferred.tsx`); semua `Reveal` memakai satu IntersectionObserver bersama + transisi CSS; parallax/kartu membesar memakai satu sumber scroll bersama (`useScrollProgress`) karena `useScroll({ target })` membuat ViewTimeline per elemen yang memaksa layout ulang. Google Fonts dimuat tanpa memblokir render; CSS digabung jadi satu file.
+
+**Aset yang perlu disiapkan:** logo SVG (untuk animasi garis/stroke preloader), foto portrait studio resolusi tinggi (≥ 1200 × 1500 px) untuk Tentang Kami, foto lanskap studio (≥ 1920 px) untuk kartu membesar (upload sebagai foto cabang), dan opsional video preloader (MP4/WebM tanpa suara, ≤ 500 KB, ±1,5 detik).
+
+## 13. Arsitektur
 
 ```
 Admin ─▶ Pages CMS ─commit─▶ GitHub (src/content/*.json, public/uploads/*)

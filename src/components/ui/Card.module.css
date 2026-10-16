@@ -6,7 +6,14 @@
   padding: var(--space-6) var(--space-5);
   border: 1px solid transparent;
   border-radius: var(--radius);
-  transition: background-color var(--dur) var(--ease), border-color var(--dur) var(--ease);
+  transition: background-color var(--dur) var(--ease), border-color var(--dur) var(--ease), transform var(--dur) var(--ease);
+}
+
+/* Desktop: kartu terangkat sedikit saat hover (kecuali kartu polos, mis. barber) */
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .card:not(.plain):hover {
+    transform: translate3d(0, -6px, 0);
+  }
 }
 
 .dark {

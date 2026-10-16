@@ -13,4 +13,6 @@ export interface HeroContent {
   secondaryCta: Cta;
   /** Kata-kata untuk strip teks berjalan di bawah hero */
   marquee: string[];
+  /** Label indikator scroll di bawah hero */
+  scrollHint: string;
 }

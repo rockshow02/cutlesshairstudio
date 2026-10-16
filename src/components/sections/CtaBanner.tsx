@@ -5,7 +5,7 @@ import { useCtaTarget } from '@/lib/useBooking';
 import { Button } from '@/components/ui/Button';
 import { Container } from '@/components/ui/Container';
 import { Kicker } from '@/components/ui/SectionTitle';
-import { Reveal } from '@/components/ui/Reveal';
+import { Reveal } from '@/components/motion/Reveal';
 import { ResponsiveImage } from '@/components/ui/ResponsiveImage';
 import styles from './CtaBanner.module.css';
 

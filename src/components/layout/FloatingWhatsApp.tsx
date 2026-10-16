@@ -44,11 +44,14 @@ export function FloatingWhatsApp() {
     const schedule = () => {
       if (!raf) raf = requestAnimationFrame(check);
     };
-    schedule();
+    // Cek awal saat browser senggang (tidak memaksa layout saat halaman masih disusun)
+    const idle = window.requestIdleCallback ? window.requestIdleCallback(schedule, { timeout: 1500 }) : window.setTimeout(schedule, 300);
     window.addEventListener('scroll', schedule, { passive: true });
     window.addEventListener('resize', schedule);
     return () => {
       cancelAnimationFrame(raf);
+      if (window.cancelIdleCallback) window.cancelIdleCallback(idle);
+      else window.clearTimeout(idle);
       window.removeEventListener('scroll', schedule);
       window.removeEventListener('resize', schedule);
     };

@@ -21,4 +21,5 @@ export const hero: HeroContent = {
   primaryCta: { label: 'Booking via WhatsApp', action: { type: 'whatsapp' } },
   secondaryCta: { label: 'Lihat Layanan', action: { type: 'link', href: '#layanan' } },
   marquee: ['On Point Always', 'We Got You', 'Goodstyle Goodmood'],
+  scrollHint: 'Scroll',
 };

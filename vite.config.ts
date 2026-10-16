@@ -10,6 +10,8 @@ export default defineConfig({
     alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) },
   },
   build: {
+    // Satu file CSS untuk semua halaman (lebih sedikit request yang memblokir render)
+    cssCodeSplit: false,
     // Multi-halaman statis: / (beranda), /produk/, /cabang/ (+ /cabang/<slug>/ hasil prerender)
     rollupOptions: {
       input: {

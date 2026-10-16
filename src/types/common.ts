@@ -40,5 +40,5 @@ export interface Cta {
 export type IconName =
   | 'whatsapp' | 'instagram' | 'tiktok' | 'google' | 'star' | 'arrow' | 'pin' | 'clock'
   | 'navigate' | 'mail' | 'check' | 'menu' | 'close' | 'chevron-left' | 'chevron-right'
-  | 'info' | 'alert' | 'tag'
+  | 'info' | 'alert' | 'tag' | 'play' | 'pause'
   | 'scissors' | 'wash' | 'kids' | 'shave' | 'color' | 'perm' | 'spa' | 'tattoo';
