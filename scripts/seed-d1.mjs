@@ -180,7 +180,7 @@ if (flag('--test-data')) {
   }
 }
 
-const out = path.join(ROOT, option('--out', 'seed/seed.sql'));
+const out = path.resolve(ROOT, option('--out', 'seed/seed.sql'));
 await mkdir(path.dirname(out), { recursive: true });
 await writeFile(out, sql.join('\n') + '\n');
 console.log(

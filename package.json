@@ -19,7 +19,8 @@
     "db:migrate:local": "wrangler d1 migrations apply DB --env staging --local",
     "db:migrate:staging": "wrangler d1 migrations apply DB --env staging --remote",
     "db:seed:local": "node scripts/seed-d1.mjs --out seed/seed.local.sql --test-data --dev-admin --apply local",
-    "db:seed:staging": "node scripts/seed-d1.mjs --out seed/seed.staging.sql --test-data --apply staging"
+    "db:seed:staging": "node scripts/seed-d1.mjs --out seed/seed.staging.sql --test-data --apply staging",
+    "test": "vitest run"
   },
   "dependencies": {
     "arctic": "^3.7.0",
