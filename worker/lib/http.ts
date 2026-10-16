@@ -24,3 +24,12 @@ export async function body<S extends z.ZodType>(c: Context, schema: S): Promise<
 }
 
 export const query = <S extends z.ZodType>(c: Context, schema: S): z.output<S> => parse(schema, c.req.query());
+
+/** Jalankan di latar (waitUntil) bila ada ExecutionContext; tanpa itu (tes) ditunggu langsung */
+export async function defer(c: Context, task: Promise<unknown>): Promise<void> {
+  try {
+    c.executionCtx.waitUntil(task);
+  } catch {
+    await task;
+  }
+}

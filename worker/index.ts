@@ -10,6 +10,7 @@ import { publicRoutes } from './routes/public';
 import { authRoutes } from './routes/auth';
 import { meRoutes } from './routes/me';
 import { bookingRoutes } from './routes/bookings';
+import { adminRoutes } from './routes/admin';
 
 export const app = createRouter();
 
@@ -30,6 +31,7 @@ app.route('/api', publicRoutes);
 app.route('/api', authRoutes);
 app.route('/api', meRoutes);
 app.route('/api', bookingRoutes);
+app.route('/api/admin', adminRoutes);
 
 app.all('/api/*', (c) => c.json({ error: { code: 'NOT_FOUND', message: 'Endpoint tidak ditemukan.' } }, 404));
 

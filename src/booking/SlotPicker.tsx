@@ -17,24 +17,28 @@ interface SlotPickerProps {
   emptyHint?: string;
   /** Sumber data lain (admin) — default GET /api/availability */
   endpoint?: string;
+  /** Parameter tambahan (mis. exclude=<id booking> untuk pindah jadwal oleh admin) */
+  extra?: Record<string, string>;
   reloadKey?: number;
 }
 
 /** Pilih tanggal (chip) lalu jam (grid). Data dari GET /api/availability. */
-export function SlotPicker({ branch, service, barber, dates, date, onDate, selected, onSelect, emptyHint, endpoint = '/availability', reloadKey }: SlotPickerProps) {
+export function SlotPicker({ branch, service, barber, dates, date, onDate, selected, onSelect, emptyHint, endpoint = '/availability', extra, reloadKey }: SlotPickerProps) {
+  const extraKey = extra ? new URLSearchParams(extra).toString() : '';
   const [state, setState] = useState<{ loading: boolean; slots: Slot[]; error?: string }>({ loading: true, slots: [] });
 
   useEffect(() => {
     let cancelled = false;
     setState((s) => ({ ...s, loading: true, error: undefined }));
     const q = new URLSearchParams({ branch: String(branch), service: String(service), barber: barber === undefined ? 'any' : String(barber), date });
+    if (extraKey) for (const [k, v] of new URLSearchParams(extraKey)) q.set(k, v);
     api<{ slots: Slot[] }>(`${endpoint}?${q}`)
       .then((r) => !cancelled && setState({ loading: false, slots: r.slots }))
       .catch((e) => !cancelled && setState({ loading: false, slots: [], error: e.message }));
     return () => {
       cancelled = true;
     };
-  }, [branch, service, barber, date, endpoint, reloadKey]);
+  }, [branch, service, barber, date, endpoint, extraKey, reloadKey]);
 
   const groups: [string, Slot[]][] = [
     ['Pagi', state.slots.filter((s) => s.time < '12:00')],

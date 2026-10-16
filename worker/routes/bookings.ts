@@ -5,7 +5,7 @@ import { cancelBody, createBookingBody, rescheduleBody } from '../../shared/sche
 import { createRouter, type AppEnv } from '../app';
 import { notFound } from '../lib/errors';
 import { assertSameOrigin, rateLimit, verifyTurnstile } from '../lib/guard';
-import { body } from '../lib/http';
+import { body, defer } from '../lib/http';
 import { createBooking, rescheduleBooking, transitionBooking, type BookingRow } from '../lib/bookings';
 import { getBranch } from '../lib/availability';
 import { notifyBranch } from '../lib/notify';
@@ -79,7 +79,7 @@ bookingRoutes.post('/bookings', requireCompleteProfile, async (c) => {
     customerNote: input.note,
     actor: { type: 'customer', id: me.id },
   });
-  c.executionCtx.waitUntil(notifyBranch(c.env, branch, booking.status === 'pending' ? 'pending' : 'new', booking.id));
+  await defer(c, notifyBranch(c.env, branch, booking.status === 'pending' ? 'pending' : 'new', booking.id));
   return c.json({ booking: present(await ownBooking(c, booking.id)) }, 201);
 });
 
@@ -105,7 +105,7 @@ bookingRoutes.post('/bookings/:id/cancel', async (c) => {
   const me = c.get('customer')!;
   await transitionBooking(c.env.DB, { bookingId: own.id, to: 'cancelled', actor: 'customer', audit: { type: 'customer', id: me.id }, reason: input.reason || 'Dibatalkan pelanggan' });
   const branch = await getBranch(c.env.DB, own.branch_id);
-  c.executionCtx.waitUntil(notifyBranch(c.env, branch, 'cancelled', own.id));
+  await defer(c, notifyBranch(c.env, branch, 'cancelled', own.id));
   return c.json({ booking: present(await ownBooking(c, own.id)) });
 });
 
@@ -116,7 +116,7 @@ bookingRoutes.post('/bookings/:id/reschedule', async (c) => {
   const me = c.get('customer')!;
   await rescheduleBooking(c.env.DB, { bookingId: own.id, startAt: input.startAt, barberId: input.barber, actor: 'customer', audit: { type: 'customer', id: me.id } });
   const branch = await getBranch(c.env.DB, own.branch_id);
-  c.executionCtx.waitUntil(notifyBranch(c.env, branch, 'rescheduled', own.id));
+  await defer(c, notifyBranch(c.env, branch, 'rescheduled', own.id));
   return c.json({ booking: present(await ownBooking(c, own.id)) });
 });
 
