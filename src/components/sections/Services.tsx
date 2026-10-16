@@ -10,7 +10,7 @@ import { SectionState } from '@/components/ui/SectionState';
 import { SectionTitle } from '@/components/ui/SectionTitle';
 import { Card, CardFooter } from '@/components/ui/Card';
 import { Icon } from '@/components/ui/Icon';
-import { Reveal } from '@/components/ui/Reveal';
+import { Reveal } from '@/components/motion/Reveal';
 import { ResponsiveImage } from '@/components/ui/ResponsiveImage';
 import styles from './Services.module.css';
 

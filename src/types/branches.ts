@@ -89,6 +89,12 @@ export interface BranchCopy {
     /** {branch} */
     barbersFor: string;
     noBarbers: string;
+    /** Judul daftar layanan di panel cabang */
+    servicesTitle: string;
+    /** {branch}: label kolom foto hairstylist berjalan */
+    barbersMarquee: string;
+    pauseMotion: string;
+    playMotion: string;
     /** {branches} */
     promoFor: string;
     notFoundTitle: string;

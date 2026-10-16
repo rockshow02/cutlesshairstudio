@@ -13,7 +13,7 @@
  *    [DEV]/[STAGING], modul `virtual:content-status` untuk badge. Web Analytics hanya di produksi.
  * 5. Prerender /cabang/<slug>/index.html per cabang (title/meta unik + JSON-LD HairSalon + ringkasan statis).
  */
-import { readdir, readFile, mkdir, writeFile } from 'node:fs/promises';
+import { readdir, readFile, mkdir, stat, writeFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import path from 'node:path';
 import sharp from 'sharp';
@@ -96,6 +96,16 @@ export async function loadContent(root: string): Promise<LoadResult> {
       const webp = img.path.replace(/\.(jpe?g|png|gif|tiff?|avif)$/i, '.webp');
       const found = existsSync(path.join(publicDir, img.path)) || existsSync(path.join(publicDir, webp));
       if (img.path.startsWith('/') && !found) errors.push(`  • ${img.at}: gambar tidak ditemukan di public${img.path}`);
+    }
+  }
+
+  // Video preloader (opsional): harus ada & ringan agar tidak menunda halaman
+  const video = (parsed.settings as { preloaderVideo?: string | null } | undefined)?.preloaderVideo;
+  if (video) {
+    const file = path.join(publicDir, video);
+    if (!existsSync(file)) errors.push(`  • settings.json: preloaderVideo: file tidak ditemukan di public${video}`);
+    else if ((await stat(file)).size > 500 * 1024) {
+      errors.push(`  • settings.json: preloaderVideo: ${video} lebih dari 500 KB, kompres dulu (mis. 720p, tanpa suara, ±1,5 detik)`);
     }
   }
 

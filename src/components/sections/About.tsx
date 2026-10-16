@@ -1,121 +1,109 @@
-import { useEffect, useRef, useState } from 'react';
+import { useRef } from 'react';
+import { useInView } from 'motion/react';
 import { getAbout } from '@/lib/content';
 import { useContent } from '@/lib/useContent';
-import { formatNumber } from '@/lib/format';
-import type { AboutStat } from '@/types';
+import type { AboutContent, AboutStat } from '@/types';
+import { PARALLAX } from '@/styles/motion';
 import { Section } from '@/components/ui/Section';
 import { SectionState } from '@/components/ui/SectionState';
 import { Kicker } from '@/components/ui/SectionTitle';
-import { Reveal } from '@/components/ui/Reveal';
 import { Icon } from '@/components/ui/Icon';
 import { ResponsiveImage } from '@/components/ui/ResponsiveImage';
+import { CountUp } from '@/components/motion/CountUp';
+import { Parallax } from '@/components/motion/Parallax';
+import { Reveal } from '@/components/motion/Reveal';
+import { TextReveal } from '@/components/motion/TextReveal';
+import { useSnap } from '@/components/motion/smoothScroll';
 import styles from './About.module.css';
 
+/** Tentang Kami (editorial): foto portrait besar, judul besar menumpuk di atasnya, keduanya parallax beda kecepatan. */
 export function About() {
   const state = useContent(getAbout);
+  const ref = useRef<HTMLElement>(null);
+  useSnap(ref);
 
   return (
-    <Section id="tentang" tone="light" labelledBy="tentang-title">
+    <Section id="tentang" tone="light" labelledBy="tentang-title" ref={ref}>
       <SectionState state={state} tone="light" skeletonCount={2}>
-        {(about) => (
-          <>
-            <div className={styles.grid}>
-              <Reveal as="figure" className={styles.figure}>
-                <ResponsiveImage image={about.image} className={styles.img} />
-                <figcaption>{about.imageCaption}</figcaption>
-              </Reveal>
-
-              <div className={styles.text}>
-                <Reveal>
-                  <Kicker tone="light">{about.heading.kicker}</Kicker>
-                  <h2 id="tentang-title" className={styles.title}>
-                    {about.heading.title}
-                  </h2>
-                </Reveal>
-                <Reveal delay={0.05}>
-                  <p className={styles.lead}>{about.lead}</p>
-                  {about.body.map((p) => (
-                    <p key={p} className={styles.body}>
-                      {p}
-                    </p>
-                  ))}
-                </Reveal>
-                {about.values.length > 0 && (
-                  <Reveal as="ul" className={styles.values} delay={0.1}>
-                    {about.values.map((v) => (
-                      <li key={v.title}>
-                        <Icon name="check" strokeWidth={2} />
-                        <div>
-                          <strong>{v.title}</strong>
-                          <span>{v.description}</span>
-                        </div>
-                      </li>
-                    ))}
-                  </Reveal>
-                )}
-              </div>
-            </div>
-
-            {about.stats.length > 0 && (
-              <dl className={styles.stats}>
-                {about.stats.map((stat, i) => (
-                  <Reveal key={stat.label} className={styles.stat} delay={i * 0.08}>
-                    <dt>{stat.label}</dt>
-                    <dd>
-                      <StatValue stat={stat} />
-                    </dd>
-                  </Reveal>
-                ))}
-              </dl>
-            )}
-          </>
-        )}
+        {(about) => <AboutBody about={about} />}
       </SectionState>
     </Section>
   );
 }
 
-/** Angka berjalan saat terlihat; format ribuan id-ID. Nilai akhir selalu ada di DOM untuk aksesibilitas. */
-function StatValue({ stat }: { stat: AboutStat }) {
-  const final = stat.display ?? formatNumber(stat.value);
-  const [text, setText] = useState(final);
-  const ref = useRef<HTMLSpanElement>(null);
+function AboutBody({ about }: { about: AboutContent }) {
+  const figureRef = useRef<HTMLDivElement>(null);
+  const inView = useInView(figureRef, { once: true, amount: 0.35 });
+  let order = 0;
 
-  useEffect(() => {
-    const el = ref.current;
-    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (!stat.animate || !el || reduce || !('IntersectionObserver' in window)) return;
-    let raf = 0;
-    const io = new IntersectionObserver(
-      ([entry]) => {
-        if (!entry.isIntersecting) return;
-        io.disconnect();
-        const start = performance.now();
-        const tick = (now: number) => {
-          const p = Math.min(1, (now - start) / 1600);
-          const eased = 1 - Math.pow(1 - p, 3);
-          setText(formatNumber(Math.round(stat.value * eased)));
-          if (p < 1) raf = requestAnimationFrame(tick);
-        };
-        raf = requestAnimationFrame(tick);
-      },
-      { threshold: 0.6 },
-    );
-    io.observe(el);
-    return () => {
-      io.disconnect();
-      cancelAnimationFrame(raf);
-    };
-  }, [stat.animate, stat.value]);
-
-  const affix = (v: string) => `${stat.prefix ?? ''}${v}${stat.suffix ?? ''}`;
-  // Nilai final hanya SATU kali di teks halaman (sr-only). Angka animasi digambar lewat CSS
-  // (::before + data-value) dan aria-hidden, sehingga screen reader maupun alat baca halaman
-  // tidak membaca "5.000+ 5.000+".
   return (
     <>
-      <span className="visually-hidden">{affix(final)}</span>
-      <span ref={ref} aria-hidden="true" className={styles.counter} data-value={affix(text)} />
+      <div className={styles.editorial}>
+        <div className={styles.feature}>
+          <div ref={figureRef} className={styles.figure}>
+            <Parallax className={styles.photo} innerClassName={styles.photoMove} speed={PARALLAX.editorialPhoto}>
+              <ResponsiveImage image={about.image} className={styles.img} />
+            </Parallax>
+            <div className={styles.shade} aria-hidden="true" />
+            <Parallax className={styles.titleWrap} speed={PARALLAX.editorialTitle}>
+              <Kicker>{about.heading.kicker}</Kicker>
+              <TextReveal as="h2" id="tentang-title" className={styles.title} lines={[about.heading.title]} play={inView} />
+            </Parallax>
+          </div>
+          <p className={styles.caption}>{about.imageCaption}</p>
+        </div>
+
+        <div className={styles.text}>
+          <Reveal as="p" className={styles.lead} index={order++}>
+            {about.lead}
+          </Reveal>
+          {about.body.map((p) => (
+            <Reveal as="p" key={p} className={styles.body} index={order++}>
+              {p}
+            </Reveal>
+          ))}
+          {about.values.length > 0 && (
+            <ul className={styles.values}>
+              {about.values.map((v) => (
+                <Reveal as="li" key={v.title} index={order++}>
+                  <Icon name="check" strokeWidth={2} />
+                  <div>
+                    <strong>{v.title}</strong>
+                    <span>{v.description}</span>
+                  </div>
+                </Reveal>
+              ))}
+            </ul>
+          )}
+        </div>
+      </div>
+
+      {about.stats.length > 0 && (
+        <dl className={styles.stats}>
+          {about.stats.map((stat, i) => (
+            <Reveal key={stat.label} className={styles.stat} index={i}>
+              <dt>{stat.label}</dt>
+              <dd>
+                <StatValue stat={stat} />
+              </dd>
+            </Reveal>
+          ))}
+        </dl>
+      )}
     </>
+  );
+}
+
+/** Angka statistik menghitung naik sekali saat terlihat (nilai final tetap untuk screen reader) */
+function StatValue({ stat }: { stat: AboutStat }) {
+  return (
+    <CountUp
+      value={stat.value}
+      decimals={Number.isInteger(stat.value) ? 0 : 1}
+      prefix={stat.prefix}
+      suffix={stat.suffix}
+      display={stat.display}
+      animateValue={Boolean(stat.animate)}
+    />
   );
 }

@@ -192,6 +192,8 @@ Klik **Pengaturan Situs**. Menu ini hanya berisi data merek. Alamat dan jam buka
 | Teks footer | Kalimat di bawah logo footer |
 | Angka statistik | Jumlah pelanggan, tahun berdiri, rating & jumlah ulasan Google. **Masing-masing punya tombol Tampilkan**; nyalakan hanya bila angkanya asli. Jumlah cabang dan hairstylist dihitung otomatis |
 | Tampilkan section Testimoni / Produk / Before-After | Menyalakan atau menyembunyikan section itu (beserta menunya) |
+| Tampilkan animasi pembuka | Logo Cutless beranimasi saat website pertama kali dibuka (sekali per kunjungan). Matikan bila tidak diinginkan |
+| Video animasi pembuka (opsional) | Video pendek pengganti animasi logo: MP4/WebM tanpa suara, **maks. 500 KB**, ±1,5 detik. Kosongkan untuk memakai animasi logo |
 
 **Save** setelah mengubah.
 

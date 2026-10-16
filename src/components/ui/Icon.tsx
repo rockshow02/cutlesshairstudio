@@ -75,6 +75,8 @@ const ICONS: Record<IconName, IconDef> = {
       </>
     ),
   },
+  play: { fill: true, body: <path d="M7 4.5v15l12.5-7.5z" /> },
+  pause: { fill: true, body: <path d="M6.5 4.5h4v15h-4zm7 0h4v15h-4z" /> },
   tag: {
     body: (
       <>

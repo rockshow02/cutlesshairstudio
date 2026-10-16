@@ -43,6 +43,12 @@ media:
     output: /uploads/site
     categories: [image]
     rename: safe
+  - name: videos
+    label: Video
+    input: public/uploads/videos
+    output: /uploads/videos
+    categories: [video]
+    rename: safe
 
 content:
   # ------------------------------------------------------------------ Cabang
@@ -760,3 +766,14 @@ content:
         type: boolean
         default: false
         description: "Nyalakan setelah foto sebelum-sesudah asli tersedia."
+      - name: enablePreloader
+        label: Tampilkan animasi pembuka
+        type: boolean
+        default: true
+        description: "Logo Cutless beranimasi saat website pertama kali dibuka (sekali per kunjungan, maks. 1,5 detik)."
+      - name: preloaderVideo
+        label: Video animasi pembuka (opsional)
+        type: file
+        description: "MP4/WebM tanpa suara, maks. 500 KB dan ±1,5 detik. Kosongkan untuk memakai animasi logo."
+        options:
+          media: videos

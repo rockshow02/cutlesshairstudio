@@ -8,13 +8,14 @@ import { Section } from '@/components/ui/Section';
 import { Kicker } from '@/components/ui/SectionTitle';
 import { Button } from '@/components/ui/Button';
 import { Icon } from '@/components/ui/Icon';
-import { Reveal } from '@/components/ui/Reveal';
+import { Reveal } from '@/components/motion/Reveal';
 import { ResponsiveImage } from '@/components/ui/ResponsiveImage';
 import { BranchPanel } from '@/components/sections/Location';
 import { Promo } from '@/components/sections/Promo';
 import { Pricing } from '@/components/sections/Pricing';
 import { Barbers } from '@/components/sections/Barbers';
 import { CtaBanner } from '@/components/sections/CtaBanner';
+import { Deferred } from '@/components/ui/Deferred';
 import styles from './BranchPages.module.css';
 
 /** /cabang/:slug/ : semua info satu cabang (dipakai SiteShell dengan pageBranchSlug) */
@@ -41,16 +42,18 @@ export function BranchPage() {
   return (
     <>
       <BranchHero branch={b} brand={site.brandName} />
-      <Section id="lokasi" tone="light" labelledBy="lokasi-detail">
-        <h2 id="lokasi-detail" className="visually-hidden">
-          {copy.heading.title}
-        </h2>
-        <BranchPanel branch={b} labels={copy.labels} headingLevel={2} />
-      </Section>
-      <Promo />
-      <Pricing />
-      <Barbers />
-      {b.bookable && <CtaBanner />}
+      <Deferred>
+        <Section id="lokasi" tone="light" labelledBy="lokasi-detail">
+          <h2 id="lokasi-detail" className="visually-hidden">
+            {copy.heading.title}
+          </h2>
+          <BranchPanel branch={b} labels={copy.labels} headingLevel={2} />
+        </Section>
+        <Promo />
+        <Pricing />
+        <Barbers />
+        {b.bookable && <CtaBanner />}
+      </Deferred>
     </>
   );
 }

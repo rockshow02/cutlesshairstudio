@@ -249,6 +249,15 @@ export const settingsSchema = z.object({
   showTestimonials: z.boolean().default(false),
   showProducts: z.boolean().default(false),
   showBeforeAfter: z.boolean().default(false),
+  /** Animasi pembuka (sekali per sesi; otomatis dilewati bila pengunjung memilih "kurangi gerakan") */
+  enablePreloader: z.boolean().default(true),
+  /** Opsional: video pendek pengganti animasi logo (mp4/webm, maks. 500 KB, ≤ 1,5 detik) */
+  preloaderVideo: z
+    .union([
+      z.string().trim().regex(/^\/uploads\/videos\/[\w.-]+\.(mp4|webm)$/i, 'video preloader harus file .mp4/.webm dari folder Video'),
+      z.literal(''),
+    ])
+    .nullish(),
 });
 
 export const productSchema = z

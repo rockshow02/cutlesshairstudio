@@ -20,5 +20,6 @@
   },
   "showTestimonials": false,
   "showProducts": false,
-  "showBeforeAfter": false
+  "showBeforeAfter": false,
+  "enablePreloader": true
 }

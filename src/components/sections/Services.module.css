@@ -30,11 +30,12 @@
   margin-bottom: var(--space-6);
 }
 .icon {
+  transform-origin: left bottom;
   color: var(--c-sand);
   transition: transform var(--dur) var(--ease);
 }
 .card:hover .icon {
-  transform: translateY(-4px);
+  transform: translate3d(0, -4px, 0) scale(1.12);
 }
 .no {
   font-size: var(--fs-xs);

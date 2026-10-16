@@ -184,6 +184,7 @@ export function buildSite(s: SettingsEntry, base: SiteContent, branches: Branch[
     brandName: s.siteName,
     siteUrl: s.siteUrl,
     features,
+    intro: { enabled: s.enablePreloader !== false, video: text(s.preloaderVideo) },
     // Link menu ikut hilang bila section-nya dimatikan
     nav: base.nav.filter((item) => !(item.href?.startsWith('/produk') && !features.products)),
     logo: logo ? { ...base.logo, stacked: toImage(logo, s.siteName, base.logo.stacked) } : base.logo,
@@ -457,7 +458,7 @@ export function buildAbout(copy: AboutCopy, s: SettingsEntry, branches: Branch[]
   if (stats.showCustomers && stats.customers) list.push({ value: stats.customers, suffix: '+', animate: true, label: L.customers });
   if (stats.showFoundedYear && stats.foundedYear) list.push({ value: stats.foundedYear, display: String(stats.foundedYear), label: L.foundedYear });
   if (stats.showRating && stats.rating)
-    list.push({ value: stats.rating, display: stats.rating.toLocaleString('id-ID', { maximumFractionDigits: 1 }), label: L.rating });
+    list.push({ value: stats.rating, display: stats.rating.toLocaleString('id-ID', { maximumFractionDigits: 1 }), animate: true, label: L.rating });
   if (stats.showReviewCount && stats.reviewCount) list.push({ value: stats.reviewCount, suffix: '+', animate: true, label: L.reviewCount });
 
   const { statLabels: _labels, ...rest } = copy;

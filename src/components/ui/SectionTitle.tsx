@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import type { SectionHeading } from '@/types';
-import { Reveal } from './Reveal';
+import { Reveal } from '@/components/motion/Reveal';
 import styles from './SectionTitle.module.css';
 
 interface SectionTitleProps {

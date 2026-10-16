@@ -48,6 +48,7 @@ export const site: SiteContent = {
   // Diisi dari Pengaturan Situs (siteUrl & toggle section)
   siteUrl: '',
   features: { testimonials: false, products: false, beforeAfter: false },
+  intro: { enabled: true },
   // TODO: sesuaikan dengan rentang harga asli
   priceRange: 'Rp60.000 - Rp450.000',
   seo: {

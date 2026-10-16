@@ -33,6 +33,7 @@ import type {
 } from '@/content/schema';
 import type {
   AboutContent,
+  ShowcaseContent,
   Announcement,
   BarbersContent,
   Branch,
@@ -105,6 +106,7 @@ function normalizeSettings(s: SettingsEntry): SettingsEntry {
     showTestimonials: Boolean(s.showTestimonials),
     showProducts: Boolean(s.showProducts),
     showBeforeAfter: Boolean(s.showBeforeAfter),
+    enablePreloader: s.enablePreloader !== false,
   };
 }
 
@@ -159,3 +161,10 @@ export const getTestimonials = (): Promise<TestimonialsContent> =>
 export const getProducts = (): Promise<ProductsContent> => resolve(() => buildProducts(data.products, local.productsCopy));
 export const getHero = (): Promise<HeroContent> => resolve(() => local.hero);
 export const getCtaBanner = (): Promise<CtaBannerContent> => resolve(() => local.ctaBanner);
+/** Foto studio = foto cabang pertama yang punya foto (Pages CMS); cadangan dari showcaseCopy */
+export const getShowcase = (): Promise<ShowcaseContent> =>
+  resolve(() => {
+    const photo = branchList().find((b) => b.photo)?.photo;
+    const { heading, taglines, fallbackImage } = local.showcaseCopy;
+    return { heading, taglines, image: photo ?? fallbackImage };
+  });

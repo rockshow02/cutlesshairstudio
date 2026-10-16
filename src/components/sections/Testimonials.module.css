@@ -41,6 +41,12 @@
   display: flex;
   height: auto;
 }
+/* Pembungkus animasi muncul: meneruskan tinggi slide ke kartu */
+.reveal {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+}
 
 /* Semua kartu setinggi slide tertinggi */
 .card {
