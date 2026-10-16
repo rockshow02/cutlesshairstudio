@@ -6,8 +6,11 @@
  *                          pengumuman, testimoni, produk, pengaturan situs). Divalidasi Zod saat build.
  *   - src/content/*.ts   : teks statis (hero, about, layanan, label UI, dll.).
  *
- * Fungsi menerima `branchSlug` opsional untuk data per cabang. Tahap booking: cukup ganti isi fungsi
- * ini dengan pemanggilan API/database (struktur branches/barbers/pricing sudah 1:1 dengan tabel).
+ * Fungsi menerima `branchSlug` opsional untuk data per cabang.
+ *
+ * Booking online (VITE_BOOKING_ENABLED=true, staging): cabang, hairstylist, dan harga dibaca dari database D1
+ * lewat GET /api/public/catalog (bentuk data sama persis dengan JSON di bawah), sehingga komponen tidak berubah.
+ * Bila API gagal, dipakai salinan JSON bawaan build (situs tetap tampil).
  * Filter tanggal promo/pengumuman dievaluasi di browser saat dipanggil (WIB), tanpa build ulang.
  */
 import * as local from '@/content';
@@ -113,8 +116,26 @@ function normalizeSettings(s: SettingsEntry): SettingsEntry {
 /** Simulasi latensi untuk menguji state loading: VITE_CONTENT_DELAY=1200 npm run dev */
 const SIMULATED_DELAY = Number(import.meta.env.VITE_CONTENT_DELAY ?? 0);
 
-/** Kembalikan salinan (komponen tidak bisa mengubah sumber), tetap async agar mudah diganti API. */
+const BOOKING_API = import.meta.env.VITE_BOOKING_ENABLED === 'true';
+let catalog: Promise<void> | null = null;
+
+/** Sekali per halaman: ganti data cabang/barber/harga dengan data D1 (API). Gagal → tetap salinan JSON. */
+function loadCatalog(): Promise<void> {
+  if (!BOOKING_API || typeof fetch === 'undefined') return Promise.resolve();
+  catalog ??= fetch('/api/public/catalog', { credentials: 'same-origin' })
+    .then((r) => (r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`))))
+    .then((c: { branches: BranchEntry[]; barbers: BarberEntry[]; pricing: PricingEntry[] }) => {
+      data.branches = c.branches;
+      data.barbers = c.barbers;
+      data.pricing = c.pricing;
+    })
+    .catch((e) => console.warn('Katalog booking tidak bisa dimuat, memakai data bawaan:', e));
+  return catalog;
+}
+
+/** Kembalikan salinan (komponen tidak bisa mengubah sumber). */
 async function resolve<T>(build: () => T): Promise<T> {
+  await loadCatalog();
   if (SIMULATED_DELAY > 0) await new Promise((r) => setTimeout(r, SIMULATED_DELAY));
   return structuredClone(build());
 }

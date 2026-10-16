@@ -28,7 +28,7 @@ Buka Pull Request **feature/transisi → staging** di GitHub. CI berjalan (konte
 ## 2. Rilis ke produksi
 
 1. Uji di URL staging (lihat [checklist](#checklist-sebelum-merge-ke-main)). Badge **STAGING** di pojok kiri bawah menunjukkan konten yang belum siap tayang. Angkanya harus **0**.
-2. Buka PR **staging → main**. CI menjalankan typecheck, lint, validasi konten **ketat** (tidak ada nomor contoh 6281234567890, kata "contoh", TODO, branchSlug tidak dikenal, cabang Aktif tanpa WA/jam), dan build produksi.
+2. Buka PR **staging → main**. CI menjalankan typecheck, lint, tes, validasi konten **ketat** (tidak ada nomor contoh 6281234567890, kata "contoh", TODO, branchSlug tidak dikenal, cabang Aktif tanpa WA/jam), dan build produksi.
 3. Merge (pakai **Create a merge commit**) setelah CI hijau. Cloudflare mendeploy produksi otomatis.
 
 PR ke `main` dari branch selain `staging` otomatis ditolak CI. Hotfix pun lewat staging dulu (cepat: buat `feature/hotfix-…` → staging → main).
@@ -73,6 +73,9 @@ git add . && git commit && git push   # PR sinkron otomatis tertutup sebagai mer
 | `npm run build` | Build produksi (ketat: konten belum siap tayang → gagal) |
 | `npm run preview:worker` | Build staging lalu `wrangler dev` di http://localhost:8787: menguji Worker sungguhan (redirect `/cabang/x` → `/cabang/x/`, halaman cabang hasil prerender, `/produk/`, header `_headers`, halaman 404) |
 | `npm run check:content` | Validasi konten seperti CI (`CONTENT_CHECK=warn` untuk mode longgar) |
+| `npm test` | Vitest: mesin slot, anti-bentrok (D1 lokal), login, admin, cron |
+| `npm run e2e` | Playwright 360px terhadap `wrangler dev` (butuh `npm run db:migrate:local && npm run db:seed:local` sekali) |
+| `npm run dev:worker` | Booking online lokal: build staging + Worker + D1 lokal di http://localhost:8787 (`.dev.vars` dari `.dev.vars.example`) |
 | `npm run typecheck` / `npm run lint` | TypeScript / ESLint |
 
 Konten tidak valid di dev (mis. commit Pages CMS yang salah) tampil sebagai **overlay error** di browser, berisi nama file, entri, dan kolomnya.

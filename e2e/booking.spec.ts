@@ -121,3 +121,19 @@ test('profil: ubah nomor tersimpan & dinormalisasi', async ({ page }) => {
   await expect(page.getByLabel('Nomor WhatsApp')).toHaveValue('0813-1111-2222');
   await expectNoHorizontalScroll(page);
 });
+
+test('landing page: tombol "Booking Online" di hero → masuk → kembali ke booking dengan cabang terpilih', async ({ page }) => {
+  await page.goto('/', { waitUntil: 'domcontentloaded' });
+  await page.evaluate(() => localStorage.setItem('cutless:branch', 'bogor-bantarjati'));
+  await page.reload({ waitUntil: 'domcontentloaded' });
+  const hero = page.locator('#top').getByRole('link', { name: 'Booking Online' });
+  await expect(hero).toHaveAttribute('href', '/booking/?cabang=bogor-bantarjati');
+  // Tombol hijau WhatsApp tetap chat WhatsApp
+  // (disembunyikan dari pembaca layar saat berada di area hero, jadi dicek lewat selektor CSS)
+  await expect(page.locator('a[class*="fab"]')).toHaveAttribute('href', /wa\.me/);
+  await hero.click();
+  await expect(page).toHaveURL(/\/masuk\?next=%2Fbooking%2F%3Fcabang%3Dbogor-bantarjati/);
+  await mockLogin(page, 'budi@test.local', new URL(page.url()).searchParams.get('next')!);
+  await expect(page.getByRole('heading', { name: 'Pilih layanan' })).toBeVisible();
+  await expectNoHorizontalScroll(page);
+});

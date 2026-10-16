@@ -7,6 +7,8 @@ interface ImportMetaEnv {
   readonly VITE_SITE_URL?: string;
   /** Token Cloudflare Web Analytics (hanya produksi) */
   readonly VITE_CF_ANALYTICS_TOKEN?: string;
+  /** 'true' = booking online aktif (data cabang/barber/harga dari API, tombol booking ke /booking/) */
+  readonly VITE_BOOKING_ENABLED?: string;
   /** Opsional: simulasi latensi konten (ms) untuk menguji state loading */
   readonly VITE_CONTENT_DELAY?: string;
 }

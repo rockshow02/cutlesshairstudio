@@ -11,6 +11,8 @@ import { authRoutes } from './routes/auth';
 import { meRoutes } from './routes/me';
 import { bookingRoutes } from './routes/bookings';
 import { adminRoutes } from './routes/admin';
+import { catalogRoutes } from './routes/catalog';
+import { runScheduled } from './cron';
 
 export const app = createRouter();
 
@@ -28,6 +30,7 @@ app.get('/api/health', async (c) => {
 });
 
 app.route('/api', publicRoutes);
+app.route('/api', catalogRoutes);
 app.route('/api', authRoutes);
 app.route('/api', meRoutes);
 app.route('/api', bookingRoutes);
@@ -56,4 +59,7 @@ app.all('*', (c) => c.env.ASSETS.fetch(c.req.raw));
 
 export default {
   fetch: app.fetch,
+  scheduled(event, env, ctx) {
+    ctx.waitUntil(runScheduled(env, event.cron));
+  },
 } satisfies ExportedHandler<Env>;

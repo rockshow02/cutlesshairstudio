@@ -23,7 +23,8 @@
     "dev:api": "wrangler dev --env staging --port 8787",
     "dev:worker": "npm run build:staging && wrangler dev --env staging --port 8787",
     "preview:worker": "npm run dev:worker",
-    "e2e": "playwright test"
+    "e2e": "playwright test",
+    "export-catalog": "node scripts/export-catalog.mjs"
   },
   "dependencies": {
     "arctic": "^3.7.0",
