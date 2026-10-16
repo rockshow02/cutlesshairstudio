@@ -91,7 +91,9 @@ test('booking saya: jadwal ulang lalu batalkan', async ({ page }) => {
   const cards = page.locator('article');
   await expect(page.getByRole('heading', { name: 'Aktif' })).toBeVisible();
   const first = cards.first();
-  const before = await first.locator('span').first().textContent();
+  const before = (await first.locator('span').first().textContent())!;
+  const withOldTime = () => page.locator('article').filter({ hasText: before }).count();
+  const countBefore = await withOldTime();
 
   await first.getByRole('button', { name: 'Jadwal ulang' }).click();
   await pickDate(page, 3);
@@ -100,8 +102,8 @@ test('booking saya: jadwal ulang lalu batalkan', async ({ page }) => {
   await first.getByRole('button', { name: /^Pindah ke/ }).click();
   await expect(page.getByRole('status').filter({ hasText: 'dipindah ke' })).toBeVisible();
   await expectNoHorizontalScroll(page);
-  const after = await page.locator('article').first().locator('span').first().textContent();
-  expect(after).not.toBe(before);
+  // Satu booking pindah dari jadwal lama (bisa ada booking lain di jam yang sama dengan hairstylist berbeda)
+  await expect.poll(withOldTime).toBe(countBefore - 1);
 
   const activeBefore = await page.locator('article').filter({ has: page.getByRole('button', { name: 'Batalkan' }) }).count();
   await page.locator('article').first().getByRole('button', { name: 'Batalkan' }).click();

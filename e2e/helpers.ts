@@ -29,10 +29,12 @@ export async function pickDate(page: Page, index: number) {
 
 /** Booking lewat API dari sesi halaman ini (dipakai untuk membuat bentrok) */
 export async function apiBook(page: Page, body: Record<string, unknown>) {
+  // Staging dengan kunci uji Turnstile Cloudflare menerima token dummy; lokal (development) tidak memeriksa
+  const withToken = { turnstileToken: process.env.E2E_TURNSTILE_TOKEN ?? 'XXXX.DUMMY.TOKEN.XXXX', ...body };
   return page.evaluate(async (b) => {
     const r = await fetch('/api/bookings', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(b) });
     return { status: r.status, json: await r.json() };
-  }, body);
+  }, withToken);
 }
 
 /** Pastikan tidak ada scroll horizontal (layout 360px) */
