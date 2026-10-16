@@ -10,7 +10,6 @@ import { SectionState } from '@/components/ui/SectionState';
 import { SectionTitle } from '@/components/ui/SectionTitle';
 import { Card, CardFooter } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
-import { Reveal } from '@/components/motion/Reveal';
 import styles from './Pricing.module.css';
 
 export function Pricing() {
@@ -48,8 +47,8 @@ export function Pricing() {
             <div className={styles.categories}>
               {data.categories
                 .filter((c) => c.items.length > 0)
-                .map((category, i) => (
-                  <Reveal key={category.id} className={styles.category} delay={(i % 2) * 0.06}>
+                .map((category) => (
+                  <div key={category.id} className={styles.category}>
                     <h3 className={styles.categoryName}>{category.name}</h3>
                     <ul>
                       {category.items.map((item) => (
@@ -63,7 +62,7 @@ export function Pricing() {
                         </li>
                       ))}
                     </ul>
-                  </Reveal>
+                  </div>
                 ))}
             </div>
 
@@ -71,10 +70,10 @@ export function Pricing() {
               <>
                 <h3 className={styles.packagesTitle}>{data.packagesTitle}</h3>
                 <ul className={styles.packages}>
-                  {data.packages.map((pkg, i) => {
+                  {data.packages.map((pkg) => {
                     const target = book({ kind: 'package', vars: { package: pkg.name } });
                     return (
-                    <Reveal as="li" key={pkg.id} delay={i * 0.06}>
+                    <li key={pkg.id}>
                       <Card tone={pkg.featured ? 'featured' : 'light'} className={pkg.featured ? styles.featured : undefined}>
                         <p className={styles.tag}>{pkg.tag}</p>
                         <h4 className={styles.pkgName}>{pkg.name}</h4>
@@ -100,7 +99,7 @@ export function Pricing() {
                           </Button>
                         </CardFooter>
                       </Card>
-                    </Reveal>
+                    </li>
                     );
                   })}
                 </ul>

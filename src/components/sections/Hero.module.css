@@ -248,11 +248,15 @@
   transform: rotate(45deg);
 }
 
+.marquee[data-offscreen] .track {
+  animation-play-state: paused;
+}
+
 @keyframes marquee {
   to { transform: translateX(-50%); }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .track { animation: none; }
+  .track { animation: none; animation-play-state: paused; }
   .scrollLine::after { animation: none; transform: none; }
 }

@@ -14,6 +14,16 @@ export default defineConfig({
     cssCodeSplit: false,
     // Multi-halaman statis: / (beranda), /produk/, /cabang/ (+ /cabang/<slug>/ hasil prerender)
     rollupOptions: {
+      output: {
+        // Library dipisah dari kode situs: chunk sendiri, bisa di-cache lama & tidak menumpuk di chunk section
+        // (Lenis & Swiper tetap dimuat dinamis hanya saat dibutuhkan, tidak dimasukkan ke sini)
+        manualChunks(id) {
+          if (!id.includes('node_modules')) return undefined;
+          if (/node_modules\/(react|react-dom|scheduler)\//.test(id)) return 'vendor-react';
+          if (/node_modules\/(motion|framer-motion|motion-dom|motion-utils)\//.test(id)) return 'vendor-motion';
+          return undefined;
+        },
+      },
       input: {
         main: fileURLToPath(new URL('./index.html', import.meta.url)),
         produk: fileURLToPath(new URL('./produk/index.html', import.meta.url)),

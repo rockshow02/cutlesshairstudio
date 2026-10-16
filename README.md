@@ -316,7 +316,7 @@ Detail lengkap: **[CONTRIBUTING.md](CONTRIBUTING.md)**.
 
 ## 12. Animasi & transisi
 
-Library: **Motion for React** (`motion`, LazyMotion + `domAnimation`) dan **Lenis** (smooth scroll, desktop saja, dimuat dinamis). Tambahan JS ±47 KB gzip (motion ±39 KB di bundle utama, Lenis ±8 KB hanya di desktop); Swiper (±30 KB gzip) kini hanya dimuat bila section Testimoni aktif, sehingga di HP bundle awal hanya naik ±11 KB.
+Library: **Motion for React** (`motion`, LazyMotion + `domAnimation`) dan **Lenis** (smooth scroll, desktop saja, dimuat dinamis). Library dipisah ke chunk sendiri (`vendor-motion` 32,7 KB gzip, `vendor-react` 44,6 KB, Lenis 7,7 KB hanya di desktop) → tambahan JS animasi ±40 KB gzip. Swiper (±30 KB gzip) hanya dimuat bila section Testimoni aktif.
 
 - **Pengaturan rasa animasi** (durasi, easing, stagger, jarak, intensitas parallax, skala kartu, kecepatan marquee): `src/styles/motion.ts`.
 - **Komponen** di `src/components/motion/`: `Reveal`, `TextReveal`, `Parallax`, `Marquee`, `CountUp`, `ExpandingCard`, `PageTransition`, `Preloader`, `ToneShift`, `MotionProvider` (+ `smoothScroll.ts`, `useScrollProgress.ts`). Semua teks & gambar tetap dari `src/lib/content.ts`.
@@ -328,12 +328,17 @@ Library: **Motion for React** (`motion`, LazyMotion + `domAnimation`) dan **Leni
 | Editorial: foto portrait + judul besar menumpuk, parallax beda kecepatan, paragraf muncul bertahap | Tentang Kami |
 | Kartu foto membesar jadi lebar penuh (radius → 0) + tagline crossfade, scroll-linked | Section `#studio` (foto = foto cabang pertama di CMS) |
 | Chip cabang + panel info berganti (fade + geser), kolom foto hairstylist berjalan berlawanan arah (HP: satu baris) | Lokasi |
-| Kartu muncul bertahap, hover terangkat + ikon membesar | Layanan, Harga, Testimoni |
+| Muncul saat di-scroll (Reveal) | HANYA judul section, paragraf Tentang Kami, kartu galeri. Harga, info cabang, jam buka, tombol booking langsung tampil |
+| Hover kartu terangkat + ikon membesar | Layanan, Harga |
 | Hitung naik sekali (nilai final tetap untuk screen reader) | Statistik Tentang, rating Testimoni |
 | Warna latar berpindah halus gelap ↔ terang (CSS scroll-driven) | Antar-section |
 | Navbar ikut warna section di bawahnya, sembunyi saat scroll turun & muncul saat naik | Semua halaman |
 | Tirai antarhalaman (≤ 400 ms) | Beranda ↔ /cabang/… ↔ /produk/ |
 | Tombol isi warna saat hover & mengecil saat ditekan; tombol WA berdenyut sekali | Semua tombol |
+
+**Reveal:** satu IntersectionObserver bersama, muncul saat tepi atas elemen melewati garis 10% dari bawah layar (threshold 0, aman untuk elemen lebih tinggi dari layar). Elemen yang sudah terlewati (scroll cepat, buka di tengah halaman) dan semua yang muncul ±1,5 detik setelah klik menu/anchor langsung tampil tanpa animasi.
+
+**Marquee** (strip teks hero, foto hairstylist) dijeda saat di luar layar dan saat "kurangi gerakan".
 
 **Aturan:** hanya `transform` & `opacity`; animasi masuk viewport sekali (`once`); scroll snap `y proximity` hanya di hero, Tentang Kami, dan kartu studio; `prefers-reduced-motion` → tanpa preloader, parallax, marquee, scroll-linked, dan tirai (fade sederhana saja).
 

@@ -20,7 +20,6 @@ import { Button } from '@/components/ui/Button';
 import { Icon } from '@/components/ui/Icon';
 import { ResponsiveImage } from '@/components/ui/ResponsiveImage';
 import { Marquee } from '@/components/motion/Marquee';
-import { Reveal } from '@/components/motion/Reveal';
 import styles from './Location.module.css';
 
 type Labels = LocationsContent['labels'];
@@ -235,7 +234,7 @@ export function BranchPanel({
 
   return (
     <div className={styles.panel} data-layout={layout}>
-      <Reveal className={styles.info}>
+      <div className={styles.info}>
         <div className={styles.titleRow}>
           <Heading className={styles.name}>{branch.name}</Heading>
           <span className={styles.statusBadge} data-status={branch.status}>
@@ -306,11 +305,11 @@ export function BranchPanel({
             </a>
           )}
         </div>
-      </Reveal>
+      </div>
 
-      <Reveal className={styles.map} delay={0.08}>
+      <div className={styles.map}>
         <iframe title={`Peta lokasi ${branch.name}`} src={branch.mapEmbedUrl} loading="lazy" referrerPolicy="no-referrer-when-downgrade" allowFullScreen />
-      </Reveal>
+      </div>
     </div>
   );
 }

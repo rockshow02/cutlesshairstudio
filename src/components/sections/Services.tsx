@@ -10,7 +10,6 @@ import { SectionState } from '@/components/ui/SectionState';
 import { SectionTitle } from '@/components/ui/SectionTitle';
 import { Card, CardFooter } from '@/components/ui/Card';
 import { Icon } from '@/components/ui/Icon';
-import { Reveal } from '@/components/motion/Reveal';
 import { ResponsiveImage } from '@/components/ui/ResponsiveImage';
 import styles from './Services.module.css';
 
@@ -27,9 +26,9 @@ export function Services() {
             <SectionTitle heading={data.heading} id="layanan-title" />
             <ul className={styles.grid}>
               {data.items.map((service, i) => (
-                <Reveal as="li" key={service.id} delay={(i % 4) * 0.05}>
+                <li key={service.id}>
                   <ServiceCard service={service} index={i} />
-                </Reveal>
+                </li>
               ))}
             </ul>
           </>
