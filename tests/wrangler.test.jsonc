@@ -1,0 +1,6 @@
+// Konfigurasi khusus tes: hanya binding D1 lokal (database sementara, tidak terhubung ke Cloudflare)
+{
+  "name": "cutless-test",
+  "compatibility_date": "2026-05-01",
+  "d1_databases": [{ "binding": "DB", "database_name": "cutless-test", "database_id": "cutless-test" }]
+}

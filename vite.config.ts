@@ -1,13 +1,37 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { fileURLToPath, URL } from 'node:url';
+import type { Plugin } from 'vite';
 import { contentPlugin } from './scripts/vite-content-plugin';
+
+/** Dev server: rute aplikasi diarahkan ke HTML entri (di produksi oleh Worker, lihat worker/index.ts) */
+function appRoutes(): Plugin {
+  return {
+    name: 'cutless-app-routes',
+    configureServer(server) {
+      server.middlewares.use((req, _res, next) => {
+        const path = (req.url ?? '').split('?')[0];
+        if (/^\/admin(\/|$)/.test(path) && !path.startsWith('/admin/index.html')) req.url = '/admin/index.html';
+        else if (/^\/(masuk|profil|kebijakan-privasi)(\/|$)/.test(path) || /^\/booking\/.+/.test(path)) req.url = '/booking/index.html';
+        next();
+      });
+    },
+  };
+}
 
 export default defineConfig({
   // contentPlugin: validasi konten Pages CMS (Zod) saat build + ukuran gambar untuk frontend
-  plugins: [react(), contentPlugin()],
+  plugins: [react(), contentPlugin(), appRoutes()],
+  server: {
+    // API booking dijalankan wrangler dev (npm run dev:api) di port 8787
+    proxy: { '/api': 'http://127.0.0.1:8787' },
+  },
   resolve: {
-    alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) },
+    alias: {
+      '@': fileURLToPath(new URL('./src', import.meta.url)),
+      // Kode bersama frontend & Worker (skema Zod, mesin slot, format nomor)
+      '@shared': fileURLToPath(new URL('./shared', import.meta.url)),
+    },
   },
   build: {
     // Satu file CSS untuk semua halaman (lebih sedikit request yang memblokir render)
@@ -29,6 +53,9 @@ export default defineConfig({
         produk: fileURLToPath(new URL('./produk/index.html', import.meta.url)),
         // Template halaman cabang: diprerender per cabang ke /cabang/<slug>/ oleh contentPlugin
         cabang: fileURLToPath(new URL('./cabang/index.html', import.meta.url)),
+        // Aplikasi booking (/booking, /masuk, /profil, /kebijakan-privasi) & dashboard admin (/admin)
+        booking: fileURLToPath(new URL('./booking/index.html', import.meta.url)),
+        admin: fileURLToPath(new URL('./admin/index.html', import.meta.url)),
       },
     },
   },

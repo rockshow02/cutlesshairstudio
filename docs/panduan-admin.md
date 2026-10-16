@@ -2,6 +2,8 @@
 
 Panduan ini untuk pemilik dan staf. Tidak perlu keahlian teknis.
 
+> **Booking online (staging):** cabang, hairstylist, jam kerja, dan harga dikelola di dashboard **/admin**, bukan lagi di Pages CMS. Lihat [panduan-admin-booking.md](panduan-admin-booking.md). Bagian Cabang, Barber, dan Daftar Harga di bawah berlaku untuk website produksi sampai booking online diluncurkan.
+
 **Panel admin:** https://app.pagescms.org
 **Login:** pakai akun **GitHub** Anda (gratis).
 

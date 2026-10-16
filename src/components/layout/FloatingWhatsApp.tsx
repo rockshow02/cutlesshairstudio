@@ -18,7 +18,8 @@ export function FloatingWhatsApp() {
   const { site } = useSite();
   const inZone = useFabSuppressed();
   // Ke WA cabang terpilih; belum memilih → pemilih cabang dulu
-  const booking = useBooking()();
+  // Tombol hijau WhatsApp tetap membuka chat WhatsApp cabang (booking online lewat tombol Booking lain)
+  const booking = useBooking()({ channel: 'whatsapp' });
   const [overlapping, setOverlapping] = useState(false);
   const ref = useRef<HTMLAnchorElement>(null);
 

@@ -53,6 +53,9 @@ jobs:
       - name: Lint
         run: npm run lint
 
+      - name: Tes (mesin slot, anti-bentrok, transisi status, D1 lokal)
+        run: npm test
+
       - name: Validasi konten (Zod + relasi cabang + aturan pra-launch)
         run: npm run check:content
         env:

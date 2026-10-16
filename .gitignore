@@ -23,3 +23,10 @@ cutless-react/
 *.log
 .DS_Store
 Thumbs.db
+
+# SQL seed hasil generate (npm run db:seed:*)
+seed/
+
+# Playwright
+playwright-report/
+test-results/

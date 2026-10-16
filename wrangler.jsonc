@@ -1,29 +1,80 @@
-// Cloudflare Workers (static assets, gratis). Dipakai oleh Workers Builds saat deploy.
+// Cloudflare Workers: situs statis (dist/) + API booking (/api/*) + D1. Dipakai oleh Workers Builds saat deploy.
 //   Produksi: npm run build         && npx wrangler deploy               → Worker "cutlesshairstudio"
 //   Staging : npm run build:staging && npx wrangler deploy --env staging → Worker "cutlesshairstudio-staging"
 // "name" harus sama dengan nama Worker di dashboard Cloudflare (subdomain *.workers.dev).
-// Uji lokal: npm run preview:worker (build staging + wrangler dev di http://localhost:8787)
+// Uji lokal: npm run dev:worker (build staging + wrangler dev di http://localhost:8787, D1 lokal)
+//
+// PENTING: fitur booking baru disiapkan untuk STAGING. Blok produksi (paling atas) hanya didefinisikan:
+// database produksi belum dibuat/dimigrasi dan secrets produksi belum diisi. Jangan deploy produksi
+// dari branch ini; produksi menunggu persetujuan klien (lihat docs/booking-setup.md).
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "cutlesshairstudio",
-  "compatibility_date": "2026-05-01", // Worker hanya static assets; tanggal ini didukung wrangler dev lokal (Node 20)
+  "main": "worker/index.ts",
+  "compatibility_date": "2026-05-01",
   "assets": {
     "directory": "./dist",
+    "binding": "ASSETS",
     // /cabang/cibubur → /cabang/cibubur/ → dist/cabang/cibubur/index.html (hasil prerender)
     "html_handling": "auto-trailing-slash",
     // URL tak dikenal → dist/404.html (bukan beranda), agar mesin pencari tidak mengindeks halaman palsu
-    "not_found_handling": "404-page"
+    "not_found_handling": "404-page",
+    // Hanya rute ini yang menjalankan Worker; file statis lain langsung dari CDN (tidak memakai kuota request)
+    "run_worker_first": ["/api/*", "/masuk*", "/profil*", "/booking*", "/admin*", "/kebijakan-privasi*"]
+  },
+  // Produksi: DIDEFINISIKAN SAJA. Ganti database_id setelah klien menyetujui & database produksi dibuat.
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "cutless-prod",
+      "database_id": "00000000-0000-0000-0000-000000000000",
+      "migrations_dir": "migrations"
+    }
+  ],
+  "vars": {
+    "APP_ENV": "production",
+    "AUTH_PHONE_PASSWORD_ENABLED": "false",
+    "AUTH_MOCK_ENABLED": "false",
+    "PBKDF2_ITERATIONS": "100000",
+    "ACCESS_TEAM_DOMAIN": "",
+    "ACCESS_AUD": "",
+    "TURNSTILE_SITE_KEY": ""
   },
   "env": {
-    // Worker terpisah: URL, versi, dan pengaturan (mis. Cloudflare Access) tidak tercampur dengan produksi.
+    // Worker terpisah: URL, versi, database, dan pengaturan (mis. Cloudflare Access) tidak tercampur dengan produksi.
     // dist/ hasil build staging sudah berisi robots.txt "Disallow: /" dan header X-Robots-Tag: noindex (dist/_headers).
     "staging": {
       "name": "cutlesshairstudio-staging",
       "assets": {
         "directory": "./dist",
+        "binding": "ASSETS",
         "html_handling": "auto-trailing-slash",
-        "not_found_handling": "404-page"
-      }
+        "not_found_handling": "404-page",
+        "run_worker_first": ["/api/*", "/masuk*", "/profil*", "/booking*", "/admin*", "/kebijakan-privasi*"]
+      },
+      "d1_databases": [
+        {
+          "binding": "DB",
+          "database_name": "cutless-staging",
+          // Isi dengan ID dari: npx wrangler d1 create cutless-staging (lihat docs/booking-setup.md)
+          "database_id": "00000000-0000-0000-0000-000000000001",
+          "migrations_dir": "migrations"
+        }
+      ],
+      "vars": {
+        "APP_ENV": "staging",
+        "AUTH_PHONE_PASSWORD_ENABLED": "false",
+        // Login uji (E2E) di staging; tetap butuh secret AUTH_MOCK_SECRET agar tidak bisa dipakai sembarang orang
+        "AUTH_MOCK_ENABLED": "true",
+        "PBKDF2_ITERATIONS": "100000",
+        // Cloudflare Access (Zero Trust): <tim>.cloudflareaccess.com dan Application Audience (AUD) tag
+        "ACCESS_TEAM_DOMAIN": "",
+        "ACCESS_AUD": "",
+        // Site key Turnstile (publik). Secret key → wrangler secret put TURNSTILE_SECRET_KEY --env staging
+        "TURNSTILE_SITE_KEY": "1x00000000000000000000AA"
+      },
+      // Tiap 15 menit: batalkan pending kedaluwarsa, bersihkan sesi. 02.00 WIB: anonimkan akun tidak aktif > 24 bulan.
+      "triggers": { "crons": ["*/15 * * * *", "0 19 * * *"] }
     }
   }
 }

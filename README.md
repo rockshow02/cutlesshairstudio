@@ -1,6 +1,6 @@
 # Cutless Hair Studio, website multi-cabang (biaya Rp0)
 
-Website Vite + React 18 + TypeScript + CSS Modules untuk beberapa cabang (saat ini Bogor & Cibubur). Konten yang sering berubah dikelola lewat **[Pages CMS](https://pagescms.org)**, CMS berbasis Git yang menyimpan konten sebagai file JSON di repo ini. Tidak ada server, database, atau API.
+Website Vite + React 18 + TypeScript + CSS Modules untuk beberapa cabang (saat ini Bogor & Cibubur). Konten yang sering berubah dikelola lewat **[Pages CMS](https://pagescms.org)**, CMS berbasis Git yang menyimpan konten sebagai file JSON di repo ini. Produksi: tanpa server/database. Staging: tambahan booking online (Worker API + D1, lihat §13).
 
 | Kebutuhan | Layanan | Biaya |
 |---|---|---|
@@ -346,7 +346,51 @@ Library: **Motion for React** (`motion`, LazyMotion + `domAnimation`) dan **Leni
 
 **Aset yang perlu disiapkan:** logo SVG (untuk animasi garis/stroke preloader), foto portrait studio resolusi tinggi (≥ 1200 × 1500 px) untuk Tentang Kami, foto lanskap studio (≥ 1920 px) untuk kartu membesar (upload sebagai foto cabang), dan opsional video preloader (MP4/WebM tanpa suara, ≤ 500 KB, ±1,5 detik).
 
-## 13. Arsitektur
+## 13. Booking online (branch `staging`, menunggu persetujuan klien untuk produksi)
+
+Worker kini melayani situs statis **dan** API booking (`/api/*`, Hono) dengan database **Cloudflare D1**. Login pelanggan **Google OAuth** (Arctic, PKCE), anti-spam **Turnstile**, dashboard `/admin` dilindungi **Cloudflare Access**. Semua dalam paket gratis Cloudflare. Fitur aktif lewat `VITE_BOOKING_ENABLED=true` (development & staging); produksi tetap `false` dan database produksi belum dibuat.
+
+| Dokumen | Isi |
+|---|---|
+| [docs/booking-setup.md](docs/booking-setup.md) | Setup staging: D1, Google OAuth (consent screen atas nama bisnis), Turnstile, Cloudflare Access, secrets, Workers Builds |
+| [docs/booking-api.md](docs/booking-api.md) | Endpoint, request/response, kode error, cron |
+| [docs/panduan-admin-booking.md](docs/panduan-admin-booking.md) | Panduan dashboard untuk owner / admin cabang / hairstylist |
+
+```
+migrations/0001_init.sql     skema D1 (cabang, layanan, harga cabang, barber, jam kerja, libur, pelanggan, sesi, booking, booking_slots, admin, audit)
+scripts/seed-d1.mjs          migrasi satu kali branches/barbers/pricing.json → D1 (+ akun uji); --apply local|staging
+scripts/export-catalog.mjs   salin D1 → src/content/*.json (SEO /cabang, sitemap, dropdown CMS)
+shared/                      kode bersama frontend & Worker: skema Zod, mesin slot, zona waktu, aturan status
+worker/                      Worker: index.ts (rute + cron), routes/ (publik, auth, akun, booking, admin), lib/, middleware/
+src/booking/  booking/       aplikasi pelanggan: /booking, /booking/saya, /masuk, /profil, /kebijakan-privasi
+src/admin/    admin/         dashboard /admin
+tests/  e2e/                 Vitest (mesin slot, anti-bentrok, login, admin, cron) & Playwright 360px
+```
+
+**Data:** cabang, hairstylist, layanan & harga, jam kerja, libur, pelanggan, booking → **D1** (kelola di `/admin`). Hero, tentang, galeri, promo, pengumuman, testimoni, produk → tetap **Pages CMS**. Di staging, koleksi Cabang/Barber/Daftar Harga sudah dihapus dari `.pages.yml`; landing page membaca D1 lewat `GET /api/public/catalog` (fungsi di `src/lib/content.ts`, komponen tidak berubah).
+
+**Anti-bentrok:** booking + semua blok 15 menit (`booking_slots`, `UNIQUE(barber_id, slot_start)`) ditulis dalam satu `db.batch()` atomik; request kedua untuk jam yang sama → 409 + 3 jam terdekat (diuji 10 request bersamaan).
+
+**Perintah:** `npm run db:migrate:local|staging`, `npm run db:seed:local|staging`, `npm run dev:worker`, `npm test`, `npm run e2e`, `npm run export-catalog`.
+
+### Estimasi kuota gratis
+
+Asumsi: 1.000 kunjungan landing page/hari, 100 sesi booking/hari, 4 tab dashboard terbuka 8 jam/hari (refresh 30 detik).
+
+| Kuota Free | Batas | Perkiraan pemakaian | |
+|---|---|---|---|
+| Workers request | 100.000/hari | ±9.000 (landing 1.000 · booking ±3.000 · dashboard ±3.900 · cron 96 · lainnya) | ±9% |
+| Workers CPU | 10 ms/request | API umumnya 1–3 ms (tanpa PBKDF2) | aman |
+| D1 baris dibaca | 5 juta/hari | ±0,5 juta (katalog di-cache 60 dtk, ketersediaan, dashboard) | ±10% |
+| D1 baris ditulis | 100.000/hari | ±2.000 (booking + slot + audit + sesi + rate limit) | ±2% |
+| D1 penyimpanan | 5 GB | ±40 MB/tahun | <1% |
+| Cron Triggers | 5/akun | 2 | |
+| Cloudflare Access | 50 pengguna | owner + admin + hairstylist | |
+| Turnstile, Google OAuth, Telegram | gratis | | |
+
+File statis (HTML/JS/CSS/gambar) **tidak** menjalankan Worker dan tidak memakai kuota request. Pertimbangkan **Workers Paid (US$5/bulan)** bila: request rutin > ±70.000/hari (±8× asumsi di atas, mis. banyak cabang + kampanye besar), D1 > 3 juta baca/hari, atau ingin mengaktifkan login nomor WA + password (PBKDF2 100.000 iterasi butuh ±80 ms CPU, jauh di atas 10 ms paket gratis; diukur di workerd lokal).
+
+## 14. Arsitektur
 
 ```
 Admin ─▶ Pages CMS ─commit─▶ GitHub (src/content/*.json, public/uploads/*)

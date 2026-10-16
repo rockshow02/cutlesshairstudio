@@ -26,7 +26,10 @@ export function Navbar() {
   const current = (item: NavItem): 'true' | 'page' | undefined =>
     isCurrentPage(item) ? 'page' : item.sectionId && active === item.sectionId ? 'true' : undefined;
   const { selected, copy: branchCopy, openPicker } = useBranch();
-  const booking = useBooking()();
+  const book = useBooking();
+  const booking = book();
+  // Tombol hijau WhatsApp di menu HP tetap chat WhatsApp
+  const whatsapp = book({ channel: 'whatsapp' });
   const branchLabel = selected ? selected.name : branchCopy.labels.pickBranch;
 
   useEffect(() => {
@@ -181,14 +184,14 @@ export function Navbar() {
         </nav>
         <div className={styles.panelFoot}>
           <Button
-            href={booking.href}
-            external={booking.external}
+            href={whatsapp.href}
+            external={whatsapp.external}
             variant="whatsapp"
             icon="whatsapp"
             block
             onClick={(e) => {
               close(false);
-              booking.onClick?.(e);
+              whatsapp.onClick?.(e);
             }}
           >
             {site.ui.floatingWhatsApp}

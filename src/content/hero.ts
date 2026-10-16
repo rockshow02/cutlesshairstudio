@@ -18,7 +18,7 @@ export const hero: HeroContent = {
   },
   // TODO (opsional): isi video latar, mis. { src: '/videos/hero.mp4', type: 'video/mp4' }
   video: undefined,
-  primaryCta: { label: 'Booking via WhatsApp', action: { type: 'whatsapp' } },
+  primaryCta: { label: import.meta.env.VITE_BOOKING_ENABLED === 'true' ? 'Booking Online' : 'Booking via WhatsApp', action: { type: 'whatsapp' } },
   secondaryCta: { label: 'Lihat Layanan', action: { type: 'link', href: '#layanan' } },
   marquee: ['On Point Always', 'We Got You', 'Goodstyle Goodmood'],
   scrollHint: 'Scroll',
