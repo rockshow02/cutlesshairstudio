@@ -2,6 +2,9 @@ import { useEffect, useState } from 'react';
 import { api, errorMessage } from '@/app/api';
 import { clock, longDate, rupiah, tzLabel, waLink } from '@/app/format';
 import { Button } from '@/components/ui/Button';
+import { Card } from '@/components/ui/Card';
+import { StatusBadge } from '@/components/ui/Badge';
+import { Alert } from '@/components/ui/Feedback';
 import { Page, Loading } from '../Page';
 import { loginUrl } from '../hooks';
 import type { CustomerBooking } from '../types';
@@ -34,52 +37,91 @@ export function Success() {
   if (error) {
     return (
       <Page id="sukses" title="Booking tidak ditemukan">
-        <p className={styles.alert} data-tone="error">{error}</p>
-        <Button href="/booking/saya" variant="dark">Lihat booking saya</Button>
+        <Alert tone="danger">{error}</Alert>
+        <Button href="/booking/saya" variant="dark">
+          Lihat booking saya
+        </Button>
       </Page>
     );
   }
-  if (!booking) return <Page id="sukses" title="Booking berhasil"><Loading /></Page>;
+  if (!booking) {
+    return (
+      <Page id="sukses" title="Booking berhasil">
+        <Loading count={2} />
+      </Page>
+    );
+  }
 
   const pending = booking.status === 'pending';
   return (
     <Page id="sukses" kicker={pending ? 'Menunggu konfirmasi' : 'Booking terkonfirmasi'} title={pending ? 'Booking diterima' : 'Booking berhasil!'}>
-      <p className={styles.muted}>Kode booking</p>
-      <p className={styles.code} aria-label={`Kode booking ${booking.code.split('').join(' ')}`}>
-        {booking.code}
-      </p>
-      <p className={styles.alert} data-tone={pending ? 'warn' : 'ok'} role="status">
-        <strong>Status: {booking.statusLabel}.</strong>{' '}
-        {pending
-          ? 'Cabang akan mengonfirmasi booking Anda. Pantau statusnya di halaman Booking saya.'
-          : 'Sampai jumpa di studio! Datang 5 menit lebih awal ya.'}
-      </p>
-      <div className={styles.summary}>
-        <dl>
-          <div><dt>Cabang</dt><dd>{booking.branch.name}{booking.branch.address ? ` · ${booking.branch.address}` : ''}</dd></div>
-          <div><dt>Jadwal</dt><dd>{longDate(booking.startAt, booking.timezone)}, {clock(booking.startAt, booking.timezone)} {tzLabel(booking.timezone)}</dd></div>
-          <div><dt>Layanan</dt><dd>{booking.service.name} (±{booking.service.durationMin} menit)</dd></div>
-          <div><dt>Hairstylist</dt><dd>{booking.barber.name}</dd></div>
-          <div><dt>Harga</dt><dd>{rupiah(booking.service.price)} <span className={styles.muted}>(bayar di cabang)</span></dd></div>
+      <Card tone="outline" as="div" padding="lg">
+        <div className={styles.codeCard}>
+          <span className={styles.codeLabel}>Kode booking</span>
+          <p className={styles.code} aria-label={`Kode booking ${booking.code.split('').join(' ')}`}>
+            {booking.code}
+          </p>
+          <StatusBadge status={booking.status} label={booking.statusLabel} />
+        </div>
+        <p className={styles.muted}>
+          {pending
+            ? 'Cabang akan mengonfirmasi booking Anda. Pantau statusnya di halaman Booking saya.'
+            : 'Sampai jumpa di studio! Datang 5 menit lebih awal ya.'}
+        </p>
+      </Card>
+      <div className={styles.gap} />
+
+      <Card tone="outline" as="div">
+        <dl className={styles.dl}>
+          <div>
+            <dt>Jadwal</dt>
+            <dd>
+              {longDate(booking.startAt, booking.timezone)}, {clock(booking.startAt, booking.timezone)} {tzLabel(booking.timezone)}
+            </dd>
+          </div>
+          <div>
+            <dt>Cabang</dt>
+            <dd>
+              {booking.branch.name}
+              {booking.branch.address && <span className={styles.address}>{booking.branch.address}</span>}
+            </dd>
+          </div>
+          <div>
+            <dt>Layanan</dt>
+            <dd>
+              {booking.service.name} <small>(±{booking.service.durationMin} menit)</small>
+            </dd>
+          </div>
+          <div>
+            <dt>Hairstylist</dt>
+            <dd>{booking.barber.name}</dd>
+          </div>
+          <div>
+            <dt>Harga</dt>
+            <dd>
+              {rupiah(booking.service.price)} <small>(bayar di cabang)</small>
+            </dd>
+          </div>
         </dl>
-      </div>
+      </Card>
+
       <div className={styles.actions}>
-        <Button href={whatsappDetail(booking)} external variant="whatsapp" icon="whatsapp">
+        <Button href={whatsappDetail(booking)} external variant="whatsapp" icon="whatsapp" block>
           Kirim detail ke WhatsApp cabang
         </Button>
-        <Button href={`/api/bookings/${booking.id}/ics`} variant="outline-dark" icon="clock">
+      </div>
+      <div className={styles.actionsTight}>
+        <Button href={`/api/bookings/${booking.id}/ics`} variant="outline-dark" icon="calendar" size="sm">
           Tambah ke kalender (.ics)
         </Button>
-      </div>
-      <div className={styles.actions}>
-        <Button href="/booking/saya" variant="dark" iconEnd="arrow">
-          Booking saya
-        </Button>
         {booking.branch.mapsUrl && (
-          <Button href={booking.branch.mapsUrl} external variant="outline-dark" icon="navigate">
+          <Button href={booking.branch.mapsUrl} external variant="outline-dark" icon="navigate" size="sm">
             Petunjuk arah
           </Button>
         )}
+        <Button href="/booking/saya" variant="text" iconEnd="arrow" size="sm">
+          Booking saya
+        </Button>
       </div>
     </Page>
   );
