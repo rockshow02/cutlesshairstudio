@@ -186,7 +186,7 @@ async function loyaltySummary(env: Parameters<typeof loyaltyActive>[0], branchId
   const stampScope = own ? 'AND branch_id = ?2' : '';
   const redeemScope = own ? 'AND EXISTS (SELECT 1 FROM bookings b WHERE b.id = v.redeemed_booking_id AND b.branch_id = ?2)' : '';
   const binds = own ? [since, branchId] : [since];
-  const [stamps, perAdmin, redeemed, issued, expired, active] = await db.batch([
+  const [stamps, perAdmin, redeemed, issued, expired, active, failed] = await db.batch([
     db.prepare(`SELECT COUNT(*) AS n FROM loyalty_stamps WHERE created_at >= ?1 AND status <> 'removed' ${stampScope}`).bind(...binds),
     db.prepare(
       `SELECT COALESCE(created_by, '-') AS admin, kind, COUNT(*) AS n FROM loyalty_stamps WHERE created_at >= ?1 ${stampScope}
@@ -196,6 +196,8 @@ async function loyaltySummary(env: Parameters<typeof loyaltyActive>[0], branchId
     db.prepare(`SELECT COUNT(*) AS n FROM loyalty_vouchers WHERE issued_at >= ?1`).bind(since),
     db.prepare(`SELECT COUNT(*) AS n FROM loyalty_vouchers WHERE status = 'expired' AND expires_at >= ?1`).bind(since),
     db.prepare(`SELECT COUNT(*) AS n FROM loyalty_vouchers WHERE status = 'active'`),
+    // Voucher gagal terbit (semua kandidat kode bentrok); dicoba lagi otomatis di stempel berikutnya
+    db.prepare(`SELECT COUNT(*) AS n FROM audit_log WHERE action = 'loyalty.voucher_issue_failed' AND created_at >= ?1`).bind(since),
   ]);
   const n = (r: D1Result) => (r.results[0] as { n: number } | undefined)?.n ?? 0;
   return {
@@ -204,7 +206,7 @@ async function loyaltySummary(env: Parameters<typeof loyaltyActive>[0], branchId
       stampsByAdmin: perAdmin.results,
       vouchersRedeemed: n(redeemed),
       vouchersRedeemedValue: (redeemed.results[0] as { value: number } | undefined)?.value ?? 0,
-      ...(own ? {} : { vouchersIssued: n(issued), vouchersExpired: n(expired), vouchersActive: n(active) }),
+      ...(own ? {} : { vouchersIssued: n(issued), vouchersExpired: n(expired), vouchersActive: n(active), voucherIssueFailures: n(failed) }),
     },
   };
 }

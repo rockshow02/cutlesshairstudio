@@ -1,8 +1,9 @@
 /** Cutless Stamp: stempel saat Selesai, pengecualian, batas harian (zona waktu cabang), hadiah 5 & 10, cron, gabung tamu, voucher. */
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { app } from '../worker/index';
 import { runScheduled } from '../worker/cron';
 import { createTestDb } from './helpers/d1';
+import { CODE_ATTEMPTS, setVoucherCodeGenerator } from '../worker/lib/loyalty';
 
 const ORIGIN = 'http://localhost';
 const OWNER = 'owner@localhost';
@@ -323,5 +324,56 @@ describe('pelanggan & ringkasan', () => {
     const byAdmin = Object.fromEntries(r.body.loyalty.stampsByAdmin.filter((x) => x.kind === 'booking').map((x) => [x.admin, x.n]));
     expect(byAdmin[BARBER]).toBeGreaterThanOrEqual(2);
     expect(byAdmin[OWNER]).toBeGreaterThanOrEqual(1);
+  });
+});
+
+describe('tabrakan kode voucher', () => {
+  const TAKEN = 'CS-AAAAAA';
+  beforeAll(async () => {
+    await setProgram(true);
+    const owner = await customer();
+    await t.db
+      .prepare(`INSERT INTO loyalty_vouchers (id, code, customer_id, issue_key, tier, service_ids, status, issued_at, expires_at) VALUES ('taken', ?, ?, 'taken:0:1', 1, '[]', 'active', '2026-01-01T00:00:00.000Z', '2099-01-01T00:00:00.000Z')`)
+      .bind(TAKEN, owner)
+      .run();
+  });
+  afterEach(() => setVoucherCodeGenerator());
+
+  const failures = async (c: string) =>
+    (await t.db.prepare(`SELECT COUNT(*) AS n FROM audit_log WHERE action = 'loyalty.voucher_issue_failed' AND entity_id = ?`).bind(c).first<{ n: number }>())!.n;
+
+  it('kode bentrok → dicoba kandidat berikutnya; voucher tetap terbit', async () => {
+    const c = await customer();
+    for (let i = 0; i < 4; i++) await complete(await booking(c, day(150 + i)));
+    // Hanya kandidat ke-5 tiap voucher yang belum dipakai
+    let calls = 0;
+    setVoucherCodeGenerator(() => (++calls % CODE_ATTEMPTS === 0 ? `CS-NEW${String(calls).padStart(3, '0')}` : TAKEN));
+    expect((await complete(await booking(c, day(154)))).status).toBe(200);
+    const v = await vouchers(c);
+    expect(v).toHaveLength(1);
+    expect(v[0].code).toMatch(/^CS-NEW\d{3}$/);
+    expect(await failures(c)).toBe(0);
+  });
+
+  it('semua kandidat bentrok → Selesai tetap berhasil, kegagalan dicatat & tampil di Ringkasan, lalu terbit di stempel berikutnya', async () => {
+    const c = await customer();
+    for (let i = 0; i < 4; i++) await complete(await booking(c, day(160 + i)));
+    setVoucherCodeGenerator(() => TAKEN);
+    const b = await booking(c, day(164));
+    expect((await complete(b)).status).toBe(200);
+    expect((await t.db.prepare('SELECT status FROM bookings WHERE id = ?').bind(b).first<{ status: string }>())!.status).toBe('completed');
+    expect(await stamps(c)).toBe(5);
+    expect(await vouchers(c)).toHaveLength(0);
+    expect(await failures(c)).toBe(1);
+    const sum = await api<{ loyalty: { voucherIssueFailures: number } }>(OWNER, '/reports/summary');
+    expect(sum.body.loyalty.voucherIssueFailures).toBeGreaterThanOrEqual(1);
+
+    // Generator normal lagi: stempel berikutnya menerbitkan voucher yang tertunda (tanpa duplikat)
+    setVoucherCodeGenerator();
+    await complete(await booking(c, day(165)));
+    const v = await vouchers(c);
+    expect(v.map((x) => x.tier)).toEqual([1]);
+    expect(v[0].code).toMatch(/^CS-[A-HJ-NP-Z2-9]{6}$/);
+    expect(await failures(c)).toBe(1);
   });
 });

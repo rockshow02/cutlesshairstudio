@@ -373,12 +373,22 @@ export interface LoyaltySummaryData {
   vouchersIssued?: number;
   vouchersExpired?: number;
   vouchersActive?: number;
+  /** Voucher gagal terbit karena tabrakan kode (owner) */
+  voucherIssueFailures?: number;
 }
 
 export function LoyaltySummary({ data }: { data: LoyaltySummaryData }) {
   return (
     <>
       <h2 className={styles.h2}>Cutless Stamp (30 hari)</h2>
+      {Boolean(data.voucherIssueFailures) && (
+        <Alert tone="danger" title={`${data.voucherIssueFailures} kali voucher gagal terbit`}>
+          <p>
+            Kode voucher bentrok berulang kali (sangat jarang). Voucher dicoba terbit lagi otomatis saat pelanggan itu mendapat stempel berikutnya. Detail ada di
+            Pengaturan → Log aktivitas (aksi loyalty.voucher_issue_failed).
+          </p>
+        </Alert>
+      )}
       <div className={styles.stats}>
         <div className={styles.stat}>
           <span className={styles.statValue}>{data.stamps}</span>

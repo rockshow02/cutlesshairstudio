@@ -54,11 +54,19 @@ export async function loyaltyActive(env: Pick<Env, 'LOYALTY_ENABLED' | 'DB'>): P
 
 const ISO = `'%Y-%m-%dT%H:%M:%fZ'`;
 const CODE_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-/** Kode voucher untuk kasir, mis. CS-7K2Q9M (32^6 kombinasi) */
-export function voucherCode(): string {
+const randomCode = (): string => {
   const bytes = crypto.getRandomValues(new Uint8Array(6));
   return `CS-${Array.from(bytes, (b) => CODE_ALPHABET[b % CODE_ALPHABET.length]).join('')}`;
+};
+let codeGenerator = randomCode;
+/** Kode voucher untuk kasir, mis. CS-7K2Q9M (32^6 kombinasi) */
+export const voucherCode = (): string => codeGenerator();
+/** Khusus tes: ganti generator kode (mis. untuk memaksa tabrakan). Tanpa argumen = kembali acak. */
+export function setVoucherCodeGenerator(fn?: () => string) {
+  codeGenerator = fn ?? randomCode;
 }
+/** Jumlah kandidat kode per voucher; kode dipilih di SQL = kandidat pertama yang belum dipakai */
+export const CODE_ATTEMPTS = 5;
 
 const ENABLED = `EXISTS (SELECT 1 FROM loyalty_settings WHERE id = 1 AND enabled = 1)`;
 
@@ -69,21 +77,41 @@ const ensureCard = (db: D1Database, customerId: string) =>
 /**
  * Evaluasi kartu: terbitkan voucher tingkat 1/2 bila jumlah stempel aktif di siklus berjalan mencapai target,
  * lalu (tingkat 2) tandai stempel siklus itu "used" dan naikkan siklus (kartu kembali ke 0).
+ *
+ * Konflik dipisah: issue_key yang sudah ada = voucher tingkat itu sudah terbit → diabaikan (OR IGNORE).
+ * Kode voucher TIDAK bergantung pada OR IGNORE: dari 5 kandidat, SQL memilih yang belum dipakai (batch D1 =
+ * satu transaksi berurutan, jadi pilihan ini aman). Bila kelimanya sudah dipakai, voucher tidak terbit,
+ * kegagalan dicatat di audit (loyalty.voucher_issue_failed) dan dicoba lagi otomatis di evaluasi berikutnya
+ * (target tetap tercapai, issue_key belum ada).
  */
 export function evaluateStatements(db: D1Database, customerId: string, nowIso: string): D1PreparedStatement[] {
   const v1 = crypto.randomUUID();
   const v2 = crypto.randomUUID();
   const activeCount = `(SELECT COUNT(*) FROM loyalty_stamps st WHERE st.customer_id = ?1 AND st.cycle = card.cycle AND st.status = 'active')`;
+  const due = (tier: 1 | 2) => `s.id = 1 AND s.enabled = 1 AND s.tier${tier}_service_ids <> '[]' AND ${activeCount} >= s.tier${tier}_stamps`;
+  const candidates = Array.from({ length: CODE_ATTEMPTS }, (_, i) => `(?${i + 5})`).join(', ');
   const issue = (vid: string, tier: 1 | 2) =>
     db
       .prepare(
         `INSERT OR IGNORE INTO loyalty_vouchers (id, code, customer_id, issue_key, tier, service_ids, status, issued_at, expires_at)
-         SELECT ?2, ?3, ?1, ?1 || ':' || card.cycle || ':${tier}', ${tier}, s.tier${tier}_service_ids, 'active', ?4,
+         SELECT ?2,
+                (SELECT c.column1 FROM (VALUES ${candidates}) AS c WHERE NOT EXISTS (SELECT 1 FROM loyalty_vouchers x WHERE x.code = c.column1) LIMIT 1),
+                ?1, ?1 || ':' || card.cycle || ':${tier}', ${tier}, s.tier${tier}_service_ids, 'active', ?4,
                 strftime(${ISO}, ?4, '+' || s.voucher_valid_days || ' days')
          FROM loyalty_settings s JOIN loyalty_cards card ON card.customer_id = ?1
-         WHERE s.id = 1 AND s.enabled = 1 AND s.tier${tier}_service_ids <> '[]' AND ${activeCount} >= s.tier${tier}_stamps`,
+         WHERE ${due(tier)}`,
       )
-      .bind(customerId, vid, voucherCode(), nowIso);
+      .bind(customerId, vid, null, nowIso, ...Array.from({ length: CODE_ATTEMPTS }, () => voucherCode()));
+  /** Target tercapai tetapi voucher tingkat itu tetap belum ada (semua kandidat kode terpakai) → catat */
+  const issueFailed = (tier: 1 | 2) =>
+    db
+      .prepare(
+        `INSERT INTO audit_log (actor_type, actor_id, action, entity, entity_id, payload)
+         SELECT 'system', NULL, 'loyalty.voucher_issue_failed', 'customer', ?1, json_object('tier', ${tier}, 'cycle', card.cycle, 'reason', 'code_collision')
+         FROM loyalty_settings s JOIN loyalty_cards card ON card.customer_id = ?1
+         WHERE ${due(tier)} AND NOT EXISTS (SELECT 1 FROM loyalty_vouchers v WHERE v.issue_key = ?1 || ':' || card.cycle || ':${tier}')`,
+      )
+      .bind(customerId);
   const tier2Issued = `EXISTS (SELECT 1 FROM loyalty_vouchers v WHERE v.issue_key = ?1 || ':' || (SELECT cycle FROM loyalty_cards WHERE customer_id = ?1) || ':2')`;
   const auditVoucher = (vid: string) =>
     db
@@ -96,6 +124,8 @@ export function evaluateStatements(db: D1Database, customerId: string, nowIso: s
   return [
     issue(v1, 1),
     issue(v2, 2),
+    issueFailed(1),
+    issueFailed(2),
     db
       .prepare(`UPDATE loyalty_stamps SET status = 'used' WHERE customer_id = ?1 AND status = 'active' AND cycle = (SELECT cycle FROM loyalty_cards WHERE customer_id = ?1) AND ${tier2Issued}`)
       .bind(customerId),
