@@ -1,5 +1,5 @@
 import { expect } from '@playwright/test';
-import { accessHeaders, apiBook, completeProfile, expectNoHorizontalScroll, mockLogin, pickDate, prepareContext, test, uniqueEmail } from './helpers';
+import { accessHeaders, apiBook, completeProfile, expectNoHorizontalScroll, mockLogin, pickDate, prepareContext, test, uniqueEmail, waitForBookingList } from './helpers';
 
 test.describe.configure({ mode: 'serial' });
 
@@ -90,7 +90,10 @@ test('booking saya: jadwal ulang lalu batalkan', async ({ page }) => {
   await mockLogin(page, email, '/booking/saya');
   await expect(page.getByRole('heading', { name: 'Booking saya' })).toBeVisible();
   const cards = page.locator('article');
+  const activeCards = page.locator('article').filter({ has: page.getByRole('button', { name: 'Batalkan' }) });
   await expect(page.getByRole('heading', { name: 'Aktif' })).toBeVisible();
+  await waitForBookingList(page);
+  await expect.poll(() => activeCards.count()).toBeGreaterThan(0);
   const first = cards.first();
   const before = (await first.locator('span').first().textContent())!;
   const withOldTime = () => page.locator('article').filter({ hasText: before }).count();
@@ -102,16 +105,20 @@ test('booking saya: jadwal ulang lalu batalkan', async ({ page }) => {
   await expectNoHorizontalScroll(page); // panel jadwal ulang (chip tanggal) tidak boleh melebarkan halaman
   await first.getByRole('button', { name: /^Pindah ke/ }).click();
   await expect(page.getByRole('status').filter({ hasText: 'dipindah ke' })).toBeVisible();
+  // Daftar dimuat ulang setelah jadwal ulang: hitung kartu hanya setelah selesai (bukan saat skeleton)
+  await waitForBookingList(page);
   await expectNoHorizontalScroll(page);
   // Satu booking pindah dari jadwal lama (bisa ada booking lain di jam yang sama dengan hairstylist berbeda)
   await expect.poll(withOldTime).toBe(countBefore - 1);
 
-  const activeBefore = await page.locator('article').filter({ has: page.getByRole('button', { name: 'Batalkan' }) }).count();
-  await page.locator('article').first().getByRole('button', { name: 'Batalkan' }).click();
+  await expect.poll(() => activeCards.count()).toBeGreaterThan(0);
+  const activeBefore = await activeCards.count();
+  await activeCards.first().getByRole('button', { name: 'Batalkan' }).click();
   await page.getByLabel('Alasan (opsional)').fill('Ada keperluan');
   await page.getByRole('button', { name: 'Ya, batalkan booking' }).click();
   await expect(page.getByRole('status').filter({ hasText: 'dibatalkan' })).toBeVisible();
-  await expect(page.locator('article').filter({ has: page.getByRole('button', { name: 'Batalkan' }) })).toHaveCount(activeBefore - 1);
+  await waitForBookingList(page);
+  await expect(activeCards).toHaveCount(activeBefore - 1);
   await expect(page.getByText('Dibatalkan').first()).toBeVisible();
 });
 

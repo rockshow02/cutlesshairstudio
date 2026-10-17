@@ -6,6 +6,7 @@ import { defineConfig } from '@playwright/test';
  *   npm run e2e
  * E2E_BASE_URL=https://…staging… E2E_MOCK_SECRET=… npm run e2e   → uji ke staging
  *   (+ E2E_CF_ACCESS_CLIENT_ID/SECRET bila seluruh Worker dikunci Access; lihat docs/booking-setup.md §7)
+ * E2E_SLOW_API_MS=500 npm run e2e   → setiap GET /api/** ditunda (uji race saat daftar dimuat ulang)
  */
 const baseURL = process.env.E2E_BASE_URL ?? 'http://localhost:8787';
 

@@ -42,10 +42,24 @@ export async function prepareContext(context: BrowserContext, baseURL: string | 
   );
 }
 
+/**
+ * Simulasi jaringan lambat: E2E_SLOW_API_MS=500 menunda setiap GET /api/** (untuk memunculkan race
+ * "menghitung elemen saat daftar masih dimuat ulang"). Diteruskan ke route lain (mis. header staging).
+ */
+const SLOW_API_MS = Number(process.env.E2E_SLOW_API_MS ?? 0);
+export async function slowApi(context: BrowserContext) {
+  if (!SLOW_API_MS) return;
+  await context.route('**/api/**', async (route) => {
+    if (route.request().method() === 'GET') await new Promise((r) => setTimeout(r, SLOW_API_MS));
+    return route.fallback();
+  });
+}
+
 /** test dengan konteks browser yang sudah disiapkan untuk staging (lihat prepareContext) */
 export const test = base.extend({
   context: async ({ context, baseURL }, use) => {
     await prepareContext(context, baseURL);
+    await slowApi(context);
     await use(context);
   },
 });
@@ -84,6 +98,14 @@ export async function apiBook(page: Page, body: Record<string, unknown>) {
     const r = await fetch('/api/bookings', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(b) });
     return { status: r.status, json: await r.json() };
   }, withToken);
+}
+
+/**
+ * Tunggu daftar Booking saya selesai dimuat (ulang). Setelah batal/jadwal ulang daftar dimuat ulang
+ * (skeleton, aria-busy="true"); menghitung kartu sebelum selesai memberi hasil 0.
+ */
+export async function waitForBookingList(page: Page) {
+  await expect(page.locator('#daftar-booking')).toHaveAttribute('aria-busy', 'false');
 }
 
 /** Pastikan tidak ada scroll horizontal (layout 360px) */
