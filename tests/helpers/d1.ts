@@ -16,7 +16,8 @@ export function splitSql(sql: string): string[] {
     .filter(Boolean);
 }
 
-export async function createTestDb() {
+/** until: terapkan migrasi s.d. file ini saja (mis. '0002_loyalty.sql') untuk menguji migrasi berikutnya di DB berisi data */
+export async function createTestDb(opts: { until?: string } = {}) {
   const dir = mkdtempSync(path.join(os.tmpdir(), 'cutless-d1-'));
   const proxy = await getPlatformProxy<{ DB: D1Database }>({
     configPath: path.resolve('tests/wrangler.test.jsonc'),
@@ -26,7 +27,8 @@ export async function createTestDb() {
   const run = async (sql: string) => {
     for (const stmt of splitSql(sql)) if (!/^PRAGMA/i.test(stmt)) await db.prepare(stmt).run();
   };
-  for (const file of readdirSync('migrations').filter((f) => f.endsWith('.sql')).sort()) {
+  const files = readdirSync('migrations').filter((f) => f.endsWith('.sql')).sort();
+  for (const file of files.filter((f) => !opts.until || f <= opts.until)) {
     await run(readFileSync(path.join('migrations', file), 'utf8'));
   }
   const seedFile = path.join(dir, 'seed.sql');
@@ -37,6 +39,8 @@ export async function createTestDb() {
   return {
     db,
     run,
+    /** Terapkan satu file migrasi (untuk tes migrasi) */
+    migrate: (file: string) => run(readFileSync(path.join('migrations', file), 'utf8')),
     async dispose() {
       await proxy.dispose();
       rmSync(dir, { recursive: true, force: true });
