@@ -1,5 +1,6 @@
 .field {
   display: grid;
+  align-content: start; /* di grid 2 kolom: field tanpa teks bantuan tidak ikut meregang */
   gap: var(--space-2);
   min-width: 0;
   margin-bottom: var(--space-5);

@@ -1,7 +1,7 @@
 /** Sheet (bottom sheet di HP, side panel di desktop) & ConfirmDialog. Memakai <dialog> native: fokus terkunci, Esc menutup. */
 import { useEffect, useId, useRef, useState, type ReactNode } from 'react';
 import { Button } from './Button';
-import { Field, Textarea } from './Field';
+import { Field, Input, Textarea } from './Field';
 import { Icon } from './Icon';
 import styles from './Overlay.module.css';
 
@@ -67,7 +67,7 @@ export interface ConfirmOptions {
   cancelLabel?: string;
   tone?: 'danger' | 'default';
   /** Kolom isian (mis. alasan pembatalan) */
-  input?: { label: string; required?: boolean; maxLength?: number; placeholder?: string; hint?: string };
+  input?: { label: string; required?: boolean; maxLength?: number; minLength?: number; placeholder?: string; hint?: string; /** satu baris (mis. password baru) */ singleLine?: boolean };
   casing?: 'upper' | 'normal';
 }
 
@@ -81,7 +81,7 @@ export function ConfirmDialog({ open, options, onConfirm, onCancel }: { open: bo
   const descId = useId();
   const [value, setValue] = useState('');
   const { title, message, confirmLabel, cancelLabel = 'Kembali', tone = 'danger', input, casing = 'normal' } = options;
-  const missing = Boolean(input?.required) && value.trim() === '';
+  const missing = (Boolean(input?.required) && value.trim() === '') || (input?.minLength ? value.trim().length < input.minLength : false);
 
   useEffect(() => {
     if (!open) return;
@@ -117,7 +117,11 @@ export function ConfirmDialog({ open, options, onConfirm, onCancel }: { open: bo
         )}
         {input && (
           <Field label={input.label} hint={input.hint ?? (input.required ? 'Wajib diisi.' : undefined)}>
-            <Textarea value={value} onChange={(e) => setValue(e.target.value)} maxLength={input.maxLength ?? 300} placeholder={input.placeholder} required={input.required} rows={3} />
+            {input.singleLine ? (
+              <Input value={value} onChange={(e) => setValue(e.target.value)} maxLength={input.maxLength ?? 300} placeholder={input.placeholder} required={input.required} autoComplete="off" />
+            ) : (
+              <Textarea value={value} onChange={(e) => setValue(e.target.value)} maxLength={input.maxLength ?? 300} placeholder={input.placeholder} required={input.required} rows={3} />
+            )}
           </Field>
         )}
         <div className={styles.confirmActions}>

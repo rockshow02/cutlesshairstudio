@@ -39,7 +39,8 @@
 .head[data-variant='app'] .title { font-size: clamp(1.35rem, 1.15rem + 0.9vw, 1.85rem); }
 .head[data-variant='app'] .description { font-size: var(--fs-sm); }
 
+/* Halaman pelanggan: aksi selebar penuh di HP. Admin: tetap ringkas. */
 @media (max-width: 599px) {
-  .actions { width: 100%; }
-  .actions > * { flex: 1 1 auto; }
+  .head[data-variant='page'] .actions { width: 100%; }
+  .head[data-variant='page'] .actions > * { flex: 1 1 auto; }
 }
