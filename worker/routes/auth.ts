@@ -11,7 +11,7 @@ import { deleteCookie, getCookie, setCookie } from 'hono/cookie';
 import { phoneLoginBody } from '../../shared/schemas';
 import { createRouter, type AppEnv } from '../app';
 import { ApiError, badRequest } from '../lib/errors';
-import { assertSameOrigin, rateLimit, verifyTurnstile } from '../lib/guard';
+import { assertSameOrigin, rateLimit, secretEquals, verifyTurnstile } from '../lib/guard';
 import { body } from '../lib/http';
 import { verifyPassword } from '../lib/password';
 import { createSession, destroySession, safeNext } from '../lib/session';
@@ -117,7 +117,7 @@ authRoutes.get('/auth/google/callback', async (c) => {
  */
 authRoutes.get('/auth/mock', async (c) => {
   if (!mockEnabled(c)) throw new ApiError(404, 'NOT_FOUND', 'Endpoint tidak ditemukan.');
-  if (c.env.APP_ENV !== 'development' && (!c.env.AUTH_MOCK_SECRET || c.req.query('secret') !== c.env.AUTH_MOCK_SECRET)) {
+  if (c.env.APP_ENV !== 'development' && !(await secretEquals(c.req.query('secret'), c.env.AUTH_MOCK_SECRET))) {
     throw new ApiError(403, 'FORBIDDEN', 'Login uji membutuhkan secret.');
   }
   const email = (c.req.query('email') ?? '').trim().toLowerCase();

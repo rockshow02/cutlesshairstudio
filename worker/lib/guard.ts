@@ -3,8 +3,37 @@ import type { Context } from 'hono';
 import type { AppEnv } from '../app';
 import { ApiError } from './errors';
 
+/** Header yang dikirim E2E staging (berisi AUTH_MOCK_SECRET) agar verifikasi Turnstile dilewati */
+export const E2E_SECRET_HEADER = 'x-e2e-secret';
+
+/**
+ * Bandingkan secret dalam waktu konstan: kedua nilai di-hash SHA-256 (panjang selalu sama),
+ * lalu dibandingkan byte demi byte dengan XOR tanpa berhenti di selisih pertama.
+ */
+export async function secretEquals(given: string | undefined | null, expected: string | undefined | null): Promise<boolean> {
+  if (!given || !expected) return false;
+  const enc = new TextEncoder();
+  const [a, b] = await Promise.all([crypto.subtle.digest('SHA-256', enc.encode(given)), crypto.subtle.digest('SHA-256', enc.encode(expected))]);
+  const x = new Uint8Array(a);
+  const y = new Uint8Array(b);
+  let diff = 0;
+  for (let i = 0; i < x.length; i++) diff |= x[i] ^ y[i];
+  return diff === 0;
+}
+
+/**
+ * Jalur uji otomatis (E2E) di STAGING saja: Turnstile asli tidak bisa diselesaikan browser otomatis.
+ * Syarat semuanya: APP_ENV tepat 'staging', AUTH_MOCK_ENABLED 'true', AUTH_MOCK_SECRET terisi,
+ * dan header x-e2e-secret cocok. Produksi (APP_ENV 'production') tidak pernah lolos jalur ini.
+ */
+export async function isE2EBypass(c: Context<AppEnv>): Promise<boolean> {
+  if (c.env.APP_ENV !== 'staging' || c.env.AUTH_MOCK_ENABLED !== 'true') return false;
+  return secretEquals(c.req.header(E2E_SECRET_HEADER), c.env.AUTH_MOCK_SECRET);
+}
+
 /** Verifikasi token Turnstile. Tanpa TURNSTILE_SECRET_KEY: lolos HANYA di development lokal. */
 export async function verifyTurnstile(c: Context<AppEnv>, token: string | undefined): Promise<void> {
+  if (await isE2EBypass(c)) return;
   const secret = c.env.TURNSTILE_SECRET_KEY;
   if (!secret) {
     if (c.env.APP_ENV === 'development') return;

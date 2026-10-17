@@ -62,6 +62,8 @@ describe('login & sesi', () => {
     expect(prod.status).toBe(404);
     const staging = await app.request(`${ORIGIN}/api/auth/mock?email=x@y.z`, {}, { ...env, APP_ENV: 'staging', AUTH_MOCK_SECRET: 's3cret' });
     expect(staging.status).toBe(403);
+    const wrong = await app.request(`${ORIGIN}/api/auth/mock?email=x@y.z&secret=s3cre`, {}, { ...env, APP_ENV: 'staging', AUTH_MOCK_SECRET: 's3cret' });
+    expect(wrong.status).toBe(403);
     const ok = await app.request(`${ORIGIN}/api/auth/mock?email=x@y.z&secret=s3cret`, {}, { ...env, APP_ENV: 'staging', AUTH_MOCK_SECRET: 's3cret' });
     expect(ok.status).toBe(302);
   });
