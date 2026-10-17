@@ -3,7 +3,10 @@ import type { IconName } from '@/types';
 import { Icon } from './Icon';
 import styles from './Button.module.css';
 
-export type ButtonVariant = 'light' | 'ghost' | 'dark' | 'outline-dark' | 'whatsapp';
+export type ButtonVariant =
+  | 'light' | 'ghost' | 'dark' | 'outline-dark' | 'whatsapp'
+  // Aplikasi booking & admin: tersier (teks), bahaya (solid & outline)
+  | 'text' | 'danger' | 'outline-danger';
 export type ButtonSize = 'sm' | 'md' | 'lg';
 
 interface BaseProps {
@@ -13,6 +16,8 @@ interface BaseProps {
   /** Ikon di kanan teks (mis. panah) */
   iconEnd?: IconName;
   block?: boolean;
+  /** 'upper' = gaya landing (kapital + tracking). 'normal' = huruf biasa, padat (dashboard admin) */
+  casing?: 'upper' | 'normal';
   className?: string;
   children: ReactNode;
 }
@@ -24,8 +29,8 @@ export type ButtonProps = LinkProps | NativeButtonProps;
 
 /** Tombol/tautan bergaya brand. Render <a> bila ada href, selain itu <button>. */
 export function Button(props: ButtonProps) {
-  const { variant = 'light', size = 'md', icon, iconEnd, block, className, children } = props;
-  const cls = [styles.btn, styles[variant], styles[size], block && styles.block, className].filter(Boolean).join(' ');
+  const { variant = 'light', size = 'md', icon, iconEnd, block, casing = 'upper', className, children } = props;
+  const cls = [styles.btn, styles[variant], styles[size], block && styles.block, casing === 'normal' && styles.normal, className].filter(Boolean).join(' ');
   const content = (
     <>
       {icon && <Icon name={icon} size={size === 'sm' ? 16 : 18} />}
@@ -35,7 +40,7 @@ export function Button(props: ButtonProps) {
   );
 
   if (props.href !== undefined) {
-    const { variant: _v, size: _s, icon: _i, iconEnd: _ie, block: _b, className: _c, children: _ch, external, ...anchor } = props;
+    const { variant: _v, size: _s, icon: _i, iconEnd: _ie, block: _b, casing: _ca, className: _c, children: _ch, external, ...anchor } = props;
     return (
       <a className={cls} {...anchor} {...(external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}>
         {content}
@@ -43,7 +48,7 @@ export function Button(props: ButtonProps) {
     );
   }
 
-  const { variant: _v, size: _s, icon: _i, iconEnd: _ie, block: _b, className: _c, children: _ch, href: _h, type = 'button', ...button } = props;
+  const { variant: _v, size: _s, icon: _i, iconEnd: _ie, block: _b, casing: _ca, className: _c, children: _ch, href: _h, type = 'button', ...button } = props;
   return (
     <button className={cls} type={type} {...button}>
       {content}

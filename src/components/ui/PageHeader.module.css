@@ -1,0 +1,45 @@
+.head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-4);
+  margin-bottom: var(--space-5);
+}
+.text { min-width: 0; flex: 1 1 18rem; }
+.eyebrow {
+  margin-bottom: var(--space-3);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--c-taupe-dark);
+}
+.title {
+  font-family: var(--f-display);
+  font-weight: 800;
+  line-height: 1.08;
+  overflow-wrap: anywhere;
+}
+.description {
+  margin-top: var(--space-2);
+  max-width: 40rem;
+  color: var(--c-ink-dim);
+}
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.head[data-variant='page'] { margin-bottom: var(--space-6); }
+.head[data-variant='page'] .title { font-size: clamp(1.6rem, 1.2rem + 2vw, 2.6rem); }
+.head[data-variant='page'] .description { margin-top: var(--space-3); font-size: var(--fs-md); }
+
+.head[data-variant='app'] .title { font-size: clamp(1.35rem, 1.15rem + 0.9vw, 1.85rem); }
+.head[data-variant='app'] .description { font-size: var(--fs-sm); }
+
+@media (max-width: 599px) {
+  .actions { width: 100%; }
+  .actions > * { flex: 1 1 auto; }
+}

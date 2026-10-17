@@ -1,0 +1,67 @@
+/* ---------- Alert ---------- */
+.alert {
+  --tone: var(--c-info);
+  --tone-bg: var(--c-info-bg);
+  --tone-line: var(--c-info-line);
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr);
+  gap: var(--space-3);
+  margin: 0 0 var(--space-5);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--tone-line);
+  border-radius: var(--radius-lg);
+  background: var(--tone-bg);
+  color: var(--tone);
+  font-size: var(--fs-sm);
+  line-height: 1.5;
+}
+.alert[data-tone='success'] { --tone: var(--c-success); --tone-bg: var(--c-success-bg); --tone-line: var(--c-success-line); }
+.alert[data-tone='warning'] { --tone: var(--c-warning); --tone-bg: var(--c-warning-bg); --tone-line: var(--c-warning-line); }
+.alert[data-tone='danger'] { --tone: var(--c-danger); --tone-bg: var(--c-danger-bg); --tone-line: var(--c-danger-line); }
+.alert[data-tone='neutral'] { --tone: var(--c-neutral); --tone-bg: var(--c-neutral-bg); --tone-line: var(--c-line-dark); }
+.alertIcon { margin-top: 1px; }
+.alertBody { min-width: 0; }
+.alertBody > * + * { margin-top: var(--space-2); }
+.alertTitle { font-weight: 700; }
+
+/* ---------- Empty state ---------- */
+.empty {
+  display: grid;
+  justify-items: center;
+  gap: var(--space-2);
+  padding: var(--space-6) var(--space-4);
+  border: 1px dashed var(--c-line-dark);
+  border-radius: var(--radius-lg);
+  text-align: center;
+}
+.empty[data-compact] { padding: var(--space-4) var(--space-3); gap: var(--space-1); }
+.emptyIcon {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  margin-bottom: var(--space-1);
+  border-radius: 50%;
+  background: var(--c-neutral-bg);
+  color: var(--c-taupe-dark);
+}
+.empty[data-compact] .emptyIcon { width: 32px; height: 32px; }
+.emptyTitle { font-weight: 700; color: var(--c-ink); }
+.emptyText { max-width: 28rem; font-size: var(--fs-sm); color: var(--c-ink-dim); }
+.emptyAction { margin-top: var(--space-3); }
+
+/* ---------- Skeleton ---------- */
+.skeleton {
+  display: block;
+  width: 100%;
+  border-radius: var(--radius);
+  background: var(--c-skeleton-light);
+  animation: pulse 1.4s ease-in-out infinite;
+}
+.skeletonList { display: grid; gap: var(--space-3); }
+@keyframes pulse {
+  50% { opacity: 0.5; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .skeleton { animation: none; }
+}

@@ -1,0 +1,89 @@
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--space-3);
+  margin-bottom: var(--space-5);
+}
+.primary { display: flex; align-items: flex-end; gap: var(--space-2); min-width: 0; }
+.actions { display: flex; align-items: flex-end; gap: var(--space-2); margin-left: auto; }
+
+/* Field di dalam toolbar tidak memakai jarak bawah */
+.primary > *,
+.actions > * { margin-bottom: 0; }
+
+.filterControls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--space-3);
+}
+.filterControls > * { margin-bottom: 0; }
+
+.filterToggle,
+.done,
+.sheetTitle,
+.backdrop { display: none; }
+
+/* ---------- HP: tombol Filter + panel bawah ---------- */
+@media (max-width: 767px) {
+  .toolbar { align-items: center; }
+  .primary { flex: 1 1 100%; }
+  .actions { margin-left: 0; }
+  .filterToggle {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    min-height: var(--touch);
+    padding: 0 var(--space-4);
+    border: 1px solid var(--c-line-dark);
+    border-radius: var(--radius);
+    background: var(--c-surface);
+    color: var(--c-ink);
+    font: 600 var(--fs-sm) / 1 var(--f-body);
+    cursor: pointer;
+  }
+  .filterToggle[aria-expanded='true'] { border-color: var(--c-ink); }
+  .filters { display: none; }
+  .filters[data-open] {
+    position: fixed;
+    inset: auto 0 0 0;
+    z-index: var(--z-sheet);
+    display: grid;
+    gap: var(--space-4);
+    max-height: 85dvh;
+    overflow-y: auto;
+    padding: var(--space-5) var(--gutter) calc(var(--space-5) + env(safe-area-inset-bottom, 0px));
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    background: var(--c-paper);
+    box-shadow: var(--shadow-overlay);
+    animation: up var(--dur-ui) var(--ease);
+  }
+  .filters[data-open] .filterControls { display: grid; gap: var(--space-4); }
+  .filters[data-open] .filterControls select,
+  .filters[data-open] .filterControls input { width: 100%; }
+  .backdrop[data-open] {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: var(--z-sheet);
+    background: var(--c-backdrop);
+  }
+  .sheetTitle { display: block; font: 700 var(--fs-lg) / 1.2 var(--f-body); }
+  .done {
+    display: block;
+    min-height: var(--touch);
+    border: 0;
+    border-radius: var(--radius);
+    background: var(--c-ink);
+    color: var(--c-bone);
+    font: 600 var(--fs-sm) / 1 var(--f-body);
+    cursor: pointer;
+  }
+}
+@keyframes up {
+  from { transform: translate3d(0, 24px, 0); opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .filters[data-open] { animation: none; }
+}

@@ -11,7 +11,7 @@
 
 /* Desktop: kartu terangkat sedikit saat hover (kecuali kartu polos, mis. barber) */
 @media (hover: hover) and (prefers-reduced-motion: no-preference) {
-  .card:not(.plain):hover {
+  .card:not(.plain):not(.outline):hover {
     transform: translate3d(0, -6px, 0);
   }
 }
@@ -43,4 +43,21 @@
 .footer {
   margin-top: auto;
   padding-top: var(--space-5);
+}
+
+/* Kartu aplikasi (booking & admin) */
+.outline {
+  height: auto;
+  padding: var(--space-5);
+  background: var(--c-paper-2);
+  border-color: var(--c-line-dark);
+  border-radius: var(--radius-lg);
+  color: var(--c-ink);
+  transition: border-color var(--dur-ui) var(--ease);
+}
+.pad-sm { padding: var(--space-4); }
+.pad-md { padding: var(--space-5); }
+.pad-lg { padding: var(--space-6); }
+@media (max-width: 479px) {
+  .outline.pad-lg { padding: var(--space-5); }
 }
