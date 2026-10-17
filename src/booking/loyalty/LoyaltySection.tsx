@@ -30,9 +30,6 @@ export function LoyaltySection({ reloadKey }: { reloadKey: number }) {
           Cutless Stamp
         </h2>
         <div className={styles.links}>
-          <button type="button" className={bookingStyles.inlineBtn} aria-expanded={showHistory} onClick={() => setShowHistory((v) => !v)}>
-            {showHistory ? 'Sembunyikan riwayat' : 'Riwayat stempel'}
-          </button>
           <a className={bookingStyles.link} href="/kebijakan-privasi#cutless-stamp">
             Syarat & ketentuan
           </a>
@@ -47,7 +44,16 @@ export function LoyaltySection({ reloadKey }: { reloadKey: number }) {
           <p className={bookingStyles.hint}>Tunjukkan kode voucher di kasir saat datang. Voucher dipakai untuk layanan yang tertulis.</p>
         </div>
       )}
-      {showHistory && <StampHistory />}
+      <div className={styles.historyBlock}>
+        <button type="button" className={bookingStyles.inlineBtn} aria-expanded={showHistory} aria-controls="riwayat-stempel" onClick={() => setShowHistory((v) => !v)}>
+          {showHistory ? 'Sembunyikan riwayat stempel' : 'Lihat riwayat stempel'}
+        </button>
+        {showHistory && (
+          <div id="riwayat-stempel">
+            <StampHistory />
+          </div>
+        )}
+      </div>
     </section>
   );
 }
