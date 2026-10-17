@@ -358,6 +358,7 @@ Worker kini melayani situs statis **dan** API booking (`/api/*`, Hono) dengan da
 
 ```
 migrations/0001_init.sql     skema D1 (cabang, layanan, harga cabang, barber, jam kerja, libur, pelanggan, sesi, booking, booking_slots, admin, audit)
+migrations/0002_loyalty.sql  Cutless Stamp: pengaturan program, kartu, stempel, voucher
 scripts/seed-d1.mjs          migrasi satu kali branches/barbers/pricing.json → D1 (+ akun uji); --apply local|staging
 scripts/export-catalog.mjs   salin D1 → src/content/*.json (SEO /cabang, sitemap, dropdown CMS)
 shared/                      kode bersama frontend & Worker: skema Zod, mesin slot, zona waktu, aturan status
@@ -368,6 +369,8 @@ tests/  e2e/                 Vitest (mesin slot, anti-bentrok, login, admin, cro
 ```
 
 **Data:** cabang, hairstylist, layanan & harga, jam kerja, libur, pelanggan, booking → **D1** (kelola di `/admin`). Hero, tentang, galeri, promo, pengumuman, testimoni, produk → tetap **Pages CMS**. Di staging, koleksi Cabang/Barber/Daftar Harga sudah dihapus dari `.pages.yml`; landing page membaca D1 lewat `GET /api/public/catalog` (fungsi di `src/lib/content.ts`, komponen tidak berubah).
+
+**Cutless Stamp (loyalitas, `feature/loyalty`):** 1 booking Selesai = 1 stempel otomatis; hadiah voucher di stempel ke-5 & ke-10 (lalu kartu kembali ke 0); stempel hangus 12 bulan, voucher 60 hari; maks. 1 stempel/hari lintas cabang. Semua angka diatur owner di **Admin → Pengaturan → Cutless Stamp**. Aktif bila env `LOYALTY_ENABLED=true` (staging) **dan** program diaktifkan owner; produksi tidak punya variabel itu → mati. Tabel di `migrations/0002_loyalty.sql`; panduan di [docs/panduan-admin-booking.md](docs/panduan-admin-booking.md) §7, API di [docs/booking-api.md](docs/booking-api.md).
 
 **Anti-bentrok:** booking + semua blok 15 menit (`booking_slots`, `UNIQUE(barber_id, slot_start)`) ditulis dalam satu `db.batch()` atomik; request kedua untuk jam yang sama → 409 + 3 jam terdekat (diuji 10 request bersamaan).
 

@@ -12,6 +12,7 @@ import { meRoutes } from './routes/me';
 import { bookingRoutes } from './routes/bookings';
 import { adminRoutes } from './routes/admin';
 import { catalogRoutes } from './routes/catalog';
+import { loyaltyRoutes } from './routes/loyalty';
 import { runScheduled } from './cron';
 
 export const app = createRouter();
@@ -34,6 +35,7 @@ app.route('/api', catalogRoutes);
 app.route('/api', authRoutes);
 app.route('/api', meRoutes);
 app.route('/api', bookingRoutes);
+app.route('/api', loyaltyRoutes);
 app.route('/api/admin', adminRoutes);
 
 app.all('/api/*', (c) => c.json({ error: { code: 'NOT_FOUND', message: 'Endpoint tidak ditemukan.' } }, 404));

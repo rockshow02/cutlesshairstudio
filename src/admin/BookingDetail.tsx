@@ -12,6 +12,8 @@ import { Field, Select, Textarea } from '@/components/ui/Field';
 import { Sheet } from '@/components/ui/Overlay';
 import { useConfirm } from '@/components/ui/useConfirm';
 import { SOURCE_LABEL, useAdmin, type AdminBooking } from './context';
+import { BookingVoucherPanel } from './Loyalty';
+import { useLoyaltyActive } from './loyaltyStatus';
 import styles from './admin.module.css';
 
 /** Detail booking + aksi sesuai peran & status (panel kanan di desktop, panel bawah di HP) */
@@ -26,6 +28,7 @@ export function BookingDetail({ booking: b, onClose, onChanged }: { booking: Adm
   const [barberId, setBarberId] = useState<number>(b.barber_id);
   const [slot, setSlot] = useState<Slot | null>(null);
   const [dialog, confirm] = useConfirm();
+  const loyaltyActive = useLoyaltyActive();
   const isBarber = me.admin.role === 'barber';
   const now = Date.now();
   const started = now >= Date.parse(b.start_at);
@@ -188,6 +191,8 @@ export function BookingDetail({ booking: b, onClose, onChanged }: { booking: Adm
           )}
         </div>
       )}
+
+      {loyaltyActive && !isBarber && <BookingVoucherPanel bookingId={b.id} onChanged={onChanged} />}
 
       {moving && (
         <div className={styles.subPanel}>

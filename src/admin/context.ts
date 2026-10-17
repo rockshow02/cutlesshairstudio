@@ -35,6 +35,8 @@ export interface AdminBooking {
   created_at: string;
   cancel_reason: string | null;
   cancelled_by: string | null;
+  /** Cutless Stamp: kode voucher yang ditukar di booking ini */
+  voucher_code?: string | null;
 }
 
 export const AdminContext = createContext<AdminMe | null>(null);

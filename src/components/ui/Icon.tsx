@@ -96,6 +96,7 @@ const ICONS: Record<IconName, IconDef> = {
   logout: { body: <path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3M10 16l-4-4 4-4M6 12h10" /> },
   search: { body: <path d="M11 18a7 7 0 1 0 0-14 7 7 0 0 0 0 14zM21 21l-4.35-4.35" /> },
   plus: { body: <path d="M12 5v14M5 12h14" /> },
+  gift: { body: <path d="M4 11h16v9a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1zM3 7h18v4H3zM12 7v14M12 7S10.5 3 8 3a2 2 0 0 0 0 4M12 7s1.5-4 4-4a2 2 0 0 1 0 4" /> },
   scissors: {
     body: (
       <>

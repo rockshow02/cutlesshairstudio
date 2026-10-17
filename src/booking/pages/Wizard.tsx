@@ -7,10 +7,11 @@ import type { Slot } from '@shared/slots';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
-import { Field, Textarea } from '@/components/ui/Field';
+import { Checkbox, Field, Textarea } from '@/components/ui/Field';
 import { Alert, EmptyState } from '@/components/ui/Feedback';
 import { Icon } from '@/components/ui/Icon';
 import type { IconName } from '@/types';
+import { rewardText, useMyLoyalty } from '@/app/loyalty';
 import { Page, Loading } from '../Page';
 import { SlotPicker } from '../SlotPicker';
 import { Turnstile } from '../Turnstile';
@@ -321,6 +322,12 @@ function BarberStep({ barbers, onPick }: { barbers: BookingBarber[] | null; onPi
   );
 }
 
+/** Penanda voucher di catatan booking (bukan penukaran; kasir yang menukar di admin) */
+function withVoucherNote(note: string, code?: string): string | null {
+  const text = code ? `[Pakai voucher ${code}] ${note}`.trim() : note;
+  return text ? text.slice(0, 300) : null;
+}
+
 function Confirm({
   me,
   branch,
@@ -337,6 +344,9 @@ function Confirm({
   onPickSlot: (s: Slot) => void;
 }) {
   const config = useAuthConfig();
+  const loyalty = useMyLoyalty();
+  const voucher = loyalty?.enabled ? loyalty.vouchers.find((v) => v.serviceIds.includes(service.id)) : undefined;
+  const [useVoucher, setUseVoucher] = useState(false);
   const [note, setNote] = useState('');
   const [token, setToken] = useState('');
   const [resetKey, setResetKey] = useState(0);
@@ -352,7 +362,7 @@ function Confirm({
     try {
       const r = await api<{ booking: CustomerBooking }>('/bookings', {
         method: 'POST',
-        json: { branch: branch.slug, service: service.id, barber: barber === 'any' ? 'any' : barber.id, startAt: slot.startAt, note: note || null, turnstileToken: token },
+        json: { branch: branch.slug, service: service.id, barber: barber === 'any' ? 'any' : barber.id, startAt: slot.startAt, note: withVoucherNote(note, useVoucher ? voucher?.code : undefined), turnstileToken: token },
       });
       window.location.assign(`/booking/sukses?id=${r.booking.id}`);
     } catch (err) {
@@ -377,6 +387,16 @@ function Confirm({
       <div className={styles.gap} />
       {branch.require_manual_confirmation && (
         <Alert tone="warning">Cabang ini mengonfirmasi booking secara manual. Status awal "Menunggu konfirmasi"; pantau di halaman Booking saya.</Alert>
+      )}
+      {voucher && (
+        <Alert tone="info" role="none" title="Kamu punya voucher untuk layanan ini">
+          <p>
+            {rewardText(voucher.services)} gratis · kode {voucher.code}. Voucher ditukar oleh kasir di cabang.
+          </p>
+          <Checkbox checked={useVoucher} onChange={(e) => setUseVoucher(e.target.checked)}>
+            Saya ingin memakai voucher ini
+          </Checkbox>
+        </Alert>
       )}
       <Field label="Catatan untuk hairstylist (opsional)">
         <Textarea id="b-note" maxLength={300} value={note} onChange={(e) => setNote(e.target.value)} placeholder="Mis. ingin model mid fade, rambut tebal" />

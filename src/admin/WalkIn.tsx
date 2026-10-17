@@ -12,6 +12,8 @@ import { PageHeader } from '@/components/ui/PageHeader';
 import { SegmentedControl } from '@/components/ui/SegmentedControl';
 import { useToast } from '@/components/ui/toastContext';
 import { useAdmin } from './context';
+import { useLoyaltyActive } from './loyaltyStatus';
+import { rewardText, type LoyaltyVoucher } from '@/app/loyalty';
 import styles from './admin.module.css';
 
 interface ServiceRow {
@@ -48,6 +50,9 @@ export function WalkIn() {
   const [customer, setCustomer] = useState<CustomerHit | null>(null);
   const [source, setSource] = useState<'walk_in' | 'admin'>('walk_in');
   const [note, setNote] = useState('');
+  const loyaltyActive = useLoyaltyActive();
+  const [vouchers, setVouchers] = useState<LoyaltyVoucher[]>([]);
+  const [voucherId, setVoucherId] = useState('');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   const [reload, setReload] = useState(0);
@@ -59,6 +64,16 @@ export function WalkIn() {
   const available = services.filter((s) => s.is_active && s.is_bookable && s.branches.some((b) => b.branch_id === branchId && b.is_active));
   const service = available.find((s) => s.id === serviceId);
   const price = service ? service.branches.find((b) => b.branch_id === branchId)?.price ?? service.base_price : 0;
+
+  // Voucher aktif pelanggan terdaftar yang cocok dengan layanan
+  useEffect(() => {
+    setVoucherId('');
+    setVouchers([]);
+    if (!loyaltyActive || mode !== 'registered' || !customer || !serviceId) return;
+    api<{ enabled: boolean; vouchers?: LoyaltyVoucher[] }>(`/admin/customers/${customer.id}/loyalty`)
+      .then((r) => setVouchers((r.vouchers ?? []).filter((v) => v.status === 'active' && v.serviceIds.includes(Number(serviceId)))))
+      .catch(() => setVouchers([]));
+  }, [loyaltyActive, mode, customer, serviceId]);
 
   const search = async () => {
     if (query.trim().length < 2) return;
@@ -73,7 +88,7 @@ export function WalkIn() {
     setBusy(true);
     setError('');
     try {
-      const r = await api<{ booking: { code: string } }>('/admin/bookings', {
+      const r = await api<{ booking: { code: string }; voucherError?: string }>('/admin/bookings', {
         method: 'POST',
         json: {
           branch: branchId,
@@ -82,10 +97,12 @@ export function WalkIn() {
           startAt: slot.startAt,
           source,
           note: note || null,
+          ...(voucherId && mode === 'registered' ? { voucherId } : {}),
           ...(mode === 'registered' && customer ? { customerId: customer.id } : { guestName, guestPhone }),
         },
       });
       toast(`Booking ${r.booking.code} dibuat untuk ${clock(slot.startAt, branch.timezone)}.`);
+      if (r.voucherError) toast(`Voucher tidak ditukar: ${r.voucherError}`, 'danger');
       setSlot(null);
       setGuestName('');
       setGuestPhone('');
@@ -258,6 +275,18 @@ export function WalkIn() {
               ))}
             {moreHits && <p className={styles.muted}>Menampilkan 20 hasil teratas. Ketik nama atau nomor lebih lengkap untuk mempersempit.</p>}
           </>
+        )}
+        {vouchers.length > 0 && (
+          <Field label="Voucher Cutless Stamp (opsional)" hint="Harga booking menjadi Rp0 dan booking ini tidak mendapat stempel.">
+            <Select value={voucherId} onChange={(e) => setVoucherId(e.target.value)}>
+              <option value="">Tidak memakai voucher</option>
+              {vouchers.map((v) => (
+                <option key={v.id} value={v.id}>
+                  {v.code} · {rewardText(v.services)}
+                </option>
+              ))}
+            </Select>
+          </Field>
         )}
         <Field label="Catatan admin">
           <Textarea value={note} onChange={(e) => setNote(e.target.value)} maxLength={1000} rows={3} />

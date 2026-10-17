@@ -10,6 +10,8 @@ export interface Env {
   ACCESS_TEAM_DOMAIN: string;
   ACCESS_AUD: string;
   TURNSTILE_SITE_KEY: string;
+  /** Cutless Stamp: 'true' = fitur tersedia (program tetap perlu diaktifkan owner). Kosong/absen = mati. */
+  LOYALTY_ENABLED?: string;
   // Secrets (wrangler secret put … --env staging / .dev.vars lokal)
   GOOGLE_CLIENT_ID?: string;
   GOOGLE_CLIENT_SECRET?: string;

@@ -7,6 +7,7 @@ import { ApiError, badRequest, forbidden, notFound } from '../../lib/errors';
 import { body, defer } from '../../lib/http';
 import { finishPage, keysetWhere, pageParams } from '../../lib/pagination';
 import { hashPassword } from '../../lib/password';
+import { loyaltyActive } from '../../lib/loyalty';
 import { allowRoles, auditActor, branchScope } from '../../middleware/admin';
 import { ADMIN_BOOKING_SQL } from './bookings';
 
@@ -169,8 +170,46 @@ adminReportRoutes.get('/summary', async (c) => {
     noShowCount: ns.no_show ?? 0,
     popularServices: popular.results,
     pendingCount: (pending.results[0] as { n: number }).n,
+    ...(await loyaltySummary(c.env, branchId, iso(monthAgo))),
   });
 });
+
+/**
+ * Ringkasan Cutless Stamp 30 hari (hanya bila program aktif): stempel diberikan (juga per admin/hairstylist,
+ * untuk memantau kejanggalan), voucher terbit/ditukar/hangus, voucher aktif. Admin cabang: stempel & penukaran
+ * di cabangnya saja; voucher terbit/hangus berlaku lintas cabang → tidak ditampilkan.
+ */
+async function loyaltySummary(env: Parameters<typeof loyaltyActive>[0], branchId: number | undefined, since: string) {
+  if (!(await loyaltyActive(env))) return {};
+  const db = env.DB;
+  const own = branchId !== undefined;
+  const stampScope = own ? 'AND branch_id = ?2' : '';
+  const redeemScope = own ? 'AND EXISTS (SELECT 1 FROM bookings b WHERE b.id = v.redeemed_booking_id AND b.branch_id = ?2)' : '';
+  const binds = own ? [since, branchId] : [since];
+  const [stamps, perAdmin, redeemed, issued, expired, active, failed] = await db.batch([
+    db.prepare(`SELECT COUNT(*) AS n FROM loyalty_stamps WHERE created_at >= ?1 AND status <> 'removed' ${stampScope}`).bind(...binds),
+    db.prepare(
+      `SELECT COALESCE(created_by, '-') AS admin, kind, COUNT(*) AS n FROM loyalty_stamps WHERE created_at >= ?1 ${stampScope}
+       GROUP BY created_by, kind ORDER BY n DESC LIMIT 20`,
+    ).bind(...binds),
+    db.prepare(`SELECT COUNT(*) AS n, COALESCE(SUM(value_snapshot), 0) AS value FROM loyalty_vouchers v WHERE status = 'redeemed' AND redeemed_at >= ?1 ${redeemScope}`).bind(...binds),
+    db.prepare(`SELECT COUNT(*) AS n FROM loyalty_vouchers WHERE issued_at >= ?1`).bind(since),
+    db.prepare(`SELECT COUNT(*) AS n FROM loyalty_vouchers WHERE status = 'expired' AND expires_at >= ?1`).bind(since),
+    db.prepare(`SELECT COUNT(*) AS n FROM loyalty_vouchers WHERE status = 'active'`),
+    // Voucher gagal terbit (semua kandidat kode bentrok); dicoba lagi otomatis di stempel berikutnya
+    db.prepare(`SELECT COUNT(*) AS n FROM audit_log WHERE action = 'loyalty.voucher_issue_failed' AND created_at >= ?1`).bind(since),
+  ]);
+  const n = (r: D1Result) => (r.results[0] as { n: number } | undefined)?.n ?? 0;
+  return {
+    loyalty: {
+      stamps: n(stamps),
+      stampsByAdmin: perAdmin.results,
+      vouchersRedeemed: n(redeemed),
+      vouchersRedeemedValue: (redeemed.results[0] as { value: number } | undefined)?.value ?? 0,
+      ...(own ? {} : { vouchersIssued: n(issued), vouchersExpired: n(expired), vouchersActive: n(active), voucherIssueFailures: n(failed) }),
+    },
+  };
+}
 
 /** GET /api/admin/export.csv?from=&to=&branch= */
 adminReportRoutes.get('/export.csv', async (c) => {

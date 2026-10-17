@@ -93,6 +93,43 @@ Tidak bisa masuk? Minta owner menambahkan email Anda (owner: *Pengaturan → Aku
 
 ---
 
+## 7. Cutless Stamp (kartu stempel loyalitas)
+
+Program loyalitas otomatis, berlaku di semua cabang. **1 booking yang Selesai = 1 stempel.**
+
+| Stempel | Hadiah (bisa diubah owner) |
+|---|---|
+| ke-5 | Voucher gratis 1× layanan kecil (default: Hair Wash & Styling atau Hot Towel Shave) |
+| ke-10 | Voucher gratis 1× Signature Haircut, lalu kartu kembali ke 0 |
+
+**Aturan otomatis:**
+- Stempel diberikan saat **Anda menandai Selesai** di detail booking. Tidak ada tombol "beri stempel" terpisah.
+- **Tidak** dapat stempel: booking batal, tidak datang, layanan paket, dan booking yang dibayar dengan voucher Cutless Stamp.
+- Maksimal **1 stempel per pelanggan per hari** (tanggal lokal cabang), lintas cabang.
+- Stempel hangus **12 bulan** sejak didapat; voucher berlaku **60 hari** sejak terbit (dihanguskan otomatis tiap malam).
+
+### Menukar voucher (di kasir)
+1. Minta pelanggan menunjukkan kode voucher (mis. `CS-7K2Q9M`) di halaman **Booking saya** di HP-nya.
+2. Buka booking-nya di **Jadwal** → bagian **Voucher Cutless Stamp** menampilkan voucher yang cocok dengan layanan → **Tukar voucher** → konfirmasi.
+3. Harga booking menjadi Rp0. Lalu tandai **Selesai** seperti biasa (booking ber-voucher tidak mendapat stempel).
+- Untuk **walk-in pelanggan terdaftar**: di **Booking baru**, setelah memilih pelanggan & layanan, pilih voucher di kolom **Voucher Cutless Stamp**.
+- Salah tukar? **Batalkan penukaran** selama booking belum Selesai. Bila booking dibatalkan/tidak datang, voucher otomatis aktif lagi (atau hangus bila sudah lewat masa berlaku).
+- Catatan booking berawalan `[Pakai voucher CS-…]` berarti pelanggan menandai ingin memakai voucher saat booking online: tukarkan di kasir setelah dicek.
+
+### Pelanggan walk-in tanpa akun
+Stempel tamu walk-in tetap tercatat di data tamu. Bila tamu itu kemudian punya akun dengan **nomor WhatsApp yang sama**, detail pelanggan (akun) menampilkan kotak **"Ada data tamu dengan nomor yang sama"** → cocokkan orangnya di kasir → **Gabungkan**. Nomor WhatsApp tidak diverifikasi otomatis, jadi penggabungan selalu lewat admin. Menekan Gabungkan dua kali tidak menggandakan stempel.
+
+### Detail pelanggan
+Bagian **Cutless Stamp** menampilkan kartu (mis. 7/10), voucher (aktif / dipakai / hangus), dan riwayat stempel (siapa yang menandai Selesai). **Owner** bisa **Tambah/Cabut stempel** manual dengan alasan wajib (mis. kompensasi keluhan); semua tercatat di **Pengaturan → Log aktivitas**.
+
+### Pengaturan (owner)
+**Pengaturan → Cutless Stamp**: aktif/nonaktif program, target hadiah pertama & utama, layanan hadiah, masa berlaku stempel (bulan) & voucher (hari). Admin cabang hanya bisa melihat. Perubahan berlaku untuk stempel/voucher berikutnya; voucher yang sudah terbit tetap memakai layanan saat terbit.
+
+### Memantau
+**Ringkasan & ekspor → Cutless Stamp (30 hari)**: stempel diberikan, voucher terbit/ditukar (beserta nilainya)/hangus, dan **stempel per admin/hairstylist**. Waspadai angka yang jauh di atas jumlah booking Selesai, atau stempel manual yang sering.
+
+---
+
 ## Pertanyaan umum
 
 | Masalah | Solusi |
