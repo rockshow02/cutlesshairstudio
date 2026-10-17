@@ -1,6 +1,36 @@
-import { expect, type Page } from '@playwright/test';
+import { test as base, expect, type BrowserContext, type Page } from '@playwright/test';
 
+/** AUTH_MOCK_SECRET staging (dari environment, tidak pernah ditulis ke repo). Kosong = uji lokal. */
 const SECRET = process.env.E2E_MOCK_SECRET ?? '';
+
+/**
+ * Mode staging (E2E_MOCK_SECRET terisi): staging memakai kunci Turnstile ASLI, yang tidak bisa
+ * diselesaikan browser otomatis. Maka:
+ *  - header x-e2e-secret dikirim HANYA ke /api/** di origin staging (tidak ke challenges.cloudflare.com).
+ *    Server melewati Turnstile hanya bila APP_ENV staging, AUTH_MOCK_ENABLED true, dan secret cocok.
+ *  - skrip widget Turnstile diganti stub yang langsung memberi token placeholder, supaya tombol
+ *    "Konfirmasi booking" aktif. Token itu diabaikan server karena header di atas.
+ * Lokal (development, tanpa site key) tidak memerlukan keduanya.
+ */
+export async function prepareContext(context: BrowserContext, baseURL: string | undefined) {
+  if (!SECRET || !baseURL) return;
+  const origin = new URL(baseURL).origin;
+  await context.route(`${origin}/api/**`, (route) => route.continue({ headers: { ...route.request().headers(), 'x-e2e-secret': SECRET } }));
+  await context.route('https://challenges.cloudflare.com/turnstile/**', (route) =>
+    route.fulfill({
+      contentType: 'application/javascript',
+      body: `window.turnstile={render:function(el,o){setTimeout(function(){o.callback('e2e-placeholder')},0);return 'e2e'},reset:function(){},remove:function(){}};`,
+    }),
+  );
+}
+
+/** test dengan konteks browser yang sudah disiapkan untuk staging (lihat prepareContext) */
+export const test = base.extend({
+  context: async ({ context, baseURL }, use) => {
+    await prepareContext(context, baseURL);
+    await use(context);
+  },
+});
 
 /** Login mock (pengganti Google di lokal/staging) */
 export async function mockLogin(page: Page, email: string, next = '/booking/') {
@@ -29,8 +59,9 @@ export async function pickDate(page: Page, index: number) {
 
 /** Booking lewat API dari sesi halaman ini (dipakai untuk membuat bentrok) */
 export async function apiBook(page: Page, body: Record<string, unknown>) {
-  // Staging dengan kunci uji Turnstile Cloudflare menerima token dummy; lokal (development) tidak memeriksa
-  const withToken = { turnstileToken: process.env.E2E_TURNSTILE_TOKEN ?? 'XXXX.DUMMY.TOKEN.XXXX', ...body };
+  // Token placeholder: lokal (development) tidak memeriksa Turnstile; di staging server melewatinya
+  // karena header x-e2e-secret dari prepareContext (konteks halaman ini harus sudah disiapkan)
+  const withToken = { turnstileToken: 'e2e-placeholder', ...body };
   return page.evaluate(async (b) => {
     const r = await fetch('/api/bookings', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(b) });
     return { status: r.status, json: await r.json() };

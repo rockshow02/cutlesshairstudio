@@ -1,5 +1,5 @@
-import { expect, test } from '@playwright/test';
-import { apiBook, completeProfile, expectNoHorizontalScroll, mockLogin, pickDate, uniqueEmail } from './helpers';
+import { expect } from '@playwright/test';
+import { apiBook, completeProfile, expectNoHorizontalScroll, mockLogin, pickDate, prepareContext, test, uniqueEmail } from './helpers';
 
 test.describe.configure({ mode: 'serial' });
 
@@ -56,6 +56,7 @@ test('slot bentrok: jam dibooking orang lain saat konfirmasi → pesan 409 + jam
   const url = new URL(page.url());
   const barberId = url.searchParams.get('barber');
   const other = await browser.newContext({ baseURL: url.origin, reducedMotion: 'reduce' });
+  await prepareContext(other, url.origin);
   const otherPage = await other.newPage();
   await mockLogin(otherPage, uniqueEmail('lain'), '/booking/');
   await completeProfile(otherPage, 'Pelanggan Lain', '0812 7777 9999');
