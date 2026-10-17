@@ -8,7 +8,8 @@ interface ToastItem { id: number; tone: ToastTone; text: string }
 
 const DURATION_MS = 6000;
 
-export function ToastProvider({ children }: { children: ReactNode }) {
+/** bottom: jarak dari bawah layar (mis. di atas tombol WhatsApp melayang) */
+export function ToastProvider({ children, bottom }: { children: ReactNode; bottom?: string }) {
   const [items, setItems] = useState<ToastItem[]>([]);
   const next = useRef(0);
   const dismiss = useCallback((id: number) => setItems((list) => list.filter((t) => t.id !== id)), []);
@@ -36,7 +37,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   return (
     <ToastContext.Provider value={value}>
       {children}
-      <div className={styles.region}>
+      <div className={styles.region} style={bottom ? { bottom } : undefined}>
         <div role="status" aria-live="polite" className={styles.stack}>
           {render('polite')}
         </div>
