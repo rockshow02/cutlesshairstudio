@@ -64,34 +64,37 @@ Di **Google Cloud Console** memakai akun Google **bisnis klien** (bukan akun pri
 
 Ganti/rotasi kunci: buat ulang secret di widget Turnstile, lalu jalankan lagi langkah 3. Site key hanya berubah bila widget dibuat ulang.
 
-## 4. Cloudflare Access (gratis s.d. 50 pengguna)
+## 4. Cloudflare Access untuk `/admin` (gratis s.d. 50 pengguna)
 
-### Batasan workers.dev (staging)
+Access mengunci **hanya** `/admin` dan `/api/admin` per path, termasuk di hostname `*.workers.dev`. Landing page, `/booking`, `/masuk`, dan login pelanggan tetap publik.
 
-Staging berjalan di subdomain `*.workers.dev`. Di hostname ini Cloudflare Access **hanya bisa mengunci seluruh Worker**: halaman, aset, dan semua API. Ini juga berlaku bila Access diaktifkan dari tab **Settings → Domains & Routes → workers.dev → Cloudflare Access** di Worker. Aturan per path (`/admin`, `/api/admin`) tidak didukung untuk `workers.dev`.
-
-Akibatnya di staging:
-- Landing page, `/booking`, `/masuk`, dan login Google ikut berada di balik Access. Hanya email yang diizinkan policy yang bisa membuka staging. Untuk lingkungan uji, ini justru wajar.
-- Tes otomatis (E2E) perlu **Service Token** untuk melewati Access (lihat §7).
-- Worker tetap memverifikasi JWT `Cf-Access-Jwt-Assertion` di `/admin` & `/api/admin` (tanda tangan, audiens, penerbit). Setelah itu email dicocokkan dengan tabel `admin_users`. JWT dari Service Token tidak berisi email, jadi `/admin` tetap menolaknya.
-- `ACCESS_AUD` di `env.staging.vars` harus berisi **AUD tag aplikasi yang mengunci Worker staging**.
-
-### Pengaturan staging
+### Pengaturan staging (yang aktif sekarang)
 
 1. Cloudflare dashboard → **Zero Trust** (paket Free). Buat nama tim, mis. `cutless` → `cutless.cloudflareaccess.com`.
-2. Aktifkan Access untuk Worker `cutlesshairstudio-staging` (tab workers.dev di Worker, atau **Access → Applications → Self-hosted** dengan domain `cutlesshairstudio-staging.adi-yansyaaah.workers.dev` tanpa path).
-   - Policy **Allow**, include **Emails**: email owner, admin cabang (harus sama dengan `admin_users`), dan penguji.
-   - Login methods: **One-time PIN** dan/atau Google. Session 24 jam.
-3. Salin **Application Audience (AUD) Tag** dari Overview aplikasi.
-4. Isi `wrangler.jsonc` → `env.staging.vars`: `ACCESS_TEAM_DOMAIN = "cutless.cloudflareaccess.com"`, `ACCESS_AUD = "<AUD tag>"`, lalu commit.
+2. **Access → Applications → Add an application → Self-hosted**:
+   - Name `Cutless Admin (staging)`, session 24 jam.
+   - Hostname `cutlesshairstudio-staging.adi-yansyaaah.workers.dev` dengan path `admin`. Tambahkan baris hostname kedua yang sama dengan path `api/admin`.
+   - Policy **Allow** `Owner & admin`, include **Emails**: email owner & admin cabang (harus sama dengan `admin_users`).
+   - Login methods: **One-time PIN** (kode lewat email) dan/atau Google.
+3. Di Worker `cutlesshairstudio-staging` → **Settings → Domains & Routes → workers.dev → Cloudflare Access**: biarkan **Previews only**.
+   Bila diubah untuk mengunci seluruh Worker, landing page dan booking ikut terkunci (dan E2E perlu Service Token, lihat §7).
+4. Salin **Application Audience (AUD) Tag** dari Overview aplikasi `Cutless Admin (staging)`.
+5. Isi `wrangler.jsonc` → `env.staging.vars`: `ACCESS_TEAM_DOMAIN = "cutless.cloudflareaccess.com"`, `ACCESS_AUD = "<AUD tag>"`, lalu commit.
+
+Perubahan aplikasi atau policy Access bisa butuh **beberapa menit** sampai berlaku. Bila `/admin` belum meminta login atau masih menolak setelah diubah, tunggu sebentar, lalu coba di jendela privat.
+
+Worker tetap memverifikasi JWT `Cf-Access-Jwt-Assertion` di `/admin` & `/api/admin` (tanda tangan, audiens, penerbit) lalu mencocokkan email dengan tabel `admin_users`. Jadi `ACCESS_AUD` harus AUD aplikasi yang mengunci path admin.
 
 Menambah admin: tambahkan email di policy Access **dan** di dashboard `/admin → Pengaturan → Akun admin`.
 
-### Produksi: wajib domain sendiri
+### Produksi
 
-Produksi **harus** memakai domain sendiri (mis. `cutlesshairstudio.com`, ditambahkan sebagai zona Cloudflare dan dipasang sebagai Custom Domain Worker), bukan `workers.dev`. Hanya di domain sendiri Access bisa mengunci **per path**: aplikasi Self-hosted dengan path `admin` dan `api/admin`. Dengan begitu landing page, booking, dan login pelanggan tetap publik.
+Langkah yang sama berlaku untuk Worker produksi. Domain sendiri (mis. `cutlesshairstudio.com` sebagai Custom Domain Worker) **direkomendasikan**, tetapi bukan syarat untuk Access. Alasannya:
+- alamat yang mudah dipercaya pelanggan;
+- cookie dan SEO di domain milik klien;
+- tidak bergantung pada subdomain akun Cloudflare.
 
-Setelah domain aktif, matikan route `workers.dev` Worker produksi (Settings → Domains & Routes) agar `/admin` tidak bisa diakses lewat hostname lain. Worker tetap memverifikasi JWT Access di `/admin` & `/api/admin` sebagai lapisan kedua.
+Bila memakai domain sendiri, pasang aplikasi Access per path di domain itu. Matikan juga route `workers.dev` Worker produksi (Settings → Domains & Routes), atau kunci path admin-nya dengan aplikasi yang sama, agar `/admin` tidak terbuka lewat hostname lain.
 
 ## 5. Secrets lain
 
@@ -115,28 +118,27 @@ Sama seperti di README §5, dengan catatan untuk booking:
 
 ## 7. Uji staging
 
-### Service Token untuk tes otomatis (sekali)
+```bash
+# Isi nilai dari pengelola sandi Anda; jangan ditulis ke file repo / riwayat shell bersama
+E2E_BASE_URL=https://cutlesshairstudio-staging.adi-yansyaaah.workers.dev E2E_MOCK_SECRET=<AUTH_MOCK_SECRET> npm run e2e
+```
 
-Staging dikunci Access seluruhnya (§4), jadi Playwright perlu Service Token:
+### Opsional: Service Token (hanya bila seluruh Worker dikunci Access)
+
+Dengan pengaturan §4 (Access hanya di path admin), E2E pelanggan **tidak** memerlukan Service Token. Langkah ini hanya perlu bila Access dipasang untuk seluruh Worker, sehingga halaman publik juga dialihkan ke login Access:
 
 1. **Zero Trust → Access → Service Auth → Service Tokens → Create Service Token**. Beri nama `cutless-e2e-staging`; masa berlaku mis. 1 tahun.
 2. Salin **Client ID** dan **Client Secret** ke pengelola sandi. Client Secret hanya ditampilkan sekali. **Jangan** tulis ke repo, `.env` yang di-commit, atau tiket.
-3. Buka aplikasi Access Worker staging → **Policies → Add a policy**:
+3. Di aplikasi Access yang mengunci Worker → **Policies → Add a policy**:
    - Action **Service Auth** (bukan Allow);
-   - Include **Service Token** = `cutless-e2e-staging`;
-   - simpan dan pastikan policy aktif di aplikasi itu.
+   - Include **Service Token** = `cutless-e2e-staging`.
 
-   Policy email (Allow) yang sudah ada tetap dipakai manusia.
-4. Rotasi: buat token baru → ganti di policy → hapus token lama. Token yang bocor: **Revoke** di halaman Service Tokens.
+   Policy email (Allow) tetap dipakai manusia.
+4. Tambahkan `E2E_CF_ACCESS_CLIENT_ID=<Client ID> E2E_CF_ACCESS_CLIENT_SECRET=<Client Secret>` ke perintah di atas.
+   Playwright mengirim header `CF-Access-Client-Id` / `CF-Access-Client-Secret` **hanya** ke origin staging, tidak ke Turnstile, Google Fonts, atau situs lain. Tanpa kedua variabel, header tidak dikirim.
+5. Rotasi: buat token baru → ganti di policy → hapus token lama. Token yang bocor: **Revoke**.
 
-### Menjalankan
-
-```bash
-# Isi nilai dari pengelola sandi Anda; jangan ditulis ke file repo / riwayat shell bersama
-E2E_BASE_URL=https://cutlesshairstudio-staging.adi-yansyaaah.workers.dev E2E_MOCK_SECRET=<AUTH_MOCK_SECRET> E2E_CF_ACCESS_CLIENT_ID=<Client ID> E2E_CF_ACCESS_CLIENT_SECRET=<Client Secret> npm run e2e
-```
-
-Header `CF-Access-Client-Id` / `CF-Access-Client-Secret` dikirim Playwright **hanya** ke origin staging (`E2E_BASE_URL`), tidak ke Cloudflare Turnstile, Google Fonts, atau situs lain. Tanpa kedua variabel itu, setiap request staging dialihkan ke halaman login Access dan tes gagal.
+### Cara kerja E2E staging
 
 Karena staging memakai Turnstile asli (tidak bisa diselesaikan browser otomatis), E2E staging bekerja seperti ini:
 
@@ -151,7 +153,7 @@ Karena staging memakai Turnstile asli (tidak bisa diselesaikan browser otomatis)
 - Skrip widget Turnstile di browser uji diganti stub, supaya tombol konfirmasi aktif. Widget asli tetap tampil untuk pengunjung biasa.
 - Mengganti `AUTH_MOCK_SECRET` (`wrangler secret put … --env staging`) otomatis membatalkan akses dari secret lama. Mematikan jalur uji sepenuhnya: set `AUTH_MOCK_ENABLED` ke `"false"` di `env.staging.vars`.
 
-Tes admin hanya berjalan lokal: Service Token tidak membawa email, jadi `/admin` staging menolaknya. Uji manual tetap perlu: login Google sungguhan, booking (lewat widget Turnstile asli), batal, jadwal ulang, dan `/admin` dengan email owner.
+Tes admin hanya berjalan lokal, karena `/admin` staging dilindungi Access (login email; JWT Service Token tidak berisi email sehingga ditolak). Uji manual tetap perlu: login Google sungguhan, booking (lewat widget Turnstile asli), batal, jadwal ulang, dan `/admin` dengan email owner.
 
 ## 8. Setelah data diubah di /admin
 
