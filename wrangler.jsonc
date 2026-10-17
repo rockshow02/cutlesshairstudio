@@ -68,8 +68,8 @@
         "AUTH_MOCK_ENABLED": "true",
         "PBKDF2_ITERATIONS": "100000",
         // Cloudflare Access (Zero Trust): <tim>.cloudflareaccess.com dan Application Audience (AUD) tag
-        "ACCESS_TEAM_DOMAIN": "",
-        "ACCESS_AUD": "",
+        "ACCESS_TEAM_DOMAIN": "wild-voice-c787.cloudflareaccess.com",
+        "ACCESS_AUD": "a21a214ea539897fff7920c75ae8f733643d9453f0193739862a6b2ae483d506",
         // Site key Turnstile (publik). Secret key → wrangler secret put TURNSTILE_SECRET_KEY --env staging
         "TURNSTILE_SITE_KEY": "0x4AAAAAAFZESiyCC6DWREp5"
       },
