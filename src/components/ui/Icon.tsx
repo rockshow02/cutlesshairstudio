@@ -89,6 +89,13 @@ const ICONS: Record<IconName, IconDef> = {
   close: { body: <path d="M6 6l12 12M18 6L6 18" /> },
   'chevron-left': { body: <path d="M15 5l-7 7 7 7" /> },
   'chevron-right': { body: <path d="M9 5l7 7-7 7" /> },
+  // Ikon aplikasi booking & admin
+  calendar: { body: <path d="M4 7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2zM4 10h16M8 3v4M16 3v4" /> },
+  user: { body: <path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4 21a8 8 0 0 1 16 0" /> },
+  filter: { body: <path d="M4 6h16M7 12h10M10 18h4" /> },
+  logout: { body: <path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3M10 16l-4-4 4-4M6 12h10" /> },
+  search: { body: <path d="M11 18a7 7 0 1 0 0-14 7 7 0 0 0 0 14zM21 21l-4.35-4.35" /> },
+  plus: { body: <path d="M12 5v14M5 12h14" /> },
   scissors: {
     body: (
       <>
