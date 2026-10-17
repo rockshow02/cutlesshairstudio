@@ -4,7 +4,8 @@ import { defineConfig } from '@playwright/test';
  * E2E booking di lebar 360px terhadap Worker lokal (wrangler dev + D1 lokal + login mock).
  *   npm run db:migrate:local && npm run db:seed:local   (sekali)
  *   npm run e2e
- * E2E_BASE_URL=https://…staging… E2E_MOCK_SECRET=… npm run e2e   → uji ke staging
+ * E2E_BASE_URL=https://…staging… E2E_MOCK_SECRET=… E2E_CF_ACCESS_CLIENT_ID=… E2E_CF_ACCESS_CLIENT_SECRET=… npm run e2e
+ *   → uji ke staging (dikunci Cloudflare Access; lihat docs/booking-setup.md §7)
  */
 const baseURL = process.env.E2E_BASE_URL ?? 'http://localhost:8787';
 

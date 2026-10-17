@@ -2,20 +2,38 @@ import { test as base, expect, type BrowserContext, type Page } from '@playwrigh
 
 /** AUTH_MOCK_SECRET staging (dari environment, tidak pernah ditulis ke repo). Kosong = uji lokal. */
 const SECRET = process.env.E2E_MOCK_SECRET ?? '';
+/** Service Token Cloudflare Access (staging di workers.dev dikunci Access seluruhnya). Dari environment saja. */
+const ACCESS_ID = process.env.E2E_CF_ACCESS_CLIENT_ID ?? '';
+const ACCESS_SECRET = process.env.E2E_CF_ACCESS_CLIENT_SECRET ?? '';
+
+/** Header Service Token Access; kosong bila tidak diisi (lokal) */
+export function accessHeaders(): Record<string, string> {
+  return ACCESS_ID && ACCESS_SECRET ? { 'CF-Access-Client-Id': ACCESS_ID, 'CF-Access-Client-Secret': ACCESS_SECRET } : {};
+}
 
 /**
- * Mode staging (E2E_MOCK_SECRET terisi): staging memakai kunci Turnstile ASLI, yang tidak bisa
- * diselesaikan browser otomatis. Maka:
- *  - header x-e2e-secret dikirim HANYA ke /api/** di origin staging (tidak ke challenges.cloudflare.com).
- *    Server melewati Turnstile hanya bila APP_ENV staging, AUTH_MOCK_ENABLED true, dan secret cocok.
+ * Mode staging (E2E_MOCK_SECRET terisi). Semua header di bawah HANYA dikirim ke origin staging
+ * (tidak ke challenges.cloudflare.com, Google Fonts, dll.):
+ *  - CF-Access-Client-Id/Secret (bila E2E_CF_ACCESS_CLIENT_* diisi) ke SEMUA request origin staging,
+ *    karena Access mengunci seluruh Worker (halaman, aset, dan API).
+ *  - x-e2e-secret ke /api/** saja: staging memakai kunci Turnstile ASLI yang tidak bisa diselesaikan
+ *    browser otomatis. Server melewati Turnstile hanya bila APP_ENV staging, AUTH_MOCK_ENABLED true,
+ *    dan secret cocok.
  *  - skrip widget Turnstile diganti stub yang langsung memberi token placeholder, supaya tombol
- *    "Konfirmasi booking" aktif. Token itu diabaikan server karena header di atas.
- * Lokal (development, tanpa site key) tidak memerlukan keduanya.
+ *    "Konfirmasi booking" aktif. Token itu diabaikan server karena x-e2e-secret.
+ * Lokal (development, tanpa site key, tanpa Access) tidak memerlukan semua ini.
+ * Catatan: page.request (APIRequestContext) tidak melewati route ini → tambahkan accessHeaders() sendiri.
  */
 export async function prepareContext(context: BrowserContext, baseURL: string | undefined) {
   if (!SECRET || !baseURL) return;
   const origin = new URL(baseURL).origin;
-  await context.route(`${origin}/api/**`, (route) => route.continue({ headers: { ...route.request().headers(), 'x-e2e-secret': SECRET } }));
+  await context.route(
+    (url) => url.origin === origin,
+    (route) => {
+      const isApi = new URL(route.request().url()).pathname.startsWith('/api/');
+      return route.continue({ headers: { ...route.request().headers(), ...accessHeaders(), ...(isApi ? { 'x-e2e-secret': SECRET } : {}) } });
+    },
+  );
   await context.route('https://challenges.cloudflare.com/turnstile/**', (route) =>
     route.fulfill({
       contentType: 'application/javascript',

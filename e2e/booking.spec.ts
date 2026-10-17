@@ -1,5 +1,5 @@
 import { expect } from '@playwright/test';
-import { apiBook, completeProfile, expectNoHorizontalScroll, mockLogin, pickDate, prepareContext, test, uniqueEmail } from './helpers';
+import { accessHeaders, apiBook, completeProfile, expectNoHorizontalScroll, mockLogin, pickDate, prepareContext, test, uniqueEmail } from './helpers';
 
 test.describe.configure({ mode: 'serial' });
 
@@ -39,7 +39,7 @@ test('tombol booking tanpa login → masuk → lengkapi profil → kembali ke la
   await expect(page.getByText(/^[A-HJ-NP-Z2-9]{8}$/)).toBeVisible();
   await expect(page.getByRole('link', { name: /Kirim detail ke WhatsApp cabang/ })).toHaveAttribute('href', /^https:\/\/wa\.me\/62\d+\?text=.*Kode/);
   const ics = await page.getByRole('link', { name: /Tambah ke kalender/ }).getAttribute('href');
-  const res = await page.request.get(ics!);
+  const res = await page.request.get(ics!, { headers: accessHeaders() });
   expect(res.headers()['content-type']).toContain('text/calendar');
   expect(await res.text()).toContain('BEGIN:VEVENT');
   await expectNoHorizontalScroll(page);
