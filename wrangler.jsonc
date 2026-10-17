@@ -71,7 +71,10 @@
         "ACCESS_TEAM_DOMAIN": "wild-voice-c787.cloudflareaccess.com",
         "ACCESS_AUD": "a21a214ea539897fff7920c75ae8f733643d9453f0193739862a6b2ae483d506",
         // Site key Turnstile (publik). Secret key → wrangler secret put TURNSTILE_SECRET_KEY --env staging
-        "TURNSTILE_SITE_KEY": "0x4AAAAAAFZESiyCC6DWREp5"
+        "TURNSTILE_SITE_KEY": "0x4AAAAAAFZESiyCC6DWREp5",
+        // Cutless Stamp tersedia di staging; program tetap MATI sampai owner mengaktifkannya di Admin → Pengaturan.
+        // Produksi tidak punya variabel ini → fitur mati.
+        "LOYALTY_ENABLED": "true"
       },
       // Tiap 15 menit: batalkan pending kedaluwarsa, bersihkan sesi. 02.00 WIB: anonimkan akun tidak aktif > 24 bulan.
       "triggers": { "crons": ["*/15 * * * *", "0 19 * * *"] }

@@ -4,6 +4,7 @@
  *  "0 19 * * *"   → (02.00 WIB) anonimkan pelanggan yang tidak aktif > 24 bulan
  */
 import { PENDING_CUTOFF_BEFORE_START_MIN, PENDING_TTL_MIN } from '../shared/booking';
+import { expireLoyalty } from './lib/loyalty';
 import type { Env } from './env';
 import { getBranch } from './lib/availability';
 import { transitionBooking } from './lib/bookings';
@@ -66,6 +67,8 @@ export async function runScheduled(env: Env, cron: string, now = Date.now()): Pr
   if (cron === '0 19 * * *') {
     const n = await anonymizeInactive(env, now);
     console.log(`cron: ${n} akun tidak aktif dianonimkan`);
+    const expired = await expireLoyalty(env, now);
+    if (expired.stamps || expired.vouchers) console.log(`cron: ${expired.stamps} stempel & ${expired.vouchers} voucher hangus`);
     return;
   }
   const n = await expirePendingBookings(env, now);

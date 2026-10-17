@@ -1,5 +1,6 @@
 /** Admin: jadwal booking, aksi status, pindah jadwal, catatan, walk-in, ketersediaan admin. */
 import { adminBookingsQuery, adminNoteBody, adminStatusBody, availabilityQuery, rescheduleBody, walkInBody } from '../../../shared/schemas';
+import { loyaltyEnv, redeemVoucher } from '../../lib/loyalty';
 import { localDayRange } from '../../../shared/time';
 import type { Context } from 'hono';
 import { createRouter, type AppEnv } from '../../app';
@@ -14,7 +15,8 @@ export const adminBookingRoutes = createRouter();
 
 export const ADMIN_BOOKING_SQL = `SELECT b.*, br.name AS branch_name, br.timezone, ba.name AS barber_name,
     c.name AS customer_name, c.phone AS customer_phone, c.email AS customer_email, c.is_guest AS customer_is_guest,
-    c.no_show_count AS customer_no_show
+    c.no_show_count AS customer_no_show,
+    (SELECT code FROM loyalty_vouchers v WHERE v.redeemed_booking_id = b.id) AS voucher_code
   FROM bookings b JOIN branches br ON br.id = b.branch_id JOIN barbers ba ON ba.id = b.barber_id JOIN customers c ON c.id = b.customer_id`;
 
 /** GET /api/admin/bookings?from=&to=&branch=&barber=&status= (tanggal lokal cabang, inklusif) */
@@ -51,7 +53,7 @@ adminBookingRoutes.get('/bookings', async (c) => {
 });
 
 /** Booking dalam cakupan admin (cabang & barber) */
-async function scopedBooking(c: Context<AppEnv>, id: string) {
+export async function scopedBooking(c: Context<AppEnv>, id: string) {
   const admin = c.get('admin')!;
   const b = await getBooking(c.env.DB, id);
   assertBranch(admin, b.branch_id);
@@ -73,6 +75,7 @@ adminBookingRoutes.post('/bookings/:id/status', async (c) => {
     actor: admin.role === 'barber' ? 'barber' : 'admin',
     audit: auditActor(admin),
     reason: input.reason,
+    loyalty: loyaltyEnv(c.env),
   });
   if (input.status === 'cancelled') {
     const branch = await getBranch(c.env.DB, b.branch_id);
@@ -134,7 +137,16 @@ adminBookingRoutes.post('/bookings', async (c) => {
     adminNote: input.note,
     actor: auditActor(admin),
   });
-  return c.json({ booking }, 201);
+  // Cutless Stamp: tukar voucher pelanggan terdaftar. Booking tetap tersimpan bila voucher gagal (pesan dikembalikan).
+  let voucherError: string | undefined;
+  if (input.voucherId && input.customerId && loyaltyEnv(c.env)) {
+    try {
+      await redeemVoucher(c.env.DB, { voucherId: input.voucherId, booking: await getBooking(c.env.DB, booking.id), actor: auditActor(admin) });
+    } catch (e) {
+      voucherError = e instanceof Error ? e.message : 'Voucher tidak bisa ditukar.';
+    }
+  }
+  return c.json({ booking, ...(voucherError ? { voucherError } : {}) }, 201);
 });
 
 /** Ketersediaan versi admin (tanpa lead time, untuk walk-in & pindah jadwal) */

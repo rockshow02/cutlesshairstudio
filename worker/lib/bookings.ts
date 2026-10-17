@@ -14,6 +14,7 @@ import {
   type Actor,
   type BookingStatus,
 } from '../../shared/booking';
+import { completionStatements, releaseVoucherStatements } from './loyalty';
 import { nearestSlots, pickBarber, slotStartsFor, type Slot } from '../../shared/slots';
 import { iso, localDate, MINUTE_MS } from '../../shared/time';
 import { ApiError, badRequest, notFound } from './errors';
@@ -186,6 +187,8 @@ export interface TransitionInput {
   audit: AuditActor;
   reason?: string | null;
   now?: number;
+  /** Cutless Stamp aktif di env (LOYALTY_ENABLED): Selesai → stempel dalam batch yang sama */
+  loyalty?: boolean;
 }
 
 /**
@@ -243,6 +246,12 @@ export async function transitionBooking(db: D1Database, input: TransitionInput):
     );
   }
   statements.push(auditStmt(db, input.audit, `booking.${to}`, 'booking', booking.id, { from: booking.status, reason: input.reason ?? undefined }));
+  // Cutless Stamp. Semua pernyataan bersyarat (status sudah berubah, program aktif) → tanpa efek bila tidak berlaku.
+  if (to === 'cancelled' || to === 'no_show') statements.push(...releaseVoucherStatements(db, booking.id, input.audit, now));
+  if (to === 'completed' && input.loyalty) {
+    const branch = await getBranch(db, booking.branch_id);
+    statements.push(...completionStatements(db, booking, branch.timezone, input.audit, now));
+  }
 
   const results = await db.batch(statements);
   if (!results[0].meta.changes) {

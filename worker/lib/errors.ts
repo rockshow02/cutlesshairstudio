@@ -18,6 +18,7 @@ export type ErrorCode =
   | 'TURNSTILE_FAILED'
   | 'FEATURE_DISABLED'
   | 'EMAIL_NOT_VERIFIED'
+  | 'VOUCHER_UNAVAILABLE'
   | 'INTERNAL';
 
 export class ApiError extends Error {

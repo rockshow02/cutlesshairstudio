@@ -91,6 +91,8 @@ export const walkInBody = z.object({
   guestName: nameField.optional(),
   guestPhone: phoneField.optional(),
   note: z.string().trim().max(1000).optional().nullable(),
+  /** Cutless Stamp: tukar voucher pelanggan terdaftar di booking ini (opsional) */
+  voucherId: z.string().max(64).optional(),
 });
 
 const hhmm = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, 'Format jam HH:MM');
@@ -174,3 +176,27 @@ export const adminUserBody = z.object({
 });
 
 export const resetPasswordBody = z.object({ password: z.string().min(8).max(128) });
+
+/* ---------- Cutless Stamp ---------- */
+
+const serviceIdList = z.array(z.number().int().positive()).max(20);
+
+export const loyaltySettingsBody = z
+  .object({
+    enabled: z.boolean(),
+    tier1_stamps: z.number().int().min(1).max(50),
+    tier1_service_ids: serviceIdList,
+    tier2_stamps: z.number().int().min(2).max(100),
+    tier2_service_ids: serviceIdList.min(1, 'Pilih minimal satu layanan hadiah utama.'),
+    stamp_valid_months: z.number().int().min(1).max(36),
+    voucher_valid_days: z.number().int().min(1).max(365),
+  })
+  .refine((v) => v.tier1_stamps < v.tier2_stamps, { message: 'Target hadiah pertama harus lebih kecil dari hadiah utama.', path: ['tier1_stamps'] });
+
+export const loyaltyAdjustBody = z.object({
+  delta: z.union([z.literal(1), z.literal(-1)]),
+  reason: z.string().trim().min(3, 'Alasan wajib diisi.').max(300),
+});
+
+export const voucherRedeemBody = z.object({ voucherId: z.string().min(1).max(64) });
+export const loyaltyMergeBody = z.object({ guestId: z.string().min(1).max(64) });
