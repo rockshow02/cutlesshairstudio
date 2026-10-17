@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { api } from '@/app/api';
 import { dateChip } from '@/app/format';
 import type { Slot } from '@shared/slots';
+import { Alert, EmptyState, Skeleton } from '@/components/ui/Feedback';
 import styles from './booking.module.css';
 
 interface SlotPickerProps {
@@ -61,17 +62,18 @@ export function SlotPicker({ branch, service, barber, dates, date, onDate, selec
           );
         })}
       </ul>
-      {state.error && (
-        <p className={styles.alert} data-tone="error" role="alert">
-          {state.error}
-        </p>
-      )}
+      {state.error && <Alert tone="danger">{state.error}</Alert>}
       {state.loading ? (
-        <p className={styles.muted} role="status">
-          Memuat jam tersedia…
-        </p>
-      ) : state.slots.length === 0 ? (
-        <p className={styles.empty}>{emptyHint ?? 'Tidak ada jam tersedia di tanggal ini. Coba tanggal lain.'}</p>
+        <div className={styles.slotSkeleton} role="status">
+          <span className="visually-hidden">Memuat jam tersedia…</span>
+          {Array.from({ length: 9 }, (_, i) => (
+            <Skeleton key={i} height={44} radius="var(--radius-lg)" />
+          ))}
+        </div>
+      ) : state.error ? null : state.slots.length === 0 ? (
+        <EmptyState icon="clock" title="Tidak ada jam tersedia">
+          {emptyHint ?? 'Tidak ada jam tersedia di tanggal ini. Coba tanggal lain.'}
+        </EmptyState>
       ) : (
         groups
           .filter(([, list]) => list.length > 0)

@@ -4,6 +4,12 @@ import { clock, formatPhone, longDate, rupiah, tzLabel } from '@/app/format';
 import { asset } from '@/lib/asset';
 import type { Slot } from '@shared/slots';
 import { Button } from '@/components/ui/Button';
+import { Card } from '@/components/ui/Card';
+import { Badge } from '@/components/ui/Badge';
+import { Field, Textarea } from '@/components/ui/Field';
+import { Alert, EmptyState } from '@/components/ui/Feedback';
+import { Icon } from '@/components/ui/Icon';
+import type { IconName } from '@/types';
 import { Page, Loading } from '../Page';
 import { SlotPicker } from '../SlotPicker';
 import { Turnstile } from '../Turnstile';
@@ -11,7 +17,11 @@ import { completeProfileUrl, loginUrl, useAuthConfig, useMe, type Me } from '../
 import type { BookingBarber, BookingBranch, BookingService, CustomerBooking } from '../types';
 import styles from '../booking.module.css';
 
-const STEPS = ['Cabang', 'Layanan', 'Hairstylist', 'Jadwal', 'Konfirmasi'];
+const STEPS = ['Cabang', 'Layanan', 'Hairstylist', 'Waktu', 'Konfirmasi'];
+
+/** Ikon kategori layanan (sama dengan kartu layanan di landing page) */
+const CATEGORY_ICON: Record<string, IconName> = { haircut: 'scissors', kids: 'kids', shaving: 'shave', coloring: 'color', treatment: 'spa', paket: 'tag' };
+const categoryIcon = (category: string): IconName => CATEGORY_ICON[category.toLowerCase()] ?? 'scissors';
 
 /**
  * /booking: 1 cabang → 2 layanan → 3 hairstylist / Siapa saja → 4 tanggal & jam → 5 konfirmasi.
@@ -123,43 +133,30 @@ function WizardSteps({ me }: { me: Me }) {
     <Page id="booking" kicker="Booking online" title={STEPS[step] === 'Konfirmasi' ? 'Konfirmasi booking' : 'Booking jadwal'}>
       <ol className={styles.steps} aria-label="Langkah booking">
         {STEPS.map((label, i) => (
-          <li key={label} data-state={i < step ? 'done' : i === step ? 'current' : 'todo'} aria-current={i === step ? 'step' : undefined}>
-            {i + 1}. {label}
+          <li key={label} className={styles.step} data-state={i < step ? 'done' : i === step ? 'current' : 'todo'} aria-current={i === step ? 'step' : undefined}>
+            <span className={styles.stepLabel}>
+              {i + 1}. {label}
+            </span>
           </li>
         ))}
       </ol>
+      <p className={styles.stepNow} aria-hidden="true">
+        Langkah {step + 1} dari {STEPS.length} · <strong>{STEPS[step]}</strong>
+      </p>
 
       {/* Pilihan sebelumnya: klik untuk mengubah */}
       {step > 0 && (
         <div className={styles.picked}>
           {branch && (
-            <button type="button" className={styles.pickedItem} onClick={() => { setSlot(null); update({ cabang: undefined, layanan: undefined, barber: undefined, tanggal: undefined }); }}>
-              {branch.name} <span>ubah</span>
-            </button>
+            <Picked label="Cabang" value={branch.name} onClick={() => { setSlot(null); update({ cabang: undefined, layanan: undefined, barber: undefined, tanggal: undefined }); }} />
           )}
-          {service && (
-            <button type="button" className={styles.pickedItem} onClick={() => { setSlot(null); update({ layanan: undefined, barber: undefined }); }}>
-              {service.name} <span>ubah</span>
-            </button>
-          )}
-          {barberChoice && (
-            <button type="button" className={styles.pickedItem} onClick={() => { setSlot(null); update({ barber: undefined }); }}>
-              {barberChoice === 'any' ? 'Siapa saja' : barberChoice.name} <span>ubah</span>
-            </button>
-          )}
-          {slot && branch && (
-            <button type="button" className={styles.pickedItem} onClick={() => setSlot(null)}>
-              {longDate(slot.startAt, branch.timezone)} · {clock(slot.startAt, branch.timezone)} <span>ubah</span>
-            </button>
-          )}
+          {service && <Picked label="Layanan" value={service.name} onClick={() => { setSlot(null); update({ layanan: undefined, barber: undefined }); }} />}
+          {barberChoice && <Picked label="Hairstylist" value={barberChoice === 'any' ? 'Siapa saja' : barberChoice.name} onClick={() => { setSlot(null); update({ barber: undefined }); }} />}
+          {slot && branch && <Picked label="Waktu" value={`${longDate(slot.startAt, branch.timezone)} · ${clock(slot.startAt, branch.timezone)} ${tzLabel(branch.timezone)}`} onClick={() => setSlot(null)} />}
         </div>
       )}
 
-      {error && (
-        <p className={styles.alert} data-tone="error" role="alert">
-          {error}
-        </p>
-      )}
+      {error && <Alert tone="danger">{error}</Alert>}
 
       {step === 0 && <BranchStep branches={branches} onPick={(b) => update({ cabang: b.slug })} />}
       {step === 1 && (
@@ -203,6 +200,18 @@ function WizardSteps({ me }: { me: Me }) {
   );
 }
 
+function Picked({ label, value, onClick }: { label: string; value: string; onClick: () => void }) {
+  return (
+    <button type="button" className={styles.pickedItem} onClick={onClick} aria-label={`Ubah ${label.toLowerCase()}: ${value}`}>
+      <span className={styles.pickedLabel}>{label}</span>
+      <span className={styles.pickedValue}>{value}</span>
+      <span className={styles.pickedEdit} aria-hidden="true">
+        Ubah
+      </span>
+    </button>
+  );
+}
+
 function BranchStep({ branches, onPick }: { branches: BookingBranch[] | null; onPick: (b: BookingBranch) => void }) {
   if (!branches) return <Loading />;
   return (
@@ -212,18 +221,14 @@ function BranchStep({ branches, onPick }: { branches: BookingBranch[] | null; on
         {branches.map((b) => (
           <li key={b.slug}>
             <button type="button" className={styles.option} disabled={!b.bookable} onClick={() => onPick(b)}>
-              <span className={styles.avatarAny} aria-hidden="true">
-                {b.city.charAt(0)}
+              <span className={styles.optionIcon} aria-hidden="true">
+                <Icon name="pin" size={20} />
               </span>
               <span className={styles.optionMain}>
                 <span className={styles.optionTitle}>{b.name}</span>
                 <span className={styles.optionMeta}>{b.address ?? b.city}</span>
               </span>
-              {!b.bookable && (
-                <span className={styles.badge} data-tone="warn">
-                  {b.status === 'coming_soon' ? 'Segera dibuka' : 'Belum bisa booking'}
-                </span>
-              )}
+              {!b.bookable && <Badge tone="warning">{b.status === 'coming_soon' ? 'Segera dibuka' : 'Belum bisa booking'}</Badge>}
             </button>
           </li>
         ))}
@@ -237,7 +242,7 @@ function ServiceStep({ services, category, onPick }: { services: BookingService[
   const [showAll, setShowAll] = useState(false);
   const onlyCategory = Boolean(category) && !showAll;
   if (!services) return <Loading />;
-  if (services.length === 0) return <p className={styles.empty}>Belum ada layanan yang bisa dibooking di cabang ini.</p>;
+  if (services.length === 0) return <EmptyState icon="scissors" title="Belum ada layanan yang bisa dibooking di cabang ini." />;
   const list = onlyCategory && category ? services.filter((s) => s.category === category) : services;
   const categories = [...new Set(list.map((s) => s.category))];
   return (
@@ -246,7 +251,7 @@ function ServiceStep({ services, category, onPick }: { services: BookingService[
       {onlyCategory && category && (
         <p className={styles.hint}>
           Menampilkan kategori {category}.{' '}
-          <button type="button" className={styles.textBtn} onClick={() => setShowAll(true)}>
+          <button type="button" className={styles.inlineBtn} onClick={() => setShowAll(true)}>
             Tampilkan semua layanan
           </button>
         </p>
@@ -260,7 +265,9 @@ function ServiceStep({ services, category, onPick }: { services: BookingService[
               .map((s) => (
                 <li key={s.id}>
                   <button type="button" className={styles.option} onClick={() => onPick(s)}>
-                    <span aria-hidden="true" />
+                    <span className={styles.optionIcon} aria-hidden="true">
+                      <Icon name={categoryIcon(s.category)} size={20} />
+                    </span>
                     <span className={styles.optionMain}>
                       <span className={styles.optionTitle}>{s.name}</span>
                       <span className={styles.optionMeta}>{s.description ?? `${s.duration_min} menit`}</span>
@@ -289,7 +296,7 @@ function BarberStep({ barbers, onPick }: { barbers: BookingBarber[] | null; onPi
         <li>
           <button type="button" className={styles.option} onClick={() => onPick('any')}>
             <span className={styles.avatarAny} aria-hidden="true">
-              ★
+              <Icon name="user" size={20} />
             </span>
             <span className={styles.optionMain}>
               <span className={styles.optionTitle}>Siapa saja</span>
@@ -300,7 +307,7 @@ function BarberStep({ barbers, onPick }: { barbers: BookingBarber[] | null; onPi
         {barbers.map((b) => (
           <li key={b.id}>
             <button type="button" className={styles.option} onClick={() => onPick(b)}>
-              {b.photo ? <img className={styles.avatar} src={asset(b.photo)} alt="" width={48} height={48} loading="lazy" /> : <span className={styles.avatarAny}>{b.name.charAt(0)}</span>}
+              {b.photo ? <img className={styles.avatar} src={asset(b.photo)} alt="" width={48} height={48} loading="lazy" /> : <span className={styles.avatarAny} aria-hidden="true">{b.name.charAt(0)}</span>}
               <span className={styles.optionMain}>
                 <span className={styles.optionTitle}>{b.name}</span>
                 <span className={styles.optionMeta}>{[b.role, b.specialty].filter(Boolean).join(' · ') || 'Hairstylist'}</span>
@@ -355,28 +362,24 @@ function Confirm({
 
   return (
     <form onSubmit={submit}>
-      <div className={styles.summary}>
-        <dl>
-          <div><dt>Cabang</dt><dd>{branch.name}</dd></div>
-          <div><dt>Layanan</dt><dd>{service.name} (±{service.duration_min} menit)</dd></div>
-          <div><dt>Harga</dt><dd>{service.price_from ? 'mulai ' : ''}{rupiah(service.price)} <span className={styles.muted}>(bayar di cabang)</span></dd></div>
-          <div><dt>Hairstylist</dt><dd>{barber === 'any' ? 'Siapa saja (dipilihkan otomatis)' : barber.name}</dd></div>
-          <div><dt>Jadwal</dt><dd>{longDate(slot.startAt, branch.timezone)}, {clock(slot.startAt, branch.timezone)} {tzLabel(branch.timezone)}</dd></div>
+      <Card tone="outline" as="div">
+        <dl className={styles.dl}>
+          {/* Cabang, layanan, hairstylist & waktu sudah tampil di ringkasan pilihan di atas (bisa diubah) */}
+          <div><dt>Durasi</dt><dd>±{service.duration_min} menit{barber === 'any' ? <small> · hairstylist dipilihkan otomatis</small> : null}</dd></div>
+          <div><dt>Harga</dt><dd>{service.price_from ? 'mulai ' : ''}{rupiah(service.price)} <small>(bayar di cabang)</small></dd></div>
           <div><dt>Nama</dt><dd>{me.name}</dd></div>
           <div><dt>WhatsApp</dt><dd>{me.phone ? formatPhone(me.phone) : '-'} <a className={styles.link} href={`/profil`}>ubah</a></dd></div>
         </dl>
-      </div>
+      </Card>
+      <div className={styles.gap} />
       {branch.require_manual_confirmation && (
-        <p className={styles.alert} data-tone="warn">
-          Cabang ini mengonfirmasi booking secara manual. Status awal "Menunggu konfirmasi"; pantau di halaman Booking saya.
-        </p>
+        <Alert tone="warning">Cabang ini mengonfirmasi booking secara manual. Status awal "Menunggu konfirmasi"; pantau di halaman Booking saya.</Alert>
       )}
-      <div className={styles.field}>
-        <label htmlFor="b-note">Catatan untuk hairstylist (opsional)</label>
-        <textarea id="b-note" maxLength={300} value={note} onChange={(e) => setNote(e.target.value)} placeholder="Mis. ingin model mid fade, rambut tebal" />
-      </div>
+      <Field label="Catatan untuk hairstylist (opsional)">
+        <Textarea id="b-note" maxLength={300} value={note} onChange={(e) => setNote(e.target.value)} placeholder="Mis. ingin model mid fade, rambut tebal" />
+      </Field>
       {error && (
-        <div className={styles.alert} data-tone="error" role="alert">
+        <Alert tone="danger">
           <p>{error.message}</p>
           {error.alternatives && error.alternatives.length > 0 && (
             <>
@@ -392,15 +395,25 @@ function Confirm({
               </ul>
             </>
           )}
-        </div>
+        </Alert>
       )}
       <Turnstile siteKey={config?.turnstileSiteKey ?? null} onToken={setToken} resetKey={resetKey} />
-      <Button type="submit" variant="dark" block size="lg" icon="check" disabled={busy || !config || (Boolean(config.turnstileSiteKey) && !token)}>
-        {busy ? 'Memproses…' : 'Konfirmasi booking'}
-      </Button>
-      <p className={`${styles.hint} ${styles.center}`} style={{ marginTop: 12 }}>
+      <p className={`${styles.hint} ${styles.center}`}>
         Batal atau jadwal ulang online paling lambat {Math.round(branch.cancel_deadline_min / 60)} jam sebelum jadwal.
       </p>
+      {/* HP: total & tombol menempel di bawah layar */}
+      <div className={styles.stickyBar}>
+        <p className={styles.stickyTotal} aria-hidden="true">
+          <span>{service.name}</span>
+          <strong>
+            {service.price_from ? 'mulai ' : ''}
+            {rupiah(service.price)}
+          </strong>
+        </p>
+        <Button type="submit" variant="dark" block size="lg" icon="check" disabled={busy || !config || (Boolean(config.turnstileSiteKey) && !token)}>
+          {busy ? 'Memproses…' : 'Konfirmasi booking'}
+        </Button>
+      </div>
     </form>
   );
 }
