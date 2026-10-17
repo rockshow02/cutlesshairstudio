@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react';
+import { useFabZone } from '@/lib/fabZones';
 import { api, ApiClientError, errorMessage } from '@/app/api';
 import { clock, formatPhone, longDate, rupiah, tzLabel } from '@/app/format';
 import { asset } from '@/lib/asset';
@@ -341,6 +342,8 @@ function Confirm({
   const [resetKey, setResetKey] = useState(0);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<{ message: string; alternatives?: Slot[] } | null>(null);
+  // Tombol WhatsApp melayang tidak boleh menimpa bar konfirmasi yang menempel di bawah layar
+  const fabZone = useFabZone<HTMLDivElement>(0);
 
   const submit = async (e: FormEvent) => {
     e.preventDefault();
@@ -402,7 +405,7 @@ function Confirm({
         Batal atau jadwal ulang online paling lambat {Math.round(branch.cancel_deadline_min / 60)} jam sebelum jadwal.
       </p>
       {/* HP: total & tombol menempel di bawah layar */}
-      <div className={styles.stickyBar}>
+      <div className={styles.stickyBar} ref={fabZone}>
         <p className={styles.stickyTotal} aria-hidden="true">
           <span>{service.name}</span>
           <strong>

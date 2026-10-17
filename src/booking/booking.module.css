@@ -1,8 +1,12 @@
 /* Halaman booking & akun pelanggan: mobile-first, warna & ukuran HANYA dari tokens.css.
    Komponen umum (Card, Field, Badge, Alert, EmptyState, Skeleton) ada di components/ui. */
 
-.page {
-  padding-top: calc(var(--header-offset) + var(--space-6));
+/* Jarak navbar → judul sama di semua halaman booking (token yang sama dengan jarak judul section di landing);
+   ruang bawah minimal setinggi area tombol WhatsApp melayang.
+   section.page (bukan .page) agar tidak kalah oleh padding-block .section milik Section di CSS gabungan. */
+section.page {
+  padding-top: calc(var(--header-offset) + var(--section-head-gap));
+  padding-bottom: max(var(--section-y), var(--fab-safe));
   min-height: 70vh;
 }
 .narrow {
@@ -49,6 +53,17 @@ form + .section { margin-top: var(--space-7); }
 .actions > * { flex: 1 1 13rem; }
 .actionsTight { display: flex; flex-wrap: wrap; gap: var(--space-2); }
 .actions + .actionsTight { margin-top: var(--space-3); }
+/* Aksi sekunder dengan lebar sama: 1 kolom di HP sempit, 2 kolom mulai 480 px */
+.actionsGrid {
+  display: grid;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+}
+@media (min-width: 480px) {
+  .actionsGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+.actionsGrid > :only-child { grid-column: 1 / -1; }
+.textAction { display: flex; justify-content: center; margin-top: var(--space-2); }
 /* Jarak antar-kartu berurutan */
 .gap { height: var(--space-5); }
 
@@ -313,6 +328,7 @@ form + .section { margin-top: var(--space-7); }
   margin-bottom: var(--space-2);
 }
 .bookingWhen { font-weight: 800; font-size: var(--fs-md); font-variant-numeric: tabular-nums; }
+.nowrap { white-space: nowrap; }
 .bookingInfo { font-size: var(--fs-sm); color: var(--c-ink-dim); }
 .bookingInfo strong { color: var(--c-ink); font-weight: 700; }
 .bookingCode { font-weight: 700; color: var(--c-ink); letter-spacing: 0.06em; }
@@ -323,6 +339,16 @@ form + .section { margin-top: var(--space-7); }
   gap: var(--space-2);
   margin-top: var(--space-4);
 }
+/* Dua aksi utama kartu: lebar sama dalam satu baris; tautan teks di bawahnya */
+.cardActionsPair {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-2);
+  margin-top: var(--space-4);
+}
+.cardActionsPair > a,
+.cardActionsPair > button { padding-inline: var(--space-2); white-space: nowrap; }
+.cardLink { margin-top: var(--space-2); }
 .inlinePanel {
   margin-top: var(--space-4);
   padding-top: var(--space-4);

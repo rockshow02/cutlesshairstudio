@@ -124,7 +124,10 @@ function Head({ booking: b }: { booking: CustomerBooking }) {
   return (
     <div className={styles.bookingHead}>
       <span className={styles.bookingWhen}>
-        {longDate(b.startAt, b.timezone)} · {clock(b.startAt, b.timezone)} {tzLabel(b.timezone)}
+        {longDate(b.startAt, b.timezone)} ·{' '}
+        <span className={styles.nowrap}>
+          {clock(b.startAt, b.timezone)} {tzLabel(b.timezone)}
+        </span>
       </span>
       <StatusBadge status={b.status} label={b.statusLabel} />
     </div>
@@ -190,17 +193,21 @@ function ActiveCard({ booking: b, branch, onChanged }: { booking: CustomerBookin
       )}
       {b.canManage ? (
         mode === 'idle' && (
-          <div className={styles.cardActions}>
-            <Button variant="outline-dark" size="sm" icon="calendar" onClick={() => setMode('reschedule')} disabled={busy}>
-              Jadwal ulang
-            </Button>
-            <Button variant="outline-danger" size="sm" onClick={cancel} disabled={busy}>
-              {busy ? 'Membatalkan…' : 'Batalkan'}
-            </Button>
-            <Button href={`/api/bookings/${b.id}/ics`} variant="text" size="sm" icon="clock">
-              Kalender
-            </Button>
-          </div>
+          <>
+            <div className={styles.cardActionsPair}>
+              <Button variant="outline-dark" size="sm" onClick={() => setMode('reschedule')} disabled={busy} block>
+                Jadwal ulang
+              </Button>
+              <Button variant="outline-danger" size="sm" onClick={cancel} disabled={busy} block>
+                {busy ? 'Membatalkan…' : 'Batalkan'}
+              </Button>
+            </div>
+            <div className={styles.cardLink}>
+              <Button href={`/api/bookings/${b.id}/ics`} variant="text" size="sm" icon="calendar">
+                Kalender
+              </Button>
+            </div>
+          </>
         )
       ) : (
         <div className={styles.inlinePanel}>

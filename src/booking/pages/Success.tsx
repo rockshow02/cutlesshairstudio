@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useFabZone } from '@/lib/fabZones';
 import { api, errorMessage } from '@/app/api';
 import { clock, longDate, rupiah, tzLabel, waLink } from '@/app/format';
 import { Button } from '@/components/ui/Button';
@@ -24,6 +25,8 @@ export function Success() {
   const id = new URLSearchParams(window.location.search).get('id') ?? '';
   const [booking, setBooking] = useState<CustomerBooking | null>(null);
   const [error, setError] = useState('');
+  // Halaman ini sudah punya tombol WhatsApp utama → tombol WhatsApp melayang disembunyikan
+  const fabZone = useFabZone<HTMLDivElement>(0);
 
   useEffect(() => {
     api<{ booking: CustomerBooking }>(`/bookings/${encodeURIComponent(id)}`)
@@ -55,6 +58,7 @@ export function Success() {
   const pending = booking.status === 'pending';
   return (
     <Page id="sukses" kicker={pending ? 'Menunggu konfirmasi' : 'Booking terkonfirmasi'} title={pending ? 'Booking diterima' : 'Booking berhasil!'}>
+      <div ref={fabZone}>
       <Card tone="outline" as="div" padding="lg">
         <div className={styles.codeCard}>
           <span className={styles.codeLabel}>Kode booking</span>
@@ -107,21 +111,24 @@ export function Success() {
 
       <div className={styles.actions}>
         <Button href={whatsappDetail(booking)} external variant="whatsapp" icon="whatsapp" block>
-          Kirim detail ke WhatsApp cabang
+          Kirim ke WhatsApp
         </Button>
       </div>
-      <div className={styles.actionsTight}>
-        <Button href={`/api/bookings/${booking.id}/ics`} variant="outline-dark" icon="calendar" size="sm">
-          Tambah ke kalender (.ics)
+      <div className={styles.actionsGrid}>
+        <Button href={`/api/bookings/${booking.id}/ics`} variant="outline-dark" icon="calendar" size="sm" block>
+          Tambah ke kalender
         </Button>
         {booking.branch.mapsUrl && (
-          <Button href={booking.branch.mapsUrl} external variant="outline-dark" icon="navigate" size="sm">
+          <Button href={booking.branch.mapsUrl} external variant="outline-dark" icon="navigate" size="sm" block>
             Petunjuk arah
           </Button>
         )}
+      </div>
+      <div className={styles.textAction}>
         <Button href="/booking/saya" variant="text" iconEnd="arrow" size="sm">
           Booking saya
         </Button>
+      </div>
       </div>
     </Page>
   );
