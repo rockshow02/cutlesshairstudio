@@ -1,5 +1,6 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { api, ApiClientError, errorMessage } from '@/app/api';
+import { usePaged } from '@/app/usePaged';
 import { clock, longDate, rupiah, tzLabel, waLink } from '@/app/format';
 import { localDate } from '@shared/time';
 import type { Slot } from '@shared/slots';
@@ -7,6 +8,7 @@ import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { StatusBadge } from '@/components/ui/Badge';
 import { Alert, EmptyState } from '@/components/ui/Feedback';
+import { LoadMore } from '@/components/ui/LoadMore';
 import { useConfirm } from '@/components/ui/useConfirm';
 import { useToast } from '@/components/ui/toastContext';
 import { Page, Loading } from '../Page';
@@ -17,25 +19,35 @@ import type { BookingBranch, CustomerBooking } from '../types';
 import styles from '../booking.module.css';
 
 /** /booking/saya: booking aktif (batal / jadwal ulang sampai batas waktu) & riwayat */
+type MyBookingsPage = { active: CustomerBooking[]; history: CustomerBooking[]; nextCursor: string | null; historyTotal?: number };
+
 export function MyBookings() {
-  const [data, setData] = useState<{ active: CustomerBooking[]; history: CustomerBooking[] } | null>(null);
+  const [active, setActive] = useState<CustomerBooking[] | null>(null);
   const [branches, setBranches] = useState<BookingBranch[]>([]);
   const [error, setError] = useState('');
   const toast = useToast();
 
-  const load = useCallback(() => {
-    api<{ active: CustomerBooking[]; history: CustomerBooking[] }>('/me/bookings')
-      .then(setData)
-      .catch((e) => {
-        if (e instanceof ApiClientError && e.status === 401) window.location.replace(loginUrl());
-        else setError(errorMessage(e));
-      });
+  // Halaman pertama: booking aktif (lengkap) + 20 riwayat terbaru; berikutnya hanya riwayat
+  const history = usePaged<CustomerBooking>(async (cursor) => {
+    try {
+      const r = await api<MyBookingsPage>(`/me/bookings${cursor ? `?cursor=${encodeURIComponent(cursor)}` : ''}`);
+      if (!cursor) setActive(r.active);
+      return { items: r.history, nextCursor: r.nextCursor, total: r.historyTotal };
+    } catch (e) {
+      if (e instanceof ApiClientError && e.status === 401) window.location.replace(loginUrl());
+      else if (!cursor) {
+        // Halaman pertama gagal: tampilkan pesan di atas, daftar kosong (tidak tertahan di skeleton)
+        setError(errorMessage(e));
+        setActive([]);
+      }
+      throw e;
+    }
   }, []);
+  const load = history.reload;
 
   useEffect(() => {
-    load();
     api<{ branches: BookingBranch[] }>('/booking/branches').then((r) => setBranches(r.branches)).catch(() => undefined);
-  }, [load]);
+  }, []);
 
   return (
     <Page
@@ -54,7 +66,7 @@ export function MyBookings() {
       }
     >
       {error && <Alert tone="danger">{error}</Alert>}
-      {!data ? (
+      {!active || !history.items ? (
         <Loading count={2} label="Memuat booking…" />
       ) : (
         <>
@@ -62,7 +74,7 @@ export function MyBookings() {
             <h2 id="aktif-title" className={styles.h2}>
               Aktif
             </h2>
-            {data.active.length === 0 ? (
+            {active.length === 0 ? (
               <EmptyState
                 icon="calendar"
                 title="Belum ada booking aktif"
@@ -76,7 +88,7 @@ export function MyBookings() {
               </EmptyState>
             ) : (
               <ul className={styles.list}>
-                {data.active.map((b) => (
+                {active.map((b) => (
                   <li key={b.id}>
                     <ActiveCard
                       booking={b}
@@ -95,11 +107,12 @@ export function MyBookings() {
             <h2 id="riwayat-title" className={styles.h2}>
               Riwayat
             </h2>
-            {data.history.length === 0 ? (
+            {history.items.length === 0 ? (
               <EmptyState icon="clock" title="Belum ada riwayat" compact />
             ) : (
+              <>
               <ul className={styles.list}>
-                {data.history.map((b) => (
+                {history.items.map((b) => (
                   <li key={b.id}>
                     <Card tone="outline" padding="sm" className={styles.historyCard}>
                       <Head booking={b} />
@@ -111,7 +124,19 @@ export function MyBookings() {
                   </li>
                 ))}
               </ul>
+              <LoadMore
+                shown={history.items.length}
+                total={history.total}
+                hasMore={history.hasMore}
+                loading={history.loadingMore}
+                onLoad={history.loadMore}
+                noun="riwayat"
+                casing="upper"
+                skeletonHeight={72}
+              />
+              </>
             )}
+            {history.error && !error && <Alert tone="danger">{history.error}</Alert>}
           </section>
         </>
       )}

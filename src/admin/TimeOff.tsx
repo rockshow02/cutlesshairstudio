@@ -1,5 +1,6 @@
-import { useCallback, useEffect, useState, type FormEvent } from 'react';
+import { useState, type FormEvent } from 'react';
 import { api, errorMessage } from '@/app/api';
+import { usePaged } from '@/app/usePaged';
 import { clock, longDate } from '@/app/format';
 import { toMinutes, zonedToUtc } from '@shared/time';
 import { Badge } from '@/components/ui/Badge';
@@ -7,6 +8,7 @@ import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { Alert, EmptyState, SkeletonList } from '@/components/ui/Feedback';
 import { Field, FieldGrid, Input, Select } from '@/components/ui/Field';
+import { LoadMore } from '@/components/ui/LoadMore';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { SegmentedControl } from '@/components/ui/SegmentedControl';
 import type { Tone } from '@/components/ui/status';
@@ -41,7 +43,6 @@ export function TimeOff() {
   const me = useAdmin();
   const toast = useToast();
   const isBarber = me.admin.role === 'barber';
-  const [rows, setRows] = useState<TimeOffRow[] | null>(null);
   const [error, setError] = useState('');
   const [kind, setKind] = useState<'barber' | 'branch'>('barber');
   const [branchId, setBranchId] = useState<number>(me.admin.branch_id ?? me.branches[0]?.id);
@@ -54,10 +55,12 @@ export function TimeOff() {
   const [note, setNote] = useState('');
   const [dialog, confirm] = useConfirm();
 
-  const load = useCallback(() => {
-    api<{ timeOff: TimeOffRow[] }>('/admin/time-off').then((r) => setRows(r.timeOff)).catch((e) => setError(errorMessage(e)));
+  const list = usePaged<TimeOffRow>(async (cursor) => {
+    const r = await api<{ timeOff: TimeOffRow[]; nextCursor: string | null; total?: number }>(`/admin/time-off${cursor ? `?cursor=${encodeURIComponent(cursor)}` : ''}`);
+    return { items: r.timeOff, nextCursor: r.nextCursor, total: r.total };
   }, []);
-  useEffect(load, [load]);
+  const load = list.reload;
+  const rows = list.items;
 
   const tz = me.branches.find((b) => b.id === branchId)?.timezone ?? 'Asia/Jakarta';
 
@@ -194,6 +197,7 @@ export function TimeOff() {
       </Card>
 
       <h2 className={styles.h2}>Mendatang & 30 hari terakhir</h2>
+      {list.error && <Alert tone="danger">{list.error}</Alert>}
       {!rows ? (
         <SkeletonList label="Memuat…" count={2} height={56} />
       ) : rows.length === 0 ? (
@@ -260,6 +264,7 @@ export function TimeOff() {
           </table>
         </div>
       )}
+      {rows && rows.length > 0 && <LoadMore shown={rows.length} total={list.total} hasMore={list.hasMore} loading={list.loadingMore} onLoad={list.loadMore} noun="libur/cuti" />}
       {dialog}
     </section>
   );

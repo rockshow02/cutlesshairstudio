@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import { api, errorMessage } from '@/app/api';
+import { usePaged } from '@/app/usePaged';
 import { clock, formatPhone, longDate, waLink } from '@/app/format';
 import { MAX_NO_SHOW } from '@shared/booking';
 import { Badge, StatusBadge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Alert, EmptyState, SkeletonList } from '@/components/ui/Feedback';
 import { Field, Input } from '@/components/ui/Field';
+import { LoadMore } from '@/components/ui/LoadMore';
 import { Sheet } from '@/components/ui/Overlay';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { useConfirm } from '@/components/ui/useConfirm';
@@ -27,36 +29,57 @@ interface CustomerRow {
   has_password?: number;
 }
 
+interface CustomerDetail {
+  customer: CustomerRow;
+  bookings: AdminBooking[];
+  bookingsNextCursor?: string | null;
+  bookingsTotal?: number;
+}
+
 /** Pelanggan: cari, riwayat & jumlah no-show, blokir/buka blokir, reset password (bila fitur aktif) */
 export function Customers() {
   const me = useAdmin();
   const toast = useToast();
   const [q, setQ] = useState('');
-  const [list, setList] = useState<CustomerRow[] | null>(null);
-  const [searching, setSearching] = useState(false);
-  const [detail, setDetail] = useState<{ customer: CustomerRow; bookings: AdminBooking[] } | null>(null);
-  const [error, setError] = useState('');
+  // Kata kunci yang sudah dicari (null = belum mencari)
+  const [submitted, setSubmitted] = useState<string | null>(null);
+  const [detail, setDetail] = useState<CustomerDetail | null>(null);
+  const [moreBusy, setMoreBusy] = useState(false);
   const [sheetMsg, setSheetMsg] = useState<{ tone: 'success' | 'danger'; text: string } | null>(null);
   const [dialog, confirm] = useConfirm();
 
-  const search = async () => {
-    setError('');
-    setSearching(true);
-    try {
-      const r = await api<{ customers: CustomerRow[] }>(`/admin/customers?q=${encodeURIComponent(q.trim())}`);
-      setList(r.customers);
-    } catch (e) {
-      setError(errorMessage(e));
-    } finally {
-      setSearching(false);
-    }
-  };
+  const list = usePaged<CustomerRow>(
+    async (cursor) => {
+      const params = new URLSearchParams({ q: submitted ?? '' });
+      if (cursor) params.set('cursor', cursor);
+      const r = await api<{ customers: CustomerRow[]; nextCursor: string | null; total?: number }>(`/admin/customers?${params}`);
+      return { items: r.customers, nextCursor: r.nextCursor, total: r.total };
+    },
+    [submitted],
+    submitted !== null,
+  );
+  const search = () => (submitted === q.trim() ? list.reload() : setSubmitted(q.trim()));
+
   const open = async (id: string) => {
     try {
       setDetail(await api(`/admin/customers/${id}`));
       setSheetMsg(null);
     } catch (e) {
       toast(errorMessage(e), 'danger');
+    }
+  };
+  const moreBookings = async () => {
+    if (!detail?.bookingsNextCursor) return;
+    setMoreBusy(true);
+    try {
+      const r = await api<{ bookings: AdminBooking[]; nextCursor: string | null }>(
+        `/admin/customers/${detail.customer.id}/bookings?cursor=${encodeURIComponent(detail.bookingsNextCursor)}`,
+      );
+      setDetail((d) => d && { ...d, bookings: [...d.bookings, ...r.bookings], bookingsNextCursor: r.nextCursor });
+    } catch (e) {
+      setSheetMsg({ tone: 'danger', text: errorMessage(e) });
+    } finally {
+      setMoreBusy(false);
     }
   };
   const act = async (action: 'block' | 'unblock') => {
@@ -74,7 +97,7 @@ export function Customers() {
       await api(`/admin/customers/${detail.customer.id}/${action}`, { method: 'POST' });
       setSheetMsg({ tone: 'success', text: action === 'block' ? 'Akun diblokir.' : 'Blokir dibuka & hitungan tidak datang direset.' });
       void open(detail.customer.id);
-      if (list) void search();
+      if (list.items) list.reload();
     } catch (e) {
       setSheetMsg({ tone: 'danger', text: errorMessage(e) });
     }
@@ -115,19 +138,19 @@ export function Customers() {
         <Field label="Nama / nomor WhatsApp / email" flush>
           <Input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="mis. Budi atau 0812…" />
         </Field>
-        <Button type="submit" variant="dark" casing="normal" icon="search" disabled={searching}>
+        <Button type="submit" variant="dark" casing="normal" icon="search" disabled={submitted !== null && !list.items}>
           Cari
         </Button>
       </form>
-      {error && <Alert tone="danger">{error}</Alert>}
+      {list.error && <Alert tone="danger">{list.error}</Alert>}
 
-      {searching && !list ? (
-        <SkeletonList label="Mencari pelanggan…" count={3} height={56} />
-      ) : list === null ? (
-        <EmptyState icon="search" title="Cari pelanggan" action={<Button variant="outline-dark" casing="normal" size="sm" onClick={search}>Tampilkan pelanggan terbaru</Button>}>
+      {submitted === null ? (
+        <EmptyState icon="search" title="Cari pelanggan" action={<Button variant="outline-dark" casing="normal" size="sm" onClick={() => setSubmitted('')}>Tampilkan pelanggan terbaru</Button>}>
           Ketik nama atau nomor lalu tekan Cari. Kosongkan untuk melihat pelanggan terbaru.
         </EmptyState>
-      ) : list.length === 0 ? (
+      ) : !list.items ? (
+        <SkeletonList label="Mencari pelanggan…" count={3} height={56} />
+      ) : list.items.length === 0 ? (
         <EmptyState icon="user" title="Tidak ada pelanggan yang cocok">
           Coba nama lain atau sebagian nomor WhatsApp.
         </EmptyState>
@@ -147,7 +170,7 @@ export function Customers() {
               </tr>
             </thead>
             <tbody>
-              {list.map((r) => (
+              {list.items.map((r) => (
                 <tr key={r.id}>
                   <td data-label="Nama">
                     <span className={styles.cellMain}>{r.name || '(tanpa nama)'}</span>
@@ -171,6 +194,9 @@ export function Customers() {
             </tbody>
           </table>
         </div>
+      )}
+      {list.items && list.items.length > 0 && (
+        <LoadMore shown={list.items.length} total={list.total} hasMore={list.hasMore} loading={list.loadingMore} onLoad={list.loadMore} noun="pelanggan" />
       )}
 
       {detail && c && (
@@ -229,7 +255,7 @@ export function Customers() {
               </Button>
             )}
           </div>
-          <h3 className={styles.h2}>Riwayat booking ({detail.bookings.length})</h3>
+          <h3 className={styles.h2}>Riwayat booking ({detail.bookingsTotal ?? detail.bookings.length})</h3>
           {detail.bookings.length === 0 ? (
             <EmptyState icon="calendar" title="Belum ada booking" compact />
           ) : (
@@ -249,6 +275,14 @@ export function Customers() {
               ))}
             </ul>
           )}
+          <LoadMore
+            shown={detail.bookings.length}
+            total={detail.bookingsTotal}
+            hasMore={Boolean(detail.bookingsNextCursor)}
+            loading={moreBusy}
+            onLoad={moreBookings}
+            noun="booking"
+          />
           {dialog}
         </Sheet>
       )}

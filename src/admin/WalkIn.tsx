@@ -44,6 +44,7 @@ export function WalkIn() {
   const [guestPhone, setGuestPhone] = useState('');
   const [query, setQuery] = useState('');
   const [hits, setHits] = useState<CustomerHit[] | null>(null);
+  const [moreHits, setMoreHits] = useState(false);
   const [customer, setCustomer] = useState<CustomerHit | null>(null);
   const [source, setSource] = useState<'walk_in' | 'admin'>('walk_in');
   const [note, setNote] = useState('');
@@ -61,8 +62,9 @@ export function WalkIn() {
 
   const search = async () => {
     if (query.trim().length < 2) return;
-    const r = await api<{ customers: CustomerHit[] }>(`/admin/customers?q=${encodeURIComponent(query)}`).catch(() => ({ customers: [] }));
+    const r = await api<{ customers: CustomerHit[]; nextCursor?: string | null }>(`/admin/customers?q=${encodeURIComponent(query)}`).catch(() => ({ customers: [], nextCursor: null }));
     setHits(r.customers);
+    setMoreHits(Boolean(r.nextCursor));
   };
 
   const submit = async (e: FormEvent) => {
@@ -254,6 +256,7 @@ export function WalkIn() {
                   ))}
                 </ul>
               ))}
+            {moreHits && <p className={styles.muted}>Menampilkan 20 hasil teratas. Ketik nama atau nomor lebih lengkap untuk mempersempit.</p>}
           </>
         )}
         <Field label="Catatan admin">

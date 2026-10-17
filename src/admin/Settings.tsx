@@ -1,11 +1,13 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react';
 import { api, errorMessage } from '@/app/api';
-import { formatPhone, rupiah } from '@/app/format';
+import { usePaged } from '@/app/usePaged';
+import { clock, formatPhone, longDate, rupiah } from '@/app/format';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { Alert, EmptyState, SkeletonList } from '@/components/ui/Feedback';
 import { Checkbox, Field, FieldGrid, Input, Select } from '@/components/ui/Field';
+import { LoadMore } from '@/components/ui/LoadMore';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { SegmentedControl } from '@/components/ui/SegmentedControl';
 import { useConfirm } from '@/components/ui/useConfirm';
@@ -14,7 +16,7 @@ import { DAYS, ROLE_LABEL, useAdmin } from './context';
 import styles from './admin.module.css';
 
 type Msg = { tone: 'ok' | 'error'; text: string } | null;
-type Sub = 'cabang' | 'hairstylist' | 'layanan' | 'admin';
+type Sub = 'cabang' | 'hairstylist' | 'layanan' | 'admin' | 'log';
 
 /** "10:00-13:00, 14:00-21:00" ⇄ [{start,end}] */
 const rangesToText = (r: { start: string; end: string }[]) => r.map((x) => `${x.start}-${x.end}`).join(', ');
@@ -37,7 +39,7 @@ export function Settings() {
     { id: 'cabang', label: 'Cabang' },
     { id: 'hairstylist', label: 'Hairstylist & jam kerja' },
     { id: 'layanan', label: 'Layanan & harga' },
-    ...(me.admin.role === 'owner' ? [{ id: 'admin' as Sub, label: 'Akun admin' }] : []),
+    ...(me.admin.role === 'owner' ? [{ id: 'admin' as Sub, label: 'Akun admin' }, { id: 'log' as Sub, label: 'Log aktivitas' }] : []),
   ];
   const [sub, setSub] = useState<Sub>('cabang');
   return (
@@ -50,6 +52,7 @@ export function Settings() {
       {sub === 'hairstylist' && <Barbers />}
       {sub === 'layanan' && <Services />}
       {sub === 'admin' && <AdminUsers />}
+      {sub === 'log' && <AuditLog />}
     </section>
   );
 }
@@ -611,6 +614,46 @@ function AdminUsers() {
         </div>
       )}
       {dialog}
+    </>
+  );
+}
+
+/* ---------- Log aktivitas (owner) ---------- */
+
+interface AuditRow { id: number; actor_type: 'admin' | 'customer' | 'system'; actor_id: string | null; action: string; entity: string; entity_id: string | null; created_at: string }
+const ACTOR = { admin: 'Admin', customer: 'Pelanggan', system: 'Sistem' } as const;
+
+/** Riwayat aksi terbaru (siapa melakukan apa). Data dari GET /api/admin/audit, terbaru dulu. */
+function AuditLog() {
+  const list = usePaged<AuditRow>(async (cursor) => {
+    const r = await api<{ entries: AuditRow[]; nextCursor: string | null }>(`/admin/audit${cursor ? `?cursor=${encodeURIComponent(cursor)}` : ''}`);
+    return { items: r.entries, nextCursor: r.nextCursor };
+  }, []);
+  if (list.error && !list.items?.length) return <Alert tone="danger">{list.error}</Alert>;
+  if (!list.items) return <SkeletonList label="Memuat log…" count={4} height={48} />;
+  if (list.items.length === 0) return <EmptyState icon="clock" title="Belum ada aktivitas" />;
+  return (
+    <>
+      <div className={styles.tableWrap} data-stack>
+        <table className={styles.table}>
+          <thead><tr><th>Waktu (WIB)</th><th>Pelaku</th><th>Aksi</th><th>Data</th></tr></thead>
+          <tbody>
+            {list.items.map((e) => (
+              <tr key={e.id}>
+                <td data-label="Waktu">{longDate(e.created_at, 'Asia/Jakarta')} {clock(e.created_at, 'Asia/Jakarta')}</td>
+                <td data-label="Pelaku">
+                  <span className={styles.cellMain}>{ACTOR[e.actor_type]}</span>
+                  {e.actor_id && e.actor_type === 'admin' ? <span className={styles.cellSub}>{e.actor_id}</span> : null}
+                </td>
+                <td data-label="Aksi"><code className={styles.code}>{e.action}</code></td>
+                <td data-label="Data">{e.entity}{e.entity_id ? <span className={styles.cellSub}>{e.entity_id}</span> : null}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      {list.error && <Alert tone="danger">{list.error}</Alert>}
+      <LoadMore shown={list.items.length} hasMore={list.hasMore} loading={list.loadingMore} onLoad={list.loadMore} noun="aktivitas" />
     </>
   );
 }

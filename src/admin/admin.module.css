@@ -278,6 +278,7 @@
 .table tbody tr:hover td { background: var(--c-paper-2); }
 .table .num { text-align: right; font-variant-numeric: tabular-nums; }
 .cellMain { font-weight: 600; }
+.code { font-size: var(--fs-xs); overflow-wrap: anywhere; }
 .cellSub { display: block; font-size: var(--fs-xs); color: var(--c-ink-dim); }
 .tableInput {
   width: 100%;
@@ -307,6 +308,8 @@
   }
   .tableWrap[data-stack] .table td { display: grid; grid-template-columns: 8.5rem minmax(0, 1fr); align-items: center; gap: var(--space-2); padding: 0; border: 0; }
   .tableWrap[data-stack] .table td::before { content: attr(data-label); font-size: var(--fs-xs); color: var(--c-ink-dim); }
+  /* Baris kedua dalam sel (mis. ID, kategori) tetap di kolom nilai */
+  .tableWrap[data-stack] .table td > .cellSub { grid-column: 2; }
   .tableWrap[data-stack] .table td[data-label=''] { grid-template-columns: minmax(0, 1fr); }
   .tableWrap[data-stack] .table td[data-label='']::before { display: none; }
   .tableWrap[data-stack] .table tbody tr:hover td { background: none; }
