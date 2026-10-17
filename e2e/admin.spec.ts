@@ -39,8 +39,13 @@ test('admin: lihat booking pelanggan di jadwal, tambah catatan, batalkan dengan 
   await dialog.getByRole('button', { name: 'Simpan catatan' }).click();
   await expect(dialog.getByRole('status')).toContainText('Catatan disimpan');
 
-  page.once('dialog', (d) => d.accept('Hairstylist berhalangan'));
+  // Batal lewat dialog konfirmasi: fokus awal di "Kembali", alasan wajib
   await dialog.getByRole('button', { name: 'Batalkan' }).click();
+  const confirm = page.getByRole('dialog', { name: /Batalkan booking/ });
+  await expect(confirm.getByRole('button', { name: 'Kembali' })).toBeFocused();
+  await expect(confirm.getByRole('button', { name: 'Ya, batalkan' })).toBeDisabled();
+  await confirm.getByLabel('Alasan pembatalan').fill('Hairstylist berhalangan');
+  await confirm.getByRole('button', { name: 'Ya, batalkan' }).click();
   await expect(dialog.getByRole('status')).toContainText('Dibatalkan');
   await expect(dialog.getByText('Dibatalkan').first()).toBeVisible();
 });
