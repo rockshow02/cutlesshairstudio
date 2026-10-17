@@ -60,7 +60,9 @@ Di **Google Cloud Console** memakai akun Google **bisnis klien** (bukan akun pri
 2. Site key → `wrangler.jsonc` → `env.staging.vars.TURNSTILE_SITE_KEY` (publik, boleh di-commit).
 3. Secret key: `npx wrangler secret put TURNSTILE_SECRET_KEY --env staging`.
 
-Sebelum langkah ini, staging memakai site key uji Cloudflare `1x00000000000000000000AA` (selalu lolos); server menolak semua submit sampai secret diisi.
+**Status:** staging sudah memakai widget Turnstile **asli** (site key di `wrangler.jsonc`, secret sudah diisi owner). Token palsu/dummy kini ditolak server, termasuk dari tes otomatis. Tes E2E staging memakai jalur khusus, lihat §7. Tanpa `TURNSTILE_SECRET_KEY`, server menolak semua submit (kecuali development lokal).
+
+Ganti/rotasi kunci: buat ulang secret di widget Turnstile, lalu jalankan lagi langkah 3. Site key hanya berubah bila widget dibuat ulang.
 
 ## 4. Cloudflare Access untuk `/admin` (gratis s.d. 50 pengguna)
 
@@ -98,9 +100,24 @@ Sama seperti di README §5, dengan catatan untuk booking:
 ## 7. Uji staging
 
 ```bash
+# Isi secret dari pengelola sandi Anda, jangan ditulis ke file repo / riwayat shell bersama
 E2E_BASE_URL=https://cutlesshairstudio-staging.adi-yansyaaah.workers.dev E2E_MOCK_SECRET=<AUTH_MOCK_SECRET> npm run e2e
 ```
-(tes admin hanya lokal karena `/admin` staging dilindungi Access). Uji manual: login Google sungguhan, booking, batal, jadwal ulang, `/admin` dengan email owner.
+
+Karena staging memakai Turnstile asli (tidak bisa diselesaikan browser otomatis), E2E staging bekerja seperti ini:
+
+- Login memakai `/api/auth/mock?secret=…`.
+- Browser uji menambahkan header `x-e2e-secret: <AUTH_MOCK_SECRET>` **hanya** ke request `/api/**` di origin staging.
+- Server melewati verifikasi Turnstile hanya bila **semua** syarat ini terpenuhi:
+  - `APP_ENV = staging`;
+  - `AUTH_MOCK_ENABLED = "true"`;
+  - secret `AUTH_MOCK_SECRET` terisi;
+  - header cocok (dibandingkan dalam waktu konstan).
+- Produksi (`APP_ENV = production`) tidak pernah melewati Turnstile, dan login mock di produksi selalu 404.
+- Skrip widget Turnstile di browser uji diganti stub, supaya tombol konfirmasi aktif. Widget asli tetap tampil untuk pengunjung biasa.
+- Mengganti `AUTH_MOCK_SECRET` (`wrangler secret put … --env staging`) otomatis membatalkan akses dari secret lama. Mematikan jalur uji sepenuhnya: set `AUTH_MOCK_ENABLED` ke `"false"` di `env.staging.vars`.
+
+Tes admin hanya berjalan lokal, karena `/admin` staging dilindungi Access. Uji manual tetap perlu: login Google sungguhan, booking (lewat widget Turnstile asli), batal, jadwal ulang, dan `/admin` dengan email owner.
 
 ## 8. Setelah data diubah di /admin
 
