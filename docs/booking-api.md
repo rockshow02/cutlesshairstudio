@@ -29,6 +29,25 @@ Skema request ada di `shared/schemas.ts` (Zod, dipakai frontend & Worker).
 | `RATE_LIMITED` | 429 | Terlalu banyak request dari IP yang sama |
 | `INTERNAL` | 500 | Kesalahan server |
 
+### Paginasi (cursor)
+
+Daftar yang bisa tumbuh panjang memakai **paginasi keyset**, bukan OFFSET: setiap halaman hanya membaca ±`limit + 1` baris D1.
+
+- `?limit=` jumlah per halaman: default **20**, maksimum **50** (nilai di luar batas dibulatkan ke batas, nilai tidak valid → 20).
+- `?cursor=` nilai `nextCursor` dari respons sebelumnya. Tanpa `cursor` = halaman pertama.
+- Respons menyertakan `nextCursor` (string, atau `null` bila sudah habis). Cursor bersifat opak (base64url `[nilai urut, id]`); jangan dibuat sendiri. Cursor rusak → `400 BAD_REQUEST`.
+- Urutan selalu memakai `id` sebagai pemecah seri, sehingga data dengan `start_at`/`created_at` sama tidak terlewat atau terulang antarhalaman.
+- `total` hanya disertakan bila hitungannya murah (lihat tiap endpoint).
+- Klien lama yang tidak mengirim `limit`/`cursor` tetap berfungsi (mendapat halaman pertama, kunci respons lama tetap ada).
+
+| Endpoint | Urutan | Total |
+|---|---|---|
+| `GET /api/me/bookings` (riwayat) | `start_at` menurun | `historyTotal` (halaman pertama) |
+| `GET /api/admin/customers` | aktivitas terakhir (`last_login_at` atau `created_at`) menurun | `total` (halaman pertama) |
+| `GET /api/admin/customers/:id` (riwayat) · `GET /api/admin/customers/:id/bookings` | `start_at` menurun | `bookingsTotal` / `total` |
+| `GET /api/admin/time-off` | `start_at` menaik | `total` |
+| `GET /api/admin/audit` | `id` menurun | tidak ada (tabel terus tumbuh) |
+
 ## Publik
 
 | Endpoint | Keterangan |
@@ -59,7 +78,7 @@ Skema request ada di `shared/schemas.ts` (Zod, dipakai frontend & Worker).
 | Endpoint | Keterangan |
 |---|---|
 | 🔒📝 `POST /api/bookings` `{ branch, service, barber: id\|"any", startAt, note?, turnstileToken }` | 201 `{ booking }`. Konfirmasi manual cabang → `status: "pending"` |
-| 🔒 `GET /api/me/bookings` | `{ active: […], history: […] }` |
+| 🔒 `GET /api/me/bookings?limit=&cursor=` | `{ active: […], history: […], nextCursor, historyTotal }`. `active` (menunggu/terkonfirmasi yang belum selesai) selalu lengkap dan hanya dikirim di halaman pertama; halaman berikutnya `active: []`. `history` dipaginasi; `historyTotal` hanya di halaman pertama |
 | 🔒 `GET /api/bookings/:id` | Booking milik sendiri |
 | 🔒 `POST /api/bookings/:id/cancel` `{ reason? }` | Sampai `cancel_deadline_min` sebelum jadwal |
 | 🔒 `POST /api/bookings/:id/reschedule` `{ startAt, barber? }` | Atomik; bentrok → 409 + alternatif |
@@ -78,7 +97,9 @@ Objek `booking` (pelanggan): `id, code, status, statusLabel, startAt, endAt, tim
 | `POST /bookings/:id/note` `{ note }` | semua dalam cakupan | Catatan admin |
 | `POST /bookings` `{ branch, service, barber, startAt, source: walk_in\|admin, customerId \| guestName+guestPhone, note? }` | owner/branch_admin | Walk-in/telepon; tamu tidak membuat akun login |
 | `GET /availability?branch=&service=&barber=&date=&exclude=<bookingId>` | semua dalam cakupan | Tanpa lead time |
-| `GET /customers?q=` · `GET /customers/:id` | owner/branch_admin | Cari, riwayat (branch_admin: pelanggan cabangnya) |
+| `GET /customers?q=&limit=&cursor=` | owner/branch_admin | `{ customers, nextCursor, total? }`. Cari nama/nomor/email; pencarian berlaku di semua halaman. `total` hanya di halaman pertama. branch_admin: pelanggan yang pernah booking di cabangnya |
+| `GET /customers/:id?limit=` | owner/branch_admin | `{ customer, bookings, bookingsNextCursor, bookingsTotal }`: halaman pertama riwayat booking (branch_admin: hanya cabangnya) |
+| `GET /customers/:id/bookings?limit=&cursor=` | owner/branch_admin | `{ bookings, nextCursor, total }`: halaman riwayat berikutnya |
 | `POST /customers/:id/block` · `/unblock` | owner/branch_admin | Buka blokir mereset hitungan tidak datang |
 | `POST /customers/:id/password` `{ password }` | owner/branch_admin | Hanya bila login nomor+password aktif |
 | `GET /reports/summary` · `GET /reports/export.csv?from=&to=&branch=` | owner/branch_admin | Ringkasan & CSV |
@@ -87,9 +108,9 @@ Objek `booking` (pelanggan): `id, code, status, statusLabel, startAt, endAt, tim
 | `GET /barbers` · `POST /barbers` · `PUT /barbers/:id` | owner/branch_admin | Termasuk `services[]` & `working[]` |
 | `GET /services` · `POST /services` · `PUT /services/:id` | owner (lihat: branch_admin) | Layanan, durasi, buffer, harga dasar |
 | `PUT /services/:id/branches/:branchId` `{ price\|null, is_active }` | owner/branch_admin (cabangnya) | Harga & ketersediaan per cabang |
-| `GET /time-off` · `POST /time-off` · `POST /time-off/:id/approve\|reject` · `DELETE /time-off/:id` | semua (barber: ajukan miliknya, status pending) | Libur cabang & cuti |
+| `GET /time-off?limit=&cursor=` · `POST /time-off` · `POST /time-off/:id/approve\|reject` · `DELETE /time-off/:id` | semua (barber: ajukan miliknya, status pending) | Libur cabang & cuti. GET: `{ timeOff, nextCursor, total }`, yang berakhir dalam 30 hari terakhir & mendatang |
 | `GET /admin-users` · `PUT /admin-users` | owner | Akun admin |
-| `GET /audit` | owner | 200 aksi terakhir |
+| `GET /audit?limit=&cursor=` | owner | `{ entries, nextCursor }`, aksi terbaru dulu (tampil di Pengaturan → Log aktivitas) |
 
 Semua aksi admin & pelanggan yang mengubah data tercatat di `audit_log`.
 

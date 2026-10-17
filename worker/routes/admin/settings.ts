@@ -4,6 +4,7 @@ import { createRouter } from '../../app';
 import { auditStmt } from '../../lib/bookings';
 import { badRequest, forbidden, notFound } from '../../lib/errors';
 import { body } from '../../lib/http';
+import { finishPage, keysetWhere, pageParams } from '../../lib/pagination';
 import { allowRoles, assertBranch, auditActor, branchScope } from '../../middleware/admin';
 
 export const adminSettingsRoutes = createRouter();
@@ -212,9 +213,14 @@ adminSettingsRoutes.put('/services/:id/branches/:branchId', allowRoles('owner', 
 
 /* ---------- Libur & cuti ---------- */
 
+/**
+ * GET /api/admin/time-off?limit=&cursor= → { timeOff, nextCursor, total }
+ * Yang berakhir dalam 30 hari terakhir & mendatang, urut tanggal mulai (menaik).
+ */
 adminSettingsRoutes.get('/time-off', async (c) => {
   const admin = c.get('admin')!;
   const scope = branchScope(admin);
+  const page = pageParams(c);
   const binds: unknown[] = [new Date(Date.now() - 30 * 86_400_000).toISOString()];
   let where = 't.end_at > ?';
   if (scope !== undefined) {
@@ -225,14 +231,20 @@ adminSettingsRoutes.get('/time-off', async (c) => {
     where += ' AND t.barber_id = ?';
     binds.push(admin.barber_id);
   }
-  const { results } = await c.env.DB.prepare(
-    `SELECT t.*, b.name AS barber_name, br.name AS branch_name FROM time_off t
+  const from = `FROM time_off t
      LEFT JOIN barbers b ON b.id = t.barber_id LEFT JOIN branches br ON br.id = COALESCE(t.branch_id, b.branch_id)
-     WHERE ${where} ORDER BY t.start_at`,
+     WHERE ${where}`;
+  const n = binds.length;
+  const { results } = await c.env.DB.prepare(
+    `SELECT t.*, b.name AS barber_name, br.name AS branch_name ${from}
+       ${page.cursor ? `AND ${keysetWhere('t.start_at', 't.id', 'asc', n + 1)}` : ''}
+     ORDER BY t.start_at, t.id LIMIT ?${n + 3}`,
   )
-    .bind(...binds)
-    .all();
-  return c.json({ timeOff: results });
+    .bind(...binds, page.cursor?.[0] ?? null, page.cursor ? Number(page.cursor[1]) : null, page.limit + 1)
+    .all<Record<string, unknown> & { id: number; start_at: string }>();
+  const { items, nextCursor } = finishPage(results, page.limit, (r) => [r.start_at, r.id]);
+  const total = (await c.env.DB.prepare(`SELECT COUNT(*) AS n ${from}`).bind(...binds).first<{ n: number }>())?.n ?? 0;
+  return c.json({ timeOff: items, nextCursor, total });
 });
 
 /** Admin: langsung disetujui. Barber: hanya untuk dirinya sendiri, status pending (perlu disetujui). */
@@ -313,8 +325,15 @@ adminSettingsRoutes.put('/admin-users', allowRoles('owner'), async (c) => {
   return c.json({ ok: true });
 });
 
-/** Riwayat aksi (audit) terbaru, owner */
+/**
+ * Riwayat aksi (audit) terbaru, owner. GET /api/admin/audit?limit=&cursor= → { entries, nextCursor }.
+ * Urut id menurun (id naik seiring waktu); tanpa total (COUNT tabel audit mahal karena terus tumbuh).
+ */
 adminSettingsRoutes.get('/audit', allowRoles('owner'), async (c) => {
-  const { results } = await c.env.DB.prepare('SELECT * FROM audit_log ORDER BY id DESC LIMIT 200').all();
-  return c.json({ entries: results });
+  const page = pageParams(c);
+  const { results } = await c.env.DB.prepare(`SELECT * FROM audit_log ${page.cursor ? 'WHERE id < ?1' : ''} ORDER BY id DESC LIMIT ?2`)
+    .bind(page.cursor ? Number(page.cursor[1]) : null, page.limit + 1)
+    .all<Record<string, unknown> & { id: number }>();
+  const { items, nextCursor } = finishPage(results, page.limit, (r) => [r.id, r.id]);
+  return c.json({ entries: items, nextCursor });
 });

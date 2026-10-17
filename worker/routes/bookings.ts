@@ -8,6 +8,7 @@ import { assertSameOrigin, rateLimit, verifyTurnstile } from '../lib/guard';
 import { body, defer } from '../lib/http';
 import { createBooking, rescheduleBooking, transitionBooking, type BookingRow } from '../lib/bookings';
 import { getBranch } from '../lib/availability';
+import { finishPage, keysetWhere, pageParams } from '../lib/pagination';
 import { notifyBranch } from '../lib/notify';
 import { requireCompleteProfile, requireCustomer } from '../middleware/customer';
 
@@ -83,16 +84,42 @@ bookingRoutes.post('/bookings', requireCompleteProfile, async (c) => {
   return c.json({ booking: present(await ownBooking(c, booking.id)) }, 201);
 });
 
-/** GET /api/me/bookings → booking aktif & riwayat */
+/** Booking aktif = status menunggu/terkonfirmasi dan belum selesai (sama dengan present().active) */
+const ACTIVE_SQL = `b.status IN (${ACTIVE_STATUSES.map((s) => `'${s}'`).join(', ')}) AND b.end_at > ?2`;
+
+/**
+ * GET /api/me/bookings?limit=&cursor= → { active, history, nextCursor, historyTotal }
+ * Booking aktif selalu lengkap (maks. beberapa per akun) dan hanya dikirim di halaman pertama;
+ * riwayat dipaginasi (terbaru dulu). Halaman berikutnya: active = [].
+ */
 bookingRoutes.get('/me/bookings', async (c) => {
-  const { results } = await c.env.DB.prepare(`${VIEW_SQL} WHERE b.customer_id = ? ORDER BY b.start_at DESC LIMIT 100`)
-    .bind(c.get('customer')!.id)
-    .all<BookingView>();
+  const me = c.get('customer')!;
   const now = Date.now();
-  const items = results.map((r) => present(r, now));
+  const nowIso = new Date(now).toISOString();
+  const page = pageParams(c);
+  const active = page.cursor
+    ? []
+    : (
+        await c.env.DB.prepare(`${VIEW_SQL} WHERE b.customer_id = ?1 AND ${ACTIVE_SQL} ORDER BY b.start_at, b.id`)
+          .bind(me.id, nowIso)
+          .all<BookingView>()
+      ).results;
+  const { results } = await c.env.DB.prepare(
+    `${VIEW_SQL} WHERE b.customer_id = ?1 AND NOT (${ACTIVE_SQL})
+       ${page.cursor ? `AND ${keysetWhere('b.start_at', 'b.id', 'desc', 3)}` : ''}
+     ORDER BY b.start_at DESC, b.id DESC LIMIT ?5`,
+  )
+    .bind(me.id, nowIso, page.cursor?.[0] ?? null, page.cursor?.[1] ?? null, page.limit + 1)
+    .all<BookingView>();
+  const { items, nextCursor } = finishPage(results, page.limit, (r) => [r.start_at, r.id]);
+  const historyTotal = page.cursor
+    ? undefined
+    : ((await c.env.DB.prepare(`SELECT COUNT(*) AS n FROM bookings b WHERE b.customer_id = ?1 AND NOT (${ACTIVE_SQL})`).bind(me.id, nowIso).first<{ n: number }>())?.n ?? 0);
   return c.json({
-    active: items.filter((b) => b.active).sort((a, b) => a.startAt.localeCompare(b.startAt)),
-    history: items.filter((b) => !b.active),
+    active: active.map((r) => present(r, now)),
+    history: items.map((r) => present(r, now)),
+    nextCursor,
+    ...(historyTotal !== undefined ? { historyTotal } : {}),
   });
 });
 

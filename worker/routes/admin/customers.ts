@@ -5,6 +5,7 @@ import { createRouter } from '../../app';
 import { auditStmt } from '../../lib/bookings';
 import { ApiError, badRequest, forbidden, notFound } from '../../lib/errors';
 import { body, defer } from '../../lib/http';
+import { finishPage, keysetWhere, pageParams } from '../../lib/pagination';
 import { hashPassword } from '../../lib/password';
 import { allowRoles, auditActor, branchScope } from '../../middleware/admin';
 import { ADMIN_BOOKING_SQL } from './bookings';
@@ -13,26 +14,60 @@ export const adminCustomerRoutes = createRouter();
 adminCustomerRoutes.use('/customers', allowRoles('owner', 'branch_admin'));
 adminCustomerRoutes.use('/customers/*', allowRoles('owner', 'branch_admin'));
 
-/** GET /api/admin/customers?q= (nama / nomor / email). branch_admin: hanya yang pernah booking di cabangnya */
+/** Urutan daftar pelanggan: aktivitas terakhir (login, atau tanggal daftar untuk tamu) terbaru dulu */
+const CUSTOMER_SORT = 'COALESCE(c.last_login_at, c.created_at)';
+
+/**
+ * GET /api/admin/customers?q=&limit=&cursor= (nama / nomor / email). branch_admin: hanya yang pernah booking di cabangnya.
+ * Respons: { customers, nextCursor, total } — total hanya di halaman pertama (tanpa cursor).
+ */
 adminCustomerRoutes.get('/customers', async (c) => {
   const admin = c.get('admin')!;
   const raw = (c.req.query('q') ?? '').trim();
   const digits = raw.replace(/\D/g, '').replace(/^0/, '62');
   const like = `%${raw.toLowerCase()}%`;
   const branchId = branchScope(admin);
+  const page = pageParams(c);
+  const filter = `c.anonymized_at IS NULL
+       AND (?2 = '' OR lower(c.name) LIKE ?3 OR lower(COALESCE(c.email, '')) LIKE ?3 OR (?4 <> '' AND c.phone LIKE '%' || ?4 || '%'))
+       ${branchId !== undefined ? 'AND EXISTS (SELECT 1 FROM bookings b WHERE b.customer_id = c.id AND b.branch_id = ?1)' : ''}`;
+  const binds = [branchId ?? null, raw, like, digits.length >= 4 ? digits : ''];
   const { results } = await c.env.DB.prepare(
     `SELECT c.id, c.name, c.email, c.phone, c.status, c.no_show_count, c.is_guest, c.created_at, c.last_login_at,
+       ${CUSTOMER_SORT} AS sort_at,
        (SELECT COUNT(*) FROM bookings b WHERE b.customer_id = c.id ${branchId !== undefined ? 'AND b.branch_id = ?1' : ''}) AS bookings
      FROM customers c
-     WHERE c.anonymized_at IS NULL
-       AND (?2 = '' OR lower(c.name) LIKE ?3 OR lower(COALESCE(c.email, '')) LIKE ?3 OR (?4 <> '' AND c.phone LIKE '%' || ?4 || '%'))
-       ${branchId !== undefined ? 'AND EXISTS (SELECT 1 FROM bookings b WHERE b.customer_id = c.id AND b.branch_id = ?1)' : ''}
-     ORDER BY COALESCE(c.last_login_at, c.created_at) DESC LIMIT 50`,
+     WHERE ${filter}
+       ${page.cursor ? `AND ${keysetWhere(CUSTOMER_SORT, 'c.id', 'desc', 5)}` : ''}
+     ORDER BY sort_at DESC, c.id DESC LIMIT ?7`,
   )
-    .bind(branchId ?? null, raw, like, digits.length >= 4 ? digits : '')
-    .all();
-  return c.json({ customers: results });
+    .bind(...binds, page.cursor?.[0] ?? null, page.cursor?.[1] ?? null, page.limit + 1)
+    .all<Record<string, unknown> & { id: string; sort_at: string }>();
+  const { items, nextCursor } = finishPage(results, page.limit, (r) => [r.sort_at, r.id]);
+  // Total hanya sekali (halaman pertama): satu COUNT dengan filter yang sama
+  const total = page.cursor
+    ? undefined
+    : ((await c.env.DB.prepare(`SELECT COUNT(*) AS n FROM customers c WHERE ${filter}`).bind(...binds).first<{ n: number }>())?.n ?? 0);
+  return c.json({ customers: items.map(({ sort_at: _s, ...r }) => r), nextCursor, ...(total !== undefined ? { total } : {}) });
 });
+
+/** Riwayat booking pelanggan (terbaru dulu), satu halaman. branchId: batasi ke cabang admin. */
+async function customerBookings(db: D1Database, customerId: string, branchId: number | undefined, page: ReturnType<typeof pageParams>) {
+  const binds: unknown[] = [customerId];
+  let where = 'b.customer_id = ?1';
+  if (branchId !== undefined) {
+    where += ' AND b.branch_id = ?2';
+    binds.push(branchId);
+  } else binds.push(null);
+  const { results } = await db
+    .prepare(`${ADMIN_BOOKING_SQL} WHERE ${where} ${page.cursor ? `AND ${keysetWhere('b.start_at', 'b.id', 'desc', 3)}` : ''} ORDER BY b.start_at DESC, b.id DESC LIMIT ?5`)
+    .bind(...binds, page.cursor?.[0] ?? null, page.cursor?.[1] ?? null, page.limit + 1)
+    .all<Record<string, unknown> & { id: string; start_at: string }>();
+  const { items, nextCursor } = finishPage(results, page.limit, (r) => [r.start_at, r.id]);
+  // Hitungan murah: indeks bookings_customer
+  const total = (await db.prepare(`SELECT COUNT(*) AS n FROM bookings b WHERE ${where}`).bind(...binds.slice(0, branchId !== undefined ? 2 : 1)).first<{ n: number }>())?.n ?? 0;
+  return { bookings: items, nextCursor, total };
+}
 
 adminCustomerRoutes.get('/customers/:id', async (c) => {
   const admin = c.get('admin')!;
@@ -44,13 +79,19 @@ adminCustomerRoutes.get('/customers/:id', async (c) => {
     .first();
   if (!customer) throw notFound('Pelanggan tidak ditemukan.');
   const branchId = branchScope(admin);
-  const { results } = await c.env.DB.prepare(
-    `${ADMIN_BOOKING_SQL} WHERE b.customer_id = ? ${branchId !== undefined ? 'AND b.branch_id = ?' : ''} ORDER BY b.start_at DESC LIMIT 200`,
-  )
-    .bind(...(branchId !== undefined ? [id, branchId] : [id]))
-    .all();
-  if (branchId !== undefined && results.length === 0) throw forbidden('Pelanggan ini belum pernah booking di cabang Anda.');
-  return c.json({ customer, bookings: results });
+  // Halaman pertama riwayat (?limit=); halaman berikutnya lewat GET /customers/:id/bookings?cursor=
+  const page = await customerBookings(c.env.DB, id, branchId, { ...pageParams(c), cursor: null });
+  if (branchId !== undefined && page.total === 0) throw forbidden('Pelanggan ini belum pernah booking di cabang Anda.');
+  return c.json({ customer, bookings: page.bookings, bookingsNextCursor: page.nextCursor, bookingsTotal: page.total });
+});
+
+/** GET /api/admin/customers/:id/bookings?limit=&cursor= → { bookings, nextCursor, total } */
+adminCustomerRoutes.get('/customers/:id/bookings', async (c) => {
+  const admin = c.get('admin')!;
+  const branchId = branchScope(admin);
+  const page = await customerBookings(c.env.DB, c.req.param('id'), branchId, pageParams(c));
+  if (branchId !== undefined && page.total === 0) throw forbidden('Pelanggan ini belum pernah booking di cabang Anda.');
+  return c.json(page);
 });
 
 /** Blokir / buka blokir. Buka blokir juga mereset hitungan no-show (bisa booking online lagi). */
