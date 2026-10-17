@@ -6,7 +6,7 @@ import reactRefresh from 'eslint-plugin-react-refresh';
 import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
-  { ignores: ['dist', 'brber-master', 'cutless-react', 'node_modules', '.wrangler', 'seed', 'playwright-report', 'test-results'] },
+  { ignores: ['dist', 'node_modules', '.wrangler', 'seed', 'playwright-report', 'test-results'] },
   {
     files: ['src/**/*.{ts,tsx}'],
     extends: [js.configs.recommended, ...tseslint.configs.recommended],

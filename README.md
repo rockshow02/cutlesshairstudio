@@ -407,4 +407,4 @@ Admin ─▶ Pages CMS ─commit─▶ GitHub (src/content/*.json, public/upload
             + filter tanggal WIB & status buka per zona waktu cabang saat runtime
 ```
 
-Kredit template Colorlib di footer wajib dipertahankan (lisensi CC BY 3.0). `brber-master/` adalah arsip template HTML asal.
+Kredit template Colorlib di footer wajib dipertahankan (lisensi CC BY 3.0); teksnya di `src/content/site.ts` (`footer.credit`). Template HTML asal (dulu `brber-master/`) sudah dihapus dari repo dan diarsipkan di tag `archive/brber-template`: `git checkout archive/brber-template -- brber-master` untuk melihatnya lagi.
