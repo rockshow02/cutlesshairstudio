@@ -2,11 +2,11 @@ import { test as base, expect, type BrowserContext, type Page } from '@playwrigh
 
 /** AUTH_MOCK_SECRET staging (dari environment, tidak pernah ditulis ke repo). Kosong = uji lokal. */
 const SECRET = process.env.E2E_MOCK_SECRET ?? '';
-/** Service Token Cloudflare Access (staging di workers.dev dikunci Access seluruhnya). Dari environment saja. */
+/** Service Token Cloudflare Access (OPSIONAL: hanya bila seluruh Worker staging dikunci Access). Dari environment saja. */
 const ACCESS_ID = process.env.E2E_CF_ACCESS_CLIENT_ID ?? '';
 const ACCESS_SECRET = process.env.E2E_CF_ACCESS_CLIENT_SECRET ?? '';
 
-/** Header Service Token Access; kosong bila tidak diisi (lokal) */
+/** Header Service Token Access; kosong bila tidak diisi (lokal, atau Access hanya di path admin) */
 export function accessHeaders(): Record<string, string> {
   return ACCESS_ID && ACCESS_SECRET ? { 'CF-Access-Client-Id': ACCESS_ID, 'CF-Access-Client-Secret': ACCESS_SECRET } : {};
 }
@@ -14,8 +14,8 @@ export function accessHeaders(): Record<string, string> {
 /**
  * Mode staging (E2E_MOCK_SECRET terisi). Semua header di bawah HANYA dikirim ke origin staging
  * (tidak ke challenges.cloudflare.com, Google Fonts, dll.):
- *  - CF-Access-Client-Id/Secret (bila E2E_CF_ACCESS_CLIENT_* diisi) ke SEMUA request origin staging,
- *    karena Access mengunci seluruh Worker (halaman, aset, dan API).
+ *  - CF-Access-Client-Id/Secret (opsional, bila E2E_CF_ACCESS_CLIENT_* diisi) ke SEMUA request origin staging,
+ *    untuk kasus Access mengunci seluruh Worker (halaman, aset, dan API). Bila Access hanya di /admin, tidak perlu.
  *  - x-e2e-secret ke /api/** saja: staging memakai kunci Turnstile ASLI yang tidak bisa diselesaikan
  *    browser otomatis. Server melewati Turnstile hanya bila APP_ENV staging, AUTH_MOCK_ENABLED true,
  *    dan secret cocok.
