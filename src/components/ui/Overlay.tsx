@@ -35,7 +35,8 @@ export function Sheet({ open, onClose, title, meta, footer, children }: SheetPro
       ref={ref}
       className={styles.sheet}
       aria-labelledby={titleId}
-      onClose={onClose}
+      // React meneruskan event close dari <dialog> anak (mis. ConfirmDialog di dalam Sheet): abaikan
+      onClose={(e) => e.target === e.currentTarget && onClose()}
       onClick={(e) => e.target === e.currentTarget && ref.current?.close()}
       data-lenis-prevent
     >
@@ -94,7 +95,7 @@ export function ConfirmDialog({ open, options, onConfirm, onCancel }: { open: bo
       className={styles.confirm}
       aria-labelledby={titleId}
       aria-describedby={message ? descId : undefined}
-      onClose={() => open && onCancel()}
+      onClose={(e) => e.target === e.currentTarget && open && onCancel()}
       onClick={(e) => e.target === e.currentTarget && ref.current?.close()}
       data-lenis-prevent
     >

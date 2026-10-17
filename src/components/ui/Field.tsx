@@ -7,20 +7,22 @@ interface FieldProps {
   hint?: ReactNode;
   /** Pesan error di bawah field (menandai aria-invalid) */
   error?: string;
+  /** Tanpa jarak bawah (mis. di dalam toolbar) */
+  flush?: boolean;
   className?: string;
   /** Satu kontrol: <Input>, <Select>, <Textarea>, atau elemen form lain */
   children: ReactElement<{ id?: string; 'aria-describedby'?: string; 'aria-invalid'?: boolean }>;
 }
 
 /** Label di atas, kontrol, lalu bantuan & error di bawah. id & aria-describedby dihubungkan otomatis. */
-export function Field({ label, hint, error, className, children }: FieldProps) {
+export function Field({ label, hint, error, flush, className, children }: FieldProps) {
   const auto = useId();
   const id = children.props.id ?? auto;
   const hintId = hint ? `${id}-hint` : undefined;
   const errorId = error ? `${id}-error` : undefined;
   const describedBy = [children.props['aria-describedby'], hintId, errorId].filter(Boolean).join(' ') || undefined;
   return (
-    <div className={[styles.field, className].filter(Boolean).join(' ')}>
+    <div className={[styles.field, flush && styles.flush, className].filter(Boolean).join(' ')}>
       <label htmlFor={id} className={styles.label}>
         {label}
       </label>
