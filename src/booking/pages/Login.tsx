@@ -1,6 +1,9 @@
 import { useState, type FormEvent } from 'react';
 import { api, errorMessage } from '@/app/api';
 import { Button } from '@/components/ui/Button';
+import { Card } from '@/components/ui/Card';
+import { Field, Input } from '@/components/ui/Field';
+import { Alert } from '@/components/ui/Feedback';
 import { Page, Loading } from '../Page';
 import { Turnstile } from '../Turnstile';
 import { nextParam, useAuthConfig } from '../hooks';
@@ -21,35 +24,31 @@ export function Login() {
 
   return (
     <Page id="masuk" kicker="Booking online" title="Masuk untuk booking" lead="Pakai akun Google, tanpa password baru. Pilihan cabang dan layanan Anda tetap tersimpan.">
-      {error && (
-        <p className={styles.alert} data-tone="error" role="alert">
-          {error}
-        </p>
-      )}
+      {error && <Alert tone="danger">{error}</Alert>}
       {!config ? (
         <Loading />
       ) : (
         <>
-          {config.google ? (
-            <div className={styles.actions}>
-              <Button href={`/api/auth/google?next=${encodeURIComponent(next)}`} variant="dark" icon="google" size="lg">
+          <Card tone="outline" as="div" padding="lg">
+            {config.google ? (
+              <Button href={`/api/auth/google?next=${encodeURIComponent(next)}`} variant="dark" icon="google" size="lg" block>
                 Masuk dengan Google
               </Button>
-            </div>
-          ) : (
-            <p className={styles.alert} data-tone="warn">
-              Login Google belum dikonfigurasi di server ini.
+            ) : (
+              <Alert tone="warning" role="none">
+                Login Google belum dikonfigurasi di server ini.
+              </Alert>
+            )}
+            <p className={`${styles.hint} ${styles.loginNote}`}>
+              Dengan masuk, Anda menyetujui{' '}
+              <a className={styles.link} href="/kebijakan-privasi">
+                Kebijakan Privasi
+              </a>
+              . Lebih suka chat? Booking juga bisa langsung via WhatsApp cabang.
             </p>
-          )}
+          </Card>
           {config.phonePassword && <PhoneLogin next={next} siteKey={config.turnstileSiteKey} />}
           {config.mock && <MockLogin next={next} />}
-          <p className={styles.hint}>
-            Dengan masuk, Anda menyetujui{' '}
-            <a className={styles.link} href="/kebijakan-privasi">
-              Kebijakan Privasi
-            </a>
-            . Lebih suka chat? Booking juga bisa langsung via WhatsApp cabang.
-          </p>
         </>
       )}
     </Page>
@@ -81,27 +80,20 @@ function PhoneLogin({ next, siteKey }: { next: string; siteKey: string | null })
   };
 
   return (
-    <form onSubmit={submit} className={styles.summary}>
+    <Card tone="outline" as="form" padding="lg" onSubmit={submit} className={styles.section}>
       <h2 className={styles.h2}>Atau masuk dengan nomor WhatsApp</h2>
-      {error && (
-        <p className={styles.alert} data-tone="error" role="alert">
-          {error}
-        </p>
-      )}
-      <div className={styles.field}>
-        <label htmlFor="login-phone">Nomor WhatsApp</label>
-        <input id="login-phone" inputMode="tel" autoComplete="tel" value={phone} onChange={(e) => setPhone(e.target.value)} required />
-      </div>
-      <div className={styles.field}>
-        <label htmlFor="login-password">Password</label>
-        <input id="login-password" type="password" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} required />
-        <span className={styles.hint}>Lupa password? Hubungi cabang untuk reset.</span>
-      </div>
+      {error && <Alert tone="danger">{error}</Alert>}
+      <Field label="Nomor WhatsApp">
+        <Input id="login-phone" inputMode="tel" autoComplete="tel" value={phone} onChange={(e) => setPhone(e.target.value)} required />
+      </Field>
+      <Field label="Password" hint="Lupa password? Hubungi cabang untuk reset.">
+        <Input id="login-password" type="password" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+      </Field>
       <Turnstile siteKey={siteKey} onToken={setToken} resetKey={resetKey} />
       <Button type="submit" variant="dark" block disabled={busy}>
         {busy ? 'Memproses…' : 'Masuk'}
       </Button>
-    </form>
+    </Card>
   );
 }
 
@@ -111,19 +103,17 @@ function MockLogin({ next }: { next: string }) {
   const [secret, setSecret] = useState('');
   const href = `/api/auth/mock?${new URLSearchParams({ email, next, ...(secret ? { secret } : {}) })}`;
   return (
-    <div className={styles.summary}>
+    <Card tone="outline" as="div" padding="lg" className={styles.section}>
       <h2 className={styles.h2}>Login uji (khusus staging/lokal)</h2>
-      <div className={styles.field}>
-        <label htmlFor="mock-email">Email uji</label>
-        <input id="mock-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
-      </div>
-      <div className={styles.field}>
-        <label htmlFor="mock-secret">Secret (staging)</label>
-        <input id="mock-secret" type="password" value={secret} onChange={(e) => setSecret(e.target.value)} />
-      </div>
+      <Field label="Email uji">
+        <Input id="mock-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+      </Field>
+      <Field label="Secret (staging)">
+        <Input id="mock-secret" type="password" value={secret} onChange={(e) => setSecret(e.target.value)} />
+      </Field>
       <Button href={href} variant="outline-dark" block>
         Masuk sebagai pengguna uji
       </Button>
-    </div>
+    </Card>
   );
 }
