@@ -13,6 +13,7 @@ import { useConfirm } from '@/components/ui/useConfirm';
 import { useToast } from '@/components/ui/toastContext';
 import { Page, Loading } from '../Page';
 import { SlotPicker } from '../SlotPicker';
+import { LoyaltySection } from '../loyalty/LoyaltySection';
 import { loginUrl } from '../hooks';
 import { whatsappDetail } from './Success';
 import type { BookingBranch, CustomerBooking } from '../types';
@@ -66,6 +67,7 @@ export function MyBookings() {
       }
     >
       {error && <Alert tone="danger">{error}</Alert>}
+      <LoyaltySection reloadKey={0} />
       {/* aria-busy: true selama daftar dimuat (ulang), mis. setelah batal/jadwal ulang */}
       <div id="daftar-booking" aria-busy={!active || !history.items || history.loadingMore}>
       {!active || !history.items ? (

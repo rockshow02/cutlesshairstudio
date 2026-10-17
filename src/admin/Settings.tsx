@@ -14,10 +14,11 @@ import { SegmentedControl } from '@/components/ui/SegmentedControl';
 import { useConfirm } from '@/components/ui/useConfirm';
 import { useToast } from '@/components/ui/toastContext';
 import { DAYS, ROLE_LABEL, useAdmin } from './context';
+import { LoyaltySettingsPanel } from './Loyalty';
 import styles from './admin.module.css';
 
 type Msg = { tone: 'ok' | 'error'; text: string } | null;
-type Sub = 'cabang' | 'hairstylist' | 'layanan' | 'admin' | 'log';
+type Sub = 'cabang' | 'hairstylist' | 'layanan' | 'stamp' | 'admin' | 'log';
 
 /** "10:00-13:00, 14:00-21:00" ⇄ [{start,end}] */
 const rangesToText = (r: { start: string; end: string }[]) => r.map((x) => `${x.start}-${x.end}`).join(', ');
@@ -40,6 +41,7 @@ export function Settings() {
     { id: 'cabang', label: 'Cabang' },
     { id: 'hairstylist', label: 'Hairstylist & jam kerja' },
     { id: 'layanan', label: 'Layanan & harga' },
+    { id: 'stamp', label: 'Cutless Stamp' },
     ...(me.admin.role === 'owner' ? [{ id: 'admin' as Sub, label: 'Akun admin' }, { id: 'log' as Sub, label: 'Log aktivitas' }] : []),
   ];
   const [sub, setSub] = useState<Sub>('cabang');
@@ -52,6 +54,7 @@ export function Settings() {
       {sub === 'cabang' && <Branches />}
       {sub === 'hairstylist' && <Barbers />}
       {sub === 'layanan' && <Services />}
+      {sub === 'stamp' && <LoyaltySettingsPanel />}
       {sub === 'admin' && <AdminUsers />}
       {sub === 'log' && <AuditLog />}
     </section>

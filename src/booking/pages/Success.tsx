@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { StatusBadge } from '@/components/ui/Badge';
 import { Alert } from '@/components/ui/Feedback';
+import { useMyLoyalty } from '@/app/loyalty';
 import { Page, Loading } from '../Page';
 import { loginUrl } from '../hooks';
 import type { CustomerBooking } from '../types';
@@ -20,6 +21,17 @@ export function whatsappDetail(b: CustomerBooking, intro = 'saya sudah booking o
   );
 }
 
+/** Info Cutless Stamp: +1 stempel setelah treatment, dan voucher yang cocok untuk layanan ini */
+function LoyaltyNote({ serviceId, vouchers }: { serviceId: number; vouchers: { code: string; serviceIds: number[] }[] }) {
+  const match = vouchers.find((v) => v.serviceIds.includes(serviceId));
+  return (
+    <Alert tone="info" role="none" title="Cutless Stamp">
+      <p>+1 stempel setelah treatment selesai. Lihat kartu stempel di Booking saya.</p>
+      {match && <p>Punya voucher {match.code} untuk layanan ini: tunjukkan kodenya di kasir.</p>}
+    </Alert>
+  );
+}
+
 /** /booking/sukses?id=… */
 export function Success() {
   const id = new URLSearchParams(window.location.search).get('id') ?? '';
@@ -27,6 +39,7 @@ export function Success() {
   const [error, setError] = useState('');
   // Halaman ini sudah punya tombol WhatsApp utama → tombol WhatsApp melayang disembunyikan
   const fabZone = useFabZone<HTMLDivElement>(0);
+  const loyalty = useMyLoyalty();
 
   useEffect(() => {
     api<{ booking: CustomerBooking }>(`/bookings/${encodeURIComponent(id)}`)
@@ -74,6 +87,7 @@ export function Success() {
         </p>
       </Card>
       <div className={styles.gap} />
+      {loyalty?.enabled && <LoyaltyNote serviceId={booking.service.id} vouchers={loyalty.vouchers} />}
 
       <Card tone="outline" as="div">
         <dl className={styles.dl}>

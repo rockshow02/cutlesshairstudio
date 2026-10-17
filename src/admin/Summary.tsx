@@ -7,6 +7,7 @@ import { Alert, EmptyState, SkeletonList } from '@/components/ui/Feedback';
 import { Field, Input, Select } from '@/components/ui/Field';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { useAdmin } from './context';
+import { LoyaltySummary, type LoyaltySummaryData } from './Loyalty';
 import styles from './admin.module.css';
 
 interface SummaryData {
@@ -15,6 +16,7 @@ interface SummaryData {
   noShowCount: number;
   popularServices: { service: string; n: number }[];
   pendingCount: number;
+  loyalty?: LoyaltySummaryData;
 }
 
 /** Ringkasan: booking hari ini/minggu ini per cabang, tingkat tidak datang, layanan terpopuler, ekspor CSV */
@@ -75,6 +77,8 @@ export function Summary() {
           )}
         </>
       )}
+
+      {data?.loyalty && <LoyaltySummary data={data.loyalty} />}
 
       <h2 className={styles.h2}>Ekspor CSV</h2>
       <Card tone="outline" as="div">

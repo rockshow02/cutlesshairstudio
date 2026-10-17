@@ -231,6 +231,7 @@ function Card({ b, isNew, showBarber, onOpen }: { b: AdminBooking; isNew: boolea
               Baru
             </Badge>
           )}
+          {b.voucher_code && <Badge tone="info">Voucher</Badge>}
           <StatusBadge status={b.status} />
         </span>
       </span>

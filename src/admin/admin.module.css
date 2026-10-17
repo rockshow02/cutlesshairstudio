@@ -263,6 +263,8 @@
 .actionBar > * { flex: 1 1 8rem; }
 .noteBlock { margin-top: var(--space-5); padding-top: var(--space-5); border-top: 1px solid var(--c-line-dark); }
 .noteBlock > div { margin-bottom: var(--space-3); }
+.loyaltyPanel { display: grid; gap: var(--space-3); margin: var(--space-5) 0; padding-top: var(--space-5); border-top: 1px solid var(--c-line-dark); }
+.loyaltyPanel > .h2 { margin: 0; }
 .subPanel {
   margin: var(--space-4) 0;
   padding: var(--space-4);

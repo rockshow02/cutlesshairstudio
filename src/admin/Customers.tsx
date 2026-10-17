@@ -13,6 +13,8 @@ import { PageHeader } from '@/components/ui/PageHeader';
 import { useConfirm } from '@/components/ui/useConfirm';
 import { useToast } from '@/components/ui/toastContext';
 import { useAdmin, type AdminBooking } from './context';
+import { CustomerLoyaltyPanel } from './Loyalty';
+import { useLoyaltyActive } from './loyaltyStatus';
 import styles from './admin.module.css';
 
 interface CustomerRow {
@@ -47,6 +49,7 @@ export function Customers() {
   const [moreBusy, setMoreBusy] = useState(false);
   const [sheetMsg, setSheetMsg] = useState<{ tone: 'success' | 'danger'; text: string } | null>(null);
   const [dialog, confirm] = useConfirm();
+  const loyaltyActive = useLoyaltyActive();
 
   const list = usePaged<CustomerRow>(
     async (cursor) => {
@@ -255,6 +258,7 @@ export function Customers() {
               </Button>
             )}
           </div>
+          {loyaltyActive && <CustomerLoyaltyPanel customerId={c.id} />}
           <h3 className={styles.h2}>Riwayat booking ({detail.bookingsTotal ?? detail.bookings.length})</h3>
           {detail.bookings.length === 0 ? (
             <EmptyState icon="calendar" title="Belum ada booking" compact />

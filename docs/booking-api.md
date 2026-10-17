@@ -114,9 +114,34 @@ Objek `booking` (pelanggan): `id, code, status, statusLabel, startAt, endAt, tim
 
 Semua aksi admin & pelanggan yang mengubah data tercatat di `audit_log`.
 
+## Cutless Stamp (loyalitas)
+
+Aktif bila env **`LOYALTY_ENABLED=true`** (staging) **dan** `loyalty_settings.enabled = 1` (owner). Produksi tidak punya variabel itu → fitur mati; perilaku booking tidak berubah. Saat mati, endpoint pelanggan mengembalikan `{ enabled: false }`.
+
+| Endpoint | Peran | Keterangan |
+|---|---|---|
+| `GET /api/loyalty/program` | publik (cache 60 dtk) | `{ enabled, tier1: { stamps, services[] }, tier2, stampValidMonths, voucherValidDays }` |
+| 🔒 `GET /api/me/loyalty` | pelanggan | `{ enabled, card: { stamps, cycle, tier1, tier2, next: { tier, remaining } }, vouchers: [aktif] }` |
+| 🔒 `GET /api/me/loyalty/stamps?limit=&cursor=` | pelanggan | `{ stamps, nextCursor }` (terbaru dulu) |
+| `GET /api/admin/loyalty/settings` · `PUT` | lihat: owner/branch_admin · ubah: owner | `{ available, settings }`; PUT `{ enabled, tier1_stamps, tier1_service_ids[], tier2_stamps, tier2_service_ids[], stamp_valid_months, voucher_valid_days }` |
+| `GET /api/admin/customers/:id/loyalty` (+ `/stamps?cursor=`) | owner/branch_admin (cabangnya) | `{ card, vouchers, stamps, stampsNextCursor, mergeCandidates }` |
+| `POST /api/admin/customers/:id/loyalty/adjust` `{ delta: 1\|-1, reason }` | owner | Penyesuaian manual (alasan wajib, audit) |
+| `POST /api/admin/customers/:id/loyalty/merge` `{ guestId }` | owner/branch_admin | Pindah stempel & voucher tamu bernomor sama ke akun (hanya bila tepat 1 akun bernomor itu). Idempoten: `{ moved: { stamps, vouchers } }` |
+| `GET /api/admin/bookings/:id/vouchers` | owner/branch_admin | `{ enabled, redeemed, eligible }` |
+| `POST /api/admin/bookings/:id/voucher` `{ voucherId }` · `DELETE` | owner/branch_admin (cabangnya) | Tukar / batalkan penukaran (booking menunggu/terkonfirmasi). Harga booking → 0, booking itu tanpa stempel. Gagal → `409 VOUCHER_UNAVAILABLE` |
+| `POST /api/admin/bookings` | | Tambahan opsional `voucherId` (pelanggan terdaftar). Booking tetap dibuat; bila voucher gagal → `voucherError` |
+| `GET /api/admin/reports/summary` | | Tambahan `loyalty: { stamps, stampsByAdmin[], vouchersRedeemed, vouchersRedeemedValue, vouchersIssued?, vouchersExpired?, vouchersActive? }` |
+| `GET /api/admin/bookings` | | Tambahan `voucher_code` per booking |
+
+**Aturan di server** (semua dalam `db.batch` yang sama dengan perubahan status, idempoten, tercatat di `audit_log`):
+- Status → `completed`: stempel bila layanan bisa dibooking & bukan kategori Paket, tidak dibayar voucher, dan belum ada stempel di tanggal lokal cabang yang sama (`UNIQUE(customer_id, stamp_date)` untuk stempel booking; `UNIQUE(booking_id)`). Lalu voucher tingkat 1/2 terbit bila target tercapai (`UNIQUE(issue_key)`); di tingkat 2 stempel siklus itu menjadi `used` dan siklus kartu +1.
+- Status → `cancelled` / `no_show`: voucher yang ditukar di booking itu kembali `active` (atau `expired` bila lewat `expires_at`), harga booking dipulihkan.
+
+Kode error baru: `VOUCHER_UNAVAILABLE` (409): voucher sudah ditukar, kedaluwarsa, layanan tidak cocok, atau booking sudah Selesai.
+
 ## Cron (Worker `scheduled`)
 
 | Jadwal | Tugas |
 |---|---|
 | `*/15 * * * *` | Batalkan pending > 2 jam atau < 60 menit sebelum jadwal (`cancelled_by = system`, slot dilepas, notifikasi Telegram); hapus sesi kedaluwarsa & catatan rate limit > 1 hari |
-| `0 19 * * *` (02.00 WIB) | Anonimkan pelanggan tanpa login & tanpa booking > 24 bulan |
+| `0 19 * * *` (02.00 WIB) | Anonimkan pelanggan tanpa login & tanpa booking > 24 bulan; Cutless Stamp: stempel & voucher lewat masa berlaku → `expired` |
