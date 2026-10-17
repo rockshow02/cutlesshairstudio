@@ -108,17 +108,23 @@ export function Schedule() {
               <button type="button" className={styles.iconBtn} aria-label={view === 'day' ? 'Hari berikutnya' : 'Minggu berikutnya'} onClick={() => setDate(addDays(date, step))}>
                 <Icon name="chevron-right" size={18} />
               </button>
+              {/* Sejajar dengan navigasi tanggal; nonaktif saat sudah di hari ini (posisi tidak bergeser) */}
+              <Button variant="outline-dark" casing="normal" className={styles.todayBtn} disabled={isToday} onClick={() => setDate(todayWib())}>
+                Hari ini
+              </Button>
             </div>
-            <SegmentedControl
-              label="Tampilan"
-              value={view}
-              onChange={setView}
-              options={[
-                { value: 'day', label: 'Harian' },
-                { value: 'week', label: 'Mingguan' },
-              ]}
-            />
           </>
+        }
+        secondary={
+          <SegmentedControl
+            label="Tampilan"
+            value={view}
+            onChange={setView}
+            options={[
+              { value: 'day', label: 'Harian' },
+              { value: 'week', label: 'Mingguan' },
+            ]}
+          />
         }
         filters={
           <>
@@ -159,11 +165,6 @@ export function Schedule() {
         }
         actions={
           <>
-            {!isToday && (
-              <Button variant="outline-dark" casing="normal" onClick={() => setDate(todayWib())}>
-                Hari ini
-              </Button>
-            )}
             {newIds.length > 0 && (
               <button type="button" className={styles.newButton} onClick={() => setNewIds([])} aria-live="polite">
                 <Badge tone="danger" solid>
@@ -253,6 +254,13 @@ function Card({ b, isNew, showBarber, onOpen }: { b: AdminBooking; isNew: boolea
 
 const activeCount = (list: AdminBooking[]) => list.filter((b) => b.status === 'pending' || b.status === 'confirmed').length;
 
+/** Label header kolom: jumlah semua kartu di kolom, plus jumlah aktif bila berbeda (mis. ada yang batal/selesai) */
+function columnLabel(list: AdminBooking[]) {
+  if (list.length === 0) return 'Kosong';
+  const active = activeCount(list);
+  return active === list.length ? `${list.length} booking` : `${list.length} booking · ${active} aktif`;
+}
+
 function DayView({ bookings, barbers, newIds, onOpen }: { bookings: AdminBooking[]; barbers: { id: number; name: string }[]; newIds: string[]; onOpen: (id: string) => void }) {
   if (barbers.length === 0) return <EmptyState icon="user" title="Belum ada hairstylist aktif di cabang ini" />;
   return (
@@ -263,7 +271,7 @@ function DayView({ bookings, barbers, newIds, onOpen }: { bookings: AdminBooking
           <div key={barber.id} className={styles.column}>
             <div className={styles.columnHead}>
               <span>{barber.name}</span>
-              <Badge tone={activeCount(list) ? 'info' : 'neutral'}>{activeCount(list)} booking</Badge>
+              {list.length > 0 && <Badge tone={activeCount(list) ? 'info' : 'neutral'}>{columnLabel(list)}</Badge>}
             </div>
             {list.length === 0 ? (
               <p className={styles.columnEmpty}>Kosong</p>
@@ -293,7 +301,7 @@ function WeekView({ bookings, from, tz, newIds, onOpen }: { bookings: AdminBooki
           <div key={d} className={styles.dayGroup}>
             <div className={styles.dayHead}>
               <h2>{shortDate(`${d}T05:00:00Z`, tz)}</h2>
-              <span className={styles.muted}>{activeCount(list)} booking aktif</span>
+              <span className={styles.muted}>{list.length === 0 ? 'Kosong' : columnLabel(list)}</span>
             </div>
             {list.length === 0 ? (
               <p className={styles.muted}>Tidak ada booking.</p>

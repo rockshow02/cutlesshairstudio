@@ -8,6 +8,7 @@ import { Card } from '@/components/ui/Card';
 import { Alert, EmptyState, SkeletonList } from '@/components/ui/Feedback';
 import { Checkbox, Field, FieldGrid, Input, Select } from '@/components/ui/Field';
 import { LoadMore } from '@/components/ui/LoadMore';
+import { Sheet } from '@/components/ui/Overlay';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { SegmentedControl } from '@/components/ui/SegmentedControl';
 import { useConfirm } from '@/components/ui/useConfirm';
@@ -408,106 +409,170 @@ function BarberForm({ barber, defaultBranch, services, onDone }: { barber?: Barb
 
 /* ---------- Layanan & harga ---------- */
 
+/** Daftar ringkas per layanan; ubah lewat panel (Sheet). API sama: PUT /services/:id dan PUT /services/:id/branches/:branchId */
 function Services() {
   const me = useAdmin();
   const isOwner = me.admin.role === 'owner';
   const [rows, setRows] = useState<ServiceRow[] | null>(null);
   const [msg, setMsg] = useState<Msg>(null);
   const [branchId, setBranchId] = useState<number>(me.admin.branch_id ?? me.branches[0].id);
+  const [editId, setEditId] = useState<number | null>(null);
   const load = useCallback(() => {
     api<{ services: ServiceRow[] }>('/admin/services').then((r) => setRows(r.services)).catch((e) => setMsg({ tone: 'error', text: errorMessage(e) }));
   }, []);
   useEffect(load, [load]);
 
-  const toast = useToast();
-  const saveService = async (s: ServiceRow) => {
-    try {
-      await api(`/admin/services/${s.id}`, {
-        method: 'PUT',
-        json: { name: s.name, category: s.category, description: s.description, duration_min: s.duration_min, buffer_min: s.buffer_min, base_price: s.base_price, price_from: Boolean(s.price_from), badge: s.badge, is_bookable: Boolean(s.is_bookable), is_active: Boolean(s.is_active), sort_order: s.sort_order },
-      });
-      setMsg(null);
-      toast(`${s.name} tersimpan.`);
-    } catch (e) {
-      setMsg({ tone: 'error', text: errorMessage(e) });
-    }
-  };
-  const saveBranchPrice = async (s: ServiceRow, price: string, active: boolean) => {
-    try {
-      await api(`/admin/services/${s.id}/branches/${branchId}`, { method: 'PUT', json: { price: price.trim() === '' ? null : Number(price), is_active: active } });
-      setMsg(null);
-      toast(`Harga ${s.name} di cabang tersimpan.`);
-      load();
-    } catch (e) {
-      setMsg({ tone: 'error', text: errorMessage(e) });
-    }
-  };
-  const update = (id: number, patch: Partial<ServiceRow>) => setRows((r) => r && r.map((x) => (x.id === id ? { ...x, ...patch } : x)));
+  const branchName = me.branches.find((b) => b.id === branchId)?.name ?? '';
+  const editing = rows?.find((s) => s.id === editId) ?? null;
 
   if (!rows) return <SkeletonList label="Memuat layanan…" count={4} height={56} />;
   return (
     <>
       <Note msg={msg} />
       <div className={styles.listHead}>
-        <Field label="Harga khusus untuk cabang" flush>
+        <Field label="Harga & ketersediaan untuk cabang" flush>
           <Select className={styles.selectSm} value={branchId} onChange={(e) => setBranchId(Number(e.target.value))} disabled={!isOwner}>
             {me.branches.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
           </Select>
         </Field>
+        <p className={styles.muted}>{rows.length} layanan</p>
       </div>
-      <div className={styles.tableWrap} data-stack>
-        <table className={styles.table}>
-          <thead>
-            <tr><th>Layanan</th><th>Durasi (mnt)</th><th>Buffer</th><th>Harga dasar</th><th>Aktif</th><th>Harga cabang</th><th>Di cabang</th><th><span className="visually-hidden">Aksi</span></th></tr>
-          </thead>
-          <tbody>
-            {rows.map((s) => {
-              const bp = s.branches.find((x) => x.branch_id === branchId);
-              return (
-                <ServiceLine key={s.id} s={s} bp={bp} isOwner={isOwner} onChange={(p) => update(s.id, p)} onSave={() => saveService(s)} onSaveBranch={saveBranchPrice} />
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
-      <p className={`${styles.muted} ${styles.exportNote}`}>Durasi & buffer menentukan jam yang tersedia. Harga cabang kosong = memakai harga dasar. Layanan kategori Paket tampil di daftar harga saja (tidak dibooking per jam).</p>
+      {rows.length === 0 ? (
+        <EmptyState icon="scissors" title="Belum ada layanan" />
+      ) : (
+        <ul className={styles.serviceList}>
+          {rows.map((s) => {
+            const bp = s.branches.find((x) => x.branch_id === branchId);
+            const price = bp?.price ?? s.base_price;
+            const available = Boolean(s.is_active) && (bp ? Boolean(bp.is_active) : false);
+            return (
+              <li key={s.id}>
+                <button type="button" className={styles.serviceRow} onClick={() => setEditId(s.id)} aria-label={`Ubah ${s.name}`}>
+                  <span className={styles.serviceMain}>
+                    <span className={styles.cellMain}>{s.name}</span>
+                    <span className={styles.cellSub}>
+                      {s.category}
+                      {s.is_bookable ? ` · ${s.duration_min} mnt + ${s.buffer_min} mnt jeda` : ' · tidak dibooking per jam'}
+                    </span>
+                  </span>
+                  <span className={styles.servicePrice}>
+                    {rupiah(price)}
+                    {bp?.price != null && bp.price !== s.base_price ? <span className={styles.cellSub}>dasar {rupiah(s.base_price)}</span> : null}
+                  </span>
+                  <span className={styles.serviceBadges}>
+                    {!s.is_active ? <Badge>Nonaktif</Badge> : available ? <Badge tone="success">Tersedia</Badge> : <Badge tone="warning">Tidak di cabang ini</Badge>}
+                  </span>
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+      <p className={`${styles.muted} ${styles.exportNote}`}>Durasi & jeda (buffer) menentukan jam yang tersedia. Harga cabang kosong = memakai harga dasar.</p>
+      {editing && (
+        <ServiceSheet
+          key={`${editing.id}-${branchId}`}
+          service={editing}
+          branchId={branchId}
+          branchName={branchName}
+          isOwner={isOwner}
+          onClose={() => setEditId(null)}
+          onSaved={(patch) => {
+            setRows((r) => r && r.map((x) => (x.id === editing.id ? { ...x, ...patch } : x)));
+            setMsg(null);
+          }}
+          onBranchSaved={() => load()}
+        />
+      )}
     </>
   );
 }
 
-function ServiceLine({ s, bp, isOwner, onChange, onSave, onSaveBranch }: {
-  s: ServiceRow;
-  bp?: { price: number | null; is_active: number };
+function ServiceSheet({ service: s, branchId, branchName, isOwner, onClose, onSaved, onBranchSaved }: {
+  service: ServiceRow;
+  branchId: number;
+  branchName: string;
   isOwner: boolean;
-  onChange: (p: Partial<ServiceRow>) => void;
-  onSave: () => void;
-  onSaveBranch: (s: ServiceRow, price: string, active: boolean) => void;
+  onClose: () => void;
+  onSaved: (patch: Partial<ServiceRow>) => void;
+  onBranchSaved: () => void;
 }) {
+  const toast = useToast();
+  const bp = s.branches.find((x) => x.branch_id === branchId);
+  const [f, setF] = useState({ name: s.name, duration_min: s.duration_min, buffer_min: s.buffer_min, base_price: s.base_price, is_active: Boolean(s.is_active) });
   const [price, setPrice] = useState(bp?.price != null ? String(bp.price) : '');
   const [active, setActive] = useState(bp ? Boolean(bp.is_active) : true);
-  useEffect(() => {
-    setPrice(bp?.price != null ? String(bp.price) : '');
-    setActive(bp ? Boolean(bp.is_active) : true);
-  }, [bp?.price, bp?.is_active]);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+
+  const saveService = async () => {
+    setBusy(true);
+    setError('');
+    try {
+      await api(`/admin/services/${s.id}`, {
+        method: 'PUT',
+        json: { name: f.name, category: s.category, description: s.description, duration_min: f.duration_min, buffer_min: f.buffer_min, base_price: f.base_price, price_from: Boolean(s.price_from), badge: s.badge, is_bookable: Boolean(s.is_bookable), is_active: f.is_active, sort_order: s.sort_order },
+      });
+      onSaved({ ...f, is_active: f.is_active ? 1 : 0 });
+      toast(`${f.name} tersimpan.`);
+    } catch (e) {
+      setError(errorMessage(e));
+    } finally {
+      setBusy(false);
+    }
+  };
+  const saveBranch = async () => {
+    setBusy(true);
+    setError('');
+    try {
+      await api(`/admin/services/${s.id}/branches/${branchId}`, { method: 'PUT', json: { price: price.trim() === '' ? null : Number(price), is_active: active } });
+      toast(`Harga ${s.name} di ${branchName} tersimpan.`);
+      onBranchSaved();
+    } catch (e) {
+      setError(errorMessage(e));
+    } finally {
+      setBusy(false);
+    }
+  };
+
   return (
-    <tr>
-      <td data-label="Layanan">
-        {isOwner ? <input className={styles.tableInput} aria-label={`Nama layanan ${s.name}`} value={s.name} onChange={(e) => onChange({ name: e.target.value })} /> : <span className={styles.cellMain}>{s.name}</span>}
-        <span className={styles.cellSub}>{s.category}{s.is_bookable ? '' : ' · paket'}</span>
-      </td>
-      <td data-label="Durasi (mnt)">{isOwner ? <input className={styles.tableInput} aria-label={`Durasi ${s.name}`} type="number" value={s.duration_min} onChange={(e) => onChange({ duration_min: Number(e.target.value) })} /> : s.duration_min}</td>
-      <td data-label="Buffer (mnt)">{isOwner ? <input className={styles.tableInput} aria-label={`Buffer ${s.name}`} type="number" value={s.buffer_min} onChange={(e) => onChange({ buffer_min: Number(e.target.value) })} /> : s.buffer_min}</td>
-      <td data-label="Harga dasar">{isOwner ? <input className={styles.tableInput} aria-label={`Harga dasar ${s.name}`} type="number" value={s.base_price} onChange={(e) => onChange({ base_price: Number(e.target.value) })} /> : rupiah(s.base_price)}</td>
-      <td data-label="Aktif">{isOwner ? <input type="checkbox" aria-label={`${s.name} aktif`} checked={Boolean(s.is_active)} onChange={(e) => onChange({ is_active: e.target.checked ? 1 : 0 })} /> : s.is_active ? 'Ya' : 'Tidak'}</td>
-      <td data-label="Harga cabang"><input className={styles.tableInput} aria-label={`Harga ${s.name} di cabang`} type="number" value={price} onChange={(e) => setPrice(e.target.value)} placeholder={String(s.base_price)} /></td>
-      <td data-label="Di cabang"><input type="checkbox" aria-label={`${s.name} tersedia di cabang`} checked={active} onChange={(e) => setActive(e.target.checked)} /></td>
-      <td data-label="">
-        <span className={styles.row}>
-          {isOwner && <Button variant="dark" casing="normal" size="sm" onClick={onSave}>Simpan</Button>}
-          <Button variant="outline-dark" casing="normal" size="sm" onClick={() => onSaveBranch(s, price, active)}>Simpan cabang</Button>
-        </span>
-      </td>
-    </tr>
+    <Sheet open onClose={onClose} title={s.name} meta={<Badge>{s.category}</Badge>}>
+      {error && <Alert tone="danger">{error}</Alert>}
+      {isOwner ? (
+        <section className={styles.sheetSection} aria-label="Data layanan">
+          <h3 className={styles.sectionLabel}>Data layanan (semua cabang)</h3>
+          <Field label="Nama"><Input value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} /></Field>
+          <FieldGrid>
+            <Field label="Durasi (menit)"><Input type="number" min={5} value={f.duration_min} onChange={(e) => setF({ ...f, duration_min: Number(e.target.value) })} /></Field>
+            <Field label="Jeda/buffer (menit)"><Input type="number" min={0} value={f.buffer_min} onChange={(e) => setF({ ...f, buffer_min: Number(e.target.value) })} /></Field>
+          </FieldGrid>
+          <Field label="Harga dasar (Rp)"><Input type="number" min={0} value={f.base_price} onChange={(e) => setF({ ...f, base_price: Number(e.target.value) })} /></Field>
+          <Checkbox checked={f.is_active} onChange={(e) => setF({ ...f, is_active: e.target.checked })} className={styles.checkRow}>
+            Aktif (tampil & bisa dibooking)
+          </Checkbox>
+          <Button variant="dark" casing="normal" onClick={saveService} disabled={busy}>
+            Simpan data layanan
+          </Button>
+        </section>
+      ) : (
+        <dl className={styles.dl}>
+          <div><dt>Durasi</dt><dd>{s.duration_min} mnt + {s.buffer_min} mnt jeda</dd></div>
+          <div><dt>Harga dasar</dt><dd>{rupiah(s.base_price)}</dd></div>
+        </dl>
+      )}
+      <section className={styles.sheetSection} aria-label={`Harga di ${branchName}`}>
+        <h3 className={styles.sectionLabel}>Di cabang {branchName}</h3>
+        <Field label="Harga cabang (Rp)" hint={`Kosong = harga dasar (${rupiah(isOwner ? f.base_price : s.base_price)})`}>
+          <Input type="number" min={0} value={price} onChange={(e) => setPrice(e.target.value)} placeholder={String(s.base_price)} />
+        </Field>
+        <Checkbox checked={active} onChange={(e) => setActive(e.target.checked)} className={styles.checkRow}>
+          Tersedia di cabang ini
+        </Checkbox>
+        <Button variant="outline-dark" casing="normal" onClick={saveBranch} disabled={busy}>
+          Simpan harga cabang
+        </Button>
+      </section>
+    </Sheet>
   );
 }
 

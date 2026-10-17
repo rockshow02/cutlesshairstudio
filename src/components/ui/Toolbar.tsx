@@ -3,8 +3,10 @@ import { Icon } from './Icon';
 import styles from './Toolbar.module.css';
 
 interface ToolbarProps {
-  /** Selalu tampil (mis. navigasi tanggal) */
+  /** Selalu tampil (mis. navigasi tanggal); di HP satu baris penuh */
   primary?: ReactNode;
+  /** Selalu tampil, sebaris dengan tombol Filter di HP (mis. Harian/Mingguan) */
+  secondary?: ReactNode;
   /** Filter: sebaris di desktop, di HP dibuka lewat tombol "Filter" sebagai panel bawah */
   filters?: ReactNode;
   /** Jumlah filter aktif (angka di tombol Filter) */
@@ -18,7 +20,7 @@ interface ToolbarProps {
  * Toolbar filter. Kontrol dirender SEKALI (label/id tetap unik); di HP panel filter menjadi
  * bottom sheet (Esc / Selesai / klik latar menutup).
  */
-export function Toolbar({ primary, filters, activeCount = 0, actions, label = 'Filter' }: ToolbarProps) {
+export function Toolbar({ primary, secondary, filters, activeCount = 0, actions, label = 'Filter' }: ToolbarProps) {
   const [open, setOpen] = useState(false);
   const panelId = useId();
   const panel = useRef<HTMLDivElement>(null);
@@ -40,6 +42,7 @@ export function Toolbar({ primary, filters, activeCount = 0, actions, label = 'F
   return (
     <div className={styles.toolbar} role="toolbar" aria-label={label}>
       {primary && <div className={styles.primary}>{primary}</div>}
+      {secondary && <div className={styles.secondary}>{secondary}</div>}
       {filters && (
         <>
           <button ref={toggle} type="button" className={styles.filterToggle} aria-expanded={open} aria-controls={panelId} onClick={() => setOpen((v) => !v)}>

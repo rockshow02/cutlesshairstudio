@@ -148,6 +148,14 @@
 }
 .iconBtn:hover { border-color: var(--c-ink); }
 .dateInput { width: 10.5rem; }
+.todayBtn { margin-left: var(--space-1); white-space: nowrap; flex: none; }
+/* HP: baris 1 = ◀ tanggal ▶ Hari ini (tanggal melebar), baris 2 = Harian/Mingguan + Filter */
+@media (max-width: 767px) {
+  .dateNav { flex: 1 1 100%; min-width: 0; }
+  .dateNav > :nth-child(2) { flex: 1 1 auto; min-width: 0; }
+  .dateInput { width: 100%; min-width: 0; padding-inline: var(--space-2); }
+  .todayBtn { padding-inline: var(--space-3); }
+}
 .newButton {
   display: inline-flex;
   align-items: center;
@@ -316,6 +324,42 @@
   .tableWrap[data-stack] .table .num { text-align: left; }
   .tableInput { min-height: var(--touch); }
 }
+
+/* ---------- Layanan & harga: daftar ringkas ---------- */
+.serviceList {
+  display: grid;
+  border: 1px solid var(--c-line-dark);
+  border-radius: var(--radius-lg);
+  background: var(--c-surface);
+  overflow: hidden;
+}
+.serviceList > li + li { border-top: 1px solid var(--c-line-dark); }
+.serviceRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: var(--space-2) var(--space-4);
+  width: 100%;
+  min-height: 60px;
+  padding: var(--space-3) var(--space-4);
+  border: 0;
+  background: transparent;
+  color: var(--c-ink);
+  font: inherit;
+  font-size: var(--fs-sm);
+  text-align: left;
+  cursor: pointer;
+  transition: background-color var(--dur-ui) var(--ease);
+}
+.serviceRow:hover { background: var(--c-paper-2); }
+.serviceMain { min-width: 0; }
+.servicePrice { font-weight: 600; text-align: right; font-variant-numeric: tabular-nums; }
+.serviceBadges { display: flex; justify-content: flex-end; min-width: 9.5rem; }
+@media (max-width: 599px) {
+  .serviceRow { grid-template-columns: minmax(0, 1fr) auto; }
+  .serviceBadges { grid-column: 1 / -1; justify-content: flex-start; min-width: 0; }
+}
+.sheetSection + .sheetSection { margin-top: var(--space-5); padding-top: var(--space-5); border-top: 1px solid var(--c-line-dark); }
 
 /* ---------- Ringkasan ---------- */
 .stats { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: var(--space-3); margin-bottom: var(--space-6); }
