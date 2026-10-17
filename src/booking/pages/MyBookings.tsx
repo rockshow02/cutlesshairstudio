@@ -66,6 +66,8 @@ export function MyBookings() {
       }
     >
       {error && <Alert tone="danger">{error}</Alert>}
+      {/* aria-busy: true selama daftar dimuat (ulang), mis. setelah batal/jadwal ulang */}
+      <div id="daftar-booking" aria-busy={!active || !history.items || history.loadingMore}>
       {!active || !history.items ? (
         <Loading count={2} label="Memuat booking…" />
       ) : (
@@ -140,6 +142,7 @@ export function MyBookings() {
           </section>
         </>
       )}
+      </div>
     </Page>
   );
 }
