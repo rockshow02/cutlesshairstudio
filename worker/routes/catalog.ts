@@ -6,6 +6,8 @@
  */
 import type { Context } from 'hono';
 import { createRouter, type AppEnv } from '../app';
+import type { Env } from '../env';
+import { hydrateProducts, shopActive } from '../lib/shop';
 
 export const catalogRoutes = createRouter();
 
@@ -15,7 +17,39 @@ const DISPLAY_ORDER = [1, 2, 3, 4, 5, 6, 0];
 const STATUS = { active: 'Aktif', coming_soon: 'Segera Dibuka', closed: 'Tutup Sementara' } as const;
 const TTL_SECONDS = 60;
 
-export async function buildCatalog(db: D1Database) {
+/**
+ * Produk toko (D1) dalam bentuk src/content/products.json + slug, hanya bila toko aktif.
+ * Toko mati → undefined: landing page & /produk tetap memakai products.json.
+ */
+async function shopProducts(env: Pick<Env, 'DB' | 'SHOP_ENABLED'>) {
+  if (!(await shopActive(env))) return undefined;
+  const { results } = await env.DB.prepare(
+    `SELECT id, slug, name, category, description, notes, badge, is_active, sort_order, release_at, per_customer_limit FROM products
+     WHERE is_active = 1 ORDER BY sort_order, id LIMIT 100`,
+  ).all<Parameters<typeof hydrateProducts>[1][number]>();
+  const products = await hydrateProducts(env.DB, results);
+  return products
+    .filter((p) => p.variants.length)
+    .map((p) => {
+      const cheapest = p.variants.reduce((a, b) => (b.price < a.price ? b : a));
+      return {
+        slug: p.slug,
+        name: p.name,
+        category: p.category,
+        price: cheapest.price,
+        compareAtPrice: cheapest.compareAtPrice ?? undefined,
+        size: p.variants.length === 1 ? p.variants[0].name : undefined,
+        description: p.description ?? undefined,
+        image: p.images[0]?.path,
+        badge: p.badge ?? undefined,
+        inStock: p.variants.some((v) => Object.values(v.stock).some((n) => n > 0)),
+        order: p.sortOrder,
+        isActive: true,
+      };
+    });
+}
+
+export async function buildCatalog(db: D1Database, env?: Pick<Env, 'SHOP_ENABLED'>) {
   const [branches, hours, barbers, services, prices] = await db.batch([
     db.prepare('SELECT * FROM branches ORDER BY sort_order, id'),
     db.prepare('SELECT * FROM branch_hours'),
@@ -26,7 +60,9 @@ export async function buildCatalog(db: D1Database) {
   type Row = Record<string, unknown>;
   const h = hours.results as Row[];
   const p = prices.results as Row[];
+  const products = env ? await shopProducts({ DB: db, SHOP_ENABLED: env.SHOP_ENABLED }) : undefined;
   return {
+    ...(products ? { products } : {}),
     branches: (branches.results as Row[]).map((b) => ({
       slug: b.slug,
       name: b.name,
@@ -76,7 +112,7 @@ catalogRoutes.get('/public/catalog', async (c: Context<AppEnv>) => {
   const key = new Request(new URL('/api/public/catalog?v=1', c.req.url).toString());
   const hit = cache ? await cache.match(key) : undefined;
   if (hit) return hit;
-  const res = new Response(JSON.stringify(await buildCatalog(c.env.DB)), {
+  const res = new Response(JSON.stringify(await buildCatalog(c.env.DB, c.env)), {
     headers: { 'content-type': 'application/json; charset=utf-8', 'cache-control': `public, max-age=${TTL_SECONDS}` },
   });
   if (cache) {

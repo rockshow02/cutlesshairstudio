@@ -13,6 +13,7 @@ import { bookingRoutes } from './routes/bookings';
 import { adminRoutes } from './routes/admin';
 import { catalogRoutes } from './routes/catalog';
 import { loyaltyRoutes } from './routes/loyalty';
+import { shopRoutes } from './routes/shop';
 import { runScheduled } from './cron';
 
 export const app = createRouter();
@@ -36,6 +37,7 @@ app.route('/api', authRoutes);
 app.route('/api', meRoutes);
 app.route('/api', bookingRoutes);
 app.route('/api', loyaltyRoutes);
+app.route('/api', shopRoutes);
 app.route('/api/admin', adminRoutes);
 
 app.all('/api/*', (c) => c.json({ error: { code: 'NOT_FOUND', message: 'Endpoint tidak ditemukan.' } }, 404));
@@ -52,7 +54,7 @@ const serveEntry = (entry: string) => async (c: Context<AppEnv>) => {
 };
 app.get('/admin', serveEntry('/admin/'));
 app.get('/admin/*', serveEntry('/admin/'));
-for (const p of ['/masuk', '/masuk/*', '/profil', '/profil/*', '/booking', '/booking/*', '/kebijakan-privasi', '/kebijakan-privasi/*']) {
+for (const p of ['/masuk', '/masuk/*', '/profil', '/profil/*', '/booking', '/booking/*', '/kebijakan-privasi', '/kebijakan-privasi/*', '/shop', '/shop/*', '/pesanan', '/pesanan/*']) {
   app.get(p, serveEntry('/booking/'));
 }
 

@@ -50,7 +50,7 @@
         "binding": "ASSETS",
         "html_handling": "auto-trailing-slash",
         "not_found_handling": "404-page",
-        "run_worker_first": ["/api/*", "/masuk*", "/profil*", "/booking*", "/admin*", "/kebijakan-privasi*"]
+        "run_worker_first": ["/api/*", "/masuk*", "/profil*", "/booking*", "/admin*", "/kebijakan-privasi*", "/shop*", "/pesanan*"]
       },
       "d1_databases": [
         {
@@ -74,7 +74,11 @@
         "TURNSTILE_SITE_KEY": "0x4AAAAAAFZESiyCC6DWREp5",
         // Cutless Stamp tersedia di staging; program tetap MATI sampai owner mengaktifkannya di Admin → Pengaturan.
         // Produksi tidak punya variabel ini → fitur mati.
-        "LOYALTY_ENABLED": "true"
+        "LOYALTY_ENABLED": "true",
+        // Cutless Shop tersedia di staging; toko tetap MATI sampai owner mengaktifkannya di Admin → Toko → Pengaturan.
+        // Ongkir otomatis (RajaOngkir) hanya bila SHIPPING_PROVIDER = "rajaongkir" + secret RAJAONGKIR_API_KEY + pengaturan toko.
+        "SHOP_ENABLED": "true",
+        "SHIPPING_PROVIDER": "manual"
       },
       // Tiap 15 menit: batalkan pending kedaluwarsa, bersihkan sesi. 02.00 WIB: anonimkan akun tidak aktif > 24 bulan.
       "triggers": { "crons": ["*/15 * * * *", "0 19 * * *"] }

@@ -1,10 +1,12 @@
 /**
  * Cron Trigger (staging: wrangler.jsonc → triggers.crons):
  *  "*\/15 * * * *" → batalkan pending kedaluwarsa, hapus sesi kedaluwarsa & catatan rate limit lama
+ *                   + toko: pesanan belum dibayar kedaluwarsa, selesai otomatis setelah dikirim, tandai lewat batas ambil
  *  "0 19 * * *"   → (02.00 WIB) anonimkan pelanggan yang tidak aktif > 24 bulan
  */
 import { PENDING_CUTOFF_BEFORE_START_MIN, PENDING_TTL_MIN } from '../shared/booking';
 import { expireLoyalty } from './lib/loyalty';
+import { runShopCron } from './lib/shop';
 import type { Env } from './env';
 import { getBranch } from './lib/availability';
 import { transitionBooking } from './lib/bookings';
@@ -74,4 +76,10 @@ export async function runScheduled(env: Env, cron: string, now = Date.now()): Pr
   const n = await expirePendingBookings(env, now);
   await cleanup(env, now);
   if (n) console.log(`cron: ${n} booking pending dibatalkan otomatis`);
+  try {
+    const shop = await runShopCron(env, now);
+    if (shop.expired || shop.completed || shop.overdue) console.log(`cron toko: ${shop.expired} kedaluwarsa, ${shop.completed} selesai otomatis, ${shop.overdue} lewat batas ambil`);
+  } catch (e) {
+    console.error('cron toko', e);
+  }
 }

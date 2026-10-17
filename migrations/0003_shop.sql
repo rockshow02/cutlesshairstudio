@@ -152,9 +152,13 @@ CREATE TABLE orders (
   cancel_reason TEXT,
   customer_note TEXT,
   admin_note TEXT,
+  -- Penanda transisi status terakhir (UUID): pernyataan stok/stempel dalam batch yang sama hanya berlaku
+  -- untuk transisi yang benar-benar terjadi (aman dari permintaan bersamaan)
+  transition_id TEXT,
   created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
   updated_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
 );
+CREATE INDEX orders_transition ON orders (transition_id);
 CREATE INDEX orders_customer ON orders (customer_id, created_at);
 CREATE INDEX orders_branch_status ON orders (branch_id, status, created_at);
 CREATE INDEX orders_status_due ON orders (status, payment_due_at);
