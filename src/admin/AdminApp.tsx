@@ -142,7 +142,7 @@ export function AdminApp() {
               </div>
             </nav>
           </header>
-          <main className={[styles.main, active === 'jadwal' && styles.wide].filter(Boolean).join(' ')} id="main">
+          <main className={styles.main} id="main">
             {active === 'jadwal' && <Schedule />}
             {active === 'baru' && <WalkIn />}
             {active === 'pelanggan' && <Customers />}

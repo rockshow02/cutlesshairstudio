@@ -160,7 +160,7 @@ export function Schedule() {
         actions={
           <>
             {!isToday && (
-              <Button variant="outline-dark" casing="normal" size="sm" onClick={() => setDate(todayWib())}>
+              <Button variant="outline-dark" casing="normal" onClick={() => setDate(todayWib())}>
                 Hari ini
               </Button>
             )}

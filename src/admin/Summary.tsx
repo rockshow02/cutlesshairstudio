@@ -1,6 +1,11 @@
 import { useEffect, useState } from 'react';
 import { api, errorMessage } from '@/app/api';
 import { addDays, localDate } from '@shared/time';
+import { Button } from '@/components/ui/Button';
+import { Card } from '@/components/ui/Card';
+import { Alert, EmptyState, SkeletonList } from '@/components/ui/Feedback';
+import { Field, Input, Select } from '@/components/ui/Field';
+import { PageHeader } from '@/components/ui/PageHeader';
 import { useAdmin } from './context';
 import styles from './admin.module.css';
 
@@ -30,74 +35,74 @@ export function Summary() {
 
   return (
     <section aria-labelledby="sum-title">
-      <h1 id="sum-title" className={styles.h1}>
-        Ringkasan
-      </h1>
-      {error && <p className={styles.alert} data-tone="error">{error}</p>}
+      <PageHeader titleId="sum-title" title="Ringkasan" description="Angka booking per cabang, tingkat tidak datang, dan layanan terpopuler 30 hari terakhir." />
+      {error && <Alert tone="danger">{error}</Alert>}
       {!data ? (
-        <p className={styles.muted}>Memuat…</p>
+        !error && <SkeletonList label="Memuat ringkasan…" count={3} height={96} />
       ) : (
         <>
           <div className={styles.stats}>
             {data.branches.map((b) => (
               <div key={b.id} className={styles.stat}>
-                <strong>{b.today ?? 0}</strong>
-                <span>
-                  booking hari ini · {b.name}
-                  <br />
-                  {b.week ?? 0} dalam 7 hari ke depan
+                <span className={styles.statValue}>{b.today ?? 0}</span>
+                <span className={styles.statLabel}>
+                  booking hari ini · <strong>{b.name}</strong>
                 </span>
+                <span className={styles.statLabel}>{b.week ?? 0} dalam 7 hari ke depan</span>
               </div>
             ))}
             <div className={styles.stat}>
-              <strong>{data.noShowRate}%</strong>
-              <span>tingkat tidak datang (30 hari, {data.noShowCount} kali)</span>
+              <span className={styles.statValue}>{data.noShowRate}%</span>
+              <span className={styles.statLabel}>tingkat tidak datang (30 hari, {data.noShowCount} kali)</span>
             </div>
             <div className={styles.stat}>
-              <strong>{data.pendingCount}</strong>
-              <span>booking menunggu konfirmasi</span>
+              <span className={styles.statValue}>{data.pendingCount}</span>
+              <span className={styles.statLabel}>booking menunggu konfirmasi</span>
             </div>
           </div>
           <h2 className={styles.h2}>Layanan terpopuler (30 hari)</h2>
           {data.popularServices.length === 0 ? (
-            <p className={styles.muted}>Belum ada data.</p>
+            <EmptyState icon="scissors" title="Belum ada data" compact />
           ) : (
-            <ol style={{ paddingLeft: 20, listStyle: 'decimal' }}>
+            <ol className={styles.rank}>
               {data.popularServices.map((s) => (
                 <li key={s.service}>
-                  {s.service} · {s.n} booking
+                  <span>{s.service}</span>
+                  <strong>{s.n} booking</strong>
                 </li>
               ))}
             </ol>
           )}
         </>
       )}
+
       <h2 className={styles.h2}>Ekspor CSV</h2>
-      <div className={styles.toolbar}>
-        <label className={styles.control}>
-          Dari
-          <input type="date" value={from} onChange={(e) => setFrom(e.target.value)} />
-        </label>
-        <label className={styles.control}>
-          Sampai
-          <input type="date" value={to} onChange={(e) => setTo(e.target.value)} />
-        </label>
-        {me.admin.role === 'owner' && (
-          <label className={styles.control}>
-            Cabang
-            <select value={branch} onChange={(e) => setBranch(e.target.value)}>
-              <option value="">Semua</option>
-              {me.branches.map((b) => (
-                <option key={b.id} value={b.id}>{b.name}</option>
-              ))}
-            </select>
-          </label>
-        )}
-        <a className={styles.btn} style={{ display: 'inline-flex', alignItems: 'center' }} href={exportUrl} download>
-          Unduh CSV
-        </a>
-      </div>
-      <p className={styles.muted}>File bisa dibuka di Excel / Google Sheets. Berisi nomor pelanggan: simpan dengan aman.</p>
+      <Card tone="outline" as="div">
+        <div className={styles.exportRow}>
+          <Field label="Dari" flush>
+            <Input type="date" value={from} onChange={(e) => setFrom(e.target.value)} />
+          </Field>
+          <Field label="Sampai" flush>
+            <Input type="date" value={to} onChange={(e) => setTo(e.target.value)} />
+          </Field>
+          {me.admin.role === 'owner' && (
+            <Field label="Cabang" flush>
+              <Select value={branch} onChange={(e) => setBranch(e.target.value)}>
+                <option value="">Semua</option>
+                {me.branches.map((b) => (
+                  <option key={b.id} value={b.id}>
+                    {b.name}
+                  </option>
+                ))}
+              </Select>
+            </Field>
+          )}
+          <Button href={exportUrl} download variant="dark" casing="normal">
+            Unduh CSV
+          </Button>
+        </div>
+        <p className={`${styles.muted} ${styles.exportNote}`}>File bisa dibuka di Excel / Google Sheets. Berisi nomor pelanggan: simpan dengan aman.</p>
+      </Card>
     </section>
   );
 }

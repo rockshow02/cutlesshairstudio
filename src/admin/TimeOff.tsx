@@ -2,6 +2,16 @@ import { useCallback, useEffect, useState, type FormEvent } from 'react';
 import { api, errorMessage } from '@/app/api';
 import { clock, longDate } from '@/app/format';
 import { toMinutes, zonedToUtc } from '@shared/time';
+import { Badge } from '@/components/ui/Badge';
+import { Button } from '@/components/ui/Button';
+import { Card } from '@/components/ui/Card';
+import { Alert, EmptyState, SkeletonList } from '@/components/ui/Feedback';
+import { Field, FieldGrid, Input, Select } from '@/components/ui/Field';
+import { PageHeader } from '@/components/ui/PageHeader';
+import { SegmentedControl } from '@/components/ui/SegmentedControl';
+import type { Tone } from '@/components/ui/status';
+import { useConfirm } from '@/components/ui/useConfirm';
+import { useToast } from '@/components/ui/toastContext';
 import { useAdmin } from './context';
 import styles from './admin.module.css';
 
@@ -20,14 +30,19 @@ interface TimeOffRow {
 }
 
 const REASONS = { cuti: 'Cuti', sakit: 'Sakit', libur_cabang: 'Libur cabang', hari_raya: 'Hari raya', lainnya: 'Lainnya' } as const;
-const STATUS = { pending: 'Menunggu persetujuan', approved: 'Disetujui', rejected: 'Ditolak' } as const;
+const STATUS: Record<TimeOffRow['status'], { label: string; tone: Tone }> = {
+  pending: { label: 'Menunggu persetujuan', tone: 'warning' },
+  approved: { label: 'Disetujui', tone: 'success' },
+  rejected: { label: 'Ditolak', tone: 'neutral' },
+};
 
 /** Libur cabang & cuti hairstylist. Hairstylist mengajukan cutinya sendiri (perlu disetujui admin). */
 export function TimeOff() {
   const me = useAdmin();
+  const toast = useToast();
   const isBarber = me.admin.role === 'barber';
   const [rows, setRows] = useState<TimeOffRow[] | null>(null);
-  const [msg, setMsg] = useState<{ tone: 'ok' | 'error'; text: string } | null>(null);
+  const [error, setError] = useState('');
   const [kind, setKind] = useState<'barber' | 'branch'>('barber');
   const [branchId, setBranchId] = useState<number>(me.admin.branch_id ?? me.branches[0]?.id);
   const [barberId, setBarberId] = useState<number | ''>(me.admin.barber_id ?? '');
@@ -37,9 +52,10 @@ export function TimeOff() {
   const [endTime, setEndTime] = useState('23:59');
   const [reason, setReason] = useState<keyof typeof REASONS>('cuti');
   const [note, setNote] = useState('');
+  const [dialog, confirm] = useConfirm();
 
   const load = useCallback(() => {
-    api<{ timeOff: TimeOffRow[] }>('/admin/time-off').then((r) => setRows(r.timeOff)).catch((e) => setMsg({ tone: 'error', text: errorMessage(e) }));
+    api<{ timeOff: TimeOffRow[] }>('/admin/time-off').then((r) => setRows(r.timeOff)).catch((e) => setError(errorMessage(e)));
   }, []);
   useEffect(load, [load]);
 
@@ -55,124 +71,185 @@ export function TimeOff() {
       reason,
       note: note || null,
     };
+    setError('');
     try {
       const r = await api<{ status: string }>('/admin/time-off', { method: 'POST', json: body });
-      setMsg({ tone: 'ok', text: r.status === 'pending' ? 'Pengajuan cuti terkirim, menunggu persetujuan admin.' : 'Tersimpan. Jam tersebut tidak bisa dibooking.' });
+      toast(r.status === 'pending' ? 'Pengajuan cuti terkirim, menunggu persetujuan admin.' : 'Tersimpan. Jam tersebut tidak bisa dibooking.');
       setNote('');
       load();
     } catch (err) {
-      setMsg({ tone: 'error', text: errorMessage(err) });
+      setError(errorMessage(err));
     }
   };
 
-  const act = async (id: number, action: 'approve' | 'reject' | 'delete') => {
+  const act = async (row: TimeOffRow, action: 'approve' | 'reject' | 'delete') => {
+    if (action === 'delete') {
+      const ok = await confirm({
+        title: 'Hapus data libur/cuti ini?',
+        message: `${row.barber_name ?? `Cabang ${row.branch_name}`} · ${REASONS[row.reason as keyof typeof REASONS] ?? row.reason}. Jam tersebut bisa dibooking lagi.`,
+        confirmLabel: 'Ya, hapus',
+        cancelLabel: 'Kembali',
+      });
+      if (ok === null) return;
+    }
     try {
-      if (action === 'delete') await api(`/admin/time-off/${id}`, { method: 'DELETE' });
-      else await api(`/admin/time-off/${id}/${action}`, { method: 'POST' });
+      if (action === 'delete') await api(`/admin/time-off/${row.id}`, { method: 'DELETE' });
+      else await api(`/admin/time-off/${row.id}/${action}`, { method: 'POST' });
+      toast(action === 'approve' ? 'Cuti disetujui.' : action === 'reject' ? 'Cuti ditolak.' : 'Data libur/cuti dihapus.');
       load();
     } catch (e) {
-      setMsg({ tone: 'error', text: errorMessage(e) });
+      toast(errorMessage(e), 'danger');
     }
   };
 
   const barbers = me.barbers.filter((b) => b.branch_id === branchId && b.is_active);
-  const bookedNote = 'Booking yang sudah ada di rentang ini TIDAK otomatis dibatalkan; cek tab Jadwal dan pindahkan/batalkan bila perlu.';
 
   return (
     <section aria-labelledby="off-title">
-      <h1 id="off-title" className={styles.h1}>
-        {isBarber ? 'Ajukan cuti' : 'Libur cabang & cuti hairstylist'}
-      </h1>
-      {msg && (
-        <p className={styles.alert} data-tone={msg.tone} role={msg.tone === 'error' ? 'alert' : 'status'}>
-          {msg.text}
-        </p>
-      )}
-      <form className={styles.panel} onSubmit={submit}>
+      <PageHeader
+        titleId="off-title"
+        title={isBarber ? 'Ajukan cuti' : 'Libur & cuti'}
+        description={isBarber ? 'Pengajuan perlu disetujui admin cabang.' : 'Atur libur cabang/hari raya dan cuti hairstylist. Jam yang diblokir tidak bisa dibooking.'}
+      />
+      {error && <Alert tone="danger">{error}</Alert>}
+      <Card tone="outline" as="form" onSubmit={submit}>
         {!isBarber && (
-          <div className={styles.seg} role="group" aria-label="Jenis" style={{ marginBottom: 12 }}>
-            <button type="button" aria-pressed={kind === 'barber'} onClick={() => { setKind('barber'); setReason('cuti'); }}>Cuti / sakit hairstylist</button>
-            <button type="button" aria-pressed={kind === 'branch'} onClick={() => { setKind('branch'); setReason('libur_cabang'); }}>Libur cabang / hari raya</button>
+          <div className={styles.segRow}>
+            <SegmentedControl
+              label="Jenis"
+              value={kind}
+              onChange={(k) => {
+                setKind(k);
+                setReason(k === 'barber' ? 'cuti' : 'libur_cabang');
+              }}
+              options={[
+                { value: 'barber', label: 'Cuti / sakit hairstylist' },
+                { value: 'branch', label: 'Libur cabang / hari raya' },
+              ]}
+              wrap
+            />
           </div>
         )}
-        <div className={styles.grid2}>
+        <FieldGrid>
           {me.admin.role === 'owner' && (
-            <label className={styles.control}>
-              Cabang
-              <select value={branchId} onChange={(e) => setBranchId(Number(e.target.value))}>
-                {me.branches.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
-              </select>
-            </label>
+            <Field label="Cabang">
+              <Select value={branchId} onChange={(e) => setBranchId(Number(e.target.value))}>
+                {me.branches.map((b) => (
+                  <option key={b.id} value={b.id}>
+                    {b.name}
+                  </option>
+                ))}
+              </Select>
+            </Field>
           )}
           {kind === 'barber' && !isBarber && (
-            <label className={styles.control}>
-              Hairstylist
-              <select value={barberId} onChange={(e) => setBarberId(Number(e.target.value))} required>
+            <Field label="Hairstylist">
+              <Select value={barberId} onChange={(e) => setBarberId(Number(e.target.value))} required>
                 <option value="">Pilih</option>
-                {barbers.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
-              </select>
-            </label>
+                {barbers.map((b) => (
+                  <option key={b.id} value={b.id}>
+                    {b.name}
+                  </option>
+                ))}
+              </Select>
+            </Field>
           )}
-          <label className={styles.control}>
-            Alasan
-            <select value={reason} onChange={(e) => setReason(e.target.value as keyof typeof REASONS)}>
+          <Field label="Alasan">
+            <Select value={reason} onChange={(e) => setReason(e.target.value as keyof typeof REASONS)}>
               {Object.entries(REASONS)
                 .filter(([k]) => (kind === 'branch' && !isBarber ? ['libur_cabang', 'hari_raya', 'lainnya'] : ['cuti', 'sakit', 'lainnya']).includes(k))
-                .map(([k, v]) => <option key={k} value={k}>{v}</option>)}
-            </select>
-          </label>
-          <label className={styles.control}>
-            Mulai (tanggal & jam)
-            <span style={{ display: 'flex', gap: 4 }}>
-              <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} required />
-              <input type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)} />
-            </span>
-          </label>
-          <label className={styles.control}>
-            Selesai (tanggal & jam)
-            <span style={{ display: 'flex', gap: 4 }}>
-              <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} placeholder="sama" />
-              <input type="time" value={endTime} onChange={(e) => setEndTime(e.target.value)} />
-            </span>
-          </label>
-          <label className={styles.control}>
-            Keterangan (opsional)
-            <input value={note} onChange={(e) => setNote(e.target.value)} maxLength={300} />
-          </label>
-        </div>
-        <p className={styles.muted}>Seharian: biarkan 00:00 – 23:59. {bookedNote}</p>
-        <button type="submit" className={styles.btn}>{isBarber ? 'Ajukan' : 'Simpan'}</button>
-      </form>
+                .map(([k, v]) => (
+                  <option key={k} value={k}>
+                    {v}
+                  </option>
+                ))}
+            </Select>
+          </Field>
+          <Field label="Keterangan (opsional)">
+            <Input value={note} onChange={(e) => setNote(e.target.value)} maxLength={300} />
+          </Field>
+          <div className={styles.inlineFields}>
+            <Field label="Mulai">
+              <Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} required />
+            </Field>
+            <Field label="Jam mulai">
+              <Input type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)} />
+            </Field>
+          </div>
+          <div className={styles.inlineFields}>
+            <Field label="Selesai" hint="Kosong = sama dengan tanggal mulai">
+              <Input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+            </Field>
+            <Field label="Jam selesai">
+              <Input type="time" value={endTime} onChange={(e) => setEndTime(e.target.value)} />
+            </Field>
+          </div>
+        </FieldGrid>
+        <Alert tone="info" role="none">
+          Seharian: biarkan 00:00 – 23:59. Booking yang sudah ada di rentang ini tidak otomatis dibatalkan; cek tab Jadwal dan pindahkan/batalkan bila perlu.
+        </Alert>
+        <Button type="submit" variant="dark" casing="normal">
+          {isBarber ? 'Ajukan' : 'Simpan'}
+        </Button>
+      </Card>
 
       <h2 className={styles.h2}>Mendatang & 30 hari terakhir</h2>
       {!rows ? (
-        <p className={styles.muted}>Memuat…</p>
+        <SkeletonList label="Memuat…" count={2} height={56} />
       ) : rows.length === 0 ? (
-        <p className={styles.muted}>Belum ada.</p>
+        <EmptyState icon="calendar" title="Belum ada libur atau cuti" compact />
       ) : (
-        <div className={styles.tableWrap}>
+        <div className={styles.tableWrap} data-stack>
           <table className={styles.table}>
-            <thead><tr><th>Untuk</th><th>Mulai</th><th>Selesai</th><th>Alasan</th><th>Status</th><th /></tr></thead>
+            <thead>
+              <tr>
+                <th>Untuk</th>
+                <th>Mulai</th>
+                <th>Selesai</th>
+                <th>Alasan</th>
+                <th>Status</th>
+                <th>
+                  <span className="visually-hidden">Aksi</span>
+                </th>
+              </tr>
+            </thead>
             <tbody>
               {rows.map((r) => {
                 const rtz = me.branches.find((b) => b.name === r.branch_name)?.timezone ?? 'Asia/Jakarta';
                 return (
                   <tr key={r.id}>
-                    <td>{r.barber_name ?? `Cabang ${r.branch_name}`}</td>
-                    <td>{longDate(r.start_at, rtz)} {clock(r.start_at, rtz)}</td>
-                    <td>{longDate(r.end_at, rtz)} {clock(r.end_at, rtz)}</td>
-                    <td>{REASONS[r.reason as keyof typeof REASONS] ?? r.reason}{r.note ? ` · ${r.note}` : ''}</td>
-                    <td>{STATUS[r.status]}</td>
-                    <td>
+                    <td data-label="Untuk" className={styles.cellMain}>
+                      {r.barber_name ?? `Cabang ${r.branch_name}`}
+                    </td>
+                    <td data-label="Mulai">
+                      {longDate(r.start_at, rtz)} {clock(r.start_at, rtz)}
+                    </td>
+                    <td data-label="Selesai">
+                      {longDate(r.end_at, rtz)} {clock(r.end_at, rtz)}
+                    </td>
+                    <td data-label="Alasan">
+                      {REASONS[r.reason as keyof typeof REASONS] ?? r.reason}
+                      {r.note ? <span className={styles.cellSub}>{r.note}</span> : null}
+                    </td>
+                    <td data-label="Status">
+                      <Badge tone={STATUS[r.status].tone}>{STATUS[r.status].label}</Badge>
+                    </td>
+                    <td data-label="">
                       {!isBarber && (
-                        <span className={styles.row} style={{ margin: 0 }}>
+                        <span className={styles.row}>
                           {r.status === 'pending' && (
                             <>
-                              <button type="button" className={`${styles.btn} ${styles.btnSmall}`} onClick={() => act(r.id, 'approve')}>Setujui</button>
-                              <button type="button" className={`${styles.btnGhost} ${styles.btnSmall}`} onClick={() => act(r.id, 'reject')}>Tolak</button>
+                              <Button variant="dark" casing="normal" size="sm" onClick={() => act(r, 'approve')}>
+                                Setujui
+                              </Button>
+                              <Button variant="outline-dark" casing="normal" size="sm" onClick={() => act(r, 'reject')}>
+                                Tolak
+                              </Button>
                             </>
                           )}
-                          <button type="button" className={`${styles.btnGhost} ${styles.btnSmall}`} onClick={() => window.confirm('Hapus data libur/cuti ini?') && act(r.id, 'delete')}>Hapus</button>
+                          <Button variant="text" casing="normal" size="sm" className={styles.textDanger} onClick={() => act(r, 'delete')}>
+                            Hapus
+                          </Button>
                         </span>
                       )}
                     </td>
@@ -183,6 +260,7 @@ export function TimeOff() {
           </table>
         </div>
       )}
+      {dialog}
     </section>
   );
 }

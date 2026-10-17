@@ -1,8 +1,15 @@
 import { useState } from 'react';
 import { api, errorMessage } from '@/app/api';
 import { clock, formatPhone, longDate, waLink } from '@/app/format';
-import { STATUS_LABEL } from '@shared/booking';
 import { MAX_NO_SHOW } from '@shared/booking';
+import { Badge, StatusBadge } from '@/components/ui/Badge';
+import { Button } from '@/components/ui/Button';
+import { Alert, EmptyState, SkeletonList } from '@/components/ui/Feedback';
+import { Field, Input } from '@/components/ui/Field';
+import { Sheet } from '@/components/ui/Overlay';
+import { PageHeader } from '@/components/ui/PageHeader';
+import { useConfirm } from '@/components/ui/useConfirm';
+import { useToast } from '@/components/ui/toastContext';
 import { useAdmin, type AdminBooking } from './context';
 import styles from './admin.module.css';
 
@@ -23,133 +30,227 @@ interface CustomerRow {
 /** Pelanggan: cari, riwayat & jumlah no-show, blokir/buka blokir, reset password (bila fitur aktif) */
 export function Customers() {
   const me = useAdmin();
+  const toast = useToast();
   const [q, setQ] = useState('');
   const [list, setList] = useState<CustomerRow[] | null>(null);
+  const [searching, setSearching] = useState(false);
   const [detail, setDetail] = useState<{ customer: CustomerRow; bookings: AdminBooking[] } | null>(null);
-  const [msg, setMsg] = useState<{ tone: 'ok' | 'error'; text: string } | null>(null);
+  const [error, setError] = useState('');
+  const [sheetMsg, setSheetMsg] = useState<{ tone: 'success' | 'danger'; text: string } | null>(null);
+  const [dialog, confirm] = useConfirm();
 
   const search = async () => {
-    setMsg(null);
+    setError('');
+    setSearching(true);
     try {
       const r = await api<{ customers: CustomerRow[] }>(`/admin/customers?q=${encodeURIComponent(q.trim())}`);
       setList(r.customers);
     } catch (e) {
-      setMsg({ tone: 'error', text: errorMessage(e) });
+      setError(errorMessage(e));
+    } finally {
+      setSearching(false);
     }
   };
   const open = async (id: string) => {
     try {
       setDetail(await api(`/admin/customers/${id}`));
-      setMsg(null);
+      setSheetMsg(null);
     } catch (e) {
-      setMsg({ tone: 'error', text: errorMessage(e) });
+      toast(errorMessage(e), 'danger');
     }
   };
   const act = async (action: 'block' | 'unblock') => {
     if (!detail) return;
-    if (action === 'block' && !window.confirm(`Blokir ${detail.customer.name}? Pelanggan tidak bisa booking online sampai dibuka.`)) return;
+    if (action === 'block') {
+      const ok = await confirm({
+        title: `Blokir ${detail.customer.name || 'pelanggan ini'}?`,
+        message: 'Pelanggan tidak bisa booking online sampai blokir dibuka. Booking yang sudah ada tidak dibatalkan otomatis.',
+        confirmLabel: 'Ya, blokir',
+        cancelLabel: 'Kembali',
+      });
+      if (ok === null) return;
+    }
     try {
       await api(`/admin/customers/${detail.customer.id}/${action}`, { method: 'POST' });
-      setMsg({ tone: 'ok', text: action === 'block' ? 'Akun diblokir.' : 'Blokir dibuka & hitungan tidak datang direset.' });
+      setSheetMsg({ tone: 'success', text: action === 'block' ? 'Akun diblokir.' : 'Blokir dibuka & hitungan tidak datang direset.' });
       void open(detail.customer.id);
+      if (list) void search();
     } catch (e) {
-      setMsg({ tone: 'error', text: errorMessage(e) });
+      setSheetMsg({ tone: 'danger', text: errorMessage(e) });
     }
   };
   const resetPassword = async () => {
     if (!detail) return;
-    const password = window.prompt('Password baru untuk pelanggan (min. 8 karakter). Sampaikan lewat WhatsApp:');
+    const password = await confirm({
+      title: 'Reset password pelanggan',
+      message: 'Semua sesi login pelanggan akan dikeluarkan. Sampaikan password baru lewat WhatsApp.',
+      input: { label: 'Password baru', required: true, minLength: 8, maxLength: 100, singleLine: true, hint: 'Minimal 8 karakter.' },
+      confirmLabel: 'Reset password',
+      cancelLabel: 'Batal',
+      tone: 'default',
+    });
     if (!password) return;
     try {
       await api(`/admin/customers/${detail.customer.id}/password`, { method: 'POST', json: { password } });
-      setMsg({ tone: 'ok', text: 'Password direset. Semua sesi login pelanggan dikeluarkan.' });
+      setSheetMsg({ tone: 'success', text: 'Password direset. Semua sesi login pelanggan dikeluarkan.' });
     } catch (e) {
-      setMsg({ tone: 'error', text: errorMessage(e) });
+      setSheetMsg({ tone: 'danger', text: errorMessage(e) });
     }
   };
 
+  const c = detail?.customer;
+  const blocked = c ? c.status === 'blocked' || c.no_show_count >= MAX_NO_SHOW : false;
+
   return (
     <section aria-labelledby="cust-title">
-      <h1 id="cust-title" className={styles.h1}>
-        Pelanggan
-      </h1>
-      <form className={styles.toolbar} onSubmit={(e) => { e.preventDefault(); void search(); }}>
-        <label className={styles.control}>
-          Nama / nomor WhatsApp / email
-          <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="mis. Budi atau 0812…" />
-        </label>
-        <button type="submit" className={styles.btn}>Cari</button>
+      <PageHeader titleId="cust-title" title="Pelanggan" description="Cari pelanggan untuk melihat riwayat booking, jumlah tidak datang, dan status akun." />
+      <form
+        className={styles.searchRow}
+        role="search"
+        onSubmit={(e) => {
+          e.preventDefault();
+          void search();
+        }}
+      >
+        <Field label="Nama / nomor WhatsApp / email" flush>
+          <Input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="mis. Budi atau 0812…" />
+        </Field>
+        <Button type="submit" variant="dark" casing="normal" icon="search" disabled={searching}>
+          Cari
+        </Button>
       </form>
-      {msg && (
-        <p className={styles.alert} data-tone={msg.tone} role={msg.tone === 'error' ? 'alert' : 'status'}>
-          {msg.text}
-        </p>
-      )}
-      {detail ? (
-        <div className={styles.panel}>
-          <div className={styles.row} style={{ justifyContent: 'space-between' }}>
-            <h2 className={styles.h2} style={{ margin: 0 }}>
-              {detail.customer.name || '(tanpa nama)'} {detail.customer.is_guest ? '(tamu)' : ''}
-            </h2>
-            <button type="button" className={`${styles.btnGhost} ${styles.btnSmall}`} onClick={() => setDetail(null)}>Kembali</button>
-          </div>
-          <dl className={styles.dl}>
-            <div><dt>WhatsApp</dt><dd>{detail.customer.phone ? <a className={styles.link} href={waLink(detail.customer.phone, `Halo ${detail.customer.name}, kami dari Cutless Hair Studio.`)} target="_blank" rel="noopener noreferrer">{formatPhone(detail.customer.phone)}</a> : '-'}</dd></div>
-            <div><dt>Email</dt><dd>{detail.customer.email ?? '-'}</dd></div>
-            <div><dt>Status</dt><dd>{detail.customer.status === 'blocked' ? 'Diblokir' : 'Aktif'}</dd></div>
-            <div><dt>Tidak datang</dt><dd>{detail.customer.no_show_count}× {detail.customer.no_show_count >= MAX_NO_SHOW ? '(otomatis tidak bisa booking online)' : ''}</dd></div>
-            <div><dt>Terdaftar</dt><dd>{longDate(detail.customer.created_at, 'Asia/Jakarta')}</dd></div>
-          </dl>
-          <div className={styles.row}>
-            {detail.customer.status === 'blocked' || detail.customer.no_show_count >= MAX_NO_SHOW ? (
-              <button type="button" className={styles.btn} onClick={() => act('unblock')}>Buka blokir</button>
-            ) : (
-              <button type="button" className={styles.btnDanger} onClick={() => act('block')}>Blokir</button>
-            )}
-            {me.features.phonePassword && !detail.customer.is_guest && (
-              <button type="button" className={styles.btnGhost} onClick={resetPassword}>Reset password</button>
-            )}
-          </div>
-          <h3 className={styles.h2}>Riwayat booking ({detail.bookings.length})</h3>
-          <div className={styles.tableWrap}>
-            <table className={styles.table}>
-              <thead><tr><th>Jadwal</th><th>Cabang</th><th>Layanan</th><th>Hairstylist</th><th>Status</th></tr></thead>
-              <tbody>
-                {detail.bookings.map((b) => (
-                  <tr key={b.id}>
-                    <td>{longDate(b.start_at, b.timezone)} {clock(b.start_at, b.timezone)}</td>
-                    <td>{b.branch_name}</td>
-                    <td>{b.service_name_snapshot}</td>
-                    <td>{b.barber_name}</td>
-                    <td><span className={styles.status} data-status={b.status}>{STATUS_LABEL[b.status]}</span></td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
+      {error && <Alert tone="danger">{error}</Alert>}
+
+      {searching && !list ? (
+        <SkeletonList label="Mencari pelanggan…" count={3} height={56} />
       ) : list === null ? (
-        <p className={styles.muted}>Ketik nama atau nomor lalu tekan Cari (kosongkan untuk pelanggan terbaru).</p>
+        <EmptyState icon="search" title="Cari pelanggan" action={<Button variant="outline-dark" casing="normal" size="sm" onClick={search}>Tampilkan pelanggan terbaru</Button>}>
+          Ketik nama atau nomor lalu tekan Cari. Kosongkan untuk melihat pelanggan terbaru.
+        </EmptyState>
       ) : list.length === 0 ? (
-        <p className={styles.muted}>Tidak ada pelanggan yang cocok.</p>
+        <EmptyState icon="user" title="Tidak ada pelanggan yang cocok">
+          Coba nama lain atau sebagian nomor WhatsApp.
+        </EmptyState>
       ) : (
-        <div className={styles.tableWrap}>
+        <div className={styles.tableWrap} data-stack>
           <table className={styles.table}>
-            <thead><tr><th>Nama</th><th>WhatsApp</th><th>Booking</th><th>Tidak datang</th><th>Status</th><th /></tr></thead>
+            <thead>
+              <tr>
+                <th>Nama</th>
+                <th>WhatsApp</th>
+                <th className={styles.num}>Booking</th>
+                <th className={styles.num}>Tidak datang</th>
+                <th>Status</th>
+                <th>
+                  <span className="visually-hidden">Aksi</span>
+                </th>
+              </tr>
+            </thead>
             <tbody>
-              {list.map((c) => (
-                <tr key={c.id}>
-                  <td>{c.name || '(tanpa nama)'} {c.is_guest ? '· tamu' : ''}</td>
-                  <td>{c.phone ? formatPhone(c.phone) : '-'}</td>
-                  <td>{c.bookings}</td>
-                  <td>{c.no_show_count}</td>
-                  <td>{c.status === 'blocked' ? 'Diblokir' : 'Aktif'}</td>
-                  <td><button type="button" className={`${styles.btnGhost} ${styles.btnSmall}`} onClick={() => open(c.id)}>Detail</button></td>
+              {list.map((r) => (
+                <tr key={r.id}>
+                  <td data-label="Nama">
+                    <span className={styles.cellMain}>{r.name || '(tanpa nama)'}</span>
+                    {r.is_guest ? <span className={styles.cellSub}>Tamu</span> : null}
+                  </td>
+                  <td data-label="WhatsApp">{r.phone ? formatPhone(r.phone) : '-'}</td>
+                  <td data-label="Booking" className={styles.num}>
+                    {r.bookings}
+                  </td>
+                  <td data-label="Tidak datang" className={styles.num}>
+                    {r.no_show_count}
+                  </td>
+                  <td data-label="Status">{r.status === 'blocked' ? <Badge tone="danger">Diblokir</Badge> : <Badge tone="success">Aktif</Badge>}</td>
+                  <td data-label="">
+                    <Button variant="outline-dark" casing="normal" size="sm" onClick={() => open(r.id)}>
+                      Detail
+                    </Button>
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
+      )}
+
+      {detail && c && (
+        <Sheet
+          open
+          onClose={() => setDetail(null)}
+          title={`${c.name || '(tanpa nama)'}${c.is_guest ? ' (tamu)' : ''}`}
+          meta={blocked ? <Badge tone="danger">Diblokir</Badge> : <Badge tone="success">Aktif</Badge>}
+        >
+          <dl className={styles.dl}>
+            <div>
+              <dt>WhatsApp</dt>
+              <dd>
+                {c.phone ? (
+                  <a className={styles.link} href={waLink(c.phone, `Halo ${c.name}, kami dari Cutless Hair Studio.`)} target="_blank" rel="noopener noreferrer">
+                    {formatPhone(c.phone)}
+                  </a>
+                ) : (
+                  '-'
+                )}
+              </dd>
+            </div>
+            <div>
+              <dt>Email</dt>
+              <dd>{c.email ?? '-'}</dd>
+            </div>
+            <div>
+              <dt>Tidak datang</dt>
+              <dd>
+                {c.no_show_count}× {c.no_show_count >= MAX_NO_SHOW ? '(otomatis tidak bisa booking online)' : ''}
+              </dd>
+            </div>
+            <div>
+              <dt>Terdaftar</dt>
+              <dd>{longDate(c.created_at, 'Asia/Jakarta')}</dd>
+            </div>
+          </dl>
+          {sheetMsg && (
+            <Alert tone={sheetMsg.tone} role={sheetMsg.tone === 'success' ? 'status' : 'alert'}>
+              {sheetMsg.text}
+            </Alert>
+          )}
+          <div className={styles.actionBar}>
+            {blocked ? (
+              <Button variant="dark" casing="normal" onClick={() => act('unblock')}>
+                Buka blokir
+              </Button>
+            ) : (
+              <Button variant="outline-danger" casing="normal" onClick={() => act('block')}>
+                Blokir
+              </Button>
+            )}
+            {me.features.phonePassword && !c.is_guest && (
+              <Button variant="outline-dark" casing="normal" onClick={resetPassword}>
+                Reset password
+              </Button>
+            )}
+          </div>
+          <h3 className={styles.h2}>Riwayat booking ({detail.bookings.length})</h3>
+          {detail.bookings.length === 0 ? (
+            <EmptyState icon="calendar" title="Belum ada booking" compact />
+          ) : (
+            <ul className={styles.hits}>
+              {detail.bookings.map((b) => (
+                <li key={b.id} className={styles.historyItem}>
+                  <span className={styles.cardTop}>
+                    <span className={styles.cardTime}>
+                      {longDate(b.start_at, b.timezone)} · {clock(b.start_at, b.timezone)}
+                    </span>
+                    <StatusBadge status={b.status} />
+                  </span>
+                  <span className={styles.hitMeta}>
+                    {b.service_name_snapshot} · {b.barber_name} · {b.branch_name}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
+          {dialog}
+        </Sheet>
       )}
     </section>
   );

@@ -1,6 +1,15 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react';
 import { api, errorMessage } from '@/app/api';
 import { formatPhone, rupiah } from '@/app/format';
+import { Badge } from '@/components/ui/Badge';
+import { Button } from '@/components/ui/Button';
+import { Card } from '@/components/ui/Card';
+import { Alert, EmptyState, SkeletonList } from '@/components/ui/Feedback';
+import { Checkbox, Field, FieldGrid, Input, Select } from '@/components/ui/Field';
+import { PageHeader } from '@/components/ui/PageHeader';
+import { SegmentedControl } from '@/components/ui/SegmentedControl';
+import { useConfirm } from '@/components/ui/useConfirm';
+import { useToast } from '@/components/ui/toastContext';
 import { DAYS, ROLE_LABEL, useAdmin } from './context';
 import styles from './admin.module.css';
 
@@ -33,15 +42,9 @@ export function Settings() {
   const [sub, setSub] = useState<Sub>('cabang');
   return (
     <section aria-labelledby="set-title">
-      <h1 id="set-title" className={styles.h1}>
-        Pengaturan
-      </h1>
-      <div className={styles.seg} role="group" aria-label="Bagian pengaturan" style={{ marginBottom: 16, flexWrap: 'wrap' }}>
-        {subs.map((s) => (
-          <button key={s.id} type="button" aria-pressed={sub === s.id} onClick={() => setSub(s.id)}>
-            {s.label}
-          </button>
-        ))}
+      <PageHeader titleId="set-title" title="Pengaturan" description="Cabang, jam kerja hairstylist, harga layanan, dan akun admin." />
+      <div className={styles.segRow}>
+        <SegmentedControl label="Bagian pengaturan" value={sub} onChange={setSub} options={subs.map((s) => ({ value: s.id, label: s.label }))} wrap />
       </div>
       {sub === 'cabang' && <Branches />}
       {sub === 'hairstylist' && <Barbers />}
@@ -51,12 +54,26 @@ export function Settings() {
   );
 }
 
+/** Pesan gagal tetap di halaman; pesan sukses lewat toast */
 function Note({ msg }: { msg: Msg }) {
   return msg ? (
-    <p className={styles.alert} data-tone={msg.tone} role={msg.tone === 'error' ? 'alert' : 'status'}>
+    <Alert tone={msg.tone === 'error' ? 'danger' : 'success'} role={msg.tone === 'error' ? 'alert' : 'status'}>
       {msg.text}
-    </p>
+    </Alert>
   ) : null;
+}
+
+/** Callback simpan: sukses → toast, gagal → Alert */
+function useSaved(setMsg: (m: Msg) => void, reload?: () => void) {
+  const toast = useToast();
+  return {
+    onSaved: (t: string) => {
+      setMsg(null);
+      toast(t);
+      reload?.();
+    },
+    onError: (t: string) => setMsg({ tone: 'error', text: t }),
+  };
 }
 
 /* ---------- Cabang ---------- */
@@ -92,15 +109,16 @@ function Branches() {
     api<{ branches: BranchRow[] }>('/admin/branches').then((r) => setRows(r.branches)).catch((e) => setMsg({ tone: 'error', text: errorMessage(e) }));
   }, []);
   useEffect(load, [load]);
-  if (!rows) return <p className={styles.muted}>Memuat…</p>;
+  const saved = useSaved(setMsg, load);
+  if (!rows) return <SkeletonList label="Memuat cabang…" count={2} height={160} />;
   return (
-    <>
+    <div className={styles.stack}>
       <Note msg={msg} />
       {rows.map((b) => (
-        <BranchForm key={b.id} branch={b} isOwner={me.admin.role === 'owner'} onSaved={(t) => { setMsg({ tone: 'ok', text: t }); load(); }} onError={(t) => setMsg({ tone: 'error', text: t })} />
+        <BranchForm key={b.id} branch={b} isOwner={me.admin.role === 'owner'} {...saved} />
       ))}
-      {me.admin.role === 'owner' && <NewBranch onSaved={(t) => { setMsg({ tone: 'ok', text: t }); load(); }} onError={(t) => setMsg({ tone: 'error', text: t })} />}
-    </>
+      {me.admin.role === 'owner' && <NewBranch {...saved} />}
+    </div>
   );
 }
 
@@ -136,51 +154,66 @@ function BranchForm({ branch: b, isOwner, onSaved, onError }: { branch: BranchRo
   };
 
   return (
-    <form className={styles.panel} onSubmit={save}>
-      <h2 className={styles.h2} style={{ marginTop: 0 }}>{b.name}</h2>
-      <div className={styles.grid2}>
-        <label className={styles.control}>Booking paling cepat (menit dari sekarang)<input type="number" min={0} value={lead} onChange={(e) => setLead(Number(e.target.value))} /></label>
-        <label className={styles.control}>Booking paling jauh (hari ke depan)<input type="number" min={1} max={90} value={maxDays} onChange={(e) => setMaxDays(Number(e.target.value))} /></label>
-        <label className={styles.control}>Batas batal/ubah online (jam sebelum jadwal)<input type="number" min={0} step={0.5} value={cancelH} onChange={(e) => setCancelH(Number(e.target.value))} /></label>
-        <label className={styles.control}>ID grup Telegram (opsional)<input value={telegram} onChange={(e) => setTelegram(e.target.value)} placeholder="-1001234567890" /></label>
+    <Card tone="outline" as="form" onSubmit={save}>
+      <div className={styles.cardHead}>
+        <h2 className={styles.panelTitle}>{b.name}</h2>
+        <Badge tone={b.status === 'active' ? 'success' : b.status === 'coming_soon' ? 'warning' : 'neutral'}>
+          {b.status === 'active' ? 'Aktif' : b.status === 'coming_soon' ? 'Segera dibuka' : 'Tutup sementara'}
+        </Badge>
       </div>
-      <label className={styles.check} style={{ margin: '12px 0' }}>
-        <input type="checkbox" checked={manual} onChange={(e) => setManual(e.target.checked)} /> Konfirmasi manual (booking online berstatus "Menunggu konfirmasi")
-      </label>
-      <p className={styles.muted}>Jam buka per hari (kosong = tutup), contoh 10:00-21:00:</p>
-      <div className={styles.grid2}>
+      <h3 className={styles.sectionLabel}>Aturan booking</h3>
+      <FieldGrid>
+        <Field label="Booking paling cepat" hint="Menit dari sekarang">
+          <Input type="number" min={0} value={lead} onChange={(e) => setLead(Number(e.target.value))} />
+        </Field>
+        <Field label="Booking paling jauh" hint="Hari ke depan (maks. 90)">
+          <Input type="number" min={1} max={90} value={maxDays} onChange={(e) => setMaxDays(Number(e.target.value))} />
+        </Field>
+        <Field label="Batas batal/ubah online" hint="Jam sebelum jadwal">
+          <Input type="number" min={0} step={0.5} value={cancelH} onChange={(e) => setCancelH(Number(e.target.value))} />
+        </Field>
+        <Field label="ID grup Telegram (opsional)">
+          <Input value={telegram} onChange={(e) => setTelegram(e.target.value)} placeholder="-1001234567890" />
+        </Field>
+      </FieldGrid>
+      <Checkbox checked={manual} onChange={(e) => setManual(e.target.checked)} className={styles.checkRow}>
+        Konfirmasi manual (booking online berstatus "Menunggu konfirmasi")
+      </Checkbox>
+      <h3 className={styles.sectionLabel}>Jam buka per hari (kosong = tutup), contoh 10:00-21:00</h3>
+      <div className={styles.hours}>
         {DAYS.map((d, i) => (
-          <label key={d} className={styles.control}>
-            {d}
-            <input value={hours[i]} onChange={(e) => setHours((h) => h.map((x, j) => (j === i ? e.target.value : x)))} placeholder="tutup" />
-          </label>
+          <Field key={d} label={d}>
+            <Input value={hours[i]} onChange={(e) => setHours((h) => h.map((x, j) => (j === i ? e.target.value : x)))} placeholder="tutup" />
+          </Field>
         ))}
       </div>
       {isOwner && (
         <>
-          <p className={styles.muted} style={{ marginTop: 12 }}>Data cabang (owner):</p>
-          <div className={styles.grid2}>
-            <label className={styles.control}>Nama<input value={info.name} onChange={(e) => setInfo({ ...info, name: e.target.value })} /></label>
-            <label className={styles.control}>Kota<input value={info.city} onChange={(e) => setInfo({ ...info, city: e.target.value })} /></label>
-            <label className={styles.control}>Provinsi<input value={info.province} onChange={(e) => setInfo({ ...info, province: e.target.value })} /></label>
-            <label className={styles.control}>WhatsApp cabang<input value={info.whatsapp} onChange={(e) => setInfo({ ...info, whatsapp: e.target.value })} /></label>
-            <label className={styles.control}>Alamat<input value={info.address} onChange={(e) => setInfo({ ...info, address: e.target.value })} /></label>
-            <label className={styles.control}>Link Google Maps<input value={info.maps_url} onChange={(e) => setInfo({ ...info, maps_url: e.target.value })} /></label>
-            <label className={styles.control}>Status
-              <select value={info.status} onChange={(e) => setInfo({ ...info, status: e.target.value as BranchRow['status'] })}>
+          <h3 className={styles.sectionLabel}>Data cabang (owner)</h3>
+          <FieldGrid>
+            <Field label="Nama"><Input value={info.name} onChange={(e) => setInfo({ ...info, name: e.target.value })} /></Field>
+            <Field label="Kota"><Input value={info.city} onChange={(e) => setInfo({ ...info, city: e.target.value })} /></Field>
+            <Field label="Provinsi"><Input value={info.province} onChange={(e) => setInfo({ ...info, province: e.target.value })} /></Field>
+            <Field label="WhatsApp cabang"><Input value={info.whatsapp} onChange={(e) => setInfo({ ...info, whatsapp: e.target.value })} /></Field>
+            <Field label="Alamat"><Input value={info.address} onChange={(e) => setInfo({ ...info, address: e.target.value })} /></Field>
+            <Field label="Link Google Maps"><Input value={info.maps_url} onChange={(e) => setInfo({ ...info, maps_url: e.target.value })} /></Field>
+            <Field label="Status">
+              <Select value={info.status} onChange={(e) => setInfo({ ...info, status: e.target.value as BranchRow['status'] })}>
                 <option value="active">Aktif</option><option value="coming_soon">Segera dibuka</option><option value="closed">Tutup sementara</option>
-              </select>
-            </label>
-            <label className={styles.control}>Zona waktu
-              <select value={info.timezone} onChange={(e) => setInfo({ ...info, timezone: e.target.value })}>
+              </Select>
+            </Field>
+            <Field label="Zona waktu">
+              <Select value={info.timezone} onChange={(e) => setInfo({ ...info, timezone: e.target.value })}>
                 <option value="Asia/Jakarta">WIB</option><option value="Asia/Makassar">WITA</option><option value="Asia/Jayapura">WIT</option>
-              </select>
-            </label>
-          </div>
+              </Select>
+            </Field>
+          </FieldGrid>
         </>
       )}
-      <button type="submit" className={styles.btn} style={{ marginTop: 12 }}>Simpan {b.name}</button>
-    </form>
+      <div className={styles.formActions}>
+        <Button type="submit" variant="dark" casing="normal">Simpan {b.name}</Button>
+      </div>
+    </Card>
   );
 }
 
@@ -196,17 +229,19 @@ function NewBranch({ onSaved, onError }: { onSaved: (t: string) => void; onError
     }
   };
   return (
-    <form className={styles.panel} onSubmit={save}>
-      <h2 className={styles.h2} style={{ marginTop: 0 }}>Tambah cabang</h2>
-      <div className={styles.grid2}>
-        <label className={styles.control}>Kode URL (slug)<input value={f.slug} onChange={(e) => setF({ ...f, slug: e.target.value })} placeholder="depok-margonda" required /></label>
-        <label className={styles.control}>Nama<input value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} required /></label>
-        <label className={styles.control}>Kota<input value={f.city} onChange={(e) => setF({ ...f, city: e.target.value })} required /></label>
-        <label className={styles.control}>Provinsi<input value={f.province} onChange={(e) => setF({ ...f, province: e.target.value })} /></label>
-        <label className={styles.control}>WhatsApp cabang<input value={f.whatsapp} onChange={(e) => setF({ ...f, whatsapp: e.target.value })} required /></label>
+    <Card tone="outline" as="form" onSubmit={save}>
+      <h2 className={styles.panelTitle}>Tambah cabang</h2>
+      <FieldGrid>
+        <Field label="Kode URL (slug)"><Input value={f.slug} onChange={(e) => setF({ ...f, slug: e.target.value })} placeholder="depok-margonda" required /></Field>
+        <Field label="Nama"><Input value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} required /></Field>
+        <Field label="Kota"><Input value={f.city} onChange={(e) => setF({ ...f, city: e.target.value })} required /></Field>
+        <Field label="Provinsi"><Input value={f.province} onChange={(e) => setF({ ...f, province: e.target.value })} /></Field>
+        <Field label="WhatsApp cabang"><Input value={f.whatsapp} onChange={(e) => setF({ ...f, whatsapp: e.target.value })} required /></Field>
+      </FieldGrid>
+      <div className={styles.formActions}>
+        <Button type="submit" variant="outline-dark" casing="normal" icon="plus">Tambah cabang</Button>
       </div>
-      <button type="submit" className={styles.btnGhost} style={{ marginTop: 12 }}>Tambah cabang</button>
-    </form>
+    </Card>
   );
 }
 
@@ -252,38 +287,46 @@ function Barbers() {
     api<{ services: ServiceRow[] }>('/admin/services').then((r) => setServices(r.services.filter((s) => s.is_bookable))).catch(() => undefined);
   }, []);
   useEffect(load, [load]);
-  if (!rows) return <p className={styles.muted}>Memuat…</p>;
+  const toast = useToast();
+  if (!rows) return <SkeletonList label="Memuat hairstylist…" count={3} height={56} />;
   if (editing) {
     return (
       <BarberForm
         barber={editing === 'new' ? undefined : editing}
         defaultBranch={me.admin.branch_id ?? me.branches[0].id}
         services={services}
-        onDone={(t) => { setEditing(null); if (t) setMsg({ tone: 'ok', text: t }); load(); }}
+        onDone={(t) => { setEditing(null); setMsg(null); if (t) toast(t); load(); }}
       />
     );
   }
   return (
     <>
       <Note msg={msg} />
-      <button type="button" className={styles.btn} onClick={() => setEditing('new')} style={{ marginBottom: 12 }}>Tambah hairstylist</button>
-      <div className={styles.tableWrap}>
+      <div className={styles.listHead}>
+        <p className={styles.muted}>{rows.length} hairstylist</p>
+        <Button variant="dark" casing="normal" size="sm" icon="plus" onClick={() => setEditing('new')}>Tambah hairstylist</Button>
+      </div>
+      {rows.length === 0 ? (
+        <EmptyState icon="user" title="Belum ada hairstylist" />
+      ) : (
+      <div className={styles.tableWrap} data-stack>
         <table className={styles.table}>
-          <thead><tr><th>Nama</th><th>Cabang</th><th>Status</th><th>Layanan</th><th>Jam kerja</th><th /></tr></thead>
+          <thead><tr><th>Nama</th><th>Cabang</th><th>Status</th><th>Layanan</th><th>Jam kerja</th><th><span className="visually-hidden">Aksi</span></th></tr></thead>
           <tbody>
             {rows.map((b) => (
               <tr key={b.id}>
-                <td>{b.name}{b.role ? ` · ${b.role}` : ''}</td>
-                <td>{me.branches.find((x) => x.id === b.branch_id)?.name}</td>
-                <td>{b.is_active ? 'Aktif' : 'Nonaktif'}</td>
-                <td>{b.services.length} layanan</td>
-                <td>{DAYS.map((d, i) => { const w = b.working.filter((x) => x.weekday === i); return w.length ? `${d.slice(0, 3)} ${rangesToText(w)}` : null; }).filter(Boolean).join(' · ') || 'Belum diatur'}</td>
-                <td><button type="button" className={`${styles.btnGhost} ${styles.btnSmall}`} onClick={() => setEditing(b)}>Ubah</button></td>
+                <td data-label="Nama"><span className={styles.cellMain}>{b.name}</span>{b.role ? <span className={styles.cellSub}>{b.role}</span> : null}</td>
+                <td data-label="Cabang">{me.branches.find((x) => x.id === b.branch_id)?.name}</td>
+                <td data-label="Status">{b.is_active ? <Badge tone="success">Aktif</Badge> : <Badge>Nonaktif</Badge>}</td>
+                <td data-label="Layanan">{b.services.length} layanan</td>
+                <td data-label="Jam kerja">{DAYS.map((d, i) => { const w = b.working.filter((x) => x.weekday === i); return w.length ? `${d.slice(0, 3)} ${rangesToText(w)}` : null; }).filter(Boolean).join(' · ') || 'Belum diatur'}</td>
+                <td data-label=""><Button variant="outline-dark" casing="normal" size="sm" onClick={() => setEditing(b)}>Ubah</Button></td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
+      )}
     </>
   );
 }
@@ -318,45 +361,45 @@ function BarberForm({ barber, defaultBranch, services, onDone }: { barber?: Barb
   };
 
   return (
-    <form className={styles.panel} onSubmit={save}>
-      <h2 className={styles.h2} style={{ marginTop: 0 }}>{barber ? `Ubah ${barber.name}` : 'Tambah hairstylist'}</h2>
+    <Card tone="outline" as="form" onSubmit={save}>
+      <h2 className={styles.panelTitle}>{barber ? `Ubah ${barber.name}` : 'Tambah hairstylist'}</h2>
       <Note msg={error ? { tone: 'error', text: error } : null} />
-      <div className={styles.grid2}>
+      <FieldGrid>
         {me.admin.role === 'owner' && (
-          <label className={styles.control}>Cabang
-            <select value={f.branch_id} onChange={(e) => setF({ ...f, branch_id: Number(e.target.value) })}>
+          <Field label="Cabang">
+            <Select value={f.branch_id} onChange={(e) => setF({ ...f, branch_id: Number(e.target.value) })}>
               {me.branches.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
-            </select>
-          </label>
+            </Select>
+          </Field>
         )}
-        <label className={styles.control}>Nama panggilan<input value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} required /></label>
-        <label className={styles.control}>Jabatan<input value={f.role} onChange={(e) => setF({ ...f, role: e.target.value })} placeholder="Senior Hairstylist" /></label>
-        <label className={styles.control}>Spesialisasi<input value={f.specialty} onChange={(e) => setF({ ...f, specialty: e.target.value })} placeholder="Skin fade, Pompadour" /></label>
-        <label className={styles.control}>Foto (path, mis. /uploads/barbers/dimas.webp)<input value={f.photo} onChange={(e) => setF({ ...f, photo: e.target.value })} /></label>
-        <label className={styles.control}>Urutan tampil<input type="number" value={f.sort_order} onChange={(e) => setF({ ...f, sort_order: Number(e.target.value) })} /></label>
-      </div>
-      <label className={styles.check} style={{ margin: '12px 0' }}>
-        <input type="checkbox" checked={f.is_active} onChange={(e) => setF({ ...f, is_active: e.target.checked })} /> Aktif (bisa dibooking & tampil di website)
-      </label>
-      <p className={styles.muted}>Layanan yang bisa dikerjakan:</p>
+        <Field label="Nama panggilan"><Input value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} required /></Field>
+        <Field label="Jabatan"><Input value={f.role} onChange={(e) => setF({ ...f, role: e.target.value })} placeholder="Senior Hairstylist" /></Field>
+        <Field label="Spesialisasi"><Input value={f.specialty} onChange={(e) => setF({ ...f, specialty: e.target.value })} placeholder="Skin fade, Pompadour" /></Field>
+        <Field label="Foto" hint="Path, mis. /uploads/barbers/dimas.webp"><Input value={f.photo} onChange={(e) => setF({ ...f, photo: e.target.value })} /></Field>
+        <Field label="Urutan tampil"><Input type="number" value={f.sort_order} onChange={(e) => setF({ ...f, sort_order: Number(e.target.value) })} /></Field>
+      </FieldGrid>
+      <Checkbox checked={f.is_active} onChange={(e) => setF({ ...f, is_active: e.target.checked })} className={styles.checkRow}>
+        Aktif (bisa dibooking & tampil di website)
+      </Checkbox>
+      <h3 className={styles.sectionLabel}>Layanan yang bisa dikerjakan</h3>
       <div className={styles.checkList}>
         {services.map((s) => (
-          <label key={s.id} className={styles.check}>
-            <input type="checkbox" checked={svc.includes(s.id)} onChange={(e) => setSvc((v) => (e.target.checked ? [...v, s.id] : v.filter((x) => x !== s.id)))} /> {s.name}
-          </label>
+          <Checkbox key={s.id} checked={svc.includes(s.id)} onChange={(e) => setSvc((v) => (e.target.checked ? [...v, s.id] : v.filter((x) => x !== s.id)))}>
+            {s.name}
+          </Checkbox>
         ))}
       </div>
-      <p className={styles.muted}>Jam kerja per hari (kosong = libur). Beberapa rentang dipisah koma, mis. 10:00-13:00, 14:00-21:00</p>
-      <div className={styles.grid2}>
+      <h3 className={styles.sectionLabel}>Jam kerja per hari (kosong = libur). Beberapa rentang dipisah koma, mis. 10:00-13:00, 14:00-21:00</h3>
+      <div className={styles.hours}>
         {DAYS.map((d, i) => (
-          <label key={d} className={styles.control}>{d}<input value={work[i]} onChange={(e) => setWork((w) => w.map((x, j) => (j === i ? e.target.value : x)))} placeholder="libur" /></label>
+          <Field key={d} label={d}><Input value={work[i]} onChange={(e) => setWork((w) => w.map((x, j) => (j === i ? e.target.value : x)))} placeholder="libur" /></Field>
         ))}
       </div>
-      <div className={styles.row} style={{ marginTop: 12 }}>
-        <button type="submit" className={styles.btn}>Simpan</button>
-        <button type="button" className={styles.btnGhost} onClick={() => onDone()}>Batal</button>
+      <div className={styles.formActions}>
+        <Button type="submit" variant="dark" casing="normal">Simpan</Button>
+        <Button variant="text" casing="normal" onClick={() => onDone()}>Batal</Button>
       </div>
-    </form>
+    </Card>
   );
 }
 
@@ -373,13 +416,15 @@ function Services() {
   }, []);
   useEffect(load, [load]);
 
+  const toast = useToast();
   const saveService = async (s: ServiceRow) => {
     try {
       await api(`/admin/services/${s.id}`, {
         method: 'PUT',
         json: { name: s.name, category: s.category, description: s.description, duration_min: s.duration_min, buffer_min: s.buffer_min, base_price: s.base_price, price_from: Boolean(s.price_from), badge: s.badge, is_bookable: Boolean(s.is_bookable), is_active: Boolean(s.is_active), sort_order: s.sort_order },
       });
-      setMsg({ tone: 'ok', text: `${s.name} tersimpan.` });
+      setMsg(null);
+      toast(`${s.name} tersimpan.`);
     } catch (e) {
       setMsg({ tone: 'error', text: errorMessage(e) });
     }
@@ -387,7 +432,8 @@ function Services() {
   const saveBranchPrice = async (s: ServiceRow, price: string, active: boolean) => {
     try {
       await api(`/admin/services/${s.id}/branches/${branchId}`, { method: 'PUT', json: { price: price.trim() === '' ? null : Number(price), is_active: active } });
-      setMsg({ tone: 'ok', text: `Harga ${s.name} di cabang tersimpan.` });
+      setMsg(null);
+      toast(`Harga ${s.name} di cabang tersimpan.`);
       load();
     } catch (e) {
       setMsg({ tone: 'error', text: errorMessage(e) });
@@ -395,21 +441,21 @@ function Services() {
   };
   const update = (id: number, patch: Partial<ServiceRow>) => setRows((r) => r && r.map((x) => (x.id === id ? { ...x, ...patch } : x)));
 
-  if (!rows) return <p className={styles.muted}>Memuat…</p>;
+  if (!rows) return <SkeletonList label="Memuat layanan…" count={4} height={56} />;
   return (
     <>
       <Note msg={msg} />
-      <div className={styles.toolbar}>
-        <label className={styles.control}>Harga khusus untuk cabang
-          <select value={branchId} onChange={(e) => setBranchId(Number(e.target.value))} disabled={!isOwner}>
+      <div className={styles.listHead}>
+        <Field label="Harga khusus untuk cabang" flush>
+          <Select className={styles.selectSm} value={branchId} onChange={(e) => setBranchId(Number(e.target.value))} disabled={!isOwner}>
             {me.branches.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
-          </select>
-        </label>
+          </Select>
+        </Field>
       </div>
-      <div className={styles.tableWrap}>
+      <div className={styles.tableWrap} data-stack>
         <table className={styles.table}>
           <thead>
-            <tr><th>Layanan</th><th>Durasi (mnt)</th><th>Buffer</th><th>Harga dasar</th><th>Aktif</th><th>Harga cabang (kosong = dasar)</th><th>Tersedia di cabang</th><th /></tr>
+            <tr><th>Layanan</th><th>Durasi (mnt)</th><th>Buffer</th><th>Harga dasar</th><th>Aktif</th><th>Harga cabang</th><th>Di cabang</th><th><span className="visually-hidden">Aksi</span></th></tr>
           </thead>
           <tbody>
             {rows.map((s) => {
@@ -421,7 +467,7 @@ function Services() {
           </tbody>
         </table>
       </div>
-      <p className={styles.muted}>Durasi & buffer menentukan jam yang tersedia. Layanan kategori Paket tampil di daftar harga saja (tidak dibooking per jam).</p>
+      <p className={`${styles.muted} ${styles.exportNote}`}>Durasi & buffer menentukan jam yang tersedia. Harga cabang kosong = memakai harga dasar. Layanan kategori Paket tampil di daftar harga saja (tidak dibooking per jam).</p>
     </>
   );
 }
@@ -442,17 +488,20 @@ function ServiceLine({ s, bp, isOwner, onChange, onSave, onSaveBranch }: {
   }, [bp?.price, bp?.is_active]);
   return (
     <tr>
-      <td>{isOwner ? <input value={s.name} onChange={(e) => onChange({ name: e.target.value })} /> : s.name}<br /><small className={styles.muted}>{s.category}{s.is_bookable ? '' : ' · paket'}</small></td>
-      <td>{isOwner ? <input type="number" value={s.duration_min} onChange={(e) => onChange({ duration_min: Number(e.target.value) })} /> : s.duration_min}</td>
-      <td>{isOwner ? <input type="number" value={s.buffer_min} onChange={(e) => onChange({ buffer_min: Number(e.target.value) })} /> : s.buffer_min}</td>
-      <td>{isOwner ? <input type="number" value={s.base_price} onChange={(e) => onChange({ base_price: Number(e.target.value) })} /> : rupiah(s.base_price)}</td>
-      <td>{isOwner ? <input type="checkbox" checked={Boolean(s.is_active)} onChange={(e) => onChange({ is_active: e.target.checked ? 1 : 0 })} /> : s.is_active ? 'Ya' : 'Tidak'}</td>
-      <td><input type="number" value={price} onChange={(e) => setPrice(e.target.value)} placeholder={String(s.base_price)} /></td>
-      <td><input type="checkbox" checked={active} onChange={(e) => setActive(e.target.checked)} /></td>
-      <td>
-        <span className={styles.row} style={{ margin: 0 }}>
-          {isOwner && <button type="button" className={`${styles.btn} ${styles.btnSmall}`} onClick={onSave}>Simpan</button>}
-          <button type="button" className={`${styles.btnGhost} ${styles.btnSmall}`} onClick={() => onSaveBranch(s, price, active)}>Simpan cabang</button>
+      <td data-label="Layanan">
+        {isOwner ? <input className={styles.tableInput} aria-label={`Nama layanan ${s.name}`} value={s.name} onChange={(e) => onChange({ name: e.target.value })} /> : <span className={styles.cellMain}>{s.name}</span>}
+        <span className={styles.cellSub}>{s.category}{s.is_bookable ? '' : ' · paket'}</span>
+      </td>
+      <td data-label="Durasi (mnt)">{isOwner ? <input className={styles.tableInput} aria-label={`Durasi ${s.name}`} type="number" value={s.duration_min} onChange={(e) => onChange({ duration_min: Number(e.target.value) })} /> : s.duration_min}</td>
+      <td data-label="Buffer (mnt)">{isOwner ? <input className={styles.tableInput} aria-label={`Buffer ${s.name}`} type="number" value={s.buffer_min} onChange={(e) => onChange({ buffer_min: Number(e.target.value) })} /> : s.buffer_min}</td>
+      <td data-label="Harga dasar">{isOwner ? <input className={styles.tableInput} aria-label={`Harga dasar ${s.name}`} type="number" value={s.base_price} onChange={(e) => onChange({ base_price: Number(e.target.value) })} /> : rupiah(s.base_price)}</td>
+      <td data-label="Aktif">{isOwner ? <input type="checkbox" aria-label={`${s.name} aktif`} checked={Boolean(s.is_active)} onChange={(e) => onChange({ is_active: e.target.checked ? 1 : 0 })} /> : s.is_active ? 'Ya' : 'Tidak'}</td>
+      <td data-label="Harga cabang"><input className={styles.tableInput} aria-label={`Harga ${s.name} di cabang`} type="number" value={price} onChange={(e) => setPrice(e.target.value)} placeholder={String(s.base_price)} /></td>
+      <td data-label="Di cabang"><input type="checkbox" aria-label={`${s.name} tersedia di cabang`} checked={active} onChange={(e) => setActive(e.target.checked)} /></td>
+      <td data-label="">
+        <span className={styles.row}>
+          {isOwner && <Button variant="dark" casing="normal" size="sm" onClick={onSave}>Simpan</Button>}
+          <Button variant="outline-dark" casing="normal" size="sm" onClick={() => onSaveBranch(s, price, active)}>Simpan cabang</Button>
         </span>
       </td>
     </tr>
@@ -472,10 +521,13 @@ function AdminUsers() {
     api<{ users: AdminUserRow[] }>('/admin/admin-users').then((r) => setRows(r.users)).catch((e) => setMsg({ tone: 'error', text: errorMessage(e) }));
   }, []);
   useEffect(load, [load]);
+  const toast = useToast();
+  const [dialog, confirm] = useConfirm();
   const save = async (u: typeof f) => {
     try {
       await api('/admin/admin-users', { method: 'PUT', json: { ...u, name: u.name || null, branch_id: u.role === 'owner' ? null : u.branch_id, barber_id: u.role === 'barber' ? u.barber_id : null } });
-      setMsg({ tone: 'ok', text: `Akun ${u.email} tersimpan. Tambahkan juga email ini ke kebijakan Cloudflare Access.` });
+      setMsg(null);
+      toast(`Akun ${u.email} tersimpan. Tambahkan juga email ini ke kebijakan Cloudflare Access.`);
       load();
     } catch (e) {
       setMsg({ tone: 'error', text: errorMessage(e) });
@@ -485,51 +537,71 @@ function AdminUsers() {
   return (
     <>
       <Note msg={msg} />
-      <form className={styles.panel} onSubmit={(e) => { e.preventDefault(); void save(f); }}>
-        <h2 className={styles.h2} style={{ marginTop: 0 }}>Tambah / ubah akun admin</h2>
-        <div className={styles.grid2}>
-          <label className={styles.control}>Email (login Cloudflare Access)<input type="email" value={f.email} onChange={(e) => setF({ ...f, email: e.target.value })} required /></label>
-          <label className={styles.control}>Nama<input value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} /></label>
-          <label className={styles.control}>Peran
-            <select value={f.role} onChange={(e) => setF({ ...f, role: e.target.value as AdminUserRow['role'] })}>
+      <Card tone="outline" as="form" onSubmit={(e) => { e.preventDefault(); void save(f); }}>
+        <h2 className={styles.panelTitle}>Tambah / ubah akun admin</h2>
+        <FieldGrid>
+          <Field label="Email" hint="Dipakai untuk login Cloudflare Access"><Input type="email" value={f.email} onChange={(e) => setF({ ...f, email: e.target.value })} required /></Field>
+          <Field label="Nama"><Input value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} /></Field>
+          <Field label="Peran">
+            <Select value={f.role} onChange={(e) => setF({ ...f, role: e.target.value as AdminUserRow['role'] })}>
               <option value="owner">Owner (semua cabang)</option><option value="branch_admin">Admin cabang</option><option value="barber">Hairstylist</option>
-            </select>
-          </label>
+            </Select>
+          </Field>
           {f.role !== 'owner' && (
-            <label className={styles.control}>Cabang
-              <select value={f.branch_id} onChange={(e) => setF({ ...f, branch_id: Number(e.target.value) })}>
+            <Field label="Cabang">
+              <Select value={f.branch_id} onChange={(e) => setF({ ...f, branch_id: Number(e.target.value) })}>
                 {me.branches.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
-              </select>
-            </label>
+              </Select>
+            </Field>
           )}
           {f.role === 'barber' && (
-            <label className={styles.control}>Hairstylist
-              <select value={f.barber_id} onChange={(e) => setF({ ...f, barber_id: Number(e.target.value) })} required>
+            <Field label="Hairstylist">
+              <Select value={f.barber_id} onChange={(e) => setF({ ...f, barber_id: Number(e.target.value) })} required>
                 <option value={0}>Pilih</option>
                 {barbers.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
-              </select>
-            </label>
+              </Select>
+            </Field>
           )}
+        </FieldGrid>
+        <div className={styles.formActions}>
+          <Button type="submit" variant="dark" casing="normal">Simpan akun</Button>
         </div>
-        <button type="submit" className={styles.btn} style={{ marginTop: 12 }}>Simpan akun</button>
-      </form>
-      {rows && (
-        <div className={styles.tableWrap}>
+      </Card>
+      {!rows ? (
+        <SkeletonList label="Memuat akun admin…" count={2} height={56} />
+      ) : (
+        <div className={`${styles.tableWrap} ${styles.spaced}`} data-stack>
           <table className={styles.table}>
-            <thead><tr><th>Email</th><th>Nama</th><th>Peran</th><th>Cabang</th><th>Status</th><th /></tr></thead>
+            <thead><tr><th>Email</th><th>Nama</th><th>Peran</th><th>Cabang</th><th>Status</th><th><span className="visually-hidden">Aksi</span></th></tr></thead>
             <tbody>
               {rows.map((u) => (
                 <tr key={u.email}>
-                  <td>{u.email}</td>
-                  <td>{u.name}</td>
-                  <td>{ROLE_LABEL[u.role]}</td>
-                  <td>{me.branches.find((b) => b.id === u.branch_id)?.name ?? 'Semua'}</td>
-                  <td>{u.is_active ? 'Aktif' : 'Nonaktif'}</td>
-                  <td>
+                  <td data-label="Email" className={styles.cellMain}>{u.email}</td>
+                  <td data-label="Nama">{u.name}</td>
+                  <td data-label="Peran">{ROLE_LABEL[u.role]}</td>
+                  <td data-label="Cabang">{me.branches.find((b) => b.id === u.branch_id)?.name ?? 'Semua'}</td>
+                  <td data-label="Status">{u.is_active ? <Badge tone="success">Aktif</Badge> : <Badge>Nonaktif</Badge>}</td>
+                  <td data-label="">
                     {u.email !== me.admin.email && (
-                      <button type="button" className={`${styles.btnGhost} ${styles.btnSmall}`} onClick={() => save({ email: u.email, name: u.name ?? '', role: u.role, branch_id: u.branch_id ?? 0, barber_id: u.barber_id ?? 0, is_active: !u.is_active })}>
+                      <Button
+                        variant={u.is_active ? 'outline-danger' : 'outline-dark'}
+                        casing="normal"
+                        size="sm"
+                        onClick={async () => {
+                          if (u.is_active) {
+                            const ok = await confirm({
+                              title: `Nonaktifkan ${u.email}?`,
+                              message: 'Akun ini tidak bisa membuka dashboard admin sampai diaktifkan lagi. Hapus juga dari kebijakan Cloudflare Access bila perlu.',
+                              confirmLabel: 'Ya, nonaktifkan',
+                              cancelLabel: 'Kembali',
+                            });
+                            if (ok === null) return;
+                          }
+                          void save({ email: u.email, name: u.name ?? '', role: u.role, branch_id: u.branch_id ?? 0, barber_id: u.barber_id ?? 0, is_active: !u.is_active });
+                        }}
+                      >
                         {u.is_active ? 'Nonaktifkan' : 'Aktifkan'}
-                      </button>
+                      </Button>
                     )}
                   </td>
                 </tr>
@@ -538,6 +610,7 @@ function AdminUsers() {
           </table>
         </div>
       )}
+      {dialog}
     </>
   );
 }
