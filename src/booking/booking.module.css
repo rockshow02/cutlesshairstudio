@@ -210,10 +210,15 @@ form + .section { margin-top: var(--space-7); }
   display: flex;
   gap: var(--space-2);
   margin: 0 calc(var(--gutter) * -1) var(--space-5);
-  padding: 2px var(--gutter) var(--space-2);
+  /* Ruang akhir ekstra: chip terakhir bisa digeser keluar dari area pudar */
+  padding: 2px calc(var(--gutter) + var(--space-6)) var(--space-2) var(--gutter);
   overflow-x: auto;
-  scroll-snap-type: x proximity;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
   scroll-padding-inline: var(--gutter);
+  scrollbar-width: thin;
+  /* Tepi kanan memudar: petunjuk bahwa deretan tanggal bisa digeser */
+  mask-image: linear-gradient(to right, var(--c-ink) calc(100% - var(--space-7)), transparent);
 }
 .date {
   flex: none;
