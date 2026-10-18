@@ -14,6 +14,7 @@ import { useConfirm } from '@/components/ui/useConfirm';
 import { SOURCE_LABEL, useAdmin, type AdminBooking } from './context';
 import { BookingVoucherPanel } from './Loyalty';
 import { useLoyaltyActive } from './loyaltyStatus';
+import { BookingOrders } from './shop/BookingOrders';
 import styles from './admin.module.css';
 
 /** Detail booking + aksi sesuai peran & status (panel kanan di desktop, panel bawah di HP) */
@@ -149,6 +150,8 @@ export function BookingDetail({ booking: b, onClose, onChanged }: { booking: Adm
           </div>
         )}
       </dl>
+
+      {!isBarber && me.features.shop && <BookingOrders bookingId={b.id} />}
 
       {msg && (
         <Alert tone={msg.tone === 'ok' ? 'success' : 'danger'} role={msg.tone === 'ok' ? 'status' : 'alert'}>

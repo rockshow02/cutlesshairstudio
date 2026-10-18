@@ -12,13 +12,15 @@ import { Customers } from './Customers';
 import { Summary } from './Summary';
 import { TimeOff } from './TimeOff';
 import { Settings } from './Settings';
+import { Shop } from './shop/Shop';
 import styles from './admin.module.css';
 
-type TabId = 'jadwal' | 'baru' | 'pelanggan' | 'ringkasan' | 'libur' | 'pengaturan';
-const TABS: { id: TabId; label: string; roles: AdminMe['admin']['role'][] }[] = [
+type TabId = 'jadwal' | 'baru' | 'pelanggan' | 'toko' | 'ringkasan' | 'libur' | 'pengaturan';
+const TABS: { id: TabId; label: string; roles: AdminMe['admin']['role'][]; feature?: 'shop' }[] = [
   { id: 'jadwal', label: 'Jadwal', roles: ['owner', 'branch_admin', 'barber'] },
   { id: 'baru', label: 'Booking baru', roles: ['owner', 'branch_admin'] },
   { id: 'pelanggan', label: 'Pelanggan', roles: ['owner', 'branch_admin'] },
+  { id: 'toko', label: 'Toko', roles: ['owner', 'branch_admin'], feature: 'shop' },
   { id: 'ringkasan', label: 'Ringkasan & ekspor', roles: ['owner', 'branch_admin'] },
   { id: 'libur', label: 'Libur & cuti', roles: ['owner', 'branch_admin', 'barber'] },
   { id: 'pengaturan', label: 'Pengaturan', roles: ['owner', 'branch_admin'] },
@@ -99,7 +101,7 @@ export function AdminApp() {
     );
   }
 
-  const tabs = TABS.filter((t) => t.roles.includes(me.admin.role));
+  const tabs = TABS.filter((t) => t.roles.includes(me.admin.role) && (!t.feature || me.features[t.feature]));
   const active = tabs.some((t) => t.id === tab) ? tab : 'jadwal';
   const branchName = me.admin.branch_id ? me.branches.find((b) => b.id === me.admin.branch_id)?.name ?? '' : 'Semua cabang';
 
@@ -146,6 +148,7 @@ export function AdminApp() {
             {active === 'jadwal' && <Schedule />}
             {active === 'baru' && <WalkIn />}
             {active === 'pelanggan' && <Customers />}
+            {active === 'toko' && <Shop />}
             {active === 'ringkasan' && <Summary />}
             {active === 'libur' && <TimeOff />}
             {active === 'pengaturan' && <Settings />}
