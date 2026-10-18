@@ -10,6 +10,7 @@ import { badRequest, forbidden } from '../../lib/errors';
 import { body, defer, query } from '../../lib/http';
 import { notifyBranch } from '../../lib/notify';
 import { assertBranch, auditActor, branchScope } from '../../middleware/admin';
+import { settleBookingOrders } from '../../lib/shop';
 
 export const adminBookingRoutes = createRouter();
 
@@ -69,6 +70,9 @@ adminBookingRoutes.post('/bookings/:id/status', async (c) => {
   if (admin.role === 'barber' && !['completed', 'no_show'].includes(input.status)) {
     throw forbidden('Hairstylist hanya bisa menandai Selesai atau Tidak datang.');
   }
+  // Pesanan produk hanya diproses owner/admin cabang (hairstylist tidak punya akses toko)
+  const settle = input.status === 'completed' && input.productOrders && input.productOrders !== 'keep' ? input.productOrders : null;
+  if (settle && admin.role === 'barber') throw forbidden('Pesanan produk diproses admin cabang.');
   const updated = await transitionBooking(c.env.DB, {
     bookingId: b.id,
     to: input.status,
@@ -81,7 +85,9 @@ adminBookingRoutes.post('/bookings/:id/status', async (c) => {
     const branch = await getBranch(c.env.DB, b.branch_id);
     await defer(c, notifyBranch(c.env, branch, 'cancelled', b.id));
   }
-  return c.json({ booking: updated });
+  // Setelah booking Selesai: produk dibayar & diambil di kasir, atau dibatalkan. Gagal → pesanan tetap terbuka ("Belum diambil")
+  const productOrders = settle ? await settleBookingOrders(c.env, b.id, settle, auditActor(admin)) : undefined;
+  return c.json({ booking: updated, ...(productOrders ? { productOrders } : {}) });
 });
 
 adminBookingRoutes.post('/bookings/:id/reschedule', async (c) => {

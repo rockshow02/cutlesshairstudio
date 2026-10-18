@@ -645,6 +645,37 @@ export async function transitionOrder(
   return getOrder(db, o.id);
 }
 
+/**
+ * Booking ditandai Selesai: pesanan "ambil saat booking" yang masih terbuka → dibayar & diambil di kasir (paid)
+ * atau dibatalkan (cancel). Tiap pesanan diproses sendiri; yang gagal tetap terbuka dan muncul di "Belum diambil".
+ */
+export async function settleBookingOrders(env: Pick<Env, 'DB' | 'LOYALTY_ENABLED' | 'SHOP_ENABLED'>, bookingId: string, mode: 'paid' | 'cancel', audit: AuditActor) {
+  const out = { done: 0, failed: 0 };
+  const settings = await shopActive(env);
+  if (!settings) return out;
+  const { results } = await env.DB.prepare(`SELECT id FROM orders WHERE booking_id = ? AND status = 'reserved_booking'`).bind(bookingId).all<{ id: string }>();
+  for (const r of results) {
+    try {
+      await transitionOrder(env, settings, {
+        orderId: r.id,
+        action: mode === 'paid' ? 'complete' : 'cancel',
+        actor: 'admin',
+        audit,
+        data: mode === 'cancel' ? { reason: 'Dibatalkan saat booking ditandai Selesai' } : {},
+      });
+      out.done++;
+    } catch (e) {
+      console.error('settle booking order', r.id, e);
+      out.failed++;
+    }
+  }
+  return out;
+}
+
+/** SQL: pesanan belum diambil = siap diambil lewat batas ambil, ATAU ambil saat booking yang booking-nya sudah Selesai */
+export const NOT_PICKED_UP_SQL = (o: string, nowParam: string) =>
+  `((${o}.status = 'ready' AND ${o}.pickup_due_at <= ${nowParam}) OR (${o}.status = 'reserved_booking' AND EXISTS (SELECT 1 FROM bookings bk WHERE bk.id = ${o}.booking_id AND bk.status = 'completed')))`;
+
 /** Stempel Cutless Stamp dari pesanan selesai (bersyarat token transisi & program loyalty aktif) */
 function orderStampStatements(db: D1Database, o: OrderRow, timezone: string, token: string, actor: AuditActor, now: number): D1PreparedStatement[] {
   const nowIso = iso(now);

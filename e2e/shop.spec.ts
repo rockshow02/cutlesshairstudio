@@ -164,3 +164,45 @@ test('produk ditambahkan ke booking; booking dibatalkan → pesanan ikut batal',
   await expect(cp.getByText('Dibatalkan').first()).toBeVisible();
   await cp.context().close();
 });
+
+test('booking Selesai dengan produk: dialog yang sama → "Produk sudah dibayar & diambil"', async ({ page, browser }) => {
+  const NAME = `Pembeli Kasir E2E ${RUN}`;
+  const cp = await customerPage(browser, 'shop-kasir', NAME);
+  const me = `(SELECT id FROM customers WHERE email = '${cp.email}')`;
+  const ymd = (d: number) => new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Jakarta' }).format(new Date(Date.now() + d * 86_400_000));
+  const id = `e2e-shop-kasir-${RUN}`;
+  localSql([
+    `INSERT INTO bookings (id, code, branch_id, barber_id, service_id, customer_id, start_at, end_at, price_snapshot, duration_snapshot, service_name_snapshot, status, source)
+     SELECT '${id}', 'E4' || substr(hex(randomblob(3)), 1, 6), 1,
+       (SELECT id FROM barbers WHERE branch_id = 1 AND is_active = 1 ORDER BY sort_order, id LIMIT 1),
+       s.id, ${me}, '${ymd(3)}T07:00:00.000Z', '${ymd(3)}T07:45:00.000Z', 100000, 45, s.name, 'confirmed', 'online'
+     FROM services s WHERE s.slug = 'signature-haircut'`,
+  ]);
+  // Produk ditambahkan saat booking masih akan datang
+  const added = await cp.evaluate(async ({ id, slug }) => {
+    const p = await (await fetch(`/api/shop/products/${slug}`)).json();
+    const r = await fetch(`/api/bookings/${id}/products`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ items: [{ variantId: p.product.variants[0].id, qty: 1 }] }) });
+    return r.status;
+  }, { id, slug: SLUG });
+  expect(added).toBe(201);
+  // Jadwalnya lalu dianggap sudah lewat (kemarin 10.00 WIB) agar bisa ditandai Selesai
+  localSql([`UPDATE bookings SET start_at = '${ymd(-1)}T03:00:00.000Z', end_at = '${ymd(-1)}T03:45:00.000Z' WHERE id = '${id}'`]);
+
+  await page.goto('/admin#jadwal', { waitUntil: 'domcontentloaded' });
+  await page.getByLabel('Tanggal').fill(ymd(-1));
+  await page.getByRole('button', { name: new RegExp(NAME) }).click();
+  const sheet = page.getByRole('dialog').first();
+  await sheet.getByRole('button', { name: 'Selesai', exact: true }).click();
+  const dialog = page.getByRole('dialog', { name: /Selesai\?/ });
+  await expect(dialog.getByText(`1× ${PRODUCT}`)).toBeVisible();
+  await expect(dialog.getByRole('radio', { name: /Proses nanti/ })).toBeChecked();
+  await expect(dialog.getByRole('radio', { name: /Produk sudah dibayar & diambil/ })).not.toBeChecked();
+  await dialog.getByRole('radio', { name: /Produk sudah dibayar & diambil/ }).check();
+  await dialog.getByRole('button', { name: 'Tandai Selesai' }).click();
+  await expect(sheet.getByRole('status')).toContainText('Produk dibayar & diambil');
+
+  await cp.goto('/pesanan', { waitUntil: 'domcontentloaded' });
+  await expect(cp.locator('#daftar-pesanan')).toHaveAttribute('aria-busy', 'false');
+  await expect(cp.getByText('Selesai').first()).toBeVisible();
+  await cp.context().close();
+});

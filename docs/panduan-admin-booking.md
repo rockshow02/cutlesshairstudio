@@ -152,8 +152,8 @@ Buka **Toko → Pesanan**, pilih status (mis. *Dibayar (perlu disiapkan)*), klik
 | Menunggu pembayaran | Cocokkan mutasi/bukti WhatsApp dengan **nominal persis** (termasuk kode unik) → **Tandai Lunas**. Bila nominal yang masuk berbeda, isi *Nominal diterima*: muncul peringatan selisih → konfirmasi bila tetap diterima. Tidak dibayar sampai batas → batal otomatis. |
 | Dibayar (ambil) | Siapkan barang → **Siap diambil**. Saat diambil → **Sudah diambil** (stok fisik berkurang di sini). |
 | Dibayar (kirim) | Kirim → isi **Nomor resi** → **Tandai dikirim**. Selesai saat pelanggan menekan "Pesanan diterima", atau otomatis 7 hari. |
-| Diambil saat booking | Di kasir: dari **Jadwal → detail booking → Produk diambil saat booking → Proses di kasir → Diambil & dibayar di kasir**. Booking batal/tidak datang → pesanan ikut batal otomatis. |
-| **Belum diambil** (merah) | Sudah lewat batas ambil. Tidak dibatalkan otomatis karena sudah dibayar: hubungi pelanggan (klik nomornya → WhatsApp), atau **Refund** bila disepakati. Telegram cabang juga mengirim pengingat sekali. |
+| Diambil saat booking | Saat menandai booking **Selesai**, dialog yang sama menampilkan pesanan produknya dengan tiga pilihan: **Proses nanti** (bawaan), **Produk sudah dibayar & diambil**, atau **Batalkan pesanan produk**. Pesanan tidak pernah selesai otomatis. Bisa juga dari detail booking → **Proses di kasir**. Booking batal/tidak datang → pesanan ikut batal otomatis. |
+| **Belum diambil** (merah) | (a) Siap diambil tetapi lewat batas ambil: tidak dibatalkan otomatis karena sudah dibayar; hubungi pelanggan (klik nomornya → WhatsApp) atau **Refund** bila disepakati; Telegram cabang mengirim pengingat sekali. (b) Ambil saat booking yang booking-nya sudah Selesai tetapi produknya dibiarkan ("Proses nanti", atau ditandai Selesai oleh hairstylist): proses di kasir atau batalkan. |
 
 **Batalkan** (sebelum bayar) & **Refund** (sesudah bayar) wajib alasan; refund mengembalikan stok bila barang belum dikirim (uang dikembalikan manual).
 

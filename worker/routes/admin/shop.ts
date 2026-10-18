@@ -14,6 +14,7 @@ import {
   hydrateProducts,
   listBranchShops,
   notifyShop,
+  NOT_PICKED_UP_SQL,
   ORDER_STATUS_LABEL,
   ORDER_STATUSES,
   orderItems,
@@ -195,24 +196,24 @@ adminShopRoutes.get('/shop/orders', async (c) => {
   const page = pageParams(c);
   const scope = branchScope(admin, c.req.query('branch') ? Number(c.req.query('branch')) : undefined);
   const status = c.req.query('status') ?? '';
-  // "overdue" = siap diambil tetapi lewat batas ambil
+  // "overdue" = belum diambil: siap diambil lewat batas ambil, atau ambil saat booking yang booking-nya sudah Selesai
   const overdue = status === 'overdue';
   if (status && !overdue && !(ORDER_STATUSES as readonly string[]).includes(status)) throw badRequest('Status tidak dikenal.');
   const q = (c.req.query('q') ?? '').trim().toUpperCase();
   const nowIso = new Date().toISOString();
   const { results } = await c.env.DB.prepare(
     `SELECT o.id, o.code, o.status, o.fulfillment, o.total, o.subtotal, o.shipping_fee, o.branch_id, o.created_at, o.payment_due_at, o.pickup_due_at,
-            o.booking_id, br.name AS branch_name, cu.name AS customer_name
+            o.booking_id, br.name AS branch_name, cu.name AS customer_name, ${NOT_PICKED_UP_SQL('o', '?4')} AS not_picked_up
      FROM orders o JOIN branches br ON br.id = o.branch_id JOIN customers cu ON cu.id = o.customer_id
      WHERE (?1 IS NULL OR o.branch_id = ?1)
        AND (?2 = '' OR o.status = ?2)
-       AND (?3 = 0 OR (o.status = 'ready' AND o.pickup_due_at <= ?4))
+       AND (?3 = 0 OR ${NOT_PICKED_UP_SQL('o', '?4')})
        AND (?5 = '' OR o.code LIKE '%' || ?5 || '%' OR upper(cu.name) LIKE '%' || ?5 || '%')
        ${page.cursor ? `AND ${keysetWhere('o.created_at', 'o.id', 'desc', 6)}` : ''}
      ORDER BY o.created_at DESC, o.id DESC LIMIT ?8`,
   )
     .bind(scope ?? null, overdue ? '' : status, overdue ? 1 : 0, nowIso, q, page.cursor?.[0] ?? null, page.cursor?.[1] ?? null, page.limit + 1)
-    .all<{ id: string; created_at: string; status: (typeof ORDER_STATUSES)[number]; fulfillment: keyof typeof FULFILLMENT_LABEL; pickup_due_at: string | null } & Record<string, unknown>>();
+    .all<{ id: string; created_at: string; status: (typeof ORDER_STATUSES)[number]; fulfillment: keyof typeof FULFILLMENT_LABEL; pickup_due_at: string | null; not_picked_up: number } & Record<string, unknown>>();
   const { items, nextCursor } = finishPage(results, page.limit, (r) => [r.created_at, r.id]);
   const lines = await orderItems(c.env.DB, items.map((o) => o.id));
   return c.json({
@@ -220,7 +221,7 @@ adminShopRoutes.get('/shop/orders', async (c) => {
       ...o,
       statusLabel: ORDER_STATUS_LABEL[o.status],
       fulfillmentLabel: FULFILLMENT_LABEL[o.fulfillment],
-      pickupOverdue: o.status === 'ready' && Boolean(o.pickup_due_at) && o.pickup_due_at! <= nowIso,
+      pickupOverdue: Boolean(o.not_picked_up),
       items: lines.get(o.id) ?? [],
     })),
     nextCursor,
@@ -296,7 +297,7 @@ adminShopRoutes.get('/shop/summary', async (c) => {
       )
       .bind(scope, s.low_stock_threshold),
     db.prepare(`SELECT o.status, COUNT(*) AS n FROM orders o WHERE o.status IN ('awaiting_quote', 'awaiting_payment', 'paid', 'reserved_booking') AND (?1 IS NULL OR o.branch_id = ?1) GROUP BY o.status`).bind(scope),
-    db.prepare(`SELECT COUNT(*) AS n FROM orders o WHERE o.status = 'ready' AND o.pickup_due_at <= ?2 AND (?1 IS NULL OR o.branch_id = ?1)`).bind(scope, nowIso),
+    db.prepare(`SELECT COUNT(*) AS n FROM orders o WHERE ${NOT_PICKED_UP_SQL('o', '?2')} AND (?1 IS NULL OR o.branch_id = ?1)`).bind(scope, nowIso),
   ]);
   return c.json({
     days,

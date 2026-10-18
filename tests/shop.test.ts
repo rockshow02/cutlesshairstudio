@@ -488,6 +488,61 @@ describe('ambil saat booking', () => {
     expect((await (await customer()).req(`/bookings/${bookingId}/products`, { method: 'POST', json: { items: [{ variantId: variant.id, qty: 1 }] } })).status).toBe(404);
   });
 
+  /** Booking hari ini yang sudah lewat (siap ditandai Selesai) + pesanan ambil saat booking */
+  async function servedBookingWithOrder(qty = 1) {
+    const c = await customer();
+    const { variant } = await product({ stock: 5, price: 60000 });
+    const id = uid('sv');
+    const start = Date.now() - 2 * 3600_000;
+    await t.db
+      .prepare(
+        `INSERT INTO bookings (id, code, branch_id, barber_id, service_id, customer_id, start_at, end_at, price_snapshot, duration_snapshot, service_name_snapshot, status, source)
+         VALUES (?, ?, 1, ?, ?, ?, ?, ?, 100000, 45, 'Layanan uji', 'confirmed', 'online')`,
+      )
+      .bind(id, `SV${String(seq).padStart(6, '0')}`, barber1, svc.wash, c.id, new Date(start).toISOString(), new Date(start + 45 * 60_000).toISOString())
+      .run();
+    const o = await createOrder(t.db, settings, { customerId: c.id, branchId: 1, fulfillment: 'with_booking', bookingId: id, items: [{ variantId: variant.id, qty }], paymentMethod: 'transfer', actor: { type: 'customer', id: c.id } });
+    return { bookingId: id, orderId: o.id, variant };
+  }
+  const completeBooking = (bookingId: string, productOrders?: string, as = OWNER) =>
+    admin<{ productOrders?: { done: number; failed: number } }>(as, `/bookings/${bookingId}/status`, { method: 'POST', json: { status: 'completed', ...(productOrders ? { productOrders } : {}) } });
+
+  it('booking Selesai + "Produk sudah dibayar & diambil" → pesanan selesai, bayar kasir, stok berkurang', async () => {
+    const { bookingId, orderId, variant } = await servedBookingWithOrder(2);
+    const r = await completeBooking(bookingId, 'paid');
+    expect(r.status).toBe(200);
+    expect(r.body.productOrders).toEqual({ done: 1, failed: 0 });
+    expect(await order(orderId)).toMatchObject({ status: 'completed', completed_by: 'admin' });
+    expect(await stock(variant.id)).toEqual({ on_hand: 3, reserved: 0 });
+    expect(await t.db.prepare('SELECT method, amount FROM payments WHERE order_id = ?').bind(orderId).first()).toEqual({ method: 'cashier', amount: 120000 });
+  });
+
+  it('booking Selesai + "Batalkan pesanan produk" → pesanan batal, reservasi dilepas', async () => {
+    const { bookingId, orderId, variant } = await servedBookingWithOrder();
+    expect((await completeBooking(bookingId, 'cancel')).status).toBe(200);
+    expect(await order(orderId)).toMatchObject({ status: 'cancelled', cancel_reason: 'Dibatalkan saat booking ditandai Selesai' });
+    expect(await stock(variant.id)).toEqual({ on_hand: 5, reserved: 0 });
+  });
+
+  it('booking Selesai tanpa pilihan → pesanan tetap terbuka & muncul di "Belum diambil"; hairstylist tidak bisa memproses produk', async () => {
+    const { bookingId, orderId, variant } = await servedBookingWithOrder();
+    expect((await completeBooking(bookingId, 'paid', BARBER)).status).toBe(403);
+    expect((await completeBooking(bookingId, undefined, BARBER)).status).toBe(200);
+    expect(await order(orderId)).toMatchObject({ status: 'reserved_booking' });
+    expect(await stock(variant.id)).toEqual({ on_hand: 5, reserved: 1 });
+    const list = await admin<{ orders: { id: string; pickupOverdue: boolean }[] }>(OWNER, '/shop/orders?status=overdue&limit=50');
+    expect(list.body.orders.find((o) => o.id === orderId)?.pickupOverdue).toBe(true);
+    const detail = await admin<{ order: { pickupOverdue: boolean; actions: string[] } }>(OWNER, `/shop/orders/${orderId}`);
+    expect(detail.body.order).toMatchObject({ pickupOverdue: true });
+    expect(detail.body.order.actions).toEqual(expect.arrayContaining(['complete', 'cancel']));
+    const sum = await admin<{ pickupOverdue: number }>(OWNER, '/shop/summary');
+    expect(sum.body.pickupOverdue).toBeGreaterThan(0);
+    // booking yang belum Selesai tidak termasuk "Belum diambil"
+    const fresh = await servedBookingWithOrder();
+    const again = await admin<{ orders: { id: string }[] }>(OWNER, '/shop/orders?status=overdue&limit=50');
+    expect(again.body.orders.some((o) => o.id === fresh.orderId)).toBe(false);
+  });
+
   it('booking dibatalkan → pesanan ikut batal & reservasi dilepas (dalam batch yang sama)', async () => {
     const c = await customer();
     const { variant } = await product({ stock: 3 });

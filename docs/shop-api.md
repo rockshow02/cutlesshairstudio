@@ -45,7 +45,11 @@ Ongkir otomatis hanya bila **ketiganya**: pengaturan `shipping_provider = rajaon
 | `expire` | awaiting_payment | sistem |
 | `refund` | paid, ready, shipped | admin (alasan wajib) |
 
-**Lewat batas ambil** (`ready` dan `pickup_due_at` lewat): tidak dibatalkan (sudah dibayar). Tampil di admin sebagai **Belum diambil** (filter `status=overdue`) dan Telegram cabang dikirim **sekali** (`pickup_overdue_notified_at`).
+**Belum diambil** (filter admin `status=overdue`, `pickupOverdue: true`):
+- `ready` dan `pickup_due_at` lewat: tidak dibatalkan (sudah dibayar); Telegram cabang dikirim **sekali** (`pickup_overdue_notified_at`).
+- `reserved_booking` yang booking-nya sudah `completed`: produk belum diproses di kasir.
+
+**Booking Selesai dengan produk:** `POST /api/admin/bookings/:id/status { status: 'completed', productOrders: 'keep' | 'paid' | 'cancel' }`. `keep` (bawaan) membiarkan pesanan terbuka; `paid` = dibayar & diambil di kasir (stok berkurang, pembayaran `cashier`); `cancel` = batal, reservasi dilepas. Respons menambah `productOrders: { done, failed }`; yang gagal tetap terbuka. Hairstylist tidak boleh mengirim `paid`/`cancel` (403); pesanan tidak pernah selesai otomatis.
 
 **Kode unik transfer** (per cabang, `unique_code_enabled`): total + Rp1–999 saat masuk `awaiting_payment`. QRIS statis: halaman pesanan menampilkan nominal persis untuk diketik pelanggan.
 

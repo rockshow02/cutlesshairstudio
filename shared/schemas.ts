@@ -75,6 +75,8 @@ export const adminBookingsQuery = z.object({
 export const adminStatusBody = z.object({
   status: z.enum(['confirmed', 'completed', 'no_show', 'cancelled']),
   reason: z.string().trim().max(300).optional().nullable(),
+  /** Saat Selesai: pesanan produk "ambil saat booking" yang masih terbuka. keep (default) = biarkan terbuka */
+  productOrders: z.enum(['keep', 'paid', 'cancel']).optional(),
 });
 
 export const adminNoteBody = z.object({ note: z.string().trim().max(1000) });

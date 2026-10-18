@@ -25,7 +25,7 @@ const FILTERS: { value: string; label: string }[] = [
   { value: 'awaiting_payment', label: 'Menunggu pembayaran' },
   { value: 'paid', label: 'Dibayar (perlu disiapkan)' },
   { value: 'ready', label: 'Siap diambil' },
-  { value: 'overdue', label: 'Belum diambil (lewat batas)' },
+  { value: 'overdue', label: 'Belum diambil' },
   { value: 'reserved_booking', label: 'Diambil saat booking' },
   { value: 'shipped', label: 'Dikirim' },
   { value: 'completed', label: 'Selesai' },

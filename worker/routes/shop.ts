@@ -18,6 +18,7 @@ import {
   hydrateProducts,
   listBranchShops,
   notifyShop,
+  NOT_PICKED_UP_SQL,
   ORDER_STATUS_LABEL,
   orderItems,
   paymentInfo,
@@ -200,14 +201,14 @@ async function placeOrder(
 /** Bentuk respons pesanan (pelanggan / admin) */
 export async function presentOrder(db: D1Database, id: string, viewer: 'customer' | 'admin') {
   const o = await db
-    .prepare(`SELECT o.*, c.name AS customer_name, c.phone AS customer_phone, c.email AS customer_email FROM orders o JOIN customers c ON c.id = o.customer_id WHERE o.id = ?`)
-    .bind(id)
-    .first<OrderRow & Record<string, unknown>>();
+    .prepare(`SELECT o.*, c.name AS customer_name, c.phone AS customer_phone, c.email AS customer_email, ${NOT_PICKED_UP_SQL('o', '?2')} AS not_picked_up
+       FROM orders o JOIN customers c ON c.id = o.customer_id WHERE o.id = ?1`)
+    .bind(id, new Date().toISOString())
+    .first<OrderRow & Record<string, unknown> & { not_picked_up: number }>();
   if (!o) throw notFound('Pesanan tidak ditemukan.');
   const b = await branchShop(db, o.branch_id);
   const items = (await orderItems(db, [o.id])).get(o.id) ?? [];
-  const now = Date.now();
-  const { transition_id: _t, ...rest } = o as Record<string, unknown>;
+  const { transition_id: _t, not_picked_up: _n, ...rest } = o as Record<string, unknown>;
   return {
     ...(viewer === 'admin' ? rest : withoutAdminFields(rest)),
     statusLabel: ORDER_STATUS_LABEL[o.status],
@@ -215,7 +216,7 @@ export async function presentOrder(db: D1Database, id: string, viewer: 'customer
     branch: { id: b.branch_id, slug: b.slug, name: b.name, whatsapp: b.whatsapp, timezone: b.timezone },
     items,
     payment: paymentInfo(o, b),
-    pickupOverdue: o.status === 'ready' && Boolean(o.pickup_due_at) && Date.parse(o.pickup_due_at!) <= now,
+    pickupOverdue: Boolean(o.not_picked_up),
     actions: allowedActions(o, viewer),
   };
 }
