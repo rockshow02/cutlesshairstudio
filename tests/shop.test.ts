@@ -305,6 +305,10 @@ describe('transisi per peran', () => {
     expect((await admin(BRANCH_ADMIN, '/shop/stock', { method: 'PUT', json: { branchId: 1, variantId: variant.id, onHand: 9, reason: 'opname' } })).status).toBe(200);
     expect((await admin(BRANCH_ADMIN, '/shop/settings', { method: 'PUT', json: {} })).status).toBe(403);
     expect((await admin(BARBER, '/shop/orders')).status).toBe(403);
+    const sum = await admin<{ revenue: { orders: number }; lowStock: { branch_id: number }[]; todo: Record<string, number> }>(BRANCH_ADMIN, '/shop/summary?branch=2');
+    expect(sum.status).toBe(200);
+    expect(sum.body.revenue.orders).toBeGreaterThan(0);
+    expect(sum.body.lowStock.every((r) => r.branch_id === 1)).toBe(true);
   });
 });
 

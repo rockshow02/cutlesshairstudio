@@ -264,3 +264,47 @@ adminShopRoutes.get('/bookings/:id/orders', async (c) => {
   const visible = results.filter((r) => admin.role === 'owner' || r.branch_id === admin.branch_id);
   return c.json({ enabled: true, orders: await Promise.all(visible.map((r) => presentOrder(c.env.DB, r.id, 'admin'))) });
 });
+
+/**
+ * GET /api/admin/shop/summary?branch=&days=30 → omzet (pesanan lunas/selesai), produk terlaris, stok menipis,
+ * pesanan perlu tindakan, belum diambil (admin cabang: cabangnya)
+ */
+adminShopRoutes.get('/shop/summary', async (c) => {
+  const s = await requireShop(c);
+  const admin = c.get('admin')!;
+  const scope = branchScope(admin, c.req.query('branch') ? Number(c.req.query('branch')) : undefined) ?? null;
+  const days = Math.min(365, Math.max(1, Number(c.req.query('days') ?? 30) || 30));
+  const since = new Date(Date.now() - days * 86_400_000).toISOString();
+  const nowIso = new Date().toISOString();
+  const db = c.env.DB;
+  const PAID = `o.status IN ('paid', 'ready', 'shipped', 'completed')`;
+  const [revenue, top, low, todo, overdue] = await db.batch([
+    db.prepare(`SELECT COUNT(*) AS orders, COALESCE(SUM(o.subtotal), 0) AS subtotal, COALESCE(SUM(o.total), 0) AS total FROM orders o WHERE ${PAID} AND COALESCE(o.paid_at, o.created_at) >= ?2 AND (?1 IS NULL OR o.branch_id = ?1)`).bind(scope, since),
+    db
+      .prepare(
+        `SELECT oi.product_id, oi.product_name, SUM(oi.qty) AS qty, SUM(oi.line_total) AS revenue FROM order_items oi JOIN orders o ON o.id = oi.order_id
+         WHERE ${PAID} AND COALESCE(o.paid_at, o.created_at) >= ?2 AND (?1 IS NULL OR o.branch_id = ?1)
+         GROUP BY oi.product_id ORDER BY qty DESC, revenue DESC LIMIT 5`,
+      )
+      .bind(scope, since),
+    db
+      .prepare(
+        `SELECT vs.branch_id, br.name AS branch_name, v.id AS variant_id, v.name AS variant_name, p.name AS product_name, vs.on_hand, vs.reserved, vs.on_hand - vs.reserved AS available
+         FROM variant_stock vs JOIN product_variants v ON v.id = vs.variant_id JOIN products p ON p.id = v.product_id JOIN branches br ON br.id = vs.branch_id
+         WHERE v.is_active = 1 AND p.is_active = 1 AND vs.on_hand - vs.reserved <= ?2 AND (?1 IS NULL OR vs.branch_id = ?1)
+         ORDER BY available, p.sort_order LIMIT 20`,
+      )
+      .bind(scope, s.low_stock_threshold),
+    db.prepare(`SELECT o.status, COUNT(*) AS n FROM orders o WHERE o.status IN ('awaiting_quote', 'awaiting_payment', 'paid', 'reserved_booking') AND (?1 IS NULL OR o.branch_id = ?1) GROUP BY o.status`).bind(scope),
+    db.prepare(`SELECT COUNT(*) AS n FROM orders o WHERE o.status = 'ready' AND o.pickup_due_at <= ?2 AND (?1 IS NULL OR o.branch_id = ?1)`).bind(scope, nowIso),
+  ]);
+  return c.json({
+    days,
+    revenue: revenue.results[0],
+    topProducts: top.results,
+    lowStock: low.results,
+    lowStockThreshold: s.low_stock_threshold,
+    todo: Object.fromEntries((todo.results as { status: string; n: number }[]).map((r) => [r.status, r.n])),
+    pickupOverdue: (overdue.results[0] as { n: number }).n,
+  });
+});

@@ -26,7 +26,7 @@ adminSettingsRoutes.get('/me', async (c) => {
     admin,
     branches: branches.results,
     barbers: admin.role === 'barber' ? barbers.results.filter((b) => (b as { id: number }).id === admin.barber_id) : barbers.results,
-    features: { phonePassword: c.env.AUTH_PHONE_PASSWORD_ENABLED === 'true' },
+    features: { phonePassword: c.env.AUTH_PHONE_PASSWORD_ENABLED === 'true', shop: c.env.SHOP_ENABLED === 'true' },
   });
 });
 
