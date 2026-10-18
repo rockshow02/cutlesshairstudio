@@ -19,6 +19,8 @@
     "db:migrate:staging": "wrangler d1 migrations apply DB --env staging --remote",
     "db:seed:local": "node scripts/seed-d1.mjs --out seed/seed.local.sql --test-data --dev-admin --apply local",
     "db:seed:staging": "node scripts/seed-d1.mjs --out seed/seed.staging.sql --test-data --apply staging",
+    "db:seed:shop:local": "node scripts/seed-shop.mjs --out seed/shop.local.sql --apply local",
+    "db:seed:shop:staging": "node scripts/seed-shop.mjs --out seed/shop.staging.sql --apply staging",
     "test": "vitest run",
     "dev:api": "wrangler dev --env staging --port 8787",
     "dev:worker": "npm run build:staging && wrangler dev --env staging --port 8787",

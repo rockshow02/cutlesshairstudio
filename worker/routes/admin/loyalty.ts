@@ -209,7 +209,7 @@ adminLoyaltyRoutes.post('/customers/:id/loyalty/merge', allowRoles('owner', 'bra
     .prepare(
       `SELECT
          (SELECT COUNT(*) FROM loyalty_stamps g WHERE g.customer_id = ?1
-            AND NOT (g.kind = 'booking' AND EXISTS (SELECT 1 FROM loyalty_stamps a WHERE a.customer_id = ?2 AND a.kind = 'booking' AND a.stamp_date = g.stamp_date))) AS stamps,
+            AND NOT (g.kind IN ('booking', 'order') AND EXISTS (SELECT 1 FROM loyalty_stamps a WHERE a.customer_id = ?2 AND a.kind IN ('booking', 'order') AND a.stamp_date = g.stamp_date))) AS stamps,
          (SELECT COUNT(*) FROM loyalty_vouchers WHERE customer_id = ?1) AS vouchers`,
     )
     .bind(guest.id, account.id)

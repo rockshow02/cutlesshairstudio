@@ -29,6 +29,8 @@ export interface Product {
   inStock: boolean;
   shopeeUrl?: string;
   tokopediaUrl?: string;
+  /** Toko aktif (produk dari D1): halaman produk di /shop/<slug> menggantikan pesan via WhatsApp */
+  shopUrl?: string;
 }
 
 export interface ProductsCopy {
@@ -41,6 +43,9 @@ export interface ProductsCopy {
     order: string;
     /** Versi pendek tombol pesan untuk kartu sempit (mobile) */
     orderShort: string;
+    /** Tombol ke halaman produk toko (/shop) */
+    buy: string;
+    buyShort: string;
     askRestock: string;
     outOfStock: string;
     normalPrice: string;

@@ -1,0 +1,45 @@
+/* Admin → Toko: filter yang menyusut di HP & daftar pesanan berbentuk baris (bukan tabel lebar) */
+.filters {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 11rem), 1fr));
+  align-items: end;
+  gap: var(--space-3);
+}
+.filters > * { min-width: 0; }
+
+.orders { display: grid; gap: var(--space-2); }
+.order {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--space-1) var(--space-3);
+  width: 100%;
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--c-line-dark);
+  border-radius: var(--radius);
+  background: var(--c-surface);
+  color: var(--c-ink);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color var(--dur) var(--ease);
+}
+.order:hover { border-color: var(--c-ink); }
+.order[data-overdue='true'] { border-color: var(--c-danger-line); }
+.code { font-weight: 800; letter-spacing: 0.04em; }
+.total { font-weight: 700; font-variant-numeric: tabular-nums; text-align: right; }
+.meta { grid-column: 1 / -1; font-size: var(--fs-sm); color: var(--c-ink-dim); overflow-wrap: anywhere; }
+.badges { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: var(--space-2); }
+
+/* Tombol yang tampil seperti tautan (nama produk, angka stok) */
+.textBtn {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-weight: 700;
+  text-align: inherit;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+.textBtn:hover { color: var(--c-taupe-dark); }

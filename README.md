@@ -354,16 +354,20 @@ Worker kini melayani situs statis **dan** API booking (`/api/*`, Hono) dengan da
 |---|---|
 | [docs/booking-setup.md](docs/booking-setup.md) | Setup staging: D1, Google OAuth (consent screen atas nama bisnis), Turnstile, Cloudflare Access, secrets, Workers Builds |
 | [docs/booking-api.md](docs/booking-api.md) | Endpoint, request/response, kode error, cron |
-| [docs/panduan-admin-booking.md](docs/panduan-admin-booking.md) | Panduan dashboard untuk owner / admin cabang / hairstylist |
+| [docs/panduan-admin-booking.md](docs/panduan-admin-booking.md) | Panduan dashboard untuk owner / admin cabang / hairstylist (termasuk §8 Toko) |
+| [docs/shop-api.md](docs/shop-api.md) | Cutless Shop: aturan stok & status, endpoint, cron, seed, **langkah migrasi 0003** |
 
 ```
 migrations/0001_init.sql     skema D1 (cabang, layanan, harga cabang, barber, jam kerja, libur, pelanggan, sesi, booking, booking_slots, admin, audit)
 migrations/0002_loyalty.sql  Cutless Stamp: pengaturan program, kartu, stempel, voucher
+migrations/0003_shop.sql     Cutless Shop: produk, varian, stok per cabang, pesanan, pembayaran, cache ongkir (+ loyalty_stamps dibangun ulang)
+scripts/seed-shop.mjs        seed produk sekali dari products.json → D1; --apply local|staging
 scripts/seed-d1.mjs          migrasi satu kali branches/barbers/pricing.json → D1 (+ akun uji); --apply local|staging
 scripts/export-catalog.mjs   salin D1 → src/content/*.json (SEO /cabang, sitemap, dropdown CMS)
 shared/                      kode bersama frontend & Worker: skema Zod, mesin slot, zona waktu, aturan status
 worker/                      Worker: index.ts (rute + cron), routes/ (publik, auth, akun, booking, admin), lib/, middleware/
 src/booking/  booking/       aplikasi pelanggan: /booking, /booking/saya, /masuk, /profil, /kebijakan-privasi
+src/shop/                    toko pelanggan (dalam entri booking): /shop, /shop/<slug>, /shop/checkout, /pesanan
 src/admin/    admin/         dashboard /admin
 tests/  e2e/                 Vitest (mesin slot, anti-bentrok, login, admin, cron) & Playwright 360px
 ```
@@ -372,9 +376,11 @@ tests/  e2e/                 Vitest (mesin slot, anti-bentrok, login, admin, cro
 
 **Cutless Stamp (loyalitas, `feature/loyalty`):** 1 booking Selesai = 1 stempel otomatis; hadiah voucher di stempel ke-5 & ke-10 (lalu kartu kembali ke 0); stempel hangus 12 bulan, voucher 60 hari; maks. 1 stempel/hari lintas cabang. Semua angka diatur owner di **Admin → Pengaturan → Cutless Stamp**. Aktif bila env `LOYALTY_ENABLED=true` (staging) **dan** program diaktifkan owner; produksi tidak punya variabel itu → mati. Tabel di `migrations/0002_loyalty.sql`; panduan di [docs/panduan-admin-booking.md](docs/panduan-admin-booking.md) §7, API di [docs/booking-api.md](docs/booking-api.md).
 
+**Cutless Shop (`feature/shop`):** toko produk di `/shop` dengan keranjang, checkout wajib login, ambil di cabang / ambil saat booking / dikirim (ongkir manual; RajaOngkir opsional, mati default). Pembayaran manual transfer/QRIS statis (+ kode unik opsional), dikonfirmasi admin; stok per cabang dengan reservasi atomik (tidak pernah minus). Aktif bila env `SHOP_ENABLED=true` (staging) **dan** owner menyalakan toko; mati → landing page & /produk tetap dari `products.json`. Detail: [docs/shop-api.md](docs/shop-api.md).
+
 **Anti-bentrok:** booking + semua blok 15 menit (`booking_slots`, `UNIQUE(barber_id, slot_start)`) ditulis dalam satu `db.batch()` atomik; request kedua untuk jam yang sama → 409 + 3 jam terdekat (diuji 10 request bersamaan).
 
-**Perintah:** `npm run db:migrate:local|staging`, `npm run db:seed:local|staging`, `npm run dev:worker`, `npm test`, `npm run e2e`, `npm run export-catalog`.
+**Perintah:** `npm run db:migrate:local|staging`, `npm run db:seed:local|staging`, `npm run db:seed:shop:local|staging`, `npm run dev:worker`, `npm test`, `npm run e2e`, `npm run export-catalog`.
 
 ### Estimasi kuota gratis
 

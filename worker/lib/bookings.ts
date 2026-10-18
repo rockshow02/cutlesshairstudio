@@ -15,6 +15,7 @@ import {
   type BookingStatus,
 } from '../../shared/booking';
 import { completionStatements, releaseVoucherStatements } from './loyalty';
+import { cancelBookingOrdersStatements } from './shopStock';
 import { nearestSlots, pickBarber, slotStartsFor, type Slot } from '../../shared/slots';
 import { iso, localDate, MINUTE_MS } from '../../shared/time';
 import { ApiError, badRequest, notFound } from './errors';
@@ -247,7 +248,11 @@ export async function transitionBooking(db: D1Database, input: TransitionInput):
   }
   statements.push(auditStmt(db, input.audit, `booking.${to}`, 'booking', booking.id, { from: booking.status, reason: input.reason ?? undefined }));
   // Cutless Stamp. Semua pernyataan bersyarat (status sudah berubah, program aktif) → tanpa efek bila tidak berlaku.
-  if (to === 'cancelled' || to === 'no_show') statements.push(...releaseVoucherStatements(db, booking.id, input.audit, now));
+  if (to === 'cancelled' || to === 'no_show') {
+    statements.push(...releaseVoucherStatements(db, booking.id, input.audit, now));
+    // Cutless Shop: pesanan "ambil saat booking" ikut batal, reservasi stok dilepas
+    statements.push(...cancelBookingOrdersStatements(db, booking.id, input.audit, now));
+  }
   if (to === 'completed' && input.loyalty) {
     const branch = await getBranch(db, booking.branch_id);
     statements.push(...completionStatements(db, booking, branch.timezone, input.audit, now));

@@ -68,6 +68,8 @@ export interface ConfirmOptions {
   tone?: 'danger' | 'default';
   /** Kolom isian (mis. alasan pembatalan) */
   input?: { label: string; required?: boolean; maxLength?: number; minLength?: number; placeholder?: string; hint?: string; /** satu baris (mis. password baru) */ singleLine?: boolean };
+  /** Pilihan satu-dari-beberapa (radio); nilai terpilih dikirim ke onConfirm. initial = pilihan awal */
+  choices?: { legend: string; initial: string; options: { value: string; label: string; hint?: string }[] };
   casing?: 'upper' | 'normal';
 }
 
@@ -80,14 +82,17 @@ export function ConfirmDialog({ open, options, onConfirm, onCancel }: { open: bo
   const titleId = useId();
   const descId = useId();
   const [value, setValue] = useState('');
-  const { title, message, confirmLabel, cancelLabel = 'Kembali', tone = 'danger', input, casing = 'normal' } = options;
+  const { title, message, confirmLabel, cancelLabel = 'Kembali', tone = 'danger', input, choices, casing = 'normal' } = options;
+  const [choice, setChoice] = useState('');
+  const initialChoice = choices?.initial ?? '';
   const missing = (Boolean(input?.required) && value.trim() === '') || (input?.minLength ? value.trim().length < input.minLength : false);
 
   useEffect(() => {
     if (!open) return;
     setValue('');
+    setChoice(initialChoice);
     ref.current?.querySelector<HTMLButtonElement>('[data-cancel]')?.focus();
-  }, [open, ref]);
+  }, [open, ref, initialChoice]);
 
   return (
     <dialog
@@ -104,7 +109,7 @@ export function ConfirmDialog({ open, options, onConfirm, onCancel }: { open: bo
         className={styles.confirmInner}
         onSubmit={(e) => {
           e.preventDefault();
-          if (!missing) onConfirm(value.trim());
+          if (!missing) onConfirm(choices ? choice : value.trim());
         }}
       >
         <h2 id={titleId} className={styles.confirmTitle}>
@@ -123,6 +128,20 @@ export function ConfirmDialog({ open, options, onConfirm, onCancel }: { open: bo
               <Textarea value={value} onChange={(e) => setValue(e.target.value)} maxLength={input.maxLength ?? 300} placeholder={input.placeholder} required={input.required} rows={3} />
             )}
           </Field>
+        )}
+        {choices && (
+          <fieldset className={styles.choices}>
+            <legend className={styles.choicesLegend}>{choices.legend}</legend>
+            {choices.options.map((o) => (
+              <label key={o.value} className={styles.choice}>
+                <input type="radio" name="confirm-choice" value={o.value} checked={choice === o.value} onChange={() => setChoice(o.value)} />
+                <span>
+                  {o.label}
+                  {o.hint && <small>{o.hint}</small>}
+                </span>
+              </label>
+            ))}
+          </fieldset>
         )}
         <div className={styles.confirmActions}>
           <Button data-cancel variant="outline-dark" casing={casing} onClick={() => ref.current?.close()}>

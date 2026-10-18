@@ -5,7 +5,7 @@ export interface AdminMe {
   admin: { email: string; name: string | null; role: 'owner' | 'branch_admin' | 'barber'; branch_id: number | null; barber_id: number | null };
   branches: { id: number; slug: string; name: string; timezone: string; status: string }[];
   barbers: { id: number; branch_id: number; name: string; is_active: number; sort_order: number }[];
-  features: { phonePassword: boolean };
+  features: { phonePassword: boolean; shop?: boolean };
 }
 
 export interface AdminBooking {

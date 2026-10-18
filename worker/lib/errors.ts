@@ -19,6 +19,8 @@ export type ErrorCode =
   | 'FEATURE_DISABLED'
   | 'EMAIL_NOT_VERIFIED'
   | 'VOUCHER_UNAVAILABLE'
+  | 'STOCK_UNAVAILABLE'
+  | 'AMOUNT_MISMATCH'
   | 'INTERNAL';
 
 export class ApiError extends Error {

@@ -124,10 +124,12 @@ function loadCatalog(): Promise<void> {
   if (!BOOKING_API || typeof fetch === 'undefined') return Promise.resolve();
   catalog ??= fetch('/api/public/catalog', { credentials: 'same-origin' })
     .then((r) => (r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`))))
-    .then((c: { branches: BranchEntry[]; barbers: BarberEntry[]; pricing: PricingEntry[] }) => {
+    .then((c: { branches: BranchEntry[]; barbers: BarberEntry[]; pricing: PricingEntry[]; products?: ProductEntry[] }) => {
       data.branches = c.branches;
       data.barbers = c.barbers;
       data.pricing = c.pricing;
+      // Toko aktif → produk dari D1 (bentuk sama + slug); toko mati → tetap products.json
+      if (c.products) data.products = c.products;
     })
     .catch((e) => console.warn('Katalog booking tidak bisa dimuat, memakai data bawaan:', e));
   return catalog;

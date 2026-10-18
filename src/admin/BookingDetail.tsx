@@ -14,6 +14,7 @@ import { useConfirm } from '@/components/ui/useConfirm';
 import { SOURCE_LABEL, useAdmin, type AdminBooking } from './context';
 import { BookingVoucherPanel } from './Loyalty';
 import { useLoyaltyActive } from './loyaltyStatus';
+import { BookingOrders } from './shop/BookingOrders';
 import styles from './admin.module.css';
 
 /** Detail booking + aksi sesuai peran & status (panel kanan di desktop, panel bawah di HP) */
@@ -69,7 +70,44 @@ export function BookingDetail({ booking: b, onClose, onChanged }: { booking: Adm
       });
       if (ok === null) return;
     }
-    void run(`Status diubah menjadi ${STATUS_LABEL[status]}.`, () => api(`/admin/bookings/${b.id}/status`, { method: 'POST', json: { status, reason } }));
+    // Selesai + ada pesanan produk "ambil saat booking" yang masih terbuka → pilih di dialog yang sama
+    let productOrders: string | undefined;
+    if (status === 'completed' && !isBarber && me.features.shop) {
+      const open = await api<{ orders: { status: string; total: number; items: { qty: number; product_name: string }[] }[] }>(`/admin/bookings/${b.id}/orders`)
+        .then((r) => r.orders.filter((o) => o.status === 'reserved_booking'))
+        .catch(() => []);
+      if (open.length) {
+        const items = open.flatMap((o) => o.items.map((i) => `${i.qty}× ${i.product_name}`)).join(', ');
+        const total = open.reduce((n, o) => n + o.total, 0);
+        const choice = await confirm({
+          title: `Tandai ${b.code} Selesai?`,
+          message: `Ada produk yang dipesan untuk diambil saat booking ini: ${items} (${rupiah(total)}, bayar di kasir).`,
+          choices: {
+            legend: 'Pesanan produk',
+            initial: 'keep',
+            options: [
+              { value: 'keep', label: 'Proses nanti', hint: 'Pesanan tetap terbuka dan muncul di Toko → Pesanan → Belum diambil.' },
+              { value: 'paid', label: 'Produk sudah dibayar & diambil', hint: 'Pembayaran kasir tercatat, stok berkurang.' },
+              { value: 'cancel', label: 'Batalkan pesanan produk', hint: 'Reservasi stok dilepas.' },
+            ],
+          },
+          confirmLabel: 'Tandai Selesai',
+          cancelLabel: 'Kembali',
+          tone: 'default',
+        });
+        if (choice === null) return;
+        productOrders = choice;
+      }
+    }
+    const label =
+      productOrders === 'paid' ? 'Booking Selesai. Produk dibayar & diambil.' : productOrders === 'cancel' ? 'Booking Selesai. Pesanan produk dibatalkan.' : `Status diubah menjadi ${STATUS_LABEL[status]}.`;
+    void run(label, async () => {
+      const r = await api<{ productOrders?: { done: number; failed: number } }>(`/admin/bookings/${b.id}/status`, { method: 'POST', json: { status, reason, productOrders } });
+      if (r.productOrders?.failed) {
+        onChanged();
+        throw new Error(`Booking Selesai, tetapi ${r.productOrders.failed} pesanan produk gagal diproses. Proses dari Toko → Pesanan → Belum diambil.`);
+      }
+    });
   };
 
   const active = b.status === 'pending' || b.status === 'confirmed';
@@ -149,6 +187,8 @@ export function BookingDetail({ booking: b, onClose, onChanged }: { booking: Adm
           </div>
         )}
       </dl>
+
+      {!isBarber && me.features.shop && <BookingOrders bookingId={b.id} />}
 
       {msg && (
         <Alert tone={msg.tone === 'ok' ? 'success' : 'danger'} role={msg.tone === 'ok' ? 'status' : 'alert'}>

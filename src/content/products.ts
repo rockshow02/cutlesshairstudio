@@ -19,6 +19,8 @@ export const productsCopy: ProductsCopy = {
     filterAll: 'Semua',
     order: 'Pesan via WhatsApp',
     orderShort: 'Pesan',
+    buy: 'Beli di toko',
+    buyShort: 'Beli',
     askRestock: 'Tanya stok',
     outOfStock: 'Stok habis',
     normalPrice: 'Harga normal',

@@ -75,6 +75,8 @@ export const adminBookingsQuery = z.object({
 export const adminStatusBody = z.object({
   status: z.enum(['confirmed', 'completed', 'no_show', 'cancelled']),
   reason: z.string().trim().max(300).optional().nullable(),
+  /** Saat Selesai: pesanan produk "ambil saat booking" yang masih terbuka. keep (default) = biarkan terbuka */
+  productOrders: z.enum(['keep', 'paid', 'cancel']).optional(),
 });
 
 export const adminNoteBody = z.object({ note: z.string().trim().max(1000) });
@@ -200,3 +202,114 @@ export const loyaltyAdjustBody = z.object({
 
 export const voucherRedeemBody = z.object({ voucherId: z.string().min(1).max(64) });
 export const loyaltyMergeBody = z.object({ guestId: z.string().min(1).max(64) });
+
+/* ---------- Cutless Shop ---------- */
+
+const money = z.number().int().min(0).max(100_000_000);
+const cartItems = z
+  .array(z.object({ variantId: id, qty: z.number().int().min(1).max(20) }))
+  .min(1, 'Keranjang kosong.')
+  .max(30);
+const fulfillment = z.enum(['pickup', 'with_booking', 'ship_manual', 'ship_auto']);
+
+export const shopQuoteBody = z.object({
+  branch: id,
+  items: cartItems,
+  fulfillment: fulfillment.optional(),
+  regionId: z.string().max(40).optional().nullable(),
+});
+
+export const shopOrderBody = z.object({
+  branch: id,
+  items: cartItems,
+  fulfillment,
+  paymentMethod: z.enum(['transfer', 'qris']).default('transfer'),
+  bookingId: z.string().max(64).optional().nullable(),
+  shipping: z
+    .object({
+      recipientName: nameField,
+      recipientPhone: phoneField,
+      address: z.string().trim().min(10, 'Alamat terlalu pendek').max(400),
+      regionId: z.string().max(40).optional().nullable(),
+      regionLabel: z.string().max(200).optional().nullable(),
+      postalCode: z.string().trim().max(10).optional().nullable(),
+    })
+    .optional()
+    .nullable(),
+  rate: z.object({ courier: z.string().max(30), service: z.string().max(60) }).optional().nullable(),
+  note: z.string().trim().max(300).optional().nullable(),
+  turnstileToken: z.string().optional().default(''),
+});
+
+export const bookingProductsBody = z.object({ items: cartItems, note: z.string().trim().max(300).optional().nullable() });
+
+export const shopSettingsBody = z.object({
+  enabled: z.boolean(),
+  payment_window_min: z.number().int().min(30).max(20160),
+  pickup_window_days: z.number().int().min(1).max(60),
+  auto_complete_days: z.number().int().min(1).max(60),
+  stamp_min_subtotal: money,
+  low_stock_threshold: z.number().int().min(0).max(1000),
+  return_policy: z.string().trim().max(2000),
+  shipping_provider: z.enum(['manual', 'rajaongkir']),
+  shipping_daily_limit: z.number().int().min(0).max(100000),
+});
+
+export const shopBranchBody = z.object({
+  pickup_enabled: z.boolean(),
+  with_booking_enabled: z.boolean(),
+  ship_manual_enabled: z.boolean(),
+  ship_auto_enabled: z.boolean(),
+  bank_name: z.string().trim().max(60).nullable(),
+  bank_account_no: z.string().trim().max(40).nullable(),
+  bank_account_name: z.string().trim().max(80).nullable(),
+  qris_image: z.string().trim().max(300).nullable(),
+  payment_note: z.string().trim().max(500).nullable(),
+  unique_code_enabled: z.boolean(),
+  origin_region_id: z.string().trim().max(40).nullable(),
+  origin_label: z.string().trim().max(200).nullable(),
+});
+
+const slug = z.string().trim().regex(/^[a-z0-9][a-z0-9-]*$/, 'Slug hanya huruf kecil, angka, dan tanda hubung').max(80);
+export const productBody = z.object({
+  slug,
+  name: z.string().trim().min(2).max(120),
+  category: z.string().trim().min(2).max(60),
+  description: z.string().trim().max(1000).nullable(),
+  notes: z.string().trim().max(3000).nullable(),
+  badge: z.string().trim().max(30).nullable(),
+  is_active: z.boolean(),
+  sort_order: z.number().int().min(0).max(100000),
+  release_at: isoString.nullable(),
+  per_customer_limit: z.number().int().min(1).max(100).nullable(),
+  images: z.array(z.object({ path: z.string().trim().min(1).max(300), alt: z.string().trim().max(200).nullable().optional() })).max(10),
+  variants: z
+    .array(
+      z.object({
+        id: id.optional(),
+        sku: z.string().trim().max(60).nullable(),
+        name: z.string().trim().min(1).max(80),
+        options: z.record(z.string().max(30), z.string().max(60)).default({}),
+        price: money,
+        compare_at_price: money.nullable(),
+        weight_gram: z.number().int().min(1).max(50000),
+        is_active: z.boolean(),
+      }),
+    )
+    .min(1, 'Minimal satu varian.')
+    .max(30),
+});
+
+export const stockBody = z.object({ branchId: id, variantId: id, onHand: z.number().int().min(0).max(100000), reason: z.string().trim().min(3, 'Alasan wajib diisi.').max(200) });
+
+export const orderActionBody = z.object({
+  shippingFee: money.optional(),
+  courier: z.string().trim().max(40).optional().nullable(),
+  service: z.string().trim().max(60).optional().nullable(),
+  trackingNo: z.string().trim().max(60).optional(),
+  amount: money.optional(),
+  method: z.enum(['transfer', 'qris', 'cashier']).optional(),
+  confirmMismatch: z.boolean().optional(),
+  reason: z.string().trim().max(300).optional().nullable(),
+  note: z.string().trim().max(300).optional().nullable(),
+});
