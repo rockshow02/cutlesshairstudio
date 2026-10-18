@@ -128,6 +128,38 @@ Bagian **Cutless Stamp** menampilkan kartu (mis. 7/10), voucher (aktif / dipakai
 ### Memantau
 **Ringkasan & ekspor → Cutless Stamp (30 hari)**: stempel diberikan, voucher terbit/ditukar (beserta nilainya)/hangus, dan **stempel per admin/hairstylist**. Waspadai angka yang jauh di atas jumlah booking Selesai, atau stempel manual yang sering.
 
+## 8. Toko (Cutless Shop)
+
+Tab **Toko** (owner & admin cabang; hairstylist tidak melihatnya). Selama toko **mati**, landing page & /produk tetap memakai daftar produk Pages CMS dan pesan via WhatsApp seperti biasa.
+
+### Menyalakan toko (owner, sekali)
+1. **Toko → Pengaturan**, per cabang: centang cara terima (Ambil di cabang, Ambil saat booking, Dikirim), isi **rekening bank** (dan path gambar **QRIS statis** bila ada), opsional **Kode unik transfer**. Simpan.
+2. Pastikan produk sudah ada (seed sekali dari Pages CMS oleh owner/developer: `npm run db:seed:shop:staging`) lalu isi **stok per cabang** (bagian berikut).
+3. Atur batas bayar (default 24 jam), **batas ambil** (default 7 hari sejak Siap diambil), selesai otomatis (7 hari setelah dikirim), minimum belanja untuk stempel, peringatan stok menipis, kebijakan retur.
+4. Centang **Toko aktif** → Simpan. Kartu produk di landing page kini mengarah ke /shop.
+
+### Produk & stok
+- Tabel menampilkan stok **tersedia** per cabang (stok fisik dikurangi yang sedang dipesan). Klik angkanya → isi **stok fisik di rak** + alasan (barang masuk, stock opname, rusak). Admin cabang hanya cabangnya. Stok tidak bisa diisi di bawah jumlah yang sedang dipesan.
+- **Owner**: klik nama produk untuk mengubah, atau **Produk baru**. Foto: unggah di Pages CMS → Media, lalu tempel path-nya (satu per baris). Varian (mis. 100 gr / 50 gr) punya harga, harga coret, berat (untuk ongkir). Varian tidak dihapus, cukup matikan "Varian aktif".
+- **Drop**: isi waktu **Rilis**; sebelum itu produk tampil "Segera" tetapi belum bisa dipesan. **Maks. per pelanggan** dihitung dari semua pesanan pelanggan yang tidak batal.
+
+### Memproses pesanan
+Buka **Toko → Pesanan**, pilih status (mis. *Dibayar (perlu disiapkan)*), klik kode pesanan.
+
+| Status | Yang Anda lakukan |
+|---|---|
+| Menunggu ongkir | Isi **Ongkir**, kurir, layanan → **Simpan ongkir**. Pelanggan lalu melihat instruksi bayar. |
+| Menunggu pembayaran | Cocokkan mutasi/bukti WhatsApp dengan **nominal persis** (termasuk kode unik) → **Tandai Lunas**. Bila nominal yang masuk berbeda, isi *Nominal diterima*: muncul peringatan selisih → konfirmasi bila tetap diterima. Tidak dibayar sampai batas → batal otomatis. |
+| Dibayar (ambil) | Siapkan barang → **Siap diambil**. Saat diambil → **Sudah diambil** (stok fisik berkurang di sini). |
+| Dibayar (kirim) | Kirim → isi **Nomor resi** → **Tandai dikirim**. Selesai saat pelanggan menekan "Pesanan diterima", atau otomatis 7 hari. |
+| Diambil saat booking | Di kasir: dari **Jadwal → detail booking → Produk diambil saat booking → Proses di kasir → Diambil & dibayar di kasir**. Booking batal/tidak datang → pesanan ikut batal otomatis. |
+| **Belum diambil** (merah) | Sudah lewat batas ambil. Tidak dibatalkan otomatis karena sudah dibayar: hubungi pelanggan (klik nomornya → WhatsApp), atau **Refund** bila disepakati. Telegram cabang juga mengirim pengingat sekali. |
+
+**Batalkan** (sebelum bayar) & **Refund** (sesudah bayar) wajib alasan; refund mengembalikan stok bila barang belum dikirim (uang dikembalikan manual).
+
+### Stempel & ringkasan
+Pesanan Selesai dengan subtotal ≥ minimum (default Rp100.000) memberi 1 stempel Cutless Stamp; tetap maks. 1 stempel/hari gabungan dengan booking. **Toko → Ringkasan**: omzet 30 hari, produk terlaris, stok menipis, pesanan perlu tindakan, belum diambil.
+
 ---
 
 ## Pertanyaan umum

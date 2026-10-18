@@ -153,6 +153,8 @@ Menurunkan pengumuman: matikan **Aktif** → **Save** (atau hapus entrinya). Bil
 
 Produk tampil di halaman **/produk** dan 4 produk teratas juga tampil di halaman utama, setelah **Pengaturan Situs → Tampilkan Produk** dinyalakan. Pembeli memesan lewat tombol WhatsApp (pesan otomatis berisi nama produk).
 
+> **Bila Cutless Shop sudah aktif** (dashboard `/admin` → Toko), produk, harga, dan stok dikelola di dashboard, bukan di sini; landing page membaca dari toko. Foto produk tetap diunggah di Pages CMS → Media. Lihat [panduan-admin-booking.md §8](panduan-admin-booking.md).
+
 **Menambah produk:**
 1. Klik **Produk** → **Add an entry**.
 2. Isi **Nama produk** (mis. `Water Based Pomade`), **Kategori**, dan **Harga jual** (angka saja, mis. `95000`).
