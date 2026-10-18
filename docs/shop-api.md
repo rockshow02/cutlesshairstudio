@@ -133,4 +133,26 @@ Aman diulang: slug yang sudah ada tidak ditimpa.
 5. Bila ada yang tidak cocok: `npx wrangler d1 time-travel restore DB --env staging --bookmark <bookmark langkah 1>` lalu laporkan.
 6. Setelah merge & deploy: `curl https://<staging>/api/shop/config` → `{"enabled":false}`. Toko dinyalakan owner di Admin → Toko → Pengaturan setelah seed & stok diisi.
 
+Hasil di staging (18 Okt 2026): jumlah baris sebelum = sesudah (stamps 1, active 1, bookings 27, vouchers 0), indeks `loyalty_stamps` lengkap (4 + 3 autoindex), seed 6 produk. Cadangan memakai bookmark Time Travel karena `d1 export` gagal (lihat di bawah).
+
+### Troubleshooting: `wrangler d1 export` → `Authentication error [code: 10000]`
+
+Terjadi di staging saat login wrangler memakai **OAuth** (`wrangler login`). Perintah lain (`execute`, `migrations apply`, `time-travel`) tetap jalan, jadi masalahnya ada pada izin token untuk endpoint ekspor, bukan pada database. Sebelum migrasi **produksi**, siapkan salah satu:
+
+1. **Perbarui login OAuth:** `npx wrangler logout` lalu `npx wrangler login`, setujui semua izin yang diminta, cek dengan `npx wrangler whoami` (akun yang benar, izin D1 tercantum). Coba export lagi.
+2. **Pakai API token khusus** (cara paling andal): Cloudflare dashboard → *My Profile → API Tokens → Create Token* → izin **Account · D1 · Edit** (+ **Account · Account Settings · Read**), batasi ke akun bisnis. Jalankan di terminal sesi itu saja, jangan disimpan di repo atau `.dev.vars`:
+   ```
+   # PowerShell
+   $env:CLOUDFLARE_API_TOKEN = "<token>"; $env:CLOUDFLARE_ACCOUNT_ID = "<account id>"
+   # produksi = blok utama wrangler.jsonc (tanpa --env); staging: tambah --env staging
+   npx wrangler d1 export DB --remote --output backup-produksi-sebelum-0003.sql
+   Remove-Item Env:CLOUDFLARE_API_TOKEN
+   ```
+   Hapus token di dashboard setelah selesai bila hanya untuk sekali pakai.
+3. **Uji dulu sebelum hari-H:** jalankan export ke staging dengan cara 1 atau 2 dan pastikan file `.sql` terbentuk dan tidak kosong.
+4. **Bila export tetap gagal:** catat bookmark Time Travel (`npx wrangler d1 time-travel info DB` (+ `--env staging` untuk staging)) **tepat sebelum** migrasi. Time Travel hanya bisa memulihkan dalam masa simpan paket (paket gratis lebih pendek dari paket berbayar; cek di dokumentasi D1), jadi verifikasi hasil migrasi (langkah 2 & 4) di hari yang sama. Sebagai cadangan tambahan, simpan isi tabel penting ke JSON:
+   ```
+   npx wrangler d1 execute DB --remote --json --command "SELECT * FROM loyalty_stamps" > loyalty_stamps.json
+   ```
+
 Tes migrasi di D1 lokal berisi data: `tests/migration-0003.test.ts` (jumlah & isi baris sama, semua indeks & constraint lama ada, constraint baru bekerja).
