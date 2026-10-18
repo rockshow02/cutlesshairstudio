@@ -11,6 +11,7 @@ import { Page, Loading } from '../Page';
 import { loginUrl } from '../hooks';
 import type { CustomerBooking } from '../types';
 import styles from '../booking.module.css';
+import { BookingProducts } from '@/shop/BookingProducts';
 
 /** Pesan WhatsApp ke cabang berisi kode & detail booking */
 export function whatsappDetail(b: CustomerBooking, intro = 'saya sudah booking online') {
@@ -121,6 +122,7 @@ export function Success() {
             </dd>
           </div>
         </dl>
+        <BookingProducts booking={booking} />
       </Card>
 
       <div className={styles.actions}>

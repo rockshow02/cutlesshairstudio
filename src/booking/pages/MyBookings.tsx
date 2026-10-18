@@ -16,6 +16,7 @@ import { SlotPicker } from '../SlotPicker';
 import { LoyaltySection } from '../loyalty/LoyaltySection';
 import { loginUrl } from '../hooks';
 import { whatsappDetail } from './Success';
+import { BookingProducts } from '@/shop/BookingProducts';
 import type { BookingBranch, CustomerBooking } from '../types';
 import styles from '../booking.module.css';
 
@@ -59,6 +60,9 @@ export function MyBookings() {
         <>
           <Button href="/booking/" variant="dark" icon="scissors" size="sm">
             Booking baru
+          </Button>
+          <Button href="/pesanan" variant="outline-dark" icon="tag" size="sm">
+            Pesanan
           </Button>
           <Button href="/profil" variant="outline-dark" icon="user" size="sm">
             Profil
@@ -215,6 +219,7 @@ function ActiveCard({ booking: b, branch, onChanged }: { booking: CustomerBookin
       <p className={styles.bookingInfo}>
         <span className={styles.bookingCode}>{b.code}</span> · <strong>{b.service.name}</strong> · {b.barber.name} · {b.branch.name} · {rupiah(b.service.price)}
       </p>
+      <BookingProducts booking={b} />
       {error && (
         <>
           <div className={styles.gap} />

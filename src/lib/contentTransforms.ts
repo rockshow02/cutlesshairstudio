@@ -487,8 +487,12 @@ export function buildProducts(entries: ProductEntry[], copy: ProductsCopy): Prod
       inStock: p.inStock !== false,
       shopeeUrl: text(p.shopeeUrl),
       tokopediaUrl: text(p.tokopediaUrl),
+      // slug hanya ada pada produk dari D1 (GET /api/public/catalog saat toko aktif)
+      shopUrl: (p as { slug?: string }).slug ? `/shop/${(p as { slug?: string }).slug}` : undefined,
     };
   });
-  const categories = PRODUCT_CATEGORY_ORDER.filter((c) => items.some((i) => i.category === c));
+  // Kategori produk D1 di luar daftar baku tetap bisa difilter (di akhir)
+  const extra = [...new Set(items.map((i) => i.category))].filter((c) => !PRODUCT_CATEGORY_ORDER.includes(c));
+  const categories = [...PRODUCT_CATEGORY_ORDER.filter((c) => items.some((i) => i.category === c)), ...extra];
   return { ...copy, categories, items };
 }

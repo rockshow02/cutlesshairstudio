@@ -71,7 +71,7 @@ function ProductsTeaser({ data }: { data: ProductsContent }) {
         heading={data.teaserHeading}
         id="produk-title"
         aside={
-          <Button href={pageUrl('/produk/')} variant="ghost" iconEnd="arrow">
+          <Button href={items.some((p) => p.shopUrl) ? '/shop/' : pageUrl('/produk/')} variant="ghost" iconEnd="arrow">
             {data.labels.viewAll}
           </Button>
         }
@@ -198,11 +198,20 @@ function ProductCard({ product, labels }: { product: Product; labels: ProductsCo
         </p>
 
         <CardFooter className={styles.foot}>
-          <Button href={order.href} external={order.external} onClick={order.onClick} size="sm" block variant={product.inStock ? 'light' : 'ghost'} icon="whatsapp">
-            <span className={styles.longLabel}>{product.inStock ? labels.order : labels.askRestock}</span>
-            <span className={styles.shortLabel}>{product.inStock ? labels.orderShort : labels.askRestock}</span>
-            <span className="visually-hidden"> {fullName}</span>
-          </Button>
+          {/* Toko aktif → ke halaman produk /shop; stok habis / toko mati → WhatsApp seperti biasa */}
+          {product.shopUrl && product.inStock ? (
+            <Button href={product.shopUrl} size="sm" block variant="light" icon="tag">
+              <span className={styles.longLabel}>{labels.buy}</span>
+              <span className={styles.shortLabel}>{labels.buyShort}</span>
+              <span className="visually-hidden"> {fullName}</span>
+            </Button>
+          ) : (
+            <Button href={order.href} external={order.external} onClick={order.onClick} size="sm" block variant={product.inStock ? 'light' : 'ghost'} icon="whatsapp">
+              <span className={styles.longLabel}>{product.inStock ? labels.order : labels.askRestock}</span>
+              <span className={styles.shortLabel}>{product.inStock ? labels.orderShort : labels.askRestock}</span>
+              <span className="visually-hidden"> {fullName}</span>
+            </Button>
+          )}
           {markets.length > 0 && (
             <p className={styles.markets}>
               {labels.alsoAt}{' '}
