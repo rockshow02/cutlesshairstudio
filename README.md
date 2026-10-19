@@ -1,5 +1,28 @@
 # Cutless Hair Studio, website multi-cabang (biaya Rp0)
 
+> ## 📦 Branch arsip: `archive/booking-online-dan-toko`
+>
+> **Dibekukan 19 Okt 2026** dari `staging` commit **`c8d086a`** (`c8d086aa36a123a9946d6f34c96e39ae0dfe9967`, "Merge feature/about-slideshow ke staging").
+> Klien memutuskan: booking lewat WhatsApp, toko tanpa checkout, tanpa akun pelanggan & database. Fitur di bawah dicabut dari `staging`
+> (branch `feature/static-wa-only`) dan disimpan utuh di branch ini. **Jangan merge branch ini**; ambil bagian yang diperlukan.
+>
+> **Fitur yang ada di branch ini**
+> - **Booking online:** wizard `/booking` (cabang → layanan → hairstylist → jam), mesin slot 15 menit + anti-bentrok (`booking_slots`), `/booking/saya` (batal/jadwal ulang), `/booking/sukses`, notifikasi Telegram, cron pembatalan otomatis. API `/api/booking*`, `/api/availability`, `/api/bookings*`.
+> - **Akun pelanggan:** `/masuk` (Google OAuth via Arctic, login uji/mock, opsi WA+password), `/profil`, sesi cookie di D1, Turnstile, `/kebijakan-privasi`, anonimisasi UU PDP.
+> - **Dashboard admin `/admin`** (Cloudflare Access): jadwal, walk-in, pelanggan, ringkasan & ekspor CSV, libur/cuti, pengaturan cabang/hairstylist/layanan/harga, log aktivitas.
+> - **Cutless Stamp** (loyalitas): stempel otomatis, voucher hadiah, panel admin (`migrations/0002_loyalty.sql`, `docs/panduan-admin-booking.md` §7).
+> - **Cutless Shop:** `/shop`, keranjang, checkout, `/pesanan`, stok per cabang, transfer/QRIS manual, ongkir manual/RajaOngkir, admin Toko (`migrations/0003_shop.sql`, `docs/shop-api.md`).
+> - **Data:** Worker Hono (`worker/`), D1 `cutless-staging` (`migrations/0001–0003`), kode bersama `shared/`, tes Vitest (`tests/`) & Playwright (`e2e/`). Landing page membaca cabang/hairstylist/harga dari D1 lewat `GET /api/public/catalog`.
+>
+> **Cara mengaktifkan kembali (ringkas)**
+> 1. Buat branch baru dari branch ini (atau cherry-pick fitur yang perlu ke `staging` terbaru) dan selesaikan konflik dengan perubahan sesudah `c8d086a`.
+> 2. Cloudflare: buat/aktifkan lagi D1 (`npx wrangler d1 create …`), isi `database_id` di `wrangler.jsonc`, jalankan `npm run db:migrate:staging` lalu `npm run db:seed:staging` (dan `db:seed:shop:staging` untuk toko). Data cabang/harga/barber terbaru ada di `src/content/*.json` branch `staging`.
+> 3. Secrets (`wrangler secret put … --env staging`): `GOOGLE_CLIENT_SECRET`, `TURNSTILE_SECRET_KEY`, `AUTH_MOCK_SECRET`, `TELEGRAM_BOT_TOKEN` (opsional), `RAJAONGKIR_API_KEY` (opsional). Vars & Cron Trigger ada di blok `env.staging` `wrangler.jsonc` branch ini.
+> 4. Google OAuth client & Turnstile site untuk domain staging, Cloudflare Access application untuk `/admin*` dan `/api/admin*` (langkah lengkap: `docs/booking-setup.md`).
+> 5. `.env.staging`: `VITE_BOOKING_ENABLED=true`. Flag fitur: `LOYALTY_ENABLED`, `SHOP_ENABLED` (env) + aktifkan program/toko dari `/admin`.
+> 6. Uji: `npm test`, `npm run e2e` (Worker lokal + D1 lokal).
+
+
 Website Vite + React 18 + TypeScript + CSS Modules untuk beberapa cabang (saat ini Bogor & Cibubur). Konten yang sering berubah dikelola lewat **[Pages CMS](https://pagescms.org)**, CMS berbasis Git yang menyimpan konten sebagai file JSON di repo ini. Produksi: tanpa server/database. Staging: tambahan booking online (Worker API + D1, lihat §13).
 
 | Kebutuhan | Layanan | Biaya |
