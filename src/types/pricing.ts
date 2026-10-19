@@ -1,7 +1,8 @@
 import type { SectionHeading } from './common';
+import type { PRICE_CATEGORIES } from '@/content/priceCategories';
 
-/** Kategori harga. Sama persis dengan enum `category` di CMS (Pricing Item). */
-export type PriceCategoryKey = 'Haircut' | 'Shaving' | 'Coloring' | 'Treatment' | 'Kids' | 'Paket';
+/** Kategori harga. Sama persis dengan PRICE_CATEGORIES (schema.ts) & enum `category` di CMS (Daftar Harga). */
+export type PriceCategoryKey = (typeof PRICE_CATEGORIES)[number];
 
 /** Badge opsional. Sama dengan enum `badge` di CMS. */
 export type PriceBadge = 'Best Seller' | 'Baru' | 'Promo';

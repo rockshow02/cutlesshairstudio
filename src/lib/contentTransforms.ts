@@ -61,6 +61,7 @@ import type {
   TestimonialEntry,
 } from '@/content/schema';
 import { srcSetOf } from './responsiveImage';
+import { PRICE_CATEGORIES } from '@/content/priceCategories';
 import { formatNumber } from './format';
 import { isActiveNow, parseWIB, toIsoWIB } from './dates';
 import { fillTemplate } from './whatsapp';
@@ -275,7 +276,8 @@ export function buildSocials(s: SettingsEntry, base: SocialLink[]): SocialLink[]
 
 /* ---------- Harga (dengan harga khusus cabang) ---------- */
 
-const CATEGORY_ORDER: Exclude<PriceCategoryKey, 'Paket'>[] = ['Haircut', 'Kids', 'Shaving', 'Coloring', 'Treatment'];
+/** Urutan kategori di Daftar Harga = urutan enum (Paket tampil terpisah sebagai kartu) */
+const CATEGORY_ORDER = PRICE_CATEGORIES.filter((c): c is Exclude<PriceCategoryKey, 'Paket'> => c !== 'Paket');
 const badgeOf = (b: PricingEntry['badge']): PriceBadge | undefined => (b ? b : undefined);
 
 /**

@@ -4,6 +4,7 @@
  *  - setiap batas panjang teks di Zod (.max) punya options.maxlength yang sama di .pages.yml, dan sebaliknya
  *  - field wajib di Zod (tanpa default, tidak boleh kosong) = required: true di .pages.yml, dan sebaliknya
  *  - setiap field Zod ada di form CMS (kecuali yang diisi otomatis), setiap field CMS dikenal Zod
+ *  - pilihan select (mis. kategori Daftar Harga) sama & berurutan dengan enum Zod
  */
 import { readFileSync } from 'node:fs';
 import { parse } from 'yaml';
@@ -15,11 +16,22 @@ interface ZInfo {
   kind: string;
   required: boolean;
   max?: number;
+  /** Pilihan enum (untuk select di CMS) */
+  values?: string[];
   children?: Record<string, ZInfo>;
   item?: ZInfo;
 }
 
-type Def = { type: string; innerType?: z.ZodType; in?: z.ZodType; options?: z.ZodType[]; element?: z.ZodType; shape?: Record<string, z.ZodType>; values?: unknown[] };
+type Def = {
+  type: string;
+  innerType?: z.ZodType;
+  in?: z.ZodType;
+  options?: z.ZodType[];
+  element?: z.ZodType;
+  shape?: Record<string, z.ZodType>;
+  values?: unknown[];
+  entries?: Record<string, string>;
+};
 const defOf = (s: z.ZodType) => (s as unknown as { _zod: { def: Def } })._zod.def;
 
 /** Ringkas skema Zod: jenis, wajib/tidak, batas panjang teks, anak (objek) / item (list) */
@@ -50,8 +62,10 @@ function info(s: z.ZodType, optional = false): ZInfo {
       const min = checks.find((c) => c._zod.def.check === 'min_length')?._zod.def.minimum ?? 0;
       return { kind: 'array', required: !optional && min > 0, item: info(def.element!) };
     }
+    case 'enum':
+      return { kind: 'enum', required: !optional, values: Object.values(def.entries ?? {}) };
     default:
-      // enum, number, boolean, literal
+      // number, boolean, literal
       return { kind: def.type, required: !optional };
   }
 }
@@ -61,7 +75,8 @@ interface CmsField {
   type: string;
   required?: boolean;
   list?: boolean | { min?: number; max?: number };
-  options?: { maxlength?: number };
+  default?: unknown;
+  options?: { maxlength?: number; values?: (string | { name: string })[] };
   fields?: CmsField[];
 }
 
@@ -84,6 +99,13 @@ function compare(path: string, cms: CmsField[], zod: Record<string, ZInfo>, out:
     if (text?.kind === 'string' && ['string', 'text'].includes(f.type)) {
       const cmsMax = f.options?.maxlength;
       if (text.max !== cmsMax) out.push(`${at}: Zod max ${text.max ?? '-'}, CMS maxlength ${cmsMax ?? '-'}`);
+    }
+    // Pilihan select = enum Zod (urutan sama), default termasuk pilihannya
+    const choice = z.kind === 'array' ? z.item : z;
+    if (choice?.kind === 'enum' && f.type === 'select') {
+      const cmsValues = (f.options?.values ?? []).map((v) => (typeof v === 'string' ? v : v.name));
+      if (JSON.stringify(cmsValues) !== JSON.stringify(choice.values)) out.push(`${at}: pilihan Zod [${choice.values}] ≠ CMS [${cmsValues}]`);
+      if (f.default !== undefined && f.default !== '' && !choice.values!.includes(String(f.default))) out.push(`${at}: default CMS "${f.default}" bukan pilihan Zod`);
     }
     const children = z.kind === 'object' ? z.children : z.kind === 'array' && z.item?.kind === 'object' ? z.item.children : undefined;
     if (children && f.fields) compare(at, f.fields, children, out);
@@ -116,6 +138,8 @@ describe('.pages.yml sejalan dengan skema Zod', () => {
   it('pemeriksaan ini benar-benar mendeteksi selisih', () => {
     const yamlText = readFileSync('.pages.yml', 'utf8').replace(/(name: message[\s\S]*?maxlength: )160/, '$1170');
     expect(mismatches(yamlText)).toContain('announcements.json.message: Zod max 160, CMS maxlength 170');
+    const oldCategories = readFileSync('.pages.yml', 'utf8').replace('values: [Haircut & Grooming, Wanita,', 'values: [Haircut, Wanita,');
+    expect(mismatches(oldCategories).some((m) => m.startsWith('pricing.json.category: pilihan Zod'))).toBe(true);
   });
 
   it('setiap field dengan batas karakter menyebut batasnya di deskripsi', () => {

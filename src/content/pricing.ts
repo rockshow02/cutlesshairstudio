@@ -11,11 +11,14 @@ export const pricingCopy: PricingCopy = {
   },
   // Label kategori yang tampil di website (kunci = pilihan "Kategori" di Pages CMS)
   categoryLabels: {
-    Haircut: 'Haircut',
-    Kids: 'Kids',
+    'Haircut & Grooming': 'Haircut & Grooming',
+    Wanita: 'Wanita',
+    Treatment: 'Treatment',
+    Coloring: 'Coloring',
+    Perming: 'Perming',
+    'Braids & Dreadlock': 'Braids & Dreadlock',
     Shaving: 'Shaving & Beard',
-    Coloring: 'Coloring & Perming',
-    Treatment: 'Treatment & Extra',
+    Kids: 'Kids',
   },
   packagesTitle: 'Paket & Membership',
   packageCtaLabel: 'Ambil Paket',
