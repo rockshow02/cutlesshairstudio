@@ -44,44 +44,17 @@
     // Worker terpisah: URL, versi, database, dan pengaturan (mis. Cloudflare Access) tidak tercampur dengan produksi.
     // dist/ hasil build staging sudah berisi robots.txt "Disallow: /" dan header X-Robots-Tag: noindex (dist/_headers).
     "staging": {
+      // Situs statis saja (booking lewat WhatsApp; fitur booking online, akun, & toko diarsipkan di branch
+      // archive/booking-online-dan-toko). Tanpa D1, tanpa vars/secrets, tanpa Cron Trigger.
       "name": "cutlesshairstudio-staging",
       "assets": {
         "directory": "./dist",
         "binding": "ASSETS",
         "html_handling": "auto-trailing-slash",
-        "not_found_handling": "404-page",
-        "run_worker_first": ["/api/*", "/masuk*", "/profil*", "/booking*", "/admin*", "/kebijakan-privasi*", "/shop*", "/pesanan*"]
+        "not_found_handling": "404-page"
       },
-      "d1_databases": [
-        {
-          "binding": "DB",
-          "database_name": "cutless-staging",
-          // npx wrangler d1 create cutless-staging (dibuat 16 Okt 2026)
-          "database_id": "2c0e9afc-085c-4bb9-8d54-57284639e5cd",
-          "migrations_dir": "migrations"
-        }
-      ],
-      "vars": {
-        "APP_ENV": "staging",
-        "AUTH_PHONE_PASSWORD_ENABLED": "false",
-        // Login uji (E2E) di staging; tetap butuh secret AUTH_MOCK_SECRET agar tidak bisa dipakai sembarang orang
-        "AUTH_MOCK_ENABLED": "true",
-        "PBKDF2_ITERATIONS": "100000",
-        // Cloudflare Access (Zero Trust): <tim>.cloudflareaccess.com dan Application Audience (AUD) tag
-        "ACCESS_TEAM_DOMAIN": "wild-voice-c787.cloudflareaccess.com",
-        "ACCESS_AUD": "a21a214ea539897fff7920c75ae8f733643d9453f0193739862a6b2ae483d506",
-        // Site key Turnstile (publik). Secret key → wrangler secret put TURNSTILE_SECRET_KEY --env staging
-        "TURNSTILE_SITE_KEY": "0x4AAAAAAFZESiyCC6DWREp5",
-        // Cutless Stamp tersedia di staging; program tetap MATI sampai owner mengaktifkannya di Admin → Pengaturan.
-        // Produksi tidak punya variabel ini → fitur mati.
-        "LOYALTY_ENABLED": "true",
-        // Cutless Shop tersedia di staging; toko tetap MATI sampai owner mengaktifkannya di Admin → Toko → Pengaturan.
-        // Ongkir otomatis (RajaOngkir) hanya bila SHIPPING_PROVIDER = "rajaongkir" + secret RAJAONGKIR_API_KEY + pengaturan toko.
-        "SHOP_ENABLED": "true",
-        "SHIPPING_PROVIDER": "manual"
-      },
-      // Tiap 15 menit: batalkan pending kedaluwarsa, bersihkan sesi. 02.00 WIB: anonimkan akun tidak aktif > 24 bulan.
-      "triggers": { "crons": ["*/15 * * * *", "0 19 * * *"] }
+      // crons kosong = Cron Trigger lama (booking & loyalitas) dihapus saat deploy berikutnya
+      "triggers": { "crons": [] }
     }
   }
 }

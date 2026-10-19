@@ -69,13 +69,290 @@ media:
     rename: safe
 
 content:
-  # ------------------------------------------------------------------ Cabang, Barber, Daftar Harga
-  # PINDAH ke database booking (D1) di branch ini: kelola lewat dashboard /admin → Pengaturan.
-  # File src/content/branches.json, barbers.json, pricing.json kini hanya salinan untuk build
-  # (SEO halaman cabang & pilihan cabang di Promo/Pengumuman). Perbarui dengan npm run export-catalog.
-  # Folder media "Foto Cabang" & "Foto Barber" tetap bisa dipakai untuk upload foto (salin path-nya ke /admin).
-
   # ------------------------------------------------------------------ Cabang
+  - name: branches
+    label: Cabang
+    type: file
+    path: src/content/branches.json
+    format: json
+    list: true
+    fields:
+      - name: slug
+        label: Kode URL (slug)
+        type: string
+        required: true
+        description: "Untuk alamat halaman /cabang/<slug>/. Huruf kecil, angka, dan tanda minus, mis. bogor-bantarjati. Jangan diubah setelah tayang."
+        pattern:
+          regex: "^[a-z0-9]+(-[a-z0-9]+)*$"
+          message: Hanya huruf kecil, angka, dan tanda minus (mis. bogor-bantarjati)
+      - name: name
+        label: Nama cabang
+        type: string
+        required: true
+        description: "Tanpa nama merek, mis. Bogor Bantarjati. Dipakai di pesan WhatsApp: ...cabang Bogor Bantarjati."
+        options:
+          maxlength: 60
+      - name: city
+        label: Kota
+        type: string
+        required: true
+        description: "Dipakai untuk pengelompokan di pemilih cabang, mis. Bogor."
+      - name: province
+        label: Provinsi
+        type: string
+        required: true
+      - name: address
+        label: Alamat lengkap
+        type: text
+      - name: googleMapsUrl
+        label: Link Google Maps
+        type: string
+        description: "Untuk tombol Petunjuk Arah. Buka Google Maps → Bagikan → Salin link."
+        pattern:
+          regex: "^(https?://.+)?$"
+          message: Harus diawali https://
+      - name: latitude
+        label: Latitude
+        type: string
+        description: "Untuk fitur Cabang terdekat & peta. Di Google Maps: klik kanan titik lokasi → klik angka koordinat (angka pertama), mis. -6.5761"
+        pattern:
+          regex: "^(-?\\d{1,2}([.,]\\d+)?)?$"
+          message: Angka desimal, mis. -6.5761
+      - name: longitude
+        label: Longitude
+        type: string
+        description: "Angka kedua dari koordinat Google Maps, mis. 106.8062"
+        pattern:
+          regex: "^(-?\\d{1,3}([.,]\\d+)?)?$"
+          message: Angka desimal, mis. 106.8062
+      - name: whatsappNumber
+        label: Nomor WhatsApp cabang
+        type: string
+        required: true
+        description: "Semua tombol booking cabang ini. Format 628xxxxxxxxxx, contoh 6281234567890."
+        pattern:
+          regex: "^(62\\d{8,13}|TODO.*)$"
+          message: Format harus 628xxxxxxxxxx (tanpa +, spasi, atau strip)
+      - name: timezone
+        label: Zona waktu
+        type: select
+        default: Asia/Jakarta
+        description: "WIB = Asia/Jakarta, WITA = Asia/Makassar, WIT = Asia/Jayapura. Dipakai menghitung status buka."
+        options:
+          values: [Asia/Jakarta, Asia/Makassar, Asia/Jayapura]
+      - name: openingHours
+        label: Jam buka
+        type: object
+        description: "Satu baris per hari, urut Senin–Minggu. Format jam 24 jam, mis. 10:00."
+        list:
+          max: 7
+          collapsible:
+            collapsed: true
+            summary: "{day}: {openTime}–{closeTime}"
+        fields:
+          - name: day
+            label: Hari
+            type: select
+            required: true
+            options:
+              values: [Senin, Selasa, Rabu, Kamis, Jumat, Sabtu, Minggu]
+          - name: openTime
+            label: Jam buka
+            type: string
+            pattern:
+              regex: "^(([01]\\d|2[0-3]):[0-5]\\d)?$"
+              message: Format HH:MM, contoh 10:00
+          - name: closeTime
+            label: Jam tutup
+            type: string
+            pattern:
+              regex: "^(([01]\\d|2[0-3]):[0-5]\\d)?$"
+              message: Format HH:MM, contoh 21:00
+          - name: isClosed
+            label: Tutup seharian
+            type: boolean
+            default: false
+      - name: status
+        label: Status
+        type: select
+        required: true
+        default: Aktif
+        description: "Segera Dibuka & Tutup Sementara tampil dengan label dan TANPA tombol booking."
+        options:
+          values: [Aktif, Segera Dibuka, Tutup Sementara]
+      - name: photo
+        label: Foto cabang
+        type: image
+        description: "Foto studio/fasad, lebar (landscape). Dikompres otomatis ke WebP."
+        options:
+          media: branches
+      - name: order
+        label: Urutan
+        type: number
+        default: 0
+        description: "Angka kecil tampil lebih dulu (10, 20, 30, ...)."
+        options:
+          min: 0
+
+  # ------------------------------------------------------------------ Daftar Harga
+  - name: pricing
+    label: Daftar Harga
+    type: file
+    path: src/content/pricing.json
+    format: json
+    list: true
+    fields:
+      - name: name
+        label: Nama layanan
+        type: string
+        required: true
+        description: "Contoh: Signature Haircut"
+        options:
+          maxlength: 80
+      - name: category
+        label: Kategori
+        type: select
+        required: true
+        default: Haircut
+        description: "Pilih \"Paket\" untuk paket/membership (tampil sebagai kartu)."
+        options:
+          values: [Haircut, Shaving, Coloring, Treatment, Kids, Paket]
+      - name: price
+        label: Harga (Rupiah)
+        type: number
+        required: true
+        description: "Angka saja, tanpa titik dan tanpa \"Rp\". Contoh: 75000"
+        options:
+          min: 0
+      - name: priceFrom
+        label: Harga mulai
+        type: boolean
+        default: false
+        description: "Aktifkan bila harga bisa lebih tinggi (tampil \"mulai Rp ...\")."
+      - name: description
+        label: Keterangan
+        type: text
+        description: "Opsional. Untuk kategori Paket, tulis isi paket satu baris per poin."
+      - name: badge
+        label: Label khusus
+        type: select
+        description: "Opsional. Kosongkan bila tidak perlu."
+        options:
+          values: [Best Seller, Baru, Promo]
+      - name: branchPrices
+        label: Harga khusus cabang
+        type: object
+        description: "Opsional. Kosongkan bila harga sama di semua cabang. Isi hanya untuk cabang yang harganya berbeda."
+        list:
+          collapsible:
+            collapsed: true
+            summary: "{branchSlug}: {price}"
+        fields:
+          - name: branchSlug
+            label: Cabang
+            type: select
+            required: true
+            options:
+              # @branch-options-start (diisi otomatis dari branches.json oleh scripts/sync-pages-config.mjs)
+              values:
+                - name: "bogor-bantarjati"
+                  label: "Bogor Bantarjati"
+                - name: "cibubur"
+                  label: "Cibubur"
+              # @branch-options-end
+          - name: price
+            label: Harga di cabang ini (Rupiah)
+            type: number
+            required: true
+            options:
+              min: 0
+      - name: order
+        label: Urutan
+        type: number
+        default: 0
+        description: "Angka kecil tampil lebih dulu (10, 20, 30, ...)."
+        options:
+          min: 0
+      - name: isActive
+        label: Tampilkan di website
+        type: boolean
+        default: true
+        description: "Matikan untuk menyembunyikan tanpa menghapus."
+
+  # ------------------------------------------------------------------ Barber
+  - name: barbers
+    label: Barber
+    type: file
+    path: src/content/barbers.json
+    format: json
+    list: true
+    fields:
+      - name: name
+        label: Nama panggilan
+        type: string
+        required: true
+        options:
+          maxlength: 60
+      - name: role
+        label: Jabatan
+        type: string
+        description: "Opsional, mis. Head Hairstylist."
+        options:
+          maxlength: 60
+      - name: photo
+        label: Foto
+        type: image
+        required: true
+        description: "Foto potret (tegak), wajah jelas. Otomatis dikompres ke WebP maks. 800 px."
+        options:
+          media: barbers
+      - name: branchSlug
+        label: Cabang
+        type: select
+        required: true
+        description: "Cabang tempat barber bekerja. Tombol booking barber menuju WhatsApp cabang ini."
+        options:
+          # @branch-options-start (diisi otomatis dari branches.json oleh scripts/sync-pages-config.mjs)
+          values:
+            - name: "bogor-bantarjati"
+              label: "Bogor Bantarjati"
+            - name: "cibubur"
+              label: "Cibubur"
+          # @branch-options-end
+      - name: specialty
+        label: Spesialisasi
+        type: string
+        description: "Pisahkan dengan koma. Contoh: Skin fade, Pompadour"
+        options:
+          maxlength: 120
+      - name: whatsappNumber
+        label: WhatsApp pribadi
+        type: string
+        description: "Opsional, format 628xxxxxxxxxx (tanpa +, spasi, strip). Kosong = pakai nomor WhatsApp cabangnya."
+        pattern:
+          regex: "^(62\\d{8,13})?$"
+          message: Format harus 628xxxxxxxxxx, contoh 6281234567890
+      - name: instagram
+        label: Link Instagram
+        type: string
+        description: "Opsional, link lengkap. Contoh: https://instagram.com/namabarber"
+        pattern:
+          regex: "^(https?://.+)?$"
+          message: Harus diawali https://
+      - name: order
+        label: Urutan
+        type: number
+        default: 0
+        description: "Posisi tampil (angka kecil = paling kiri)."
+        options:
+          min: 0
+      - name: isActive
+        label: Tampilkan di website
+        type: boolean
+        default: true
+        description: "Matikan bila barber cuti/resign, tanpa menghapus data."
+
+  # ------------------------------------------------------------------ Galeri
   - name: gallery
     label: Galeri
     type: file

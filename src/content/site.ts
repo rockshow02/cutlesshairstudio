@@ -39,7 +39,7 @@ export const site: SiteContent = {
       // Ke nomor pusat (bukan cabang)
       question: 'Halo {brand}, saya mau tanya-tanya dulu.',
       priceQuestion: 'Halo {brand} cabang {branch}, saya mau tanya harga {service}.',
-      product: 'Halo {brand} cabang {branch}, saya mau pesan {product}. Masih ada stoknya?',
+      product: 'Halo {brand} cabang {branch}, saya mau pesan {product} untuk diambil di studio. Masih ada stoknya?',
       productRestock: 'Halo {brand} cabang {branch}, kapan {product} ready lagi? Saya mau pesan.',
     },
   },
