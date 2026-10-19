@@ -6,54 +6,54 @@
     "province": "Jawa Barat",
     "address": "Jl Pandawa Raya No.4 Blk B1, RT.07/RW.15, Bantarjati, Kec. Bogor Utara, Kota Bogor, Jawa Barat 16152",
     "googleMapsUrl": "https://maps.app.goo.gl/7aYPRv1HzyUxaGP37",
-    "whatsappNumber": "628988918236",
+    "whatsappNumber": "628132220932",
     "timezone": "Asia/Jakarta",
     "openingHours": [
       {
         "day": "Senin",
-        "openTime": "10:00",
+        "openTime": "09:00",
         "closeTime": "21:00",
         "isClosed": false
       },
       {
         "day": "Selasa",
-        "openTime": "10:00",
+        "openTime": "09:00",
         "closeTime": "21:00",
         "isClosed": false
       },
       {
         "day": "Rabu",
-        "openTime": "10:00",
+        "openTime": "09:00",
         "closeTime": "21:00",
         "isClosed": false
       },
       {
         "day": "Kamis",
-        "openTime": "10:00",
+        "openTime": "09:00",
         "closeTime": "21:00",
         "isClosed": false
       },
       {
         "day": "Jumat",
-        "openTime": "13:00",
+        "openTime": "09:00",
         "closeTime": "21:00",
         "isClosed": false
       },
       {
         "day": "Sabtu",
         "openTime": "09:00",
-        "closeTime": "22:00",
+        "closeTime": "21:00",
         "isClosed": false
       },
       {
         "day": "Minggu",
         "openTime": "09:00",
-        "closeTime": "22:00",
+        "closeTime": "21:00",
         "isClosed": false
       }
     ],
     "status": "Aktif",
-    "photo": "/uploads/branches/bogor-bantarjati.webp",
+    "photo": "/uploads/branches/img3998.jpg",
     "order": 10
   },
   {
