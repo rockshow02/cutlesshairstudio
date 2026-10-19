@@ -221,20 +221,84 @@ Section Testimoni baru tampil setelah **Pengaturan Situs → Tampilkan section T
 
 Klik **Pengaturan Situs**. Menu ini hanya berisi data merek. Alamat dan jam buka ada di menu **Cabang**.
 
-| Kolom | Dipakai untuk |
+| Kolom | Dipakai untuk | Batas |
+|---|---|---|
+| Nama usaha | Judul website, pesan WhatsApp | wajib, maks. 80 karakter |
+| Alamat website (domain resmi) | Link yang dibagikan di Google/WhatsApp/sosial media. Ganti **hanya** saat pindah domain, mis. `https://cutlesshairstudio.id` (tanpa `/` di akhir) | wajib |
+| Nomor WhatsApp pusat | Pertanyaan umum & kontak di footer. Booking memakai nomor cabang | wajib, format `628xxxxxxxxxx` |
+| Pesan booking default | Pesan otomatis tombol booking. `{brand}` = nama usaha, `{branch}` = nama cabang | maks. **500** karakter (emoji dihitung 2) |
+| Link Instagram / TikTok | Ikon sosial media di footer. **Kosongkan untuk menyembunyikan** | link lengkap `https://…` |
+| Email | Baris email di footer. **Kosongkan untuk menyembunyikan** | format email valid, maks. 100 karakter |
+| Tagline footer | Kalimat di bawah logo footer. Tulis `{cities}` untuk kota cabang otomatis, mis. *Hair studio di {cities}. Goodstyle, goodmood.* → *Hair studio di Bogor & Cibubur. …* | maks. **160** karakter |
+| Angka statistik | Jumlah pelanggan, tahun berdiri, rating & jumlah ulasan Google. **Masing-masing punya tombol Tampilkan**; nyalakan hanya bila angkanya asli. Jumlah cabang dan hairstylist dihitung otomatis | |
+| Tampilkan section Testimoni / Produk / Before-After | Menyalakan atau menyembunyikan section itu (beserta menunya) | |
+| Tampilkan animasi pembuka | Logo Cutless beranimasi saat website pertama kali dibuka (sekali per kunjungan). Matikan bila tidak diinginkan | |
+| Video animasi pembuka (opsional) | Video pendek pengganti animasi logo: MP4/WebM tanpa suara, ±1,5 detik. Kosongkan untuk memakai animasi logo | maks. 500 KB |
+
+### Footer & kontak: di mana mengubahnya
+
+| Yang ingin diubah | Menu → kolom |
 |---|---|
-| Nama usaha | Judul website, pesan WhatsApp |
-| Alamat website (domain resmi) | Link yang dibagikan di Google/WhatsApp/sosial media. Ganti **hanya** saat pindah domain, mis. `https://cutlesshairstudio.id` (tanpa `/` di akhir) |
-| Nomor WhatsApp pusat | Pertanyaan umum & kontak di footer. Booking memakai nomor cabang. Format `628xxxxxxxxxx` |
-| Pesan booking default | Pesan otomatis tombol booking. `{brand}` = nama usaha, `{branch}` = nama cabang |
-| Link Instagram / TikTok | Ikon sosial media. **Kosongkan untuk menyembunyikan** |
-| Teks footer | Kalimat di bawah logo footer |
-| Angka statistik | Jumlah pelanggan, tahun berdiri, rating & jumlah ulasan Google. **Masing-masing punya tombol Tampilkan**; nyalakan hanya bila angkanya asli. Jumlah cabang dan hairstylist dihitung otomatis |
-| Tampilkan section Testimoni / Produk / Before-After | Menyalakan atau menyembunyikan section itu (beserta menunya) |
-| Tampilkan animasi pembuka | Logo Cutless beranimasi saat website pertama kali dibuka (sekali per kunjungan). Matikan bila tidak diinginkan |
-| Video animasi pembuka (opsional) | Video pendek pengganti animasi logo: MP4/WebM tanpa suara, **maks. 500 KB**, ±1,5 detik. Kosongkan untuk memakai animasi logo |
+| Nomor WhatsApp di footer (pertanyaan umum) | **Pengaturan Situs → Nomor WhatsApp pusat** |
+| Nomor WhatsApp untuk booking | **Cabang → Nomor WhatsApp** (tiap cabang). Hairstylist bisa punya nomor sendiri di **Barber** |
+| Email | **Pengaturan Situs → Email** (kosong = tidak tampil) |
+| Instagram, TikTok | **Pengaturan Situs → Link Instagram / Link TikTok** (kosong = ikon disembunyikan) |
+| Tagline di bawah logo | **Pengaturan Situs → Tagline footer** |
+| Daftar cabang di footer | Otomatis dari menu **Cabang** |
+| Nama kota (footer, judul & deskripsi Google, data cabang) | Otomatis dari kolom **Kota** di menu **Cabang**; cabang *Segera Dibuka* belum disebut |
 
 **Save** setelah mengubah.
+
+---
+
+## Batas karakter tiap kolom
+
+Form Pages CMS menolak isian yang melebihi batas, dan website memeriksa batas yang sama saat dibangun. Bila kolom kepanjangan sempat tersimpan (mis. lewat edit langsung di GitHub), website **tidak diperbarui** sampai isinya dipendekkan. Emoji dihitung 2 karakter.
+
+| Menu | Kolom | Maks. karakter | Wajib diisi? |
+|---|---|---|---|
+| Cabang | Kode URL (slug) | 60 | wajib |
+| Cabang | Nama cabang | 60 | wajib |
+| Cabang | Kota | 60 | wajib |
+| Cabang | Provinsi | 60 | wajib |
+| Cabang | Alamat lengkap | 300 | opsional |
+| Daftar Harga | Nama layanan | 80 | wajib |
+| Daftar Harga | Keterangan | 300 | opsional |
+| Barber | Nama panggilan | 60 | wajib |
+| Barber | Jabatan | 60 | opsional |
+| Barber | Spesialisasi | 120 | opsional |
+| Galeri | Deskripsi foto | 150 | wajib |
+| Galeri | Keterangan singkat | 120 | opsional |
+| Hero (bagian paling atas) | Teks kecil di atas judul | 80 | wajib |
+| Hero (bagian paling atas) | Judul (per baris) | 40 per isian | wajib |
+| Hero (bagian paling atas) | Subjudul | 240 | wajib |
+| Hero (bagian paling atas) | Label tombol utama | 30 | wajib |
+| Hero (bagian paling atas) | Label tombol kedua | 30 | wajib |
+| Hero (bagian paling atas) | Deskripsi foto | 150 | wajib |
+| Hero (bagian paling atas) | Teks berjalan | 40 per isian | wajib |
+| Tentang Kami | Teks kecil di atas judul | 40 | wajib |
+| Tentang Kami | Judul (tampil di atas foto) | 80 | wajib |
+| Tentang Kami | Paragraf | 600 per isian | wajib |
+| Tentang Kami | Poin nilai → Judul poin | 40 | wajib |
+| Tentang Kami | Poin nilai → Keterangan | 120 | wajib |
+| Tentang Kami | Keterangan di bawah foto | 80 | opsional |
+| Tentang Kami | Foto slideshow → Deskripsi foto | 150 | wajib |
+| Kartu Studio ("On point, always.") | Deskripsi foto | 150 | opsional |
+| Kartu Studio ("On point, always.") | Tagline | 60 per isian | wajib |
+| Promo | Judul promo | 80 | wajib |
+| Promo | Deskripsi | 400 | opsional |
+| Promo | Teks tombol | 40 | opsional |
+| Promo | Pesan WhatsApp | 500 | opsional |
+| Pengumuman | Pesan | 160 | wajib |
+| Testimoni | Nama pemberi ulasan | 60 | wajib |
+| Testimoni | Isi ulasan | 500 | wajib |
+| Produk | Nama produk | 80 | wajib |
+| Produk | Isi / ukuran | 30 | opsional |
+| Produk | Deskripsi singkat | 400 | opsional |
+| Pengaturan Situs | Nama usaha | 80 | wajib |
+| Pengaturan Situs | Pesan booking default | 500 | opsional |
+| Pengaturan Situs | Email | 100 | opsional |
+| Pengaturan Situs | Tagline footer | 160 | opsional |
 
 ---
 

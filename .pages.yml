@@ -81,29 +81,39 @@ content:
         label: Kode URL (slug)
         type: string
         required: true
-        description: "Untuk alamat halaman /cabang/<slug>/. Huruf kecil, angka, dan tanda minus, mis. bogor-bantarjati. Jangan diubah setelah tayang."
+        description: "Untuk alamat halaman /cabang/<slug>/. Huruf kecil, angka, dan tanda minus, mis. bogor-bantarjati. Jangan diubah setelah tayang. Maksimal 60 karakter."
         pattern:
           regex: "^[a-z0-9]+(-[a-z0-9]+)*$"
           message: Hanya huruf kecil, angka, dan tanda minus (mis. bogor-bantarjati)
+        options:
+          maxlength: 60
       - name: name
         label: Nama cabang
         type: string
         required: true
-        description: "Tanpa nama merek, mis. Bogor Bantarjati. Dipakai di pesan WhatsApp: ...cabang Bogor Bantarjati."
+        description: "Tanpa nama merek, mis. Bogor Bantarjati. Dipakai di pesan WhatsApp: ...cabang Bogor Bantarjati. Maksimal 60 karakter."
         options:
           maxlength: 60
       - name: city
         label: Kota
         type: string
         required: true
-        description: "Dipakai untuk pengelompokan di pemilih cabang, mis. Bogor."
+        description: "Dipakai untuk pengelompokan di pemilih cabang, mis. Bogor. Maksimal 60 karakter."
+        options:
+          maxlength: 60
       - name: province
         label: Provinsi
         type: string
         required: true
+        options:
+          maxlength: 60
+        description: Maksimal 60 karakter.
       - name: address
         label: Alamat lengkap
         type: text
+        options:
+          maxlength: 300
+        description: Maksimal 300 karakter.
       - name: googleMapsUrl
         label: Link Google Maps
         type: string
@@ -175,7 +185,6 @@ content:
       - name: status
         label: Status
         type: select
-        required: true
         default: Aktif
         description: "Segera Dibuka & Tutup Sementara tampil dengan label dan TANPA tombol booking."
         options:
@@ -206,7 +215,7 @@ content:
         label: Nama layanan
         type: string
         required: true
-        description: "Contoh: Signature Haircut"
+        description: "Contoh: Signature Haircut. Maksimal 80 karakter."
         options:
           maxlength: 80
       - name: category
@@ -232,7 +241,9 @@ content:
       - name: description
         label: Keterangan
         type: text
-        description: "Opsional. Untuk kategori Paket, tulis isi paket satu baris per poin."
+        description: "Opsional. Untuk kategori Paket, tulis isi paket satu baris per poin. Maksimal 300 karakter."
+        options:
+          maxlength: 300
       - name: badge
         label: Label khusus
         type: select
@@ -293,10 +304,11 @@ content:
         required: true
         options:
           maxlength: 60
+        description: Maksimal 60 karakter.
       - name: role
         label: Jabatan
         type: string
-        description: "Opsional, mis. Head Hairstylist."
+        description: "Opsional, mis. Head Hairstylist. Maksimal 60 karakter."
         options:
           maxlength: 60
       - name: photo
@@ -322,7 +334,7 @@ content:
       - name: specialty
         label: Spesialisasi
         type: string
-        description: "Pisahkan dengan koma. Contoh: Skin fade, Pompadour"
+        description: "Pisahkan dengan koma. Contoh: Skin fade, Pompadour. Maksimal 120 karakter."
         options:
           maxlength: 120
       - name: whatsappNumber
@@ -371,7 +383,7 @@ content:
         label: Deskripsi foto
         type: string
         required: true
-        description: "Wajib. Jelaskan isi foto, mis. \"Mid fade dengan textured crop\"."
+        description: "Wajib. Jelaskan isi foto, mis. \"Mid fade dengan textured crop\". Maksimal 150 karakter."
         options:
           maxlength: 150
       - name: styleCategory
@@ -383,7 +395,7 @@ content:
       - name: caption
         label: Keterangan singkat
         type: string
-        description: "Opsional, tampil saat foto diperbesar."
+        description: "Opsional, tampil saat foto diperbesar. Maksimal 120 karakter."
         options:
           maxlength: 120
       - name: order
@@ -408,7 +420,7 @@ content:
         label: Teks kecil di atas judul
         type: string
         required: true
-        description: "{cities} diganti otomatis dengan kota cabang, mis. Hair Studio · {cities} → Hair Studio · Bogor & Cibubur."
+        description: "{cities} diganti otomatis dengan kota cabang, mis. Hair Studio · {cities} → Hair Studio · Bogor & Cibubur. Maksimal 80 karakter."
         options:
           maxlength: 80
       - name: titleLines
@@ -418,26 +430,28 @@ content:
           min: 1
           max: 3
         required: true
-        description: "Satu isian = satu baris judul besar. Pendek saja (maks. 40 karakter per baris)."
+        description: "Satu isian = satu baris judul besar. Pendek saja. Maksimal 40 karakter per isian."
         options:
           maxlength: 40
       - name: subtitle
         label: Subjudul
         type: text
         required: true
-        description: "1–2 kalimat (maks. 240 karakter)."
+        description: "1–2 kalimat. Maksimal 240 karakter."
+        options:
+          maxlength: 240
       - name: primaryCtaLabel
         label: Label tombol utama
         type: string
         required: true
-        description: "Tombol ini membuka WhatsApp cabang yang dipilih. Contoh: Booking via WhatsApp"
+        description: "Tombol ini membuka WhatsApp cabang yang dipilih. Contoh: Booking via WhatsApp. Maksimal 30 karakter."
         options:
           maxlength: 30
       - name: secondaryCtaLabel
         label: Label tombol kedua
         type: string
         required: true
-        description: "Menuju daftar layanan. Contoh: Lihat Layanan"
+        description: "Menuju daftar layanan. Contoh: Lihat Layanan. Maksimal 30 karakter."
         options:
           maxlength: 30
       - name: image
@@ -457,7 +471,7 @@ content:
         label: Deskripsi foto
         type: string
         required: true
-        description: "Wajib. Jelaskan isi foto untuk pembaca layar & Google."
+        description: "Wajib. Jelaskan isi foto untuk pembaca layar & Google. Maksimal 150 karakter."
         options:
           maxlength: 150
       - name: marquee
@@ -467,7 +481,7 @@ content:
           min: 1
           max: 8
         required: true
-        description: "Kata-kata pendek di strip berjalan di bawah hero."
+        description: "Kata-kata pendek di strip berjalan di bawah hero. Maksimal 40 karakter per isian."
         options:
           maxlength: 40
 
@@ -484,12 +498,14 @@ content:
         required: true
         options:
           maxlength: 40
+        description: Maksimal 40 karakter.
       - name: title
         label: Judul (tampil di atas foto)
         type: string
         required: true
         options:
           maxlength: 80
+        description: Maksimal 80 karakter.
       - name: paragraphs
         label: Paragraf
         type: text
@@ -497,7 +513,9 @@ content:
           min: 1
           max: 4
         required: true
-        description: "Paragraf pertama tampil lebih besar. Maks. 600 karakter per paragraf."
+        description: "Paragraf pertama tampil lebih besar. Maksimal 600 karakter per isian."
+        options:
+          maxlength: 600
       - name: values
         label: Poin nilai
         type: object
@@ -511,16 +529,18 @@ content:
             required: true
             options:
               maxlength: 40
+            description: Maksimal 40 karakter.
           - name: description
             label: Keterangan
             type: string
             required: true
             options:
               maxlength: 120
+            description: Maksimal 120 karakter.
       - name: caption
         label: Keterangan di bawah foto
         type: string
-        description: "Contoh: Studio Cutless, Bogor"
+        description: "Contoh: Studio Cutless, Bogor. Maksimal 80 karakter."
         options:
           maxlength: 80
       - name: images
@@ -542,7 +562,7 @@ content:
             label: Deskripsi foto
             type: string
             required: true
-            description: "Wajib. Jelaskan isi foto, mis. Hairstylist merapikan fade pelanggan."
+            description: "Wajib. Jelaskan isi foto, mis. Hairstylist merapikan fade pelanggan. Maksimal 150 karakter."
             options:
               maxlength: 150
           - name: focalPoint
@@ -583,7 +603,7 @@ content:
       - name: imageAlt
         label: Deskripsi foto
         type: string
-        description: "Wajib bila foto diisi."
+        description: "Wajib bila foto diisi. Maksimal 150 karakter."
         options:
           maxlength: 150
       - name: taglines
@@ -593,7 +613,7 @@ content:
           min: 1
           max: 5
         required: true
-        description: "Kalimat pendek yang berganti di atas foto (maks. 60 karakter)."
+        description: "Kalimat pendek yang berganti di atas foto. Maksimal 60 karakter per isian."
         options:
           maxlength: 60
 
@@ -609,13 +629,15 @@ content:
         label: Judul promo
         type: string
         required: true
-        description: "Contoh: Diskon 20% Haircut Weekday"
+        description: "Contoh: Diskon 20% Haircut Weekday. Maksimal 80 karakter."
         options:
           maxlength: 80
       - name: description
         label: Deskripsi
         type: text
-        description: "Syarat & ketentuan singkat."
+        description: "Syarat & ketentuan singkat. Maksimal 400 karakter."
+        options:
+          maxlength: 400
       - name: image
         label: Gambar
         type: image
@@ -628,10 +650,13 @@ content:
         default: Ambil Promo
         options:
           maxlength: 40
+        description: Maksimal 40 karakter.
       - name: waMessage
         label: Pesan WhatsApp
         type: text
-        description: "Pesan otomatis saat tombol diklik. Boleh pakai {brand} dan {promo}. Contoh: Halo {brand}, saya mau pakai promo {promo} untuk [hari/jam]."
+        description: "Pesan otomatis saat tombol diklik. Boleh pakai {brand} dan {promo}. Contoh: Halo {brand}, saya mau pakai promo {promo} untuk [hari/jam]. Maksimal 500 karakter."
+        options:
+          maxlength: 500
       - name: startDate
         label: Mulai
         type: date
@@ -679,13 +704,12 @@ content:
         label: Pesan
         type: string
         required: true
-        description: "Maks. 160 karakter. Tampil sebagai bar tipis di atas menu."
+        description: "Tampil sebagai bar tipis di atas menu. Maksimal 160 karakter."
         options:
           maxlength: 160
       - name: type
         label: Jenis
         type: select
-        required: true
         default: Info
         description: '"Tutup" tampil paling menonjol.'
         options:
@@ -736,7 +760,7 @@ content:
         label: Nama pemberi ulasan
         type: string
         required: true
-        description: "Tulis seperti di Google, mis. Aditya R."
+        description: "Tulis seperti di Google, mis. Aditya R. Maksimal 60 karakter."
         options:
           maxlength: 60
       - name: rating
@@ -751,7 +775,9 @@ content:
         label: Isi ulasan
         type: text
         required: true
-        description: "Salin dari ulasan asli (maks. 500 karakter). Jangan mengarang ulasan."
+        description: "Salin dari ulasan asli. Jangan mengarang ulasan. Maksimal 500 karakter."
+        options:
+          maxlength: 500
       - name: date
         label: Tanggal ulasan
         type: date
@@ -786,7 +812,7 @@ content:
         label: Nama produk
         type: string
         required: true
-        description: "Contoh: Water Based Pomade"
+        description: "Contoh: Water Based Pomade. Maksimal 80 karakter."
         options:
           maxlength: 80
       - name: category
@@ -812,13 +838,15 @@ content:
       - name: size
         label: Isi / ukuran
         type: string
-        description: "Contoh: 100 ml atau 80 gr"
+        description: "Contoh: 100 ml atau 80 gr. Maksimal 30 karakter."
         options:
           maxlength: 30
       - name: description
         label: Deskripsi singkat
         type: text
-        description: "Manfaat & cocok untuk siapa (maks. 400 karakter)."
+        description: "Manfaat & cocok untuk siapa. Maksimal 400 karakter."
+        options:
+          maxlength: 400
       - name: image
         label: Foto produk
         type: image
@@ -880,6 +908,7 @@ content:
         required: true
         options:
           maxlength: 80
+        description: Maksimal 80 karakter.
       - name: siteUrl
         label: Alamat website (domain resmi)
         type: string
@@ -899,7 +928,9 @@ content:
       - name: defaultWaMessage
         label: Pesan booking default
         type: text
-        description: "Boleh pakai {brand} dan {branch} (nama cabang). Contoh: Halo {brand} cabang {branch}, saya mau booking haircut untuk [hari/jam]."
+        description: "Boleh pakai {brand} dan {branch} (nama cabang). Contoh: Halo {brand} cabang {branch}, saya mau booking haircut untuk [hari/jam]. Maksimal 500 karakter."
+        options:
+          maxlength: 500
       - name: instagramUrl
         label: Link Instagram
         type: string
@@ -914,10 +945,22 @@ content:
         pattern:
           regex: "^(https?://.+)?$"
           message: Harus diawali https://
-      - name: footerText
-        label: Teks footer
+      - name: email
+        label: Email
+        type: string
+        description: "Opsional, tampil di footer. Kosongkan untuk menyembunyikan baris email. Maksimal 100 karakter."
+        pattern:
+          regex: '^([^@\s]+@[^@\s]+\.[^@\s]+)?$'
+          message: Format email tidak valid, mis. halo@cutlesshairstudio.id
+        options:
+          maxlength: 100
+      - name: footerTagline
+        label: Tagline footer
         type: text
-        description: "Kalimat singkat di bawah logo footer."
+        default: "Hair studio di {cities}. Goodstyle, goodmood."
+        description: "Kalimat singkat di bawah logo footer. {cities} diganti otomatis dengan kota cabang aktif, mis. Bogor & Cibubur. Maksimal 160 karakter."
+        options:
+          maxlength: 160
       - name: stats
         label: Angka statistik
         type: object
