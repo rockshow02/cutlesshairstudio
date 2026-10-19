@@ -43,6 +43,24 @@ media:
     output: /uploads/site
     categories: [image]
     rename: safe
+  - name: hero
+    label: Foto Hero
+    input: public/uploads/hero
+    output: /uploads/hero
+    categories: [image]
+    rename: safe
+  - name: about
+    label: Foto Tentang Kami
+    input: public/uploads/about
+    output: /uploads/about
+    categories: [image]
+    rename: safe
+  - name: studio
+    label: Foto Kartu Studio
+    input: public/uploads/studio
+    output: /uploads/studio
+    categories: [image]
+    rename: safe
   - name: videos
     label: Video
     input: public/uploads/videos
@@ -101,6 +119,206 @@ content:
         label: Tampilkan di website
         type: boolean
         default: true
+
+  # ------------------------------------------------------------------ Hero
+  - name: hero
+    label: Hero (bagian paling atas)
+    type: file
+    path: src/content/hero.json
+    format: json
+    fields:
+      - name: kicker
+        label: Teks kecil di atas judul
+        type: string
+        required: true
+        description: "{cities} diganti otomatis dengan kota cabang, mis. Hair Studio · {cities} → Hair Studio · Bogor & Cibubur."
+        options:
+          maxlength: 80
+      - name: titleLines
+        label: Judul (per baris)
+        type: string
+        list:
+          min: 1
+          max: 3
+        required: true
+        description: "Satu isian = satu baris judul besar. Pendek saja (maks. 40 karakter per baris)."
+        options:
+          maxlength: 40
+      - name: subtitle
+        label: Subjudul
+        type: text
+        required: true
+        description: "1–2 kalimat (maks. 240 karakter)."
+      - name: primaryCtaLabel
+        label: Label tombol utama
+        type: string
+        required: true
+        description: "Tombol ini membuka WhatsApp cabang yang dipilih. Contoh: Booking via WhatsApp"
+        options:
+          maxlength: 30
+      - name: secondaryCtaLabel
+        label: Label tombol kedua
+        type: string
+        required: true
+        description: "Menuju daftar layanan. Contoh: Lihat Layanan"
+        options:
+          maxlength: 30
+      - name: image
+        label: Foto desktop
+        type: image
+        required: true
+        description: "Foto lebar (landscape), min. 1920 px. Dikompres otomatis ke WebP 1920 px + versi 1280 px."
+        options:
+          media: hero
+      - name: mobileImage
+        label: Foto HP (opsional)
+        type: image
+        description: "Foto tegak (portrait) untuk layar HP. Kosong = memakai foto desktop."
+        options:
+          media: hero
+      - name: imageAlt
+        label: Deskripsi foto
+        type: string
+        required: true
+        description: "Wajib. Jelaskan isi foto untuk pembaca layar & Google."
+        options:
+          maxlength: 150
+      - name: marquee
+        label: Teks berjalan
+        type: string
+        list:
+          min: 1
+          max: 8
+        required: true
+        description: "Kata-kata pendek di strip berjalan di bawah hero."
+        options:
+          maxlength: 40
+
+  # ------------------------------------------------------------------ Tentang Kami
+  - name: about
+    label: Tentang Kami
+    type: file
+    path: src/content/about.json
+    format: json
+    fields:
+      - name: kicker
+        label: Teks kecil di atas judul
+        type: string
+        required: true
+        options:
+          maxlength: 40
+      - name: title
+        label: Judul (tampil di atas foto)
+        type: string
+        required: true
+        options:
+          maxlength: 80
+      - name: paragraphs
+        label: Paragraf
+        type: text
+        list:
+          min: 1
+          max: 4
+        required: true
+        description: "Paragraf pertama tampil lebih besar. Maks. 600 karakter per paragraf."
+      - name: values
+        label: Poin nilai
+        type: object
+        list:
+          max: 6
+        description: "Daftar bertanda centang di samping foto."
+        fields:
+          - name: title
+            label: Judul poin
+            type: string
+            required: true
+            options:
+              maxlength: 40
+          - name: description
+            label: Keterangan
+            type: string
+            required: true
+            options:
+              maxlength: 120
+      - name: caption
+        label: Keterangan di bawah foto
+        type: string
+        description: "Contoh: Studio Cutless, Bogor"
+        options:
+          maxlength: 80
+      - name: images
+        label: Foto slideshow
+        type: object
+        list:
+          min: 1
+          max: 8
+        required: true
+        description: "1–8 foto tegak (portrait 4:5). Urutan di sini = urutan tampil; foto pertama dimuat lebih dulu. Satu foto = tampil diam tanpa indikator. Dikompres otomatis ke WebP 1200 px + versi HP 600 px."
+        fields:
+          - name: src
+            label: Foto
+            type: image
+            required: true
+            options:
+              media: about
+          - name: alt
+            label: Deskripsi foto
+            type: string
+            required: true
+            description: "Wajib. Jelaskan isi foto, mis. Hairstylist merapikan fade pelanggan."
+            options:
+              maxlength: 150
+          - name: focalPoint
+            label: Titik fokus
+            type: select
+            default: tengah
+            description: "Bagian foto yang dipertahankan saat foto dipotong agar pas bingkai (mis. atas untuk wajah)."
+            options:
+              values: [atas, tengah, bawah]
+      - name: slideInterval
+        label: Jeda per foto (detik)
+        type: number
+        default: 5
+        options:
+          min: 3
+          max: 15
+      - name: transition
+        label: Efek pergantian
+        type: select
+        default: crossfade
+        description: "crossfade = memudar halus; ken-burns = memudar + foto membesar perlahan."
+        options:
+          values: [crossfade, ken-burns]
+
+  # ------------------------------------------------------------------ Kartu Studio
+  - name: studio
+    label: Kartu Studio ("On point, always.")
+    type: file
+    path: src/content/studio.json
+    format: json
+    fields:
+      - name: image
+        label: Foto
+        type: image
+        description: "Foto lebar suasana studio. Kosong = memakai foto cabang pertama."
+        options:
+          media: studio
+      - name: imageAlt
+        label: Deskripsi foto
+        type: string
+        description: "Wajib bila foto diisi."
+        options:
+          maxlength: 150
+      - name: taglines
+        label: Tagline
+        type: string
+        list:
+          min: 1
+          max: 5
+        required: true
+        description: "Kalimat pendek yang berganti di atas foto (maks. 60 karakter)."
+        options:
+          maxlength: 60
 
   # ------------------------------------------------------------------ Promo
   - name: promos

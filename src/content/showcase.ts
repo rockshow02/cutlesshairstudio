@@ -1,8 +1,8 @@
 import type { ShowcaseCopy } from '@/types';
 
 /**
- * Kartu foto studio yang membesar (di bawah section Tentang).
- * Foto diambil otomatis dari foto cabang pertama di Pages CMS; bila belum ada, memakai fallbackImage.
+ * Kartu foto studio yang membesar (di bawah section Tentang). Foto & tagline: src/content/studio.json
+ * (Pages CMS → Kartu Studio). Foto kosong → foto cabang pertama; belum ada juga → fallbackImage.
  */
 export const showcaseCopy: ShowcaseCopy = {
   heading: 'Suasana studio Cutless',
@@ -12,5 +12,4 @@ export const showcaseCopy: ShowcaseCopy = {
     width: 750,
     height: 423,
   },
-  taglines: ['On point, always.', 'Kursi nyaman, obrolan santai.', 'Detail yang bikin balik lagi.'],
 };

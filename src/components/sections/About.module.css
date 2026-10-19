@@ -45,9 +45,123 @@
   height: 100%;
   object-fit: cover;
 }
+
+/* ---------- Slideshow: semua foto ditumpuk di bingkai yang sama (rasio 4:5 tetap, tanpa layout shift) ---------- */
+.figure {
+  touch-action: pan-y; /* geser horizontal = ganti foto, vertikal = gulir halaman */
+}
+.slides {
+  position: relative;
+  height: 100%;
+}
+.slide {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity var(--slide-fade, 800ms) var(--ease);
+}
+.slide[data-active='true'] {
+  opacity: 1;
+}
+.slide[data-focus='top'] .img { object-position: 50% 0%; }
+.slide[data-focus='bottom'] .img { object-position: 50% 100%; }
+
+/* Ken Burns: foto aktif membesar perlahan selama tampil; foto yang keluar baru kembali ke ukuran awal
+   setelah selesai memudar (tanpa lompatan) */
+.figure[data-transition='ken-burns'] .img {
+  transition: transform 0s linear var(--slide-fade, 800ms);
+}
+.figure[data-transition='ken-burns'] .slide[data-active='true'] .img {
+  transform: scale(1.08);
+  transition: transform calc(var(--slide-ms, 5000ms) + var(--slide-fade, 800ms)) linear;
+}
+
+/* Kontrol di atas foto (judul tetap di bawah, di atas gradasi gelap) */
+.controls {
+  position: absolute;
+  inset: var(--space-3) var(--space-3) auto;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+.dots {
+  display: flex;
+  flex: 1 1 auto;
+  gap: var(--space-1);
+  max-width: 14rem;
+}
+.dot {
+  flex: 1 1 0;
+  min-width: 18px;
+  padding: 11px 0; /* area sentuh 24 px untuk garis 2 px */
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
+.track {
+  display: block;
+  height: 3px;
+  overflow: hidden;
+  border-radius: 2px;
+  background: color-mix(in srgb, var(--c-bone) 38%, transparent);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--c-ink) 18%, transparent);
+}
+.fill {
+  display: block;
+  height: 100%;
+  background: var(--c-bone);
+  transform: scaleX(0);
+  transform-origin: left center;
+}
+.dot[aria-current='true'] .fill {
+  animation: slide-progress var(--slide-ms, 5000ms) linear forwards;
+}
+.figure[data-playing='false'] .fill {
+  animation-play-state: paused;
+}
+@keyframes slide-progress {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+.dot:hover .track { background: color-mix(in srgb, var(--c-bone) 60%, transparent); }
+.dot:focus-visible,
+.ctrlBtn:focus-visible {
+  outline: 2px solid var(--c-bone);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+.arrows { display: flex; gap: var(--space-2); }
+.ctrlBtn {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 40px;
+  height: 40px;
+  border: 1px solid color-mix(in srgb, var(--c-bone) 35%, transparent);
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--c-ink) 55%, transparent);
+  color: var(--c-bone);
+  cursor: pointer;
+  backdrop-filter: blur(6px);
+  transition: background-color var(--dur) var(--ease);
+}
+.ctrlBtn:hover { background: color-mix(in srgb, var(--c-ink) 75%, transparent); }
+.flip { transform: scaleX(-1); }
+
+/* Kurangi gerakan: tanpa autoplay (lihat useSlideshow), ganti foto langsung, garis aktif penuh */
+@media (prefers-reduced-motion: reduce) {
+  .slide { transition-duration: 1ms; }
+  .figure .img { transform: none !important; transition: none !important; }
+  .dot[aria-current='true'] .fill { animation: none; transform: scaleX(1); }
+}
 .shade {
   z-index: -1;
-  background: linear-gradient(180deg, rgba(12, 16, 20, 0) 35%, rgba(12, 16, 20, 0.55) 62%, rgba(12, 16, 20, 0.9) 100%);
+  /* Atas: tipis untuk indikator. Bawah: gelap agar judul terbaca di atas foto apa pun */
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--c-ink) 38%, transparent) 0%, transparent 16%),
+    linear-gradient(180deg, transparent 32%, color-mix(in srgb, var(--c-ink) 60%, transparent) 58%, color-mix(in srgb, var(--c-ink) 92%, transparent) 100%);
 }
 .titleWrap {
   align-self: end;

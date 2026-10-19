@@ -26,6 +26,11 @@ const imagePath = z
   .string()
   .regex(/^\/uploads\/[\w./-]+\.(webp|jpe?g|png|gif|avif)$/i, 'harus path gambar di /uploads/... (jpg, png, atau webp)');
 const optionalImage = z.union([imagePath, z.literal('')]).nullish();
+/** Gambar section (hero, tentang, studio): upload Pages CMS (/uploads/...) atau aset bawaan situs (/images/...) */
+const sectionImage = z
+  .string()
+  .regex(/^\/(uploads|images)\/[\w./-]+\.(webp|jpe?g|png|gif|avif)$/i, 'harus path gambar di /uploads/... (jpg, png, atau webp)');
+const requiredText = (max: number, label: string) => z.string().trim().min(1, `${label} wajib diisi`).max(max, `maksimal ${max} karakter`);
 
 export const WA_REGEX = /^62\d{8,13}$/;
 const WA_MESSAGE = 'format nomor WhatsApp harus 62xxxxxxxxxx (tanpa +, spasi, atau strip)';
@@ -285,6 +290,58 @@ export const productSchema = z
   });
 
 /** Daftar file konten & skemanya (dipakai plugin build untuk validasi) */
+/* ---------- Hero, Tentang Kami, Studio (single file) ---------- */
+
+export const heroSchema = z.object({
+  /** {cities} diganti otomatis dengan kota cabang, mis. "Bogor & Cibubur" */
+  kicker: requiredText(80, 'kicker'),
+  titleLines: z.array(requiredText(40, 'baris judul')).min(1, 'minimal 1 baris judul').max(3, 'maksimal 3 baris judul'),
+  subtitle: requiredText(240, 'subjudul'),
+  primaryCtaLabel: requiredText(30, 'label tombol utama'),
+  secondaryCtaLabel: requiredText(30, 'label tombol kedua'),
+  image: sectionImage,
+  mobileImage: z.union([sectionImage, z.literal('')]).nullish(),
+  imageAlt: requiredText(150, 'deskripsi foto'),
+  marquee: z.array(requiredText(40, 'teks berjalan')).min(1, 'minimal 1 teks berjalan').max(8),
+});
+
+export const ABOUT_FOCAL_POINTS = ['atas', 'tengah', 'bawah'] as const;
+export const ABOUT_TRANSITIONS = ['crossfade', 'ken-burns'] as const;
+
+export const aboutSchema = z.object({
+  kicker: requiredText(40, 'kicker'),
+  title: requiredText(80, 'judul'),
+  /** Paragraf pertama tampil lebih besar (lead) */
+  paragraphs: z.array(requiredText(600, 'paragraf')).min(1, 'minimal 1 paragraf').max(4),
+  values: z
+    .array(z.object({ title: requiredText(40, 'judul poin'), description: requiredText(120, 'keterangan poin') }))
+    .max(6, 'maksimal 6 poin'),
+  caption: optionalText(80),
+  images: z
+    .array(
+      z.object({
+        src: sectionImage,
+        alt: requiredText(150, 'deskripsi foto'),
+        focalPoint: z.enum(ABOUT_FOCAL_POINTS, { error: 'titik fokus harus atas, tengah, atau bawah' }).nullish(),
+      }),
+    )
+    .min(1, 'minimal 1 foto')
+    .max(8, 'maksimal 8 foto'),
+  slideInterval: z.number({ message: 'jeda harus angka (detik)' }).min(3, 'jeda minimal 3 detik').max(15, 'jeda maksimal 15 detik').default(5),
+  transition: z.enum(ABOUT_TRANSITIONS, { error: 'transisi harus crossfade atau ken-burns' }).default('crossfade'),
+});
+
+export const studioSchema = z
+  .object({
+    /** Kosong = foto cabang pertama (seperti sebelumnya) */
+    image: z.union([sectionImage, z.literal('')]).nullish(),
+    imageAlt: optionalText(150),
+    taglines: z.array(requiredText(60, 'tagline')).min(1, 'minimal 1 tagline').max(5, 'maksimal 5 tagline'),
+  })
+  .superRefine((s, ctx) => {
+    if (s.image && !s.imageAlt) ctx.addIssue({ code: 'custom', path: ['imageAlt'], message: 'deskripsi foto wajib diisi bila foto dipilih' });
+  });
+
 export const CONTENT_FILES = {
   'branches.json': z.array(branchSchema).min(1, 'minimal satu cabang'),
   'pricing.json': z.array(pricingItemSchema),
@@ -295,6 +352,9 @@ export const CONTENT_FILES = {
   'testimonials.json': z.array(testimonialSchema),
   'settings.json': settingsSchema,
   'products.json': z.array(productSchema),
+  'hero.json': heroSchema,
+  'about.json': aboutSchema,
+  'studio.json': studioSchema,
 } as const;
 
 /* ---------- Tipe hasil (dipakai src/lib/content.ts) ---------- */
@@ -309,6 +369,9 @@ export type TestimonialEntry = z.output<typeof testimonialSchema>;
 export type SettingsEntry = z.output<typeof settingsSchema>;
 export type OpeningHourEntry = z.output<typeof openingHourSchema>;
 export type ProductEntry = z.output<typeof productSchema>;
+export type HeroEntry = z.output<typeof heroSchema>;
+export type AboutEntry = z.output<typeof aboutSchema>;
+export type StudioEntry = z.output<typeof studioSchema>;
 
 /* ---------- Pemeriksaan lintas file ---------- */
 
@@ -322,6 +385,9 @@ export interface ContentBundle {
   testimonials: TestimonialEntry[];
   settings: SettingsEntry;
   products: ProductEntry[];
+  hero: HeroEntry;
+  about: AboutEntry;
+  studio: StudioEntry;
 }
 
 export interface ContentIssue {
