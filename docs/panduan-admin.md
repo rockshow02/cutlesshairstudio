@@ -23,7 +23,7 @@ Panduan ini untuk pemilik dan staf. Tidak perlu keahlian teknis.
 2. Klik **Sign in with GitHub** → izinkan akses (sekali saja).
 3. Pilih repo **cutlesshairstudio** → branch **main**.
    Branch **main** = website asli. Branch **staging** hanya untuk uji coba (hasilnya tampil di alamat staging berlabel *STAGING*, tidak dilihat pelanggan). Bila ragu, pakai **main**.
-4. Menu konten ada di kiri: **Cabang, Daftar Harga, Barber, Galeri, Promo, Pengumuman, Testimoni, Produk, Pengaturan Situs**.
+4. Menu konten ada di kiri: **Cabang, Daftar Harga, Barber, Galeri, Hero, Tentang Kami, Kartu Studio, Promo, Pengumuman, Testimoni, Produk, Pengaturan Situs**.
 
 Tips umum:
 - Setiap kolom punya keterangan kecil di bawahnya. Baca dulu bila ragu.
@@ -113,6 +113,42 @@ Harga "mulai" pada kartu **Layanan** di halaman utama dihitung otomatis dari Daf
 Foto dari HP langsung bisa dipakai. Sistem otomatis mengompresnya beberapa menit setelah upload (Anda mungkin melihat perubahan kecil tercatat atas nama *github-actions*; itu normal).
 
 ---
+
+## 3a. Hero (bagian paling atas)
+
+Menu **Hero (bagian paling atas)**:
+- **Teks kecil di atas judul**: tulis `{cities}` untuk menampilkan kota cabang otomatis (mis. *Hair Studio · Bogor & Cibubur*).
+- **Judul (per baris)**: satu isian = satu baris besar. Maks. 3 baris, pendek saja.
+- **Subjudul**, **Label tombol utama** (tombol ini selalu membuka WhatsApp cabang yang dipilih), **Label tombol kedua** (menuju Layanan).
+- **Foto desktop**: foto lebar (landscape) min. 1920 px. **Foto HP** (opsional): foto tegak; kosong = memakai foto desktop. **Deskripsi foto** wajib.
+- **Teks berjalan**: kata-kata pendek di strip di bawah hero.
+
+## 3b. Tentang Kami & slideshow foto
+
+Menu **Tentang Kami**: teks kecil, **judul** (tampil di atas foto), **paragraf** (paragraf pertama tampil lebih besar), **poin nilai** (judul + keterangan), **keterangan di bawah foto**, dan **Foto slideshow**.
+
+**Menambah foto slideshow**
+1. Buka **Tentang Kami** → bagian **Foto slideshow** → **Add an entry** (maks. 8 foto).
+2. **Foto**: pilih/upload foto **tegak (portrait)**. Bingkai di website berasio **4:5**, foto lebih lebar akan dipotong. Foto dikompres otomatis ke WebP (1200 px + versi HP 600 px).
+3. **Deskripsi foto** wajib diisi (mis. *Hairstylist merapikan fade pelanggan*).
+4. **Titik fokus**: bagian foto yang dipertahankan saat dipotong: **atas** (wajah/kepala di atas), **tengah** (bawaan), **bawah**.
+5. Klik **Save**. Tampil di website ±1–2 menit kemudian.
+
+**Mengurutkan**: tarik ikon titik-titik di kiri tiap foto. Urutan di panel = urutan tampil. **Foto pertama** dimuat lebih dulu dan tampil saat halaman dibuka, jadi pilih foto terbaik untuk posisi pertama.
+
+**Menghapus**: klik ikon tempat sampah pada foto → **Save**. Minimal harus tersisa **1 foto** (website menolak menyimpan bila kosong). Satu foto = tampil diam tanpa indikator.
+
+**Pengaturan slideshow**
+- **Jeda per foto (detik)**: 3–15, bawaan 5.
+- **Efek pergantian**: *crossfade* (memudar halus, bawaan) atau *ken-burns* (memudar + foto membesar perlahan).
+
+Perilaku di website (otomatis): berganti sendiri sesuai jeda, berhenti saat kursor di atas foto, saat section tidak terlihat, atau saat tab browser tidak aktif. Pengunjung bisa memilih foto lewat garis indikator, menggeser (swipe) di HP, atau menekan tombol jeda. Pengunjung yang mengaktifkan "kurangi gerakan" di HP/komputernya melihat foto diam dengan tombol panah.
+
+> Foto dari Google Drive: **unduh dulu**, lalu upload lewat Pages CMS. Jangan menempelkan link Google Drive.
+
+## 3c. Kartu Studio ("On point, always.")
+
+Menu **Kartu Studio**: **Foto** (opsional, foto lebar suasana studio; kosong = memakai foto cabang pertama), **Deskripsi foto** (wajib bila foto diisi), dan **Tagline** (1–5 kalimat pendek yang berganti di atas foto).
 
 ## 4. Membuat promo
 
