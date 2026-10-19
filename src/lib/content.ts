@@ -3,8 +3,9 @@
  *
  * Sumber konten (tanpa server, tanpa API, biaya Rp0):
  *   - src/content/*.json : dikelola admin lewat Pages CMS (cabang, harga, barber, galeri, promo,
- *                          pengumuman, testimoni, produk, pengaturan situs). Divalidasi Zod saat build.
- *   - src/content/*.ts   : teks statis (hero, about, layanan, label UI, dll.).
+ *                          pengumuman, testimoni, produk, pengaturan situs, hero, tentang kami, kartu studio).
+ *                          Divalidasi Zod saat build.
+ *   - src/content/*.ts   : teks statis (layanan, label UI, dll.).
  *
  * Fungsi menerima `branchSlug` opsional untuk data per cabang.
  *
@@ -23,15 +24,21 @@ import announcementsJson from '@/content/announcements.json';
 import testimonialsJson from '@/content/testimonials.json';
 import settingsJson from '@/content/settings.json';
 import productsJson from '@/content/products.json';
+import heroJson from '@/content/hero.json';
+import aboutJson from '@/content/about.json';
+import studioJson from '@/content/studio.json';
 import type {
+  AboutEntry,
   AnnouncementEntry,
   BarberEntry,
   BranchEntry,
   GalleryEntry,
+  HeroEntry,
   PricingEntry,
   ProductEntry,
   PromoEntry,
   SettingsEntry,
+  StudioEntry,
   TestimonialEntry,
 } from '@/content/schema';
 import type {
@@ -55,6 +62,8 @@ import type {
 } from '@/types';
 import {
   buildAbout,
+  buildHero,
+  buildShowcase,
   buildAnnouncements,
   buildBarbers,
   buildBranches,
@@ -88,7 +97,15 @@ const data = {
   testimonials: testimonialsJson as unknown as TestimonialEntry[],
   settings: normalizeSettings(settingsJson as unknown as SettingsEntry),
   products: productsJson as unknown as ProductEntry[],
+  hero: heroJson as unknown as HeroEntry,
+  about: normalizeAbout(aboutJson as unknown as AboutEntry),
+  studio: studioJson as unknown as StudioEntry,
 };
+
+/** Default Zod (jeda 5 detik, crossfade) juga diterapkan di browser karena Pages CMS bisa tidak menulis field kosong */
+function normalizeAbout(a: AboutEntry): AboutEntry {
+  return { ...a, slideInterval: a.slideInterval || 5, transition: a.transition || 'crossfade' };
+}
 
 /** Nilai default yang diisi Zod saat validasi build (Pages CMS bisa tidak menulis field kosong) */
 function normalizeSettings(s: SettingsEntry): SettingsEntry {
@@ -176,18 +193,14 @@ export const getAnnouncements = (branchSlug?: string): Promise<Announcement[]> =
 /* ---------- Lainnya ---------- */
 
 export const getAbout = (): Promise<AboutContent> =>
-  resolve(() => buildAbout(local.aboutCopy, data.settings, branchList(), data.barbers));
+  resolve(() => buildAbout(data.about, local.aboutCopy, data.settings, branchList(), data.barbers));
 export const getGallery = (): Promise<GalleryContent> =>
   resolve(() => buildGallery(data.gallery, local.galleryCopy, data.settings.showBeforeAfter));
 export const getTestimonials = (): Promise<TestimonialsContent> =>
   resolve(() => buildTestimonials(data.testimonials, local.testimonialsCopy, data.settings));
 export const getProducts = (): Promise<ProductsContent> => resolve(() => buildProducts(data.products, local.productsCopy));
-export const getHero = (): Promise<HeroContent> => resolve(() => local.hero);
+export const getHero = (): Promise<HeroContent> => resolve(() => buildHero(data.hero, local.heroExtras, BOOKING_API));
 export const getCtaBanner = (): Promise<CtaBannerContent> => resolve(() => local.ctaBanner);
-/** Foto studio = foto cabang pertama yang punya foto (Pages CMS); cadangan dari showcaseCopy */
+/** Foto studio dari Pages CMS (Kartu Studio); kosong → foto cabang pertama; cadangan showcaseCopy */
 export const getShowcase = (): Promise<ShowcaseContent> =>
-  resolve(() => {
-    const photo = branchList().find((b) => b.photo)?.photo;
-    const { heading, taglines, fallbackImage } = local.showcaseCopy;
-    return { heading, taglines, image: photo ?? fallbackImage };
-  });
+  resolve(() => buildShowcase(data.studio, local.showcaseCopy, branchList().find((b) => b.photo)?.photo));

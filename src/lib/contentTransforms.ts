@@ -7,6 +7,7 @@ import imageMeta from 'virtual:image-meta';
 import type {
   AboutContent,
   AboutCopy,
+  AboutSlide,
   AboutStat,
   Announcement,
   Barber,
@@ -17,6 +18,8 @@ import type {
   GalleryContent,
   GalleryCopy,
   GalleryLayout,
+  HeroContent,
+  HeroExtras,
   ImageAsset,
   LocationsContent,
   OpeningHour,
@@ -34,6 +37,8 @@ import type {
   PromoCopy,
   Rating,
   ServicesContent,
+  ShowcaseContent,
+  ShowcaseCopy,
   SiteContent,
   SocialLink,
   Testimonial,
@@ -41,17 +46,21 @@ import type {
   TestimonialsCopy,
 } from '@/types';
 import type {
+  AboutEntry,
   AnnouncementEntry,
   BarberEntry,
   BranchEntry,
   GalleryEntry,
+  HeroEntry,
   OpeningHourEntry,
   PricingEntry,
   ProductEntry,
   PromoEntry,
   SettingsEntry,
+  StudioEntry,
   TestimonialEntry,
 } from '@/content/schema';
+import { srcSetOf } from './responsiveImage';
 import { formatNumber } from './format';
 import { isActiveNow, parseWIB, toIsoWIB } from './dates';
 import { fillTemplate } from './whatsapp';
@@ -80,6 +89,44 @@ export function toImage(src: string, alt: string, fallback = { width: 800, heigh
   const resolved = imageMeta[src] ? src : imageMeta[webp] ? webp : src;
   const size = imageMeta[resolved] ?? fallback;
   return { src: resolved, alt, width: size.width, height: size.height };
+}
+
+/** Seperti toImage + srcset otomatis dari versi kecil (mis. foto-600.webp) bila ada */
+export function responsiveImage(src: string, alt: string, sizes: string, fallback?: { width: number; height: number }): ImageAsset {
+  const image = toImage(src, alt, fallback);
+  const srcSet = srcSetOf(image.src, imageMeta);
+  return srcSet ? { ...image, srcSet, sizes } : image;
+}
+
+/* ---------- Hero (Pages CMS → Hero) ---------- */
+
+export function buildHero(h: HeroEntry, extras: HeroExtras, bookingOnline: boolean): HeroContent {
+  const image = responsiveImage(h.image, h.imageAlt, '100vw', { width: 1920, height: 1000 });
+  const mobile = text(h.mobileImage);
+  return {
+    kicker: h.kicker,
+    titleLines: h.titleLines,
+    subtitle: h.subtitle,
+    image: mobile ? { ...image, mobileSrc: toImage(mobile, h.imageAlt).src } : image,
+    video: extras.video,
+    // Staging dengan booking online: label tombol utama mengikuti fitur itu; produksi memakai label dari CMS
+    primaryCta: { label: bookingOnline ? 'Booking Online' : h.primaryCtaLabel, action: { type: 'whatsapp' } },
+    secondaryCta: { label: h.secondaryCtaLabel, action: { type: 'link', href: extras.secondaryHref } },
+    marquee: h.marquee,
+    scrollHint: extras.scrollHint,
+  };
+}
+
+/* ---------- Kartu studio (Pages CMS → Kartu Studio) ---------- */
+
+/** Foto dari CMS; kosong → foto cabang pertama; belum ada → fallbackImage */
+export function buildShowcase(s: StudioEntry, copy: ShowcaseCopy, branchPhoto: ImageAsset | undefined): ShowcaseContent {
+  const image = text(s.image);
+  return {
+    heading: copy.heading,
+    taglines: s.taglines,
+    image: image ? toImage(image, text(s.imageAlt) ?? copy.heading, { width: 1200, height: 800 }) : (branchPhoto ?? copy.fallbackImage),
+  };
 }
 
 /** Stabil & unik untuk key React: slug + index */
@@ -445,7 +492,11 @@ export function buildTestimonials(entries: TestimonialEntry[], copy: Testimonial
 
 /* ---------- Tentang: angka statistik ---------- */
 
-export function buildAbout(copy: AboutCopy, s: SettingsEntry, branches: Branch[], barbers: BarberEntry[]): AboutContent {
+const FOCUS: Record<string, AboutSlide['focus']> = { atas: 'top', tengah: 'center', bawah: 'bottom' };
+/** Bingkai foto Tentang: lebar penuh di HP, ±7/12 kolom di tablet/desktop */
+const ABOUT_SIZES = '(min-width: 1280px) 700px, (min-width: 768px) 58vw, 100vw';
+
+export function buildAbout(a: AboutEntry, copy: AboutCopy, s: SettingsEntry, branches: Branch[], barbers: BarberEntry[]): AboutContent {
   const stats = s.stats;
   const activeBranches = branches.filter((b) => b.status === 'Aktif');
   const activeSlugs = new Set(activeBranches.map((b) => b.slug));
@@ -461,8 +512,21 @@ export function buildAbout(copy: AboutCopy, s: SettingsEntry, branches: Branch[]
     list.push({ value: stats.rating, display: stats.rating.toLocaleString('id-ID', { maximumFractionDigits: 1 }), animate: true, label: L.rating });
   if (stats.showReviewCount && stats.reviewCount) list.push({ value: stats.reviewCount, suffix: '+', animate: true, label: L.reviewCount });
 
-  const { statLabels: _labels, ...rest } = copy;
-  return { ...rest, stats: list };
+  const [lead, ...body] = a.paragraphs;
+  return {
+    heading: { kicker: a.kicker, title: a.title },
+    lead,
+    body,
+    slides: a.images.map((img) => ({
+      image: responsiveImage(img.src, img.alt, ABOUT_SIZES, { width: 960, height: 1200 }),
+      focus: FOCUS[img.focalPoint ?? 'tengah'] ?? 'center',
+    })),
+    slideInterval: a.slideInterval,
+    transition: a.transition,
+    imageCaption: text(a.caption) ?? '',
+    values: a.values,
+    stats: list,
+  };
 }
 
 /* ---------- Produk ---------- */

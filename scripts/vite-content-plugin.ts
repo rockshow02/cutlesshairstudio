@@ -19,13 +19,14 @@ import path from 'node:path';
 import sharp from 'sharp';
 import { z } from 'zod';
 import { loadEnv, type Plugin, type ViteDevServer } from 'vite';
-import { CONTENT_FILES, crossCheck, type BranchEntry, type ContentBundle, type ContentIssue } from '../src/content/schema';
+import { CONTENT_FILES, crossCheck, type BranchEntry, type ContentBundle, type ContentIssue, type HeroEntry } from '../src/content/schema';
+import { srcSetOf, type ImageMeta } from '../src/lib/responsiveImage';
 
 const VIRTUAL_ID = 'virtual:image-meta';
 const RESOLVED_ID = `\0${VIRTUAL_ID}`;
 const STATUS_ID = 'virtual:content-status';
 const RESOLVED_STATUS_ID = `\0${STATUS_ID}`;
-const IMAGE_KEYS = new Set(['photo', 'image', 'logo']);
+const IMAGE_KEYS = new Set(['photo', 'image', 'logo', 'mobileImage', 'src']);
 const OG_IMAGE = '/images/og/og-cutless.jpg';
 const BRANCH_ROUTE = /^\/cabang\/([a-z0-9-]+)\/?(?:index\.html)?(?:[?#].*)?$/;
 
@@ -117,8 +118,8 @@ export async function loadContent(root: string): Promise<LoadResult> {
 
 /* ---------- Ukuran gambar ---------- */
 
-async function readImageMeta(root: string): Promise<Record<string, { width: number; height: number }>> {
-  const uploads = path.join(root, 'public', 'uploads');
+/** Ukuran gambar di public/uploads (Pages CMS) dan public/images (aset bawaan, mis. foto hero awal) */
+async function readImageMeta(root: string): Promise<ImageMeta> {
   const meta: Record<string, { width: number; height: number }> = {};
   const walk = async (dir: string): Promise<void> => {
     if (!existsSync(dir)) return;
@@ -138,7 +139,8 @@ async function readImageMeta(root: string): Promise<Record<string, { width: numb
       }
     }
   };
-  await walk(uploads);
+  await walk(path.join(root, 'public', 'uploads'));
+  await walk(path.join(root, 'public', 'images'));
   return meta;
 }
 
@@ -244,7 +246,25 @@ function branchBody(b: BranchEntry, bundle: ContentBundle): string {
   ].join('');
 }
 
-function fillHtml(html: string, bundle: ContentBundle | undefined): string {
+/** File asli (jpg/png) yang sudah dikonversi ke .webp → pakai .webp */
+const resolveImage = (src: string, meta: ImageMeta) => {
+  const webp = src.replace(/\.(jpe?g|png|gif|tiff?|avif)$/i, '.webp');
+  return meta[src] ? src : meta[webp] ? webp : src;
+};
+
+/** Preload foto hero (LCP) sesuai hero.json: versi HP < 768 px, versi desktop + srcset ≥ 768 px */
+function heroPreload(hero: HeroEntry, meta: ImageMeta): string {
+  const desktop = resolveImage(hero.image, meta);
+  const srcset = srcSetOf(desktop, meta);
+  const set = srcset ? ` imagesrcset="${esc(srcset)}" imagesizes="100vw"` : '';
+  if (!hero.mobileImage) return `<link rel="preload" as="image" href="${esc(desktop)}"${set} />`;
+  return [
+    `<link rel="preload" as="image" href="${esc(resolveImage(hero.mobileImage, meta))}" media="(max-width: 767px)" />`,
+    `<link rel="preload" as="image" href="${esc(desktop)}"${set} media="(min-width: 768px)" />`,
+  ].join('\n    ');
+}
+
+function fillHtml(html: string, bundle: ContentBundle | undefined, meta: ImageMeta = {}): string {
   if (!bundle) return html;
   const { siteUrl, siteName } = bundle.settings;
   const allBranches = jsonLdTag(bundle.branches.map((b) => branchJsonLd(b, bundle)));
@@ -253,7 +273,8 @@ function fillHtml(html: string, bundle: ContentBundle | undefined): string {
     .replaceAll('%BRAND%', esc(siteName))
     .replaceAll('%CITIES%', esc(citiesOf(bundle)))
     .replaceAll('%OG_IMAGE%', `${siteUrl}${OG_IMAGE}`)
-    .replace('<!--cutless:jsonld-->', allBranches);
+    .replace('<!--cutless:jsonld-->', allBranches)
+    .replace('<!--cutless:hero-preload-->', heroPreload(bundle.hero, meta));
 }
 
 const HEAD_REGION = /<!--cutless:head-start-->[\s\S]*?<!--cutless:head-end-->/;
@@ -313,9 +334,12 @@ export function contentPlugin(): Plugin {
   let launchIssues: string[] = [];
   /** Pesan konten tidak valid terakhir di dev server (dikirim ulang ke browser yang baru terhubung) */
   let devError: string | null = null;
+  /** Ukuran gambar (untuk preload hero), dibaca ulang tiap konten/gambar berubah */
+  let imageMeta: ImageMeta = {};
 
   const refresh = async () => {
     const result = await loadContent(root);
+    imageMeta = await readImageMeta(root);
     if (result.bundle && siteUrlOverride) {
       result.bundle = { ...result.bundle, settings: { ...result.bundle.settings, siteUrl: siteUrlOverride } };
     }
@@ -392,7 +416,7 @@ export function contentPlugin(): Plugin {
     transformIndexHtml: {
       order: 'pre',
       handler(html, ctx) {
-        let out = fillHtml(html, bundle);
+        let out = fillHtml(html, bundle, imageMeta);
         // Dev server: /cabang/<slug>/ memakai head cabang tersebut
         const slug = ctx.originalUrl?.match(BRANCH_ROUTE)?.[1];
         const branch = slug && bundle?.branches.find((b) => b.slug === slug);
@@ -447,6 +471,7 @@ export function contentPlugin(): Plugin {
       server.ws.on('connection', () => sendOverlay(server));
       server.watcher.on('all', (_event, file) => {
         if (file.startsWith(uploadsDir)) {
+          void refresh();
           const mod = server.moduleGraph.getModuleById(RESOLVED_ID);
           if (mod) server.moduleGraph.invalidateModule(mod);
           server.ws.send({ type: 'full-reload' });

@@ -16,14 +16,8 @@ export interface AboutStat {
   label: string;
 }
 
-/** Teks statis section Tentang (angka statistik dihitung dari data cabang/barber & pengaturan) */
+/** Label statistik section Tentang (teks lain dari src/content/about.json, dikelola Pages CMS) */
 export interface AboutCopy {
-  heading: SectionHeading;
-  lead: string;
-  body: string[];
-  image: ImageAsset;
-  imageCaption: string;
-  values: AboutValue[];
   statLabels: {
     branches: string;
     barbers: string;
@@ -34,11 +28,21 @@ export interface AboutCopy {
   };
 }
 
+/** Satu foto slideshow Tentang Kami. focus = posisi potong (object-position vertikal) */
+export interface AboutSlide {
+  image: ImageAsset;
+  focus: 'top' | 'center' | 'bottom';
+}
+
 export interface AboutContent {
   heading: SectionHeading;
   lead: string;
   body: string[];
-  image: ImageAsset;
+  /** Minimal 1, maksimal 8. Satu foto = tampil statis */
+  slides: AboutSlide[];
+  /** Detik per foto */
+  slideInterval: number;
+  transition: 'crossfade' | 'ken-burns';
   imageCaption: string;
   values: AboutValue[];
   stats: AboutStat[];
