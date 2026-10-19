@@ -76,6 +76,26 @@
         "openTime": "08:00",
         "closeTime": "22:00",
         "isClosed": false
+      },
+      {
+        "day": "Rabu",
+        "isClosed": true
+      },
+      {
+        "day": "Kamis",
+        "isClosed": true
+      },
+      {
+        "day": "Jumat",
+        "isClosed": true
+      },
+      {
+        "day": "Sabtu",
+        "isClosed": true
+      },
+      {
+        "day": "Minggu",
+        "isClosed": true
       }
     ],
     "status": "Aktif",
