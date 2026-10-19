@@ -11,6 +11,7 @@
  */
 import { z } from 'zod';
 import { parseWIB } from '../lib/dates';
+import { PRICE_CATEGORIES } from './priceCategories';
 
 /* ---------- Helper ---------- */
 
@@ -72,7 +73,7 @@ function dateRange<T extends { startDate?: string | null; endDate?: string | nul
 
 /* ---------- Enum ---------- */
 
-export const PRICE_CATEGORIES = ['Haircut', 'Shaving', 'Coloring', 'Treatment', 'Kids', 'Paket'] as const;
+export { PRICE_CATEGORIES } from './priceCategories';
 export const PRICE_BADGES = ['Best Seller', 'Baru', 'Promo'] as const;
 export const GALLERY_STYLES = ['Fade', 'Pompadour', 'Crop', 'Coloring', 'Perming', 'Lainnya'] as const;
 export const ANNOUNCEMENT_TYPES = ['Info', 'Tutup', 'Jam Khusus'] as const;

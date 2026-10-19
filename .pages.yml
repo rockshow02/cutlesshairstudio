@@ -222,10 +222,10 @@ content:
         label: Kategori
         type: select
         required: true
-        default: Haircut
+        default: Haircut & Grooming
         description: "Pilih \"Paket\" untuk paket/membership (tampil sebagai kartu)."
         options:
-          values: [Haircut, Shaving, Coloring, Treatment, Kids, Paket]
+          values: [Haircut & Grooming, Wanita, Treatment, Coloring, Perming, Braids & Dreadlock, Shaving, Kids, Paket]
       - name: price
         label: Harga (Rupiah)
         type: number
