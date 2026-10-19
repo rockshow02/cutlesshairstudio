@@ -73,9 +73,9 @@ git add . && git commit && git push   # PR sinkron otomatis tertutup sebagai mer
 | `npm run build` | Build produksi (ketat: konten belum siap tayang → gagal) |
 | `npm run preview:worker` | Build staging lalu `wrangler dev` di http://localhost:8787: menguji Worker sungguhan (redirect `/cabang/x` → `/cabang/x/`, halaman cabang hasil prerender, `/produk/`, header `_headers`, halaman 404) |
 | `npm run check:content` | Validasi konten seperti CI (`CONTENT_CHECK=warn` untuk mode longgar) |
-| `npm test` | Vitest: mesin slot, anti-bentrok (D1 lokal), login, admin, cron |
-| `npm run e2e` | Playwright 360px terhadap `wrangler dev` (butuh `npm run db:migrate:local && npm run db:seed:local` sekali) |
-| `npm run dev:worker` | Booking online lokal: build staging + Worker + D1 lokal di http://localhost:8787 (`.dev.vars` dari `.dev.vars.example`) |
+| `npm test` | Vitest: skema konten, srcset otomatis, pesan WhatsApp |
+| `npm run e2e` | Playwright 360 px & 1280 px terhadap `wrangler dev` (situs statis): tombol WhatsApp per cabang, tanpa request `/api/*`, rute lama → beranda/404 |
+| `npm run dev:worker` | Sama dengan `preview:worker` (dipakai `npm run e2e`) |
 | `npm run typecheck` / `npm run lint` | TypeScript / ESLint |
 
 Konten tidak valid di dev (mis. commit Pages CMS yang salah) tampil sebagai **overlay error** di browser, berisi nama file, entri, dan kolomnya.

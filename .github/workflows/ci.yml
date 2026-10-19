@@ -53,7 +53,7 @@ jobs:
       - name: Lint
         run: npm run lint
 
-      - name: Tes (mesin slot, anti-bentrok, transisi status, D1 lokal)
+      - name: Tes unit (skema konten, srcset, pesan WhatsApp)
         run: npm test
 
       - name: Validasi konten (Zod + relasi cabang + aturan pra-launch)

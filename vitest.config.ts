@@ -1,13 +1,11 @@
 import { defineConfig } from 'vitest/config';
+import { fileURLToPath, URL } from 'node:url';
 
-// Tes mesin slot (murni) & tes integrasi D1 lokal (miniflare lewat wrangler getPlatformProxy).
+// Tes unit: skema konten (Zod), srcset otomatis, pesan WhatsApp.
 export default defineConfig({
+  resolve: { alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) } },
   test: {
     include: ['tests/**/*.test.ts'],
     environment: 'node',
-    testTimeout: 60_000,
-    hookTimeout: 120_000,
-    // Tiap file tes memakai database sementara sendiri
-    fileParallelism: false,
   },
 });
