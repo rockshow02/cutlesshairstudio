@@ -11,12 +11,12 @@
   "stats": {
     "customers": 5000,
     "showCustomers": true,
-    "foundedYear": 2021,
+    "foundedYear": 2026,
     "showFoundedYear": true,
     "rating": "4.9",
-    "showRating": true,
+    "showRating": false,
     "reviewCount": 300,
-    "showReviewCount": true,
+    "showReviewCount": false,
     "reviewsUrl": "https://maps.app.goo.gl/7aYPRv1HzyUxaGP37"
   },
   "showTestimonials": false,
