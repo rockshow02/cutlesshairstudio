@@ -27,9 +27,9 @@ export function Navbar() {
     isCurrentPage(item) ? 'page' : item.sectionId && active === item.sectionId ? 'true' : undefined;
   const { selected, copy: branchCopy, openPicker } = useBranch();
   const book = useBooking();
+  // "Booking Sekarang" & tombol hijau WhatsApp di menu HP: WhatsApp cabang terpilih
   const booking = book();
-  // Tombol hijau WhatsApp di menu HP tetap chat WhatsApp
-  const whatsapp = book({ channel: 'whatsapp' });
+  const whatsapp = booking;
   const branchLabel = selected ? selected.name : branchCopy.labels.pickBranch;
 
   useEffect(() => {

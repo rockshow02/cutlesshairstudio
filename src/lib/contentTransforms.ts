@@ -100,7 +100,7 @@ export function responsiveImage(src: string, alt: string, sizes: string, fallbac
 
 /* ---------- Hero (Pages CMS → Hero) ---------- */
 
-export function buildHero(h: HeroEntry, extras: HeroExtras, bookingOnline: boolean): HeroContent {
+export function buildHero(h: HeroEntry, extras: HeroExtras): HeroContent {
   const image = responsiveImage(h.image, h.imageAlt, '100vw', { width: 1920, height: 1000 });
   const mobile = text(h.mobileImage);
   return {
@@ -109,8 +109,8 @@ export function buildHero(h: HeroEntry, extras: HeroExtras, bookingOnline: boole
     subtitle: h.subtitle,
     image: mobile ? { ...image, mobileSrc: toImage(mobile, h.imageAlt).src } : image,
     video: extras.video,
-    // Staging dengan booking online: label tombol utama mengikuti fitur itu; produksi memakai label dari CMS
-    primaryCta: { label: bookingOnline ? 'Booking Online' : h.primaryCtaLabel, action: { type: 'whatsapp' } },
+    // Tombol utama selalu WhatsApp cabang terpilih (label dari CMS, mis. "Booking via WhatsApp")
+    primaryCta: { label: h.primaryCtaLabel, action: { type: 'whatsapp' } },
     secondaryCta: { label: h.secondaryCtaLabel, action: { type: 'link', href: extras.secondaryHref } },
     marquee: h.marquee,
     scrollHint: extras.scrollHint,
@@ -551,11 +551,9 @@ export function buildProducts(entries: ProductEntry[], copy: ProductsCopy): Prod
       inStock: p.inStock !== false,
       shopeeUrl: text(p.shopeeUrl),
       tokopediaUrl: text(p.tokopediaUrl),
-      // slug hanya ada pada produk dari D1 (GET /api/public/catalog saat toko aktif)
-      shopUrl: (p as { slug?: string }).slug ? `/shop/${(p as { slug?: string }).slug}` : undefined,
     };
   });
-  // Kategori produk D1 di luar daftar baku tetap bisa difilter (di akhir)
+  // Kategori di luar daftar baku tetap bisa difilter (di akhir)
   const extra = [...new Set(items.map((i) => i.category))].filter((c) => !PRODUCT_CATEGORY_ORDER.includes(c));
   const categories = [...PRODUCT_CATEGORY_ORDER.filter((c) => items.some((i) => i.category === c)), ...extra];
   return { ...copy, categories, items };

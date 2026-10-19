@@ -1,0 +1,7 @@
+# Rute fitur yang dicabut (booking online & toko; arsip: branch archive/booking-online-dan-toko).
+# Yang pernah ditautkan dari landing page (/booking, /shop) diarahkan ke beranda; rute lain (/masuk, /profil,
+# /pesanan, /admin, /kebijakan-privasi) tidak ada lagi dan mendapat halaman 404.
+/booking     /   301
+/booking/*   /   301
+/shop        /   301
+/shop/*      /   301

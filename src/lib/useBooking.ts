@@ -24,8 +24,6 @@ export interface BookingOptions {
   number?: string;
   /** Hanya cabang ini yang boleh dipilih (mis. promo khusus cabang) */
   allowedSlugs?: string[];
-  /** 'whatsapp' = selalu chat WhatsApp cabang walau booking online aktif (tombol hijau WA) */
-  channel?: 'whatsapp';
 }
 
 export interface BookingTarget {
@@ -37,25 +35,8 @@ export interface BookingTarget {
   branch?: Branch;
 }
 
-/** Booking online aktif (staging): tombol booking ke /booking/ alih-alih WhatsApp */
-const BOOKING_ONLINE = import.meta.env.VITE_BOOKING_ENABLED === 'true';
-/** Jenis pesan yang merupakan booking jadwal (selain itu, mis. produk/paket/tanya harga, tetap WhatsApp) */
-const BOOKABLE_KINDS = new Set<MessageKind>(['general', 'service', 'barber']);
-
-/** URL alur booking dengan pilihan yang sudah diketahui (cabang, layanan, hairstylist) */
-function bookingPageUrl(branch: Branch | undefined, o: BookingOptions): string {
-  const q = new URLSearchParams();
-  if (branch?.bookable) q.set('cabang', branch.slug);
-  if (o.vars?.service) q.set('layanan', o.vars.service);
-  if (o.vars?.barber) q.set('barber', o.vars.barber);
-  const qs = q.toString();
-  return `/booking/${qs ? `?${qs}` : ''}`;
-}
-
 /**
- * Semua tombol booking lewat sini.
- * Booking online aktif → halaman /booking/ (pilihan cabang/layanan/barber dibawa; login diminta di sana).
- * Selain itu → WhatsApp CABANG dengan pesan yang menyebut cabang:
+ * Semua tombol booking & pesan lewat sini → WhatsApp CABANG dengan pesan yang menyebut cabang:
  * "Halo Cutless Hair Studio cabang Cibubur, saya mau booking ...".
  * Belum memilih cabang → pemilih cabang terbuka dulu, lalu WhatsApp dibuka dari klik yang sama.
  */
@@ -75,11 +56,6 @@ export function useBooking(): (options?: BookingOptions) => BookingTarget {
     const allowed = (b: Branch) => !options.allowedSlugs?.length || options.allowedSlugs.includes(b.slug);
     const forced = options.branchSlug ? branches.find((b) => b.slug === options.branchSlug) : undefined;
     const target = forced ?? (effective && effective.bookable && allowed(effective) ? effective : undefined);
-
-    // Nomor WA pribadi barber tidak relevan untuk booking online (jadwal tetap lewat sistem)
-    if (BOOKING_ONLINE && options.channel !== 'whatsapp' && !options.message && (!options.number || options.kind === 'barber') && BOOKABLE_KINDS.has(options.kind ?? 'general')) {
-      return { href: bookingPageUrl(target, options), external: false, branch: target };
-    }
 
     if (target?.bookable) return { href: linkFor(target, options), external: true, branch: target };
 

@@ -9,9 +9,6 @@
  *
  * Fungsi menerima `branchSlug` opsional untuk data per cabang.
  *
- * Booking online (VITE_BOOKING_ENABLED=true, staging): cabang, hairstylist, dan harga dibaca dari database D1
- * lewat GET /api/public/catalog (bentuk data sama persis dengan JSON di bawah), sehingga komponen tidak berubah.
- * Bila API gagal, dipakai salinan JSON bawaan build (situs tetap tampil).
  * Filter tanggal promo/pengumuman dievaluasi di browser saat dipanggil (WIB), tanpa build ulang.
  */
 import * as local from '@/content';
@@ -133,28 +130,8 @@ function normalizeSettings(s: SettingsEntry): SettingsEntry {
 /** Simulasi latensi untuk menguji state loading: VITE_CONTENT_DELAY=1200 npm run dev */
 const SIMULATED_DELAY = Number(import.meta.env.VITE_CONTENT_DELAY ?? 0);
 
-const BOOKING_API = import.meta.env.VITE_BOOKING_ENABLED === 'true';
-let catalog: Promise<void> | null = null;
-
-/** Sekali per halaman: ganti data cabang/barber/harga dengan data D1 (API). Gagal → tetap salinan JSON. */
-function loadCatalog(): Promise<void> {
-  if (!BOOKING_API || typeof fetch === 'undefined') return Promise.resolve();
-  catalog ??= fetch('/api/public/catalog', { credentials: 'same-origin' })
-    .then((r) => (r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`))))
-    .then((c: { branches: BranchEntry[]; barbers: BarberEntry[]; pricing: PricingEntry[]; products?: ProductEntry[] }) => {
-      data.branches = c.branches;
-      data.barbers = c.barbers;
-      data.pricing = c.pricing;
-      // Toko aktif → produk dari D1 (bentuk sama + slug); toko mati → tetap products.json
-      if (c.products) data.products = c.products;
-    })
-    .catch((e) => console.warn('Katalog booking tidak bisa dimuat, memakai data bawaan:', e));
-  return catalog;
-}
-
 /** Kembalikan salinan (komponen tidak bisa mengubah sumber). */
 async function resolve<T>(build: () => T): Promise<T> {
-  await loadCatalog();
   if (SIMULATED_DELAY > 0) await new Promise((r) => setTimeout(r, SIMULATED_DELAY));
   return structuredClone(build());
 }
@@ -199,7 +176,7 @@ export const getGallery = (): Promise<GalleryContent> =>
 export const getTestimonials = (): Promise<TestimonialsContent> =>
   resolve(() => buildTestimonials(data.testimonials, local.testimonialsCopy, data.settings));
 export const getProducts = (): Promise<ProductsContent> => resolve(() => buildProducts(data.products, local.productsCopy));
-export const getHero = (): Promise<HeroContent> => resolve(() => buildHero(data.hero, local.heroExtras, BOOKING_API));
+export const getHero = (): Promise<HeroContent> => resolve(() => buildHero(data.hero, local.heroExtras));
 export const getCtaBanner = (): Promise<CtaBannerContent> => resolve(() => local.ctaBanner);
 /** Foto studio dari Pages CMS (Kartu Studio); kosong → foto cabang pertama; cadangan showcaseCopy */
 export const getShowcase = (): Promise<ShowcaseContent> =>

@@ -15,23 +15,12 @@
     "check:content": "node scripts/check-content.mjs",
     "optimize-images": "node scripts/optimize-images.mjs",
     "sync-cms": "node scripts/sync-pages-config.mjs",
-    "db:migrate:local": "wrangler d1 migrations apply DB --env staging --local",
-    "db:migrate:staging": "wrangler d1 migrations apply DB --env staging --remote",
-    "db:seed:local": "node scripts/seed-d1.mjs --out seed/seed.local.sql --test-data --dev-admin --apply local",
-    "db:seed:staging": "node scripts/seed-d1.mjs --out seed/seed.staging.sql --test-data --apply staging",
-    "db:seed:shop:local": "node scripts/seed-shop.mjs --out seed/shop.local.sql --apply local",
-    "db:seed:shop:staging": "node scripts/seed-shop.mjs --out seed/shop.staging.sql --apply staging",
     "test": "vitest run",
-    "dev:api": "wrangler dev --env staging --port 8787",
     "dev:worker": "npm run build:staging && wrangler dev --env staging --port 8787",
     "preview:worker": "npm run dev:worker",
-    "e2e": "playwright test",
-    "export-catalog": "node scripts/export-catalog.mjs"
+    "e2e": "playwright test"
   },
   "dependencies": {
-    "arctic": "^3.7.0",
-    "hono": "^4.13.13",
-    "jose": "^6.2.12",
     "lenis": "^1.3.27",
     "motion": "^14.3.0",
     "react": "18.3.1",
@@ -39,7 +28,6 @@
     "swiper": "^11.2.8"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "^4.20260702.1",
     "@eslint/js": "^10.0.1",
     "@playwright/test": "^1.64.1",
     "@types/node": "^20.19.43",
