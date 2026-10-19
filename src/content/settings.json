@@ -6,7 +6,8 @@
   "defaultWaMessage": "Halo Kak! Untuk reservasi di {brand} cabang {branch}, mohon isi formulir berikut ya:\nNama Lengkap:\nNomor HP / WA:\nHari & Tanggal:\nJam Kedatangan:\nPilihan Layanan: (mis. Haircut Classic / Hair Treatment / Hair Color)\nKapster Pilihan: (Opsional)\nKirim kembali format ini jika sudah diisi. Kami akan segera mengecek dan mengonfirmasi ketersediaan jadwal. 💈\n📌 Catatan: Toleransi keterlambatan maks. 15 menit. Jika melebihi batas waktu, slot akan dialihkan ke antrean berikutnya demi kenyamanan bersama.",
   "instagramUrl": "https://www.instagram.com/cutlesshairstudio/",
   "tiktokUrl": "https://www.tiktok.com/@cutlesshairstudio",
-  "footerText": "Hair studio di Kota Bogor. Goodstyle, goodmood.",
+  "email": "halo@cutlesshairstudio.id",
+  "footerTagline": "Hair studio di {cities}. Goodstyle, goodmood.",
   "stats": {
     "customers": 5000,
     "showCustomers": true,

@@ -247,7 +247,8 @@ export function buildSite(s: SettingsEntry, base: SiteContent, branches: Branch[
       description: fillTemplate(base.seo.description, vars),
       url: `${s.siteUrl}/`,
     },
-    footer: { ...base.footer, description: text(s.footerText) ?? base.footer.description },
+    email: text(s.email) ?? '',
+    footer: { ...base.footer, description: fillTemplate(text(s.footerTagline) ?? base.footer.description, vars) },
   };
 }
 

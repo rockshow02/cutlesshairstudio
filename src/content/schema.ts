@@ -231,7 +231,10 @@ export const settingsSchema = z.object({
   defaultWaMessage: optionalText(500),
   instagramUrl: optionalUrl,
   tiktokUrl: optionalUrl,
-  footerText: optionalText(300),
+  /** Opsional: kosong = baris email di footer tidak ditampilkan */
+  email: z.union([z.email({ message: 'format email tidak valid, mis. halo@cutlesshairstudio.id' }).max(100), z.literal('')]).nullish(),
+  /** Kalimat di bawah logo footer; {cities} diisi otomatis dari kota cabang aktif */
+  footerTagline: optionalText(160),
   stats: z
     .object({
       customers: z.number().int().min(0).nullish(),
