@@ -4,13 +4,13 @@ import type { SiteContent } from '@/types';
  * Konfigurasi & teks statis situs.
  * Nilai berikut DITIMPA oleh Pengaturan Situs di Pages CMS (src/content/settings.json):
  *   brandName, logo.stacked (logo footer), whatsapp.number, whatsapp.displayNumber,
- *   whatsapp.templates.general, siteUrl, features, footer.description.
+ *   whatsapp.templates.general, email, siteUrl, features, footer.description (tagline footer).
+ * Kota TIDAK ditulis di sini: {cities} diisi otomatis dari kota cabang aktif (branches.json).
  * Alamat & jam buka kini per cabang (src/content/branches.json).
  * Ubah nilai-nilai itu lewat Pages CMS, bukan di file ini.
  */
 export const site: SiteContent = {
   brandName: 'Cutless Hair Studio',
-  city: 'Kota Bogor',
   logo: {
     horizontal: { src: '/images/brand/cutless-logo-horizontal-white.png', alt: 'Cutless Hair Studio', width: 432, height: 120 },
     stacked: { src: '/images/brand/cutless-logo-white.png', alt: 'Cutless Hair Studio', width: 404, height: 360 },
@@ -43,8 +43,8 @@ export const site: SiteContent = {
       productRestock: 'Halo {brand} cabang {branch}, kapan {product} ready lagi? Saya mau pesan.',
     },
   },
-  // TODO: ganti email bisnis
-  email: 'halo@cutlesshairstudio.id',
+  // Diisi dari Pengaturan Situs → Email (kosong = tidak ditampilkan)
+  email: '',
   // Diisi dari Pengaturan Situs (siteUrl & toggle section)
   siteUrl: '',
   features: { testimonials: false, products: false, beforeAfter: false },
@@ -89,7 +89,8 @@ export const site: SiteContent = {
     announcementRegion: 'Pengumuman',
   },
   footer: {
-    description: 'Hair studio di Kota Bogor. Goodstyle, goodmood.',
+    // Bawaan bila Pengaturan Situs → Tagline footer kosong; {cities} = kota cabang aktif
+    description: 'Hair studio di {cities}. Goodstyle, goodmood.',
     contactTitle: 'Kontak',
     exploreTitle: 'Jelajahi',
     branchesTitle: 'Cabang',

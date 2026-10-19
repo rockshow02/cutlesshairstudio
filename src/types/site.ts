@@ -92,7 +92,6 @@ export interface FooterContent {
 
 export interface SiteContent {
   brandName: string;
-  city: string;
   logo: {
     horizontal: ImageAsset;
     stacked: ImageAsset;
@@ -100,6 +99,7 @@ export interface SiteContent {
   };
   nav: NavItem[];
   whatsapp: WhatsAppConfig;
+  /** Kosong = baris email di footer tidak ditampilkan (Pengaturan Situs → Email) */
   email: string;
   /** Domain resmi tanpa garis miring akhir (settings.json → siteUrl) */
   siteUrl: string;
