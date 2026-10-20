@@ -26,6 +26,7 @@ import type {
   ImageAsset,
   LocationsContent,
   OpeningHour,
+  PartnerLogosContent,
   PriceBadge,
   PriceCategory,
   PriceCategoryKey,
@@ -57,6 +58,7 @@ import type {
   GalleryEntry,
   HeroEntry,
   OpeningHourEntry,
+  PartnersEntry,
   PricingEntry,
   ProductEntry,
   PromoEntry,
@@ -101,6 +103,32 @@ export function responsiveImage(src: string, alt: string, sizes: string, fallbac
   const image = toImage(src, alt, fallback);
   const srcSet = srcSetOf(image.src, imageMeta);
   return srcSet ? { ...image, srcSet, sizes } : image;
+}
+
+/* ---------- Logo Partner (Pages CMS → Logo Partner) ---------- */
+
+/** Logo aktif ≤ ini: deret statis di tengah, tanpa animasi */
+export const PARTNER_STATIC_MAX = 2;
+
+/** Pita logo di beranda. null = dimatikan atau belum ada logo aktif → pita tidak dirender (tanpa ruang kosong). */
+export function buildPartnerLogos(p: PartnersEntry | null | undefined, brandName: string): PartnerLogosContent | null {
+  if (!p || p.enabled === false) return null;
+  const items = activeSorted(p.logos ?? []).map((l) => {
+    const logo = text(l.logo);
+    return {
+      name: l.name,
+      // Lebar/tinggi asli dari file (cegah layout shift); tinggi tampil diatur CSS
+      logo: logo ? toImage(logo, l.name, { width: 400, height: 200 }) : null,
+      url: text(l.url) ?? null,
+    };
+  });
+  if (items.length === 0) return null;
+  return {
+    label: text(p.label) ?? null,
+    ariaLabel: `Partner ${brandName}`,
+    items,
+    animated: items.length > PARTNER_STATIC_MAX,
+  };
 }
 
 /* ---------- Hero (Pages CMS → Hero) ---------- */

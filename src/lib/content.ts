@@ -4,7 +4,7 @@
  * Sumber konten (tanpa server, tanpa API, biaya Rp0):
  *   - src/content/*.json : dikelola admin lewat Pages CMS (cabang, harga, barber, galeri, promo,
  *                          pengumuman, testimoni, produk, pengaturan situs, hero, tentang kami, kartu studio,
- *                          CTA penutup).
+ *                          CTA penutup, logo partner).
  *                          Divalidasi Zod saat build.
  *   - src/content/*.ts   : teks statis (layanan, label UI, dll.).
  *
@@ -26,7 +26,7 @@ import heroJson from '@/content/hero.json';
 import aboutJson from '@/content/about.json';
 import studioJson from '@/content/studio.json';
 import ctaJson from '@/content/cta.json';
-import partnerJson from '@/content/partner.json';
+import partnersJson from '@/content/partners.json';
 import type {
   AboutEntry,
   AnnouncementEntry,
@@ -35,7 +35,7 @@ import type {
   CtaEntry,
   GalleryEntry,
   HeroEntry,
-  PartnerEntry,
+  PartnersEntry,
   PricingEntry,
   ProductEntry,
   PromoEntry,
@@ -52,7 +52,7 @@ import type {
   BranchCopy,
   CtaBannerContent,
   GalleryContent,
-  PartnerPageContent,
+  PartnerLogosContent,
   HeroContent,
   LocationsContent,
   PricingContent,
@@ -73,6 +73,7 @@ import {
   buildBranches,
   buildGallery,
   buildLocations,
+  buildPartnerLogos,
   buildPricing,
   buildProducts,
   buildPromos,
@@ -83,7 +84,6 @@ import {
   joinIndonesian,
   operatingCities,
 } from './contentTransforms';
-import { buildPartnerPage } from './partner';
 
 /**
  * Pesan fatal bila konfigurasi situs gagal dimuat. Satu-satunya teks yang tidak berasal
@@ -106,7 +106,7 @@ const data = {
   about: normalizeAbout(aboutJson as unknown as AboutEntry),
   studio: studioJson as unknown as StudioEntry,
   cta: ctaJson as unknown as CtaEntry,
-  partner: partnerJson as unknown as PartnerEntry,
+  partners: partnersJson as unknown as PartnersEntry,
 };
 
 /** Default Zod (jeda 5 detik, crossfade) juga diterapkan di browser karena Pages CMS bisa tidak menulis field kosong */
@@ -191,8 +191,6 @@ export const getCtaBanner = (): Promise<CtaBannerContent> => resolve(() => build
 /** Foto studio dari Pages CMS (Kartu Studio); kosong → foto cabang pertama; cadangan showcaseCopy */
 export const getShowcase = (): Promise<ShowcaseContent> =>
   resolve(() => buildShowcase(data.studio, local.showcaseCopy, branchList().find((b) => b.photo)?.photo));
-/** Halaman /partner/ (Pages CMS → Halaman Partner). Foto hero kosong → foto CTA penutup */
-export const getPartnerPage = (): Promise<PartnerPageContent> =>
-  resolve(() =>
-    buildPartnerPage(data.partner, data.settings, buildCtaBanner(data.cta, local.ctaBannerCopy).backgroundImage, local.partnerCopy),
-  );
+/** Pita logo partner di beranda (Pages CMS → Logo Partner). null = dimatikan / belum ada logo aktif → tidak dirender */
+export const getPartnerLogos = (): Promise<PartnerLogosContent | null> =>
+  resolve(() => buildPartnerLogos(data.partners, data.settings.siteName));

@@ -10,6 +10,7 @@ import { Barbers } from '@/components/sections/Barbers';
 import { Gallery } from '@/components/sections/Gallery';
 import { Products } from '@/components/sections/Products';
 import { Location } from '@/components/sections/Location';
+import { PartnerLogos } from '@/components/sections/PartnerLogos';
 import { CtaBanner } from '@/components/sections/CtaBanner';
 import { useSite } from '@/lib/SiteContext';
 import { Deferred } from '@/components/ui/Deferred';
@@ -44,6 +45,8 @@ export default function App() {
         <Products variant="teaser" />
         <LazyTestimonials />
         <Location />
+        {/* Pita logo partner: tidak dirender bila dimatikan / belum ada logo aktif */}
+        <PartnerLogos />
         <CtaBanner />
       </Deferred>
     </SiteShell>

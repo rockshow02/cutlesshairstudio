@@ -1,7 +1,7 @@
 /**
  * Konten statis (teks section, label UI, SEO, dll.).
  * Konten yang dikelola admin ada di file JSON sejajar (pricing, barbers, gallery, promos,
- * announcements, settings, hero, about, studio, cta, partner) dan diedit lewat Pages CMS.
+ * announcements, settings, hero, about, studio, cta, partners) dan diedit lewat Pages CMS.
  * Jangan import dari komponen: akses lewat src/lib/content.ts.
  */
 export { site } from './site';
@@ -18,4 +18,3 @@ export { ctaBannerCopy } from './cta';
 export { promoCopy } from './promo';
 export { productsCopy } from './products';
 export { showcaseCopy } from './showcase';
-export { partnerCopy } from './partnerCopy';

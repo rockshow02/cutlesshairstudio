@@ -74,7 +74,7 @@ git add . && git commit && git push   # PR sinkron otomatis tertutup sebagai mer
 | `npm run preview:worker` | Build staging lalu `wrangler dev` di http://localhost:8787: menguji Worker sungguhan (redirect `/cabang/x` → `/cabang/x/`, halaman cabang hasil prerender, `/produk/`, header `_headers`, halaman 404) |
 | `npm run check:content` | Validasi konten seperti CI (`CONTENT_CHECK=warn` untuk mode longgar) |
 | `npm test` | Vitest: skema konten, srcset otomatis, pesan WhatsApp |
-| `npm run e2e` | Playwright 360 px & 1280 px terhadap `wrangler dev` (situs statis): tombol WhatsApp per cabang, halaman `/partner/`, tanpa request `/api/*`, rute lama → beranda/404. Menjalankan `npm run e2e:server` otomatis bila port 8787 kosong |
+| `npm run e2e` | Playwright 360 px & 1280 px terhadap `wrangler dev` (situs statis): tombol WhatsApp per cabang, pita logo partner (5 logo uji), `/partner` dicabut, tanpa request `/api/*`, rute lama → beranda/404. Menjalankan `npm run e2e:server` otomatis bila port 8787 kosong |
 | `npm run build:e2e` / `npm run e2e:server` | Build E2E (`--mode e2e`, `.env.e2e`): seperti staging, tetapi cabang & barber memakai **data uji tetap** dari `e2e/fixtures/content.ts`, sehingga perubahan di Pages CMS (mis. status cabang) tidak membuat tes gagal. Hanya untuk tes, tidak pernah di-deploy. Bila `wrangler dev` sudah jalan di 8787, pastikan isinya hasil `build:e2e` |
 | `npm run dev:worker` | Build staging + `wrangler dev` (pratinjau situs dengan data CMS asli) |
 | `npm run typecheck` / `npm run lint` | TypeScript / ESLint |

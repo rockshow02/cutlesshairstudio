@@ -14,7 +14,7 @@ export default defineConfig({
   build: {
     // Satu file CSS untuk semua halaman (lebih sedikit request yang memblokir render)
     cssCodeSplit: false,
-    // Multi-halaman statis: / (beranda), /produk/, /partner/, /cabang/ (+ /cabang/<slug>/ hasil prerender)
+    // Multi-halaman statis: / (beranda), /produk/, /cabang/ (+ /cabang/<slug>/ hasil prerender)
     rollupOptions: {
       output: {
         // Library dipisah dari kode situs: chunk sendiri, bisa di-cache lama & tidak menumpuk di chunk section
@@ -29,7 +29,6 @@ export default defineConfig({
       input: {
         main: fileURLToPath(new URL('./index.html', import.meta.url)),
         produk: fileURLToPath(new URL('./produk/index.html', import.meta.url)),
-        partner: fileURLToPath(new URL('./partner/index.html', import.meta.url)),
         // Template halaman cabang: diprerender per cabang ke /cabang/<slug>/ oleh contentPlugin
         cabang: fileURLToPath(new URL('./cabang/index.html', import.meta.url)),
       },
