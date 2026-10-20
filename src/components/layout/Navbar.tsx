@@ -115,7 +115,7 @@ export function Navbar() {
 
           <nav className={styles.desktopNav} aria-label={site.ui.mainNavigation}>
             <ul>
-              {site.nav.map((item) => (
+              {site.nav.filter((item) => item.desktop !== false).map((item) => (
                 <li key={navKey(item)}>
                   <a href={navHref(item)} aria-current={current(item)}>
                     {item.label}
