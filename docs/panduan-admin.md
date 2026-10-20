@@ -23,7 +23,7 @@ Panduan ini untuk pemilik dan staf. Tidak perlu keahlian teknis.
 2. Klik **Sign in with GitHub** → izinkan akses (sekali saja).
 3. Pilih repo **cutlesshairstudio** → branch **main**.
    Branch **main** = website asli. Branch **staging** hanya untuk uji coba (hasilnya tampil di alamat staging berlabel *STAGING*, tidak dilihat pelanggan). Bila ragu, pakai **main**.
-4. Menu konten ada di kiri: **Cabang, Daftar Harga, Barber, Galeri, Hero, Tentang Kami, Kartu Studio, Promo, Pengumuman, Testimoni, Produk, Pengaturan Situs**.
+4. Menu konten ada di kiri: **Cabang, Daftar Harga, Barber, Galeri, Hero, Tentang Kami, Kartu Studio, CTA Penutup, Promo, Pengumuman, Testimoni, Produk, Pengaturan Situs**.
 
 Tips umum:
 - Setiap kolom punya keterangan kecil di bawahnya. Baca dulu bila ragu.
@@ -162,6 +162,15 @@ Perilaku di website (otomatis): berganti sendiri sesuai jeda, berhenti saat kurs
 
 Menu **Kartu Studio**: **Foto** (opsional, foto lebar suasana studio; kosong = memakai foto cabang pertama), **Deskripsi foto** (wajib bila foto diisi), dan **Tagline** (1–5 kalimat pendek yang berganti di atas foto).
 
+## 3d. CTA penutup ("Kursimu sudah siap.")
+
+Menu **CTA Penutup**: bagian ajakan booking besar di bawah halaman.
+- **Teks kecil di atas judul** (maks. 60), **Judul** (maks. 60, tampil sangat besar, pendek saja), **Deskripsi** (maks. 240), **Label tombol** (maks. 40).
+- Tombol **selalu** membuka WhatsApp cabang yang dipilih pengunjung; yang bisa diubah hanya tulisannya.
+- **Foto latar**: pilih/upload foto **lebar (landscape) minimal 1920 px**, dan **kompres dulu sampai di bawah 1 MB** sebelum upload (mis. lewat squoosh.app atau kirim ke WhatsApp sendiri lalu simpan ulang). Website membuat versi 1920 px & 1280 px (WebP) otomatis. Foto tampil gelap dan hitam-putih agar teks tetap terbaca, jadi foto suasana studio yang tidak terlalu ramai paling cocok.
+- **Deskripsi foto** wajib bila foto latar diisi (maks. 150).
+- Kosongkan **Foto latar** untuk kembali ke foto bawaan.
+
 ## 4. Membuat promo
 
 1. Klik **Promo** → **Add an entry**.
@@ -297,6 +306,11 @@ Form Pages CMS menolak isian yang melebihi batas, dan website memeriksa batas ya
 | Tentang Kami | Foto slideshow → Deskripsi foto | 150 | wajib |
 | Kartu Studio ("On point, always.") | Deskripsi foto | 150 | opsional |
 | Kartu Studio ("On point, always.") | Tagline | 60 per isian | wajib |
+| CTA Penutup ("Kursimu sudah siap.") | Teks kecil di atas judul | 60 | wajib |
+| CTA Penutup ("Kursimu sudah siap.") | Judul | 60 | wajib |
+| CTA Penutup ("Kursimu sudah siap.") | Deskripsi | 240 | wajib |
+| CTA Penutup ("Kursimu sudah siap.") | Label tombol | 40 | wajib |
+| CTA Penutup ("Kursimu sudah siap.") | Deskripsi foto | 150 | wajib bila foto diisi |
 | Promo | Judul promo | 80 | wajib |
 | Promo | Deskripsi | 400 | opsional |
 | Promo | Teks tombol | 40 | opsional |

@@ -64,10 +64,11 @@ src/content/
   hero.json                 Hero                ← Pages CMS (teks, label tombol, foto desktop/HP, teks berjalan)
   about.json                Tentang Kami        ← Pages CMS (teks, poin nilai, slideshow 1–8 foto, jeda, efek)
   studio.json               Kartu Studio        ← Pages CMS (foto opsional + tagline)
+  cta.json                  CTA Penutup         ← Pages CMS (teks, label tombol, foto latar opsional)
   schema.ts                 skema Zod semua file di atas + cek relasi & siap tayang (acuan tunggal)
   *.ts                      teks statis: layanan, label UI, SEO, judul section, label statistik
 public/uploads/
-  branches/  barbers/  gallery/  promos/  products/  site/  hero/  about/  studio/    gambar dari Pages CMS (WebP)
+  branches/  barbers/  gallery/  promos/  products/  site/  hero/  about/  studio/  cta/    gambar dari Pages CMS (WebP)
 src/lib/content.ts          lapisan data: getBranches(), getBranchBySlug(), getBarbers(slug?), getPricing(slug?), ...
 src/lib/contentTransforms.ts  filter isActive, urut order, harga per cabang, gabung dengan teks statis
 src/lib/BranchContext.tsx   cabang pilihan pengunjung (localStorage) + pemilih cabang
@@ -122,7 +123,7 @@ Pages CMS belum bisa membuat dropdown dari isi file lain, jadi daftar cabang dis
 
 ## 4. Gambar
 
-- Upload lewat Pages CMS masuk ke `public/uploads/<jenis>/`. Lebar maks.: hero 1920 px (+ versi 1280 px), galeri, promo, cabang & studio 1600 px, slideshow Tentang Kami 1200 px (+ versi HP 600 px), produk 1000 px, barber & logo 800 px.
+- Upload lewat Pages CMS masuk ke `public/uploads/<jenis>/`. Lebar maks.: hero & CTA penutup 1920 px (+ versi 1280 px), galeri, promo, cabang & studio 1600 px, slideshow Tentang Kami 1200 px (+ versi HP 600 px), produk 1000 px, barber & logo 800 px.
 - Versi kecil (`nama-1280.webp`, `nama-600.webp`) dibuat otomatis oleh `npm run optimize-images` dan dipakai sebagai `srcset` (`src/lib/responsiveImage.ts`). Preload foto hero di `index.html` dibuat saat build dari `hero.json`.
 - **Jangan menautkan gambar langsung ke Google Drive** (lambat, bisa diblokir, dan ditolak validasi). Unduh dulu, lalu upload lewat Pages CMS atau salin ke `public/uploads/<jenis>/` dan jalankan `npm run optimize-images`.
 - Workflow **`.github/workflows/optimize-images.yml`** (*Sinkron konten*) berjalan saat ada perubahan di `public/uploads/**` atau `src/content/*.json`: kompres ke **WebP**, hapus file asli, perbarui path di JSON, sinkron dropdown cabang, lalu commit.
