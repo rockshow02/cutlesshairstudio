@@ -351,6 +351,23 @@ export const studioSchema = z
     if (s.image && !s.imageAlt) ctx.addIssue({ code: 'custom', path: ['imageAlt'], message: 'deskripsi foto wajib diisi bila foto dipilih' });
   });
 
+/* ---------- CTA penutup ("Kursimu sudah siap.") ---------- */
+
+export const ctaSchema = z
+  .object({
+    kicker: requiredText(60, 'kicker'),
+    title: requiredText(60, 'judul'),
+    description: requiredText(240, 'deskripsi'),
+    /** Tombol selalu ke WhatsApp cabang terpilih; hanya labelnya yang bisa diubah */
+    ctaLabel: requiredText(40, 'label tombol'),
+    /** Kosong = foto cadangan bawaan */
+    image: z.union([sectionImage, z.literal('')]).nullish(),
+    imageAlt: optionalText(150),
+  })
+  .superRefine((c, ctx) => {
+    if (c.image && !c.imageAlt) ctx.addIssue({ code: 'custom', path: ['imageAlt'], message: 'deskripsi foto wajib diisi bila foto dipilih' });
+  });
+
 export const CONTENT_FILES = {
   'branches.json': z.array(branchSchema).min(1, 'minimal satu cabang'),
   'pricing.json': z.array(pricingItemSchema),
@@ -364,6 +381,7 @@ export const CONTENT_FILES = {
   'hero.json': heroSchema,
   'about.json': aboutSchema,
   'studio.json': studioSchema,
+  'cta.json': ctaSchema,
 } as const;
 
 /* ---------- Tipe hasil (dipakai src/lib/content.ts) ---------- */
@@ -381,6 +399,7 @@ export type ProductEntry = z.output<typeof productSchema>;
 export type HeroEntry = z.output<typeof heroSchema>;
 export type AboutEntry = z.output<typeof aboutSchema>;
 export type StudioEntry = z.output<typeof studioSchema>;
+export type CtaEntry = z.output<typeof ctaSchema>;
 
 /* ---------- Pemeriksaan lintas file ---------- */
 
@@ -397,6 +416,7 @@ export interface ContentBundle {
   hero: HeroEntry;
   about: AboutEntry;
   studio: StudioEntry;
+  cta: CtaEntry;
 }
 
 export interface ContentIssue {

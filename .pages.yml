@@ -61,6 +61,12 @@ media:
     output: /uploads/studio
     categories: [image]
     rename: safe
+  - name: cta
+    label: Foto CTA Penutup
+    input: public/uploads/cta
+    output: /uploads/cta
+    categories: [image]
+    rename: safe
   - name: videos
     label: Video
     input: public/uploads/videos
@@ -628,6 +634,54 @@ content:
         description: "Kalimat pendek yang berganti di atas foto. Maksimal 60 karakter per isian."
         options:
           maxlength: 60
+
+  # ------------------------------------------------------------------ CTA Penutup
+  - name: cta
+    label: CTA Penutup ("Kursimu sudah siap.")
+    type: file
+    path: src/content/cta.json
+    format: json
+    fields:
+      - name: kicker
+        label: Teks kecil di atas judul
+        type: string
+        required: true
+        description: "Maksimal 60 karakter."
+        options:
+          maxlength: 60
+      - name: title
+        label: Judul
+        type: string
+        required: true
+        description: "Kalimat pendek, tampil sangat besar. Maksimal 60 karakter."
+        options:
+          maxlength: 60
+      - name: description
+        label: Deskripsi
+        type: text
+        required: true
+        description: "1–2 kalimat ajakan booking. Maksimal 240 karakter."
+        options:
+          maxlength: 240
+      - name: ctaLabel
+        label: Label tombol
+        type: string
+        required: true
+        description: "Tombol selalu membuka WhatsApp cabang yang dipilih pengunjung (tujuannya tidak bisa diubah). Contoh: Booking via WhatsApp. Maksimal 40 karakter."
+        options:
+          maxlength: 40
+      - name: image
+        label: Foto latar
+        type: image
+        description: "Foto lebar (landscape) minimal 1920 px, kompres < 1 MB sebelum upload. Tampil gelap (diberi lapisan hitam) agar teks terbaca. Kosong = foto bawaan."
+        options:
+          media: cta
+      - name: imageAlt
+        label: Deskripsi foto
+        type: string
+        description: "Wajib bila foto latar diisi. Maksimal 150 karakter."
+        options:
+          maxlength: 150
 
   # ------------------------------------------------------------------ Promo
   - name: promos
