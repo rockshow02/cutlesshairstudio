@@ -11,6 +11,7 @@ import { formatPrice, formatTime } from '@/lib/format';
 import { pageUrl } from '@/lib/navigation';
 import { MOBILE_QUERY, useMediaQuery } from '@/lib/useMediaQuery';
 import { useFabZone } from '@/lib/fabZones';
+import { usePageHidden } from '@/lib/usePageHidden';
 import type { Branch, GalleryItem, LocationsContent } from '@/types';
 import { DISTANCE, DURATION, EASE, MARQUEE } from '@/styles/motion';
 import { Section } from '@/components/ui/Section';
@@ -208,17 +209,6 @@ function GalleryCard({ item }: { item: GalleryItem }) {
       {label && <figcaption>{label}</figcaption>}
     </figure>
   );
-}
-
-/** Tab browser tidak aktif → jeda animasi */
-function usePageHidden() {
-  const [hidden, setHidden] = useState(() => typeof document !== 'undefined' && document.visibilityState === 'hidden');
-  useEffect(() => {
-    const on = () => setHidden(document.visibilityState === 'hidden');
-    document.addEventListener('visibilitychange', on);
-    return () => document.removeEventListener('visibilitychange', on);
-  }, []);
-  return hidden;
 }
 
 /** Ulangi daftar sampai minimal n item (agar pita tidak kosong & putaran mulus saat foto sedikit) */
