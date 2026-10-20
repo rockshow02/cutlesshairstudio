@@ -395,9 +395,21 @@ content:
       - name: caption
         label: Keterangan singkat
         type: string
-        description: "Opsional, tampil saat foto diperbesar. Maksimal 120 karakter."
+        description: "Opsional, tampil saat foto diperbesar dan sebagai label di kolom foto berjalan (section Lokasi). Kosong = label memakai Gaya rambut. Maksimal 120 karakter."
         options:
           maxlength: 120
+      - name: focalPoint
+        label: Titik fokus
+        type: select
+        default: atas
+        description: "Bagian foto yang dipertahankan saat foto dipotong agar pas di kartu: atas (kepala/wajah), tengah, atau bawah."
+        options:
+          values: [atas, tengah, bawah]
+      - name: showInMarquee
+        label: Tampilkan di kolom foto berjalan
+        type: boolean
+        default: true
+        description: "Ikut berjalan di kolom foto section Lokasi. Matikan untuk foto yang hanya untuk galeri."
       - name: order
         label: Urutan
         type: number

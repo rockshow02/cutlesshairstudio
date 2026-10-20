@@ -4,6 +4,8 @@
     "altText": "Hairstylist merapikan jenggot dan rambut pelanggan",
     "styleCategory": "Crop",
     "caption": "Beard trim & textured crop",
+    "focalPoint": "atas",
+    "showInMarquee": true,
     "order": 10,
     "isActive": true
   },
@@ -12,6 +14,8 @@
     "altText": "Proses hair tattoo garis di sisi kepala",
     "styleCategory": "Lainnya",
     "caption": "Hair tattoo",
+    "focalPoint": "atas",
+    "showInMarquee": true,
     "order": 20,
     "isActive": true
   },
@@ -20,6 +24,8 @@
     "altText": "Beberapa hairstylist sedang bekerja di studio",
     "styleCategory": "Lainnya",
     "caption": "Suasana studio",
+    "focalPoint": "atas",
+    "showInMarquee": true,
     "order": 30,
     "isActive": true
   },
@@ -28,6 +34,8 @@
     "altText": "Hairstylist membuat fade dengan clipper",
     "styleCategory": "Fade",
     "caption": "Fade dengan clipper",
+    "focalPoint": "atas",
+    "showInMarquee": true,
     "order": 40,
     "isActive": true
   },
@@ -36,6 +44,8 @@
     "altText": "Pelanggan berbaring saat beard shaping",
     "styleCategory": "Lainnya",
     "caption": "Beard shaping",
+    "focalPoint": "atas",
+    "showInMarquee": true,
     "order": 50,
     "isActive": true
   },
@@ -44,6 +54,8 @@
     "altText": "Detail perapian jenggot dengan trimmer",
     "styleCategory": "Lainnya",
     "caption": "Beard detail",
+    "focalPoint": "atas",
+    "showInMarquee": true,
     "order": 60,
     "isActive": true
   },
@@ -52,6 +64,8 @@
     "altText": "Hairstylist memotong taper fade",
     "styleCategory": "Fade",
     "caption": "Taper fade",
+    "focalPoint": "atas",
+    "showInMarquee": true,
     "order": 70,
     "isActive": true
   },
@@ -60,6 +74,8 @@
     "altText": "Finishing potongan rambut dengan gunting",
     "styleCategory": "Lainnya",
     "caption": "Finishing",
+    "focalPoint": "atas",
+    "showInMarquee": true,
     "order": 80,
     "isActive": true
   }

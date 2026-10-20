@@ -76,6 +76,7 @@ function dateRange<T extends { startDate?: string | null; endDate?: string | nul
 export { PRICE_CATEGORIES } from './priceCategories';
 export const PRICE_BADGES = ['Best Seller', 'Baru', 'Promo'] as const;
 export const GALLERY_STYLES = ['Fade', 'Pompadour', 'Crop', 'Coloring', 'Perming', 'Lainnya'] as const;
+export const GALLERY_FOCAL_POINTS = ['atas', 'tengah', 'bawah'] as const;
 export const ANNOUNCEMENT_TYPES = ['Info', 'Tutup', 'Jam Khusus'] as const;
 export const DAYS = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'] as const;
 export const BRANCH_STATUSES = ['Aktif', 'Segera Dibuka', 'Tutup Sementara'] as const;
@@ -178,6 +179,10 @@ export const galleryItemSchema = z.object({
   altText: z.string().trim().min(1, 'deskripsi foto wajib diisi').max(150),
   styleCategory: z.enum(GALLERY_STYLES, { error: `gaya rambut harus salah satu: ${GALLERY_STYLES.join(', ')}` }).default('Lainnya'),
   caption: optionalText(120),
+  /** Bagian foto yang dipertahankan saat dipotong (object-position vertikal) */
+  focalPoint: z.enum(GALLERY_FOCAL_POINTS, { error: 'titik fokus harus atas, tengah, atau bawah' }).default('atas'),
+  /** Ikut berjalan di kolom foto section Lokasi */
+  showInMarquee: z.boolean().default(true),
   order,
   isActive,
 });
