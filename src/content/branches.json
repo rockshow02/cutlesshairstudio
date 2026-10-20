@@ -61,44 +61,55 @@
     "name": "Cibubur",
     "city": "Cibubur",
     "province": "Jawa Barat",
-    "address": "jalan raya cibubur situ",
-    "whatsappNumber": "62898492732031",
+    "address": "Jl. Alternatif Cibubur No.87, Harjamukti, Kec. Cimanggis, Kota Depok, Jawa Barat 16454",
+    "googleMapsUrl": "https://maps.app.goo.gl/xqA2fgPDFDkGTUJh7",
+    "whatsappNumber": "628132220932",
     "timezone": "Asia/Jakarta",
     "openingHours": [
       {
         "day": "Senin",
-        "openTime": "08:00",
-        "closeTime": "22:00",
+        "openTime": "09:00",
+        "closeTime": "21:00",
         "isClosed": false
       },
       {
         "day": "Selasa",
-        "openTime": "08:00",
-        "closeTime": "22:00",
+        "openTime": "09:00",
+        "closeTime": "21:00",
         "isClosed": false
       },
       {
         "day": "Rabu",
-        "isClosed": true
+        "openTime": "09:00",
+        "closeTime": "21:00",
+        "isClosed": false
       },
       {
         "day": "Kamis",
-        "isClosed": true
+        "openTime": "09:00",
+        "closeTime": "21:00",
+        "isClosed": false
       },
       {
         "day": "Jumat",
-        "isClosed": true
+        "openTime": "09:00",
+        "closeTime": "21:00",
+        "isClosed": false
       },
       {
         "day": "Sabtu",
-        "isClosed": true
+        "openTime": "09:00",
+        "closeTime": "21:00",
+        "isClosed": false
       },
       {
         "day": "Minggu",
-        "isClosed": true
+        "openTime": "09:00",
+        "closeTime": "21:00",
+        "isClosed": false
       }
     ],
-    "status": "Aktif",
+    "status": "Segera Dibuka",
     "order": 20
   }
 ]
