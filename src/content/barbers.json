@@ -2,7 +2,7 @@
   {
     "name": "Yasslaw",
     "role": "Head Hairstylist",
-    "photo": "/uploads/barbers/yasslaw.jpg",
+    "photo": "/uploads/barbers/yasslaw.webp",
     "branchSlug": "bogor-bantarjati",
     "specialty": "Skin fade, Pompadour",
     "order": 10,
@@ -11,7 +11,7 @@
   {
     "name": "Agus",
     "role": "Senior Hairstylist",
-    "photo": "/uploads/barbers/agus.jpg",
+    "photo": "/uploads/barbers/agus.webp",
     "branchSlug": "bogor-bantarjati",
     "specialty": "Beard, Classic cut",
     "order": 20,
@@ -20,7 +20,7 @@
   {
     "name": "Soemardi(erte)",
     "role": "Color Specialist",
-    "photo": "/uploads/barbers/soemardi-erte.jpg",
+    "photo": "/uploads/barbers/soemardi-erte.webp",
     "branchSlug": "bogor-bantarjati",
     "specialty": "Coloring, Perming",
     "order": 30,
