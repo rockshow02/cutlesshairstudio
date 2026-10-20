@@ -79,14 +79,35 @@ test.describe('animasi', () => {
     const pos = () => track.evaluate((el) => new DOMMatrix(getComputedStyle(el).transform).m41);
     // Desktop memakai smooth scroll (Lenis) yang bisa masih bergulir: pastikan pita di layar (tidak dijeda
     // data-offscreen) lalu tunggu sampai pita bergerak
-    await expect(async () => {
-      await strip.scrollIntoViewIfNeeded();
-      await expect(strip).toBeInViewport({ ratio: 0.9 });
-      await expect(band).not.toHaveAttribute('data-offscreen', '');
-      const a = await pos();
-      await page.waitForTimeout(300);
-      expect(await pos()).not.toBe(a);
-    }).toPass({ timeout: 15_000 });
+    try {
+      await expect(async () => {
+        await strip.scrollIntoViewIfNeeded();
+        await expect(strip).toBeInViewport({ ratio: 0.9 });
+        await expect(band).not.toHaveAttribute('data-offscreen', '');
+        const a = await pos();
+        await page.waitForTimeout(300);
+        expect(await pos()).not.toBe(a);
+      }).toPass({ timeout: 15_000 });
+    } catch {
+      // Diagnosis untuk CI (log job tidak terbaca tanpa login): kenapa pita tidak bergerak
+      const diag = await band.evaluate((el) => {
+        const t = el.firstElementChild as HTMLElement;
+        const cs = getComputedStyle(t);
+        const r = el.getBoundingClientRect();
+        return {
+          scrollY: Math.round(scrollY),
+          innerHeight,
+          rect: [Math.round(r.top), Math.round(r.bottom)],
+          hover: el.matches(':hover'),
+          attrs: Object.fromEntries([...el.attributes].map((a) => [a.name, a.value.slice(0, 40)])),
+          anim: [cs.animationName, cs.animationPlayState, cs.animationDuration, cs.transform],
+          visibility: document.visibilityState,
+          html: document.documentElement.className,
+          reduce: matchMedia('(prefers-reduced-motion: reduce)').matches,
+        };
+      });
+      throw new Error(`pita logo tidak bergerak: ${JSON.stringify(diag)}`);
+    }
     if (!isMobile) {
       await strip.locator('[data-axis="x"]').hover();
       await page.waitForTimeout(150);
