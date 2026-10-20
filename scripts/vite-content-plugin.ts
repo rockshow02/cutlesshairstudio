@@ -270,35 +270,6 @@ function heroPreload(hero: HeroEntry, meta: ImageMeta): string {
   ].join('\n    ');
 }
 
-/** Foto hero partner: CMS → foto CTA penutup → foto bawaan (sama dengan src/lib/partner.ts & src/content/cta.ts) */
-const partnerHeroImage = (bundle: ContentBundle) => bundle.partner.hero.image || bundle.cta.image || '/images/cta/studio.jpg';
-
-function partnerPreload(bundle: ContentBundle, meta: ImageMeta): string {
-  if (bundle.partner.hero.enabled === false) return '';
-  const src = resolveImage(partnerHeroImage(bundle), meta);
-  const srcset = srcSetOf(src, meta);
-  return `<link rel="preload" as="image" href="${esc(src)}"${srcset ? ` imagesrcset="${esc(srcset)}" imagesizes="100vw"` : ''} />`;
-}
-
-/** Ringkasan statis halaman partner di dalam #root (terbaca crawler; diganti React saat halaman dimuat). Section mati tidak ikut. */
-function partnerBody(bundle: ContentBundle): string {
-  const p = bundle.partner;
-  const list = (items: string[]) => (items.length ? `<ul>${items.map((i) => `<li>${esc(i)}</li>`).join('')}</ul>` : '');
-  const points = (items: { title: string; description: string }[] = []) => list(items.map((i) => `${i.title}: ${i.description}`));
-  const section = (on: boolean | undefined, title: string, body: string) => (on === false ? '' : `<h2>${esc(title)}</h2>${body}`);
-  return [
-    '<div class="prerender">',
-    `<h1>${esc(p.hero.enabled === false ? `Kemitraan & Kerja Sama ${bundle.settings.siteName}` : p.hero.title)}</h1>`,
-    p.hero.enabled === false ? '' : `<p>${esc(p.hero.subtitle)}</p>`,
-    section(p.franchise.enabled, p.franchise.title, [p.franchise.intro ? `<p>${esc(p.franchise.intro)}</p>` : '', points(p.franchise.reasons), list(p.franchise.benefits ?? []), points(p.franchise.steps), list(p.franchise.cities ?? [])].join('')),
-    section(p.brand.enabled, p.brand.title, [p.brand.intro ? `<p>${esc(p.brand.intro)}</p>` : '', points(p.brand.forms)].join('')),
-    section(p.corporate.enabled, p.corporate.title, [p.corporate.intro ? `<p>${esc(p.corporate.intro)}</p>` : '', points(p.corporate.services)].join('')),
-    p.faq.enabled === false || !p.faq.items?.length ? '' : `<h2>${esc(p.faq.title)}</h2>${p.faq.items.map((q) => `<h3>${esc(q.question)}</h3><p>${esc(q.answer)}</p>`).join('')}`,
-    '<p><a href="/">Beranda</a> · <a href="/cabang/">Semua cabang</a></p>',
-    '</div>',
-  ].join('');
-}
-
 function fillHtml(html: string, bundle: ContentBundle | undefined, meta: ImageMeta = {}): string {
   if (!bundle) return html;
   const { siteUrl, siteName } = bundle.settings;
@@ -309,9 +280,7 @@ function fillHtml(html: string, bundle: ContentBundle | undefined, meta: ImageMe
     .replaceAll('%CITIES%', esc(citiesOf(bundle)))
     .replaceAll('%OG_IMAGE%', `${siteUrl}${OG_IMAGE}`)
     .replace('<!--cutless:jsonld-->', allBranches)
-    .replace('<!--cutless:hero-preload-->', heroPreload(bundle.hero, meta))
-    .replace('<!--cutless:partner-preload-->', partnerPreload(bundle, meta))
-    .replace('<!--cutless:partner-body-->', partnerBody(bundle));
+    .replace('<!--cutless:hero-preload-->', heroPreload(bundle.hero, meta));
 }
 
 const HEAD_REGION = /<!--cutless:head-start-->[\s\S]*?<!--cutless:head-end-->/;
@@ -324,7 +293,6 @@ function sitemap(bundle: ContentBundle): string {
     '/cabang/',
     ...bundle.branches.map((b) => `/cabang/${b.slug}/`),
     ...(bundle.settings.showProducts ? ['/produk/'] : []),
-    '/partner/',
   ];
   const body = urls.map((u) => `  <url><loc>${siteUrl}${u}</loc><lastmod>${today}</lastmod></url>`).join('\n');
   return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${body}\n</urlset>\n`;

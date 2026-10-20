@@ -5,3 +5,6 @@
 /booking/*   /   301
 /shop        /   301
 /shop/*      /   301
+# Halaman /partner dicabut (arsip: branch archive/partner-page, tag partner-page-v1); logo partner kini pita di beranda
+/partner     /   301
+/partner/*   /   301
