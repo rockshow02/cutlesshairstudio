@@ -79,9 +79,19 @@ test.describe('animasi', () => {
     const pos = () => track.evaluate((el) => new DOMMatrix(getComputedStyle(el).transform).m41);
     // Desktop memakai smooth scroll (Lenis) yang bisa masih bergulir: pastikan pita di layar (tidak dijeda
     // data-offscreen) lalu tunggu sampai pita bergerak
+    // Desktop: smooth scroll Lenis tidak mengikuti lompatan scroll native (scrollIntoViewIfNeeded) di CI →
+    // gulir dengan roda mouse seperti pengunjung sampai pita di tengah layar
+    const viewport = page.viewportSize()!;
+    await page.mouse.move(viewport.width / 2, viewport.height / 2);
+    for (let i = 0; i < 80; i++) {
+      const top = await strip.evaluate((el) => el.getBoundingClientRect().top);
+      if (top > viewport.height * 0.2 && top < viewport.height * 0.6) break;
+      await page.mouse.wheel(0, Math.max(-600, Math.min(600, top - viewport.height * 0.4)));
+      await page.waitForTimeout(150);
+    }
+    await page.mouse.move(5, viewport.height - 5); // kursor di luar pita (hover menjeda)
     try {
       await expect(async () => {
-        await strip.scrollIntoViewIfNeeded();
         await expect(strip).toBeInViewport({ ratio: 0.9 });
         await expect(band).not.toHaveAttribute('data-offscreen', '');
         const a = await pos();
