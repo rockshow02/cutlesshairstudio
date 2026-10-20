@@ -11,6 +11,7 @@ import { parse } from 'yaml';
 import type { z } from 'zod';
 import { describe, expect, it } from 'vitest';
 import { CONTENT_FILES } from '../src/content/schema';
+import { validateCmsContent, type CmsField as FormField } from './helpers/pagesCms';
 
 interface ZInfo {
   kind: string;
@@ -133,6 +134,24 @@ export function mismatches(yamlText = readFileSync('.pages.yml', 'utf8')): strin
 describe('.pages.yml sejalan dengan skema Zod', () => {
   it('batas karakter (maxlength), wajib/opsional, dan daftar field sama', () => {
     expect(mismatches()).toEqual([]);
+  });
+
+  it('isi semua file konten lolos aturan form Pages CMS (admin tidak terkunci saat Save)', () => {
+    const config = parse(readFileSync('.pages.yml', 'utf8')) as { content: { name: string; path: string; list?: boolean; fields: FormField[] }[] };
+    const problems = config.content.flatMap((c) => validateCmsContent(c, JSON.parse(readFileSync(c.path, 'utf8'))).map((e) => `${c.name} ${e}`));
+    expect(problems).toEqual([]);
+  });
+
+  it('tiruan form Pages CMS mendeteksi isian yang tidak bisa disimpan', () => {
+    const config = parse(readFileSync('.pages.yml', 'utf8')) as { content: { name: string; list?: boolean; fields: FormField[] }[] };
+    const pricing = config.content.find((c) => c.name === 'pricing')!;
+    const item = { name: 'Uji', category: 'Wanita', price: 1000, isActive: true };
+    expect(validateCmsContent(pricing, [item])).toEqual([]);
+    expect(validateCmsContent(pricing, [{ ...item, branchPrices: null }])).toEqual(['#1.branchPrices: list bernilai null (hapus kuncinya atau isi [])']);
+    expect(validateCmsContent(pricing, [{ ...item, category: 'Haircut' }])[0]).toMatch(/category: bukan pilihan/);
+    expect(validateCmsContent(pricing, [{ ...item, badge: 'Hot' }])[0]).toMatch(/badge: bukan pilihan/);
+    expect(validateCmsContent(pricing, [{ ...item, name: 'x'.repeat(81) }])[0]).toMatch(/lebih dari 80 karakter/);
+    expect(validateCmsContent(pricing, [{ ...item, badge: '', description: null }])).toEqual([]);
   });
 
   it('pemeriksaan ini benar-benar mendeteksi selisih', () => {
