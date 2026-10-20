@@ -1,16 +1,16 @@
-import { readFileSync } from 'node:fs';
 import { expect } from '@playwright/test';
+import { E2E_BARBERS, E2E_BRANCHES } from './fixtures/content';
 import { expectNoHorizontalScroll, parseWa, test } from './helpers';
 
 /**
  * Situs statis: semua tombol booking & pesan membuka WhatsApp cabang yang benar (360 px & desktop),
  * tidak ada request ke /api/*, rute fitur yang dicabut → beranda (bila pernah ditautkan) atau 404.
  */
-const json = <T>(file: string): T => JSON.parse(readFileSync(`src/content/${file}`, 'utf8')) as T;
-const branches = json<{ slug: string; name: string; whatsappNumber: string; status: string }[]>('branches.json');
-const barbers = json<{ name: string; branchSlug: string; whatsappNumber?: string; isActive?: boolean }[]>('barbers.json');
-const bogor = branches.find((b) => b.slug === 'bogor-bantarjati')!;
-const cibubur = branches.find((b) => b.slug === 'cibubur')!;
+// Cabang & barber uji tetap (Aktif, nomor WhatsApp uji), bukan data CMS: lihat e2e/fixtures/content.ts & npm run build:e2e
+const { bogor, cibubur } = E2E_BRANCHES;
+// URL staging/produksi sungguhan (E2E_BASE_URL) memakai data CMS, bukan data uji: tes per cabang dilewati
+const fixtureBuild = !process.env.E2E_BASE_URL;
+const barbers: readonly { name: string; branchSlug: string; whatsappNumber?: string; isActive?: boolean }[] = E2E_BARBERS;
 
 /** Tombol booking/pesan (footer berisi WhatsApp PUSAT untuk pertanyaan umum, sengaja tidak termasuk) */
 const waLinks = (page: import('@playwright/test').Page) =>
@@ -19,6 +19,7 @@ const waLinks = (page: import('@playwright/test').Page) =>
   );
 
 test('belum memilih cabang: tombol hero → pemilih cabang → WhatsApp cabang itu dengan pesan menyebut cabang', async ({ page, context, apiCalls }) => {
+  test.skip(!fixtureBuild, 'butuh build E2E (data uji)');
   await page.goto('/', { waitUntil: 'domcontentloaded' });
   const hero = page.getByRole('link', { name: 'Booking via WhatsApp' }).first();
   await expect(hero).toBeVisible();
@@ -35,6 +36,7 @@ test('belum memilih cabang: tombol hero → pemilih cabang → WhatsApp cabang i
 });
 
 test('setelah cabang dipilih: semua tombol booking/pesan di beranda langsung ke WhatsApp cabang itu', async ({ page, apiCalls }) => {
+  test.skip(!fixtureBuild, 'butuh build E2E (data uji)');
   await page.goto('/', { waitUntil: 'domcontentloaded' });
   await page.evaluate((slug) => localStorage.setItem('cutless:branch', slug), cibubur.slug);
   await page.reload({ waitUntil: 'domcontentloaded' });
@@ -67,6 +69,7 @@ test('setelah cabang dipilih: semua tombol booking/pesan di beranda langsung ke 
 });
 
 test('kartu hairstylist: WhatsApp hairstylist (atau cabangnya) dengan nama hairstylist & cabang', async ({ page }) => {
+  test.skip(!fixtureBuild, 'butuh build E2E (data uji)');
   await page.goto('/', { waitUntil: 'domcontentloaded' });
   await page.evaluate((slug) => localStorage.setItem('cutless:branch', slug), bogor.slug);
   await page.reload({ waitUntil: 'domcontentloaded' });
@@ -84,6 +87,7 @@ test('kartu hairstylist: WhatsApp hairstylist (atau cabangnya) dengan nama hairs
 });
 
 test('halaman /cabang/:slug: tombol booking selalu ke cabang halaman itu (bukan cabang tersimpan)', async ({ page, apiCalls }) => {
+  test.skip(!fixtureBuild, 'butuh build E2E (data uji)');
   await page.goto('/', { waitUntil: 'domcontentloaded' });
   await page.evaluate((slug) => localStorage.setItem('cutless:branch', slug), cibubur.slug);
   await page.goto(`/cabang/${bogor.slug}/`, { waitUntil: 'domcontentloaded' });
