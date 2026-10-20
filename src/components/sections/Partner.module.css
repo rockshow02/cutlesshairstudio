@@ -1,0 +1,479 @@
+/* Halaman /partner/. Mobile-first (360 px), warna hanya dari token. */
+
+.loading {
+  padding-top: calc(var(--header-offset) + var(--nav-safe-top) + var(--space-8));
+}
+
+/* ---------- Hero: foto, bayangan, dan konten ditumpuk di satu sel grid ---------- */
+.hero {
+  position: relative;
+  z-index: var(--z-content);
+  display: grid;
+  min-height: min(88svh, 52rem);
+  background: var(--c-ink);
+  color: var(--c-bone);
+  overflow: hidden;
+  isolation: isolate;
+}
+.hero > * {
+  grid-area: 1 / 1;
+  min-width: 0;
+}
+.heroBg {
+  z-index: -2;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.6;
+  contain: size;
+}
+.heroShade {
+  z-index: -1;
+  background: linear-gradient(0deg, rgba(12, 16, 20, 0.96) 0%, rgba(12, 16, 20, 0.8) 45%, rgba(12, 16, 20, 0.45) 100%);
+}
+.heroInner {
+  align-self: end;
+  width: 100%;
+  padding-top: calc(var(--header-offset) + var(--nav-safe-top) + var(--space-8));
+  padding-bottom: var(--space-8);
+}
+.heroTitle {
+  max-width: 16ch;
+  font-size: var(--fs-display);
+  line-height: 0.98;
+  letter-spacing: -0.03em;
+  text-transform: uppercase;
+  overflow-wrap: anywhere;
+}
+.heroText {
+  max-width: 36rem;
+  margin-top: var(--space-5);
+  color: var(--c-bone-dim);
+  font-size: var(--fs-lg);
+}
+.heroActions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin-top: var(--space-6);
+}
+@media (min-width: 600px) {
+  .heroActions {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+}
+
+/* ---------- Kartu & poin ---------- */
+.typeGrid,
+.pointGrid,
+.pointGrid4 {
+  display: grid;
+  gap: var(--space-4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+@media (min-width: 768px) {
+  .typeGrid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--space-5);
+  }
+  .pointGrid4 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-5);
+  }
+}
+@media (min-width: 1024px) {
+  .pointGrid4 {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.iconBadge,
+.iconBadgeLight {
+  display: inline-grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  margin-bottom: var(--space-5);
+  border: 1px solid var(--c-line-light);
+  border-radius: 50%;
+  color: var(--c-sand);
+}
+.iconBadgeLight {
+  width: 44px;
+  height: 44px;
+  margin-bottom: var(--space-4);
+  border-color: var(--c-line-dark);
+  color: var(--c-taupe-dark);
+}
+.cardTitle {
+  margin-bottom: var(--space-3);
+  font-size: var(--fs-h3);
+  line-height: 1.2;
+}
+.cardText {
+  color: var(--c-bone-dim);
+}
+
+.split {
+  display: grid;
+  gap: var(--space-7);
+}
+@media (min-width: 900px) {
+  .split {
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+    gap: var(--space-8);
+  }
+}
+.block {
+  margin-top: var(--space-8);
+}
+.subTitle {
+  margin-bottom: var(--space-5);
+  font-family: var(--f-body);
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.point {
+  min-width: 0;
+  padding: var(--space-5);
+  border: 1px solid var(--c-line-dark);
+  border-radius: var(--radius);
+  background: var(--c-paper-2);
+}
+.pointDark {
+  border-color: var(--c-line-light);
+  background: var(--c-ink-2);
+}
+.pointTitle {
+  margin-bottom: var(--space-2);
+  font-family: var(--f-body);
+  font-size: var(--fs-md);
+  font-weight: 700;
+  line-height: 1.35;
+  letter-spacing: 0;
+}
+.pointText {
+  font-size: var(--fs-sm);
+  color: var(--c-ink-dim);
+}
+.pointDark .pointText {
+  color: var(--c-bone-dim);
+}
+
+.checks {
+  display: grid;
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.checks li {
+  display: flex;
+  gap: var(--space-3);
+  align-items: flex-start;
+}
+.checkIcon {
+  flex: none;
+  margin-top: 3px;
+  color: var(--c-taupe-dark);
+}
+
+/* Alur kemitraan: langkah bernomor, berjajar di desktop */
+.steps {
+  display: grid;
+  gap: var(--space-4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+@media (min-width: 768px) {
+  .steps {
+    grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+  }
+}
+.step {
+  min-width: 0;
+  padding-top: var(--space-4);
+  border-top: 2px solid var(--c-ink);
+}
+.stepNo {
+  display: block;
+  margin-bottom: var(--space-2);
+  font-family: var(--f-display);
+  font-size: 1.75rem;
+  line-height: 1;
+  color: var(--c-taupe-dark);
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 36px;
+  padding: var(--space-1) var(--space-4);
+  border: 1px solid var(--c-line-dark);
+  border-radius: 999px;
+  background: var(--c-paper-2);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+}
+.chip svg {
+  color: var(--c-taupe-dark);
+}
+.investment {
+  font-size: var(--fs-lg);
+  font-weight: 600;
+}
+
+.note {
+  display: flex;
+  gap: var(--space-3);
+  align-items: flex-start;
+  max-width: 44rem;
+  margin-top: var(--space-6);
+  padding: var(--space-4);
+  border-left: 2px solid var(--c-taupe-dark);
+  background: var(--c-paper-2);
+  font-size: var(--fs-sm);
+}
+.note svg {
+  flex: none;
+  margin-top: 2px;
+  color: var(--c-taupe-dark);
+}
+
+.apply {
+  margin-top: var(--space-7);
+}
+
+/* ---------- Logo partner: abu-abu, berwarna saat hover/fokus; 3 kolom di HP ---------- */
+.logos {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+@media (min-width: 768px) {
+  .logos {
+    grid-template-columns: repeat(auto-fill, minmax(9rem, 1fr));
+    gap: var(--space-4);
+  }
+}
+.logoCell {
+  display: grid;
+  min-width: 0;
+  aspect-ratio: 3 / 2;
+  border: 1px solid var(--c-line-light);
+  border-radius: var(--radius);
+  background: var(--c-ink-2);
+}
+.logoLink {
+  display: grid;
+  border-radius: var(--radius);
+}
+.logo {
+  place-self: center;
+  width: 80%;
+  height: 70%;
+  object-fit: contain;
+  filter: grayscale(1);
+  opacity: 0.7;
+  transition: filter var(--dur) var(--ease), opacity var(--dur) var(--ease);
+}
+.logoCell:hover .logo,
+.logoLink:focus-visible .logo {
+  filter: none;
+  opacity: 1;
+}
+
+/* ---------- Testimoni ---------- */
+@media (min-width: 768px) {
+  .pointGrid:has(.quoteCard) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+.quoteCard {
+  margin: 0;
+}
+.quote {
+  margin: 0 0 var(--space-5);
+  font-size: var(--fs-lg);
+}
+.quoteBy {
+  display: grid;
+  gap: var(--space-1);
+  margin-top: auto;
+  font-size: var(--fs-sm);
+  color: var(--c-bone-dim);
+}
+.quoteBy strong {
+  color: var(--c-bone);
+}
+
+/* ---------- FAQ ---------- */
+.faq {
+  max-width: 48rem;
+  border-top: 1px solid var(--c-line-dark);
+}
+.faqItem {
+  border-bottom: 1px solid var(--c-line-dark);
+}
+.faqQ {
+  display: flex;
+  gap: var(--space-4);
+  align-items: center;
+  justify-content: space-between;
+  min-height: var(--touch);
+  padding: var(--space-4) 0;
+  font-weight: 700;
+  cursor: pointer;
+  list-style: none;
+}
+.faqQ::-webkit-details-marker {
+  display: none;
+}
+.faqIcon {
+  flex: none;
+  color: var(--c-taupe-dark);
+  transition: transform var(--dur-fast) var(--ease);
+}
+.faqItem[open] .faqIcon {
+  transform: rotate(45deg);
+}
+.faqA {
+  max-width: 42rem;
+  padding-bottom: var(--space-5);
+  color: var(--c-ink-dim);
+}
+
+/* ---------- Form ---------- */
+/* Ruang bawah agar tombol WA melayang tidak menutupi tombol kirim di HP */
+.formSection {
+  padding-bottom: calc(var(--section-y) + var(--fab-safe));
+}
+@media (min-width: 1024px) {
+  .formSection {
+    padding-bottom: var(--section-y);
+  }
+}
+.formWrap {
+  max-width: 52rem;
+}
+.form {
+  gap: var(--space-5);
+}
+.row {
+  display: grid;
+  gap: var(--space-5);
+}
+@media (min-width: 600px) {
+  .row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+.field {
+  display: grid;
+  gap: var(--space-2);
+  min-width: 0;
+}
+.label {
+  font-size: var(--fs-sm);
+  font-weight: 600;
+}
+.labelHint {
+  font-weight: 400;
+  color: var(--c-bone-dim);
+}
+.input {
+  width: 100%;
+  min-height: var(--touch);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--c-line-light);
+  border-radius: var(--radius);
+  background: var(--c-ink);
+  color: var(--c-bone);
+  font: inherit;
+  font-size: var(--fs-md);
+}
+.input::placeholder {
+  color: var(--c-bone-dim);
+  opacity: 0.7;
+}
+.input:focus-visible {
+  outline: 2px solid var(--c-sand);
+  outline-offset: 1px;
+}
+.input[aria-invalid='true'] {
+  border-color: var(--c-danger-line);
+}
+.selectWrap {
+  position: relative;
+}
+.selectWrap::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  right: var(--space-4);
+  width: 8px;
+  height: 8px;
+  border-right: 1.5px solid var(--c-bone);
+  border-bottom: 1.5px solid var(--c-bone);
+  transform: translateY(-70%) rotate(45deg);
+  pointer-events: none;
+}
+.selectWrap .input {
+  padding-right: var(--space-7);
+  appearance: none;
+}
+.textarea {
+  min-height: 8rem;
+  resize: vertical;
+}
+.hint {
+  font-size: var(--fs-xs);
+  color: var(--c-bone-dim);
+}
+.error {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+  font-size: var(--fs-sm);
+  color: var(--c-danger-bg);
+}
+.errorSummary {
+  padding: var(--space-3) var(--space-4);
+  border-left: 2px solid var(--c-danger-line);
+  background: var(--c-danger-bg);
+  color: var(--c-danger);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+}
+.privacy {
+  font-size: var(--fs-xs);
+  color: var(--c-bone-dim);
+  text-align: center;
+}
+.opened:empty {
+  display: none;
+}
+.opened {
+  font-size: var(--fs-sm);
+  color: var(--c-sand-light);
+  text-align: center;
+}
