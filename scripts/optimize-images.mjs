@@ -9,6 +9,7 @@
  *   - about/ (slideshow Tentang Kami): lebar maks. 1200 px + versi 600 px (nama-600.webp) untuk HP
  *   - hero/                         : lebar maks. 1920 px + versi 1280 px (nama-1280.webp)
  *   - gallery/ (juga)               : + versi 600 px untuk kartu kolom foto berjalan (section Lokasi)
+ *   - cta/ (foto latar CTA penutup)  : lebar maks. 1920 px + versi 1280 px
  * Versi kecil dipakai otomatis sebagai srcset (src/lib/contentTransforms.ts → responsiveImage).
  * Lalu memperbarui path gambar di src/content/*.json (mis. foto.jpg → foto.webp).
  *
@@ -27,9 +28,9 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const UPLOADS = path.join(ROOT, 'public', 'uploads');
 const CONTENT = path.join(ROOT, 'src', 'content');
 
-const MAX_WIDTH = { barbers: 800, site: 800, products: 1000, gallery: 1600, promos: 1600, about: 1200, hero: 1920 };
+const MAX_WIDTH = { barbers: 800, site: 800, products: 1000, gallery: 1600, promos: 1600, about: 1200, hero: 1920, cta: 1920 };
 /** Versi lebih kecil per folder: <nama>-<lebar>.webp (hanya bila foto aslinya lebih lebar) */
-const VARIANTS = { about: [600], hero: [1280], gallery: [600] };
+const VARIANTS = { about: [600], hero: [1280], gallery: [600], cta: [1280] };
 const variantPattern = (folder) => (VARIANTS[folder] ? new RegExp(`-(${VARIANTS[folder].join('|')})\\.webp$`) : null);
 const DEFAULT_MAX_WIDTH = 1600;
 const QUALITY = 78;

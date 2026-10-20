@@ -15,6 +15,8 @@ import type {
   BarbersCopy,
   Branch,
   BranchCopy,
+  CtaBannerContent,
+  CtaBannerCopy,
   GalleryContent,
   GalleryCopy,
   GalleryItem,
@@ -51,6 +53,7 @@ import type {
   AnnouncementEntry,
   BarberEntry,
   BranchEntry,
+  CtaEntry,
   GalleryEntry,
   HeroEntry,
   OpeningHourEntry,
@@ -116,6 +119,20 @@ export function buildHero(h: HeroEntry, extras: HeroExtras): HeroContent {
     secondaryCta: { label: h.secondaryCtaLabel, action: { type: 'link', href: extras.secondaryHref } },
     marquee: h.marquee,
     scrollHint: extras.scrollHint,
+  };
+}
+
+/* ---------- CTA penutup (Pages CMS → CTA Penutup) ---------- */
+
+/** Foto latar dari CMS (srcset 1280/1920 bila ada); kosong → foto cadangan. Tombol selalu WhatsApp cabang terpilih. */
+export function buildCtaBanner(c: CtaEntry, copy: CtaBannerCopy): CtaBannerContent {
+  const image = text(c.image);
+  return {
+    kicker: c.kicker,
+    title: c.title,
+    description: c.description,
+    cta: { label: c.ctaLabel, action: { type: 'whatsapp' } },
+    backgroundImage: image ? responsiveImage(image, text(c.imageAlt) ?? c.title, '100vw', { width: 1920, height: 1080 }) : copy.fallbackImage,
   };
 }
 

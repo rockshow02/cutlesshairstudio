@@ -3,7 +3,8 @@
  *
  * Sumber konten (tanpa server, tanpa API, biaya Rp0):
  *   - src/content/*.json : dikelola admin lewat Pages CMS (cabang, harga, barber, galeri, promo,
- *                          pengumuman, testimoni, produk, pengaturan situs, hero, tentang kami, kartu studio).
+ *                          pengumuman, testimoni, produk, pengaturan situs, hero, tentang kami, kartu studio,
+ *                          CTA penutup).
  *                          Divalidasi Zod saat build.
  *   - src/content/*.ts   : teks statis (layanan, label UI, dll.).
  *
@@ -24,11 +25,13 @@ import productsJson from '@/content/products.json';
 import heroJson from '@/content/hero.json';
 import aboutJson from '@/content/about.json';
 import studioJson from '@/content/studio.json';
+import ctaJson from '@/content/cta.json';
 import type {
   AboutEntry,
   AnnouncementEntry,
   BarberEntry,
   BranchEntry,
+  CtaEntry,
   GalleryEntry,
   HeroEntry,
   PricingEntry,
@@ -59,6 +62,7 @@ import type {
 } from '@/types';
 import {
   buildAbout,
+  buildCtaBanner,
   buildHero,
   buildShowcase,
   buildAnnouncements,
@@ -97,6 +101,7 @@ const data = {
   hero: heroJson as unknown as HeroEntry,
   about: normalizeAbout(aboutJson as unknown as AboutEntry),
   studio: studioJson as unknown as StudioEntry,
+  cta: ctaJson as unknown as CtaEntry,
 };
 
 /** Default Zod (jeda 5 detik, crossfade) juga diterapkan di browser karena Pages CMS bisa tidak menulis field kosong */
@@ -177,7 +182,7 @@ export const getTestimonials = (): Promise<TestimonialsContent> =>
   resolve(() => buildTestimonials(data.testimonials, local.testimonialsCopy, data.settings));
 export const getProducts = (): Promise<ProductsContent> => resolve(() => buildProducts(data.products, local.productsCopy));
 export const getHero = (): Promise<HeroContent> => resolve(() => buildHero(data.hero, local.heroExtras));
-export const getCtaBanner = (): Promise<CtaBannerContent> => resolve(() => local.ctaBanner);
+export const getCtaBanner = (): Promise<CtaBannerContent> => resolve(() => buildCtaBanner(data.cta, local.ctaBannerCopy));
 /** Foto studio dari Pages CMS (Kartu Studio); kosong → foto cabang pertama; cadangan showcaseCopy */
 export const getShowcase = (): Promise<ShowcaseContent> =>
   resolve(() => buildShowcase(data.studio, local.showcaseCopy, branchList().find((b) => b.photo)?.photo));
