@@ -26,6 +26,7 @@ import heroJson from '@/content/hero.json';
 import aboutJson from '@/content/about.json';
 import studioJson from '@/content/studio.json';
 import ctaJson from '@/content/cta.json';
+import partnerJson from '@/content/partner.json';
 import type {
   AboutEntry,
   AnnouncementEntry,
@@ -34,6 +35,7 @@ import type {
   CtaEntry,
   GalleryEntry,
   HeroEntry,
+  PartnerEntry,
   PricingEntry,
   ProductEntry,
   PromoEntry,
@@ -50,6 +52,7 @@ import type {
   BranchCopy,
   CtaBannerContent,
   GalleryContent,
+  PartnerPageContent,
   HeroContent,
   LocationsContent,
   PricingContent,
@@ -80,6 +83,7 @@ import {
   joinIndonesian,
   operatingCities,
 } from './contentTransforms';
+import { buildPartnerPage } from './partner';
 
 /**
  * Pesan fatal bila konfigurasi situs gagal dimuat. Satu-satunya teks yang tidak berasal
@@ -102,6 +106,7 @@ const data = {
   about: normalizeAbout(aboutJson as unknown as AboutEntry),
   studio: studioJson as unknown as StudioEntry,
   cta: ctaJson as unknown as CtaEntry,
+  partner: partnerJson as unknown as PartnerEntry,
 };
 
 /** Default Zod (jeda 5 detik, crossfade) juga diterapkan di browser karena Pages CMS bisa tidak menulis field kosong */
@@ -186,3 +191,8 @@ export const getCtaBanner = (): Promise<CtaBannerContent> => resolve(() => build
 /** Foto studio dari Pages CMS (Kartu Studio); kosong → foto cabang pertama; cadangan showcaseCopy */
 export const getShowcase = (): Promise<ShowcaseContent> =>
   resolve(() => buildShowcase(data.studio, local.showcaseCopy, branchList().find((b) => b.photo)?.photo));
+/** Halaman /partner/ (Pages CMS → Halaman Partner). Foto hero kosong → foto CTA penutup */
+export const getPartnerPage = (): Promise<PartnerPageContent> =>
+  resolve(() =>
+    buildPartnerPage(data.partner, data.settings, buildCtaBanner(data.cta, local.ctaBannerCopy).backgroundImage, local.partnerCopy),
+  );
