@@ -67,12 +67,6 @@ media:
     output: /uploads/cta
     categories: [image]
     rename: safe
-  - name: partner
-    label: Foto Halaman Partner
-    input: public/uploads/partner
-    output: /uploads/partner
-    categories: [image]
-    rename: safe
   - name: partner-logos
     label: Logo Partner
     input: public/uploads/partner-logos
@@ -695,560 +689,62 @@ content:
         options:
           maxlength: 150
 
-  # ------------------------------------------------------------------ Halaman Partner
-  - name: partner
-    label: Halaman Partner
+  # ------------------------------------------------------------------ Logo Partner
+  - name: partners
+    label: Logo Partner
     type: file
-    path: src/content/partner.json
+    path: src/content/partners.json
     format: json
     fields:
-      - name: partnershipWhatsapp
-        label: Nomor WhatsApp partnership
+      - name: enabled
+        label: Tampilkan pita logo
+        type: boolean
+        default: true
+        description: "Pita logo berjalan di beranda, tepat sebelum CTA penutup. Pita tidak muncul bila dimatikan atau belum ada logo yang ditampilkan."
+      - name: label
+        label: Label kecil di atas pita (opsional)
         type: string
-        description: "Tujuan tombol Chat Tim Partnership dan form pengajuan. Kosong = Nomor WhatsApp pusat (Pengaturan Situs). Format 628xxxxxxxxxx."
-        pattern:
-          regex: '^(62\d{8,13})?$'
-          message: Format harus 628xxxxxxxxxx (tanpa +, spasi, atau strip)
-      - name: hero
-        label: "1. Hero (bagian paling atas)"
+        description: "Contoh: Partner & Kolaborasi. Kosongkan bila tidak perlu. Maksimal 40 karakter."
+        options:
+          maxlength: 40
+      - name: logos
+        label: Logo
         type: object
-        required: true
+        list:
+          max: 40
+        description: "Hanya partner yang sudah memberi izin. 1–2 logo tampil diam di tengah; 3 atau lebih berjalan."
         fields:
-          - name: enabled
-            label: Tampilkan section ini
-            type: boolean
-            default: true
-          - name: kicker
-            label: Teks kecil di atas judul
+          - name: name
+            label: Nama partner
             type: string
             required: true
-            description: Maksimal 60 karakter.
+            description: "Juga teks alternatif logo. Bila logo kosong, nama ini tampil sebagai teks. Maksimal 60 karakter."
             options:
               maxlength: 60
-          - name: title
-            label: Judul
-            type: string
-            required: true
-            description: Maksimal 80 karakter.
-            options:
-              maxlength: 80
-          - name: subtitle
-            label: Subjudul
-            type: text
-            required: true
-            description: Maksimal 300 karakter.
-            options:
-              maxlength: 300
-          - name: image
-            label: Foto latar
+          - name: logo
+            label: Logo (opsional)
             type: image
-            description: "Foto lebar (landscape) minimal 1920 px. Tampil gelap agar teks terbaca. Dikompres otomatis ke WebP 1920 px + versi HP 1280 px. Kosong = foto CTA penutup."
+            description: "PNG atau WebP berlatar TRANSPARAN (bukan SVG), lebar minimal 400 px. Tampil satu warna senada pita, berwarna asli saat disentuh kursor. Dikompres otomatis ke WebP 400 px. Kosong = nama partner tampil sebagai teks."
             options:
-              media: partner
-          - name: imageAlt
-            label: Deskripsi foto
+              media: partner-logos
+          - name: url
+            label: Link (opsional)
             type: string
-            description: "Wajib bila foto latar diisi. Maksimal 150 karakter."
-            options:
-              maxlength: 150
-          - name: primaryLabel
-            label: Label tombol utama (scroll ke form)
-            type: string
-            required: true
-            description: "Contoh: Ajukan Kerja Sama. Maksimal 40 karakter."
-            options:
-              maxlength: 40
-          - name: secondaryLabel
-            label: Label tombol WhatsApp
-            type: string
-            required: true
-            description: "Contoh: Chat Tim Partnership. Maksimal 40 karakter."
-            options:
-              maxlength: 40
-      - name: types
-        label: "2. Pilih jenis kerja sama (3 kartu)"
-        type: object
-        required: true
-        fields:
-          - name: enabled
-            label: Tampilkan section ini
+            description: "Situs atau Instagram partner, harus diawali https://. Dibuka di tab baru. Kosong = tidak bisa diklik."
+            pattern:
+              regex: '^(https://\S+)?$'
+              message: Harus diawali https://
+          - name: isActive
+            label: Tampilkan
             type: boolean
             default: true
-          - name: kicker
-            label: Teks kecil di atas judul
-            type: string
-            required: true
-            description: Maksimal 60 karakter.
+          - name: order
+            label: Urutan
+            type: number
+            default: 0
+            description: "Angka kecil tampil lebih dulu."
             options:
-              maxlength: 60
-          - name: title
-            label: Judul
-            type: string
-            required: true
-            description: Maksimal 80 karakter.
-            options:
-              maxlength: 80
-          - name: intro
-            label: Pengantar
-            type: text
-            description: "Opsional. Maksimal 300 karakter."
-            options:
-              maxlength: 300
-          - name: items
-            label: Kartu
-            type: object
-            list:
-              max: 3
-            description: "Maksimal 3 kartu. Kartu yang section tujuannya dimatikan otomatis disembunyikan."
-            fields:
-              - name: target
-                label: Jenis (tujuan tombol)
-                type: select
-                required: true
-                description: "cabang = Kemitraan Cabang, brand = Brand & Kolaborasi, korporat = Korporat & Event."
-                options:
-                  values: [cabang, brand, korporat]
-              - name: title
-                label: Judul
-                type: string
-                required: true
-                description: Maksimal 80 karakter.
-                options:
-                  maxlength: 80
-              - name: description
-                label: Deskripsi singkat
-                type: text
-                required: true
-                description: Maksimal 300 karakter.
-                options:
-                  maxlength: 300
-              - name: icon
-                label: Ikon
-                type: select
-                default: star
-                options:
-                  values: [store, handshake, briefcase, pin, gift, tag, calendar, user, scissors, star, check, shave, wash]
-              - name: buttonLabel
-                label: Label tombol
-                type: string
-                required: true
-                description: "Contoh: Lihat Kemitraan. Maksimal 40 karakter."
-                options:
-                  maxlength: 40
-      - name: franchise
-        label: "3. Kemitraan Cabang"
-        type: object
-        required: true
-        fields:
-          - name: enabled
-            label: Tampilkan section ini
-            type: boolean
-            default: true
-          - name: kicker
-            label: Teks kecil di atas judul
-            type: string
-            required: true
-            description: Maksimal 60 karakter.
-            options:
-              maxlength: 60
-          - name: title
-            label: Judul
-            type: string
-            required: true
-            description: Maksimal 80 karakter.
-            options:
-              maxlength: 80
-          - name: intro
-            label: Pengantar
-            type: text
-            description: "Opsional. Maksimal 300 karakter."
-            options:
-              maxlength: 300
-          - name: reasonsTitle
-            label: Judul "Alasan bermitra"
-            type: string
-            required: true
-            description: Maksimal 80 karakter.
-            options:
-              maxlength: 80
-          - name: reasons
-            label: Alasan bermitra
-            type: object
-            list:
-              max: 8
-            fields:
-              - name: title
-                label: Judul
-                type: string
-                required: true
-                description: Maksimal 80 karakter.
-                options:
-                  maxlength: 80
-              - name: description
-                label: Deskripsi
-                type: text
-                required: true
-                description: Maksimal 300 karakter.
-                options:
-                  maxlength: 300
-          - name: benefitsTitle
-            label: Judul "Yang didapat mitra"
-            type: string
-            required: true
-            description: Maksimal 80 karakter.
-            options:
-              maxlength: 80
-          - name: benefits
-            label: Yang didapat mitra
-            type: string
-            list:
-              max: 10
-            description: "Satu poin per isian, tampil dengan tanda centang. Maksimal 160 karakter per poin."
-            options:
-              maxlength: 160
-          - name: stepsTitle
-            label: Judul "Alur kemitraan"
-            type: string
-            required: true
-            description: Maksimal 80 karakter.
-            options:
-              maxlength: 80
-          - name: steps
-            label: Alur kemitraan
-            type: object
-            list:
-              max: 8
-            description: "Urutan di sini = nomor langkah (1, 2, 3, ...)."
-            fields:
-              - name: title
-                label: Judul langkah
-                type: string
-                required: true
-                description: Maksimal 80 karakter.
-                options:
-                  maxlength: 80
-              - name: description
-                label: Deskripsi
-                type: text
-                required: true
-                description: Maksimal 300 karakter.
-                options:
-                  maxlength: 300
-          - name: citiesTitle
-            label: Judul "Kota target"
-            type: string
-            required: true
-            description: Maksimal 80 karakter.
-            options:
-              maxlength: 80
-          - name: cities
-            label: Kota target ekspansi
-            type: string
-            list:
-              max: 20
-            description: "Satu kota per isian, tampil sebagai chip. Maksimal 40 karakter."
-            options:
-              maxlength: 40
-          - name: investmentRange
-            label: Kisaran investasi (opsional)
-            type: string
-            description: "Teks bebas. Kosong = tidak ditampilkan. Isi hanya dengan angka yang sudah disetujui owner. Maksimal 160 karakter."
-            options:
-              maxlength: 160
-      - name: brand
-        label: "4. Brand & Kolaborasi"
-        type: object
-        required: true
-        fields:
-          - name: enabled
-            label: Tampilkan section ini
-            type: boolean
-            default: true
-          - name: kicker
-            label: Teks kecil di atas judul
-            type: string
-            required: true
-            description: Maksimal 60 karakter.
-            options:
-              maxlength: 60
-          - name: title
-            label: Judul
-            type: string
-            required: true
-            description: Maksimal 80 karakter.
-            options:
-              maxlength: 80
-          - name: intro
-            label: Pengantar
-            type: text
-            description: "Opsional. Maksimal 300 karakter."
-            options:
-              maxlength: 300
-          - name: forms
-            label: Bentuk kolaborasi
-            type: object
-            list:
-              max: 8
-            description: "Mis. produk, konten, event, sponsorship."
-            fields:
-              - name: title
-                label: Judul
-                type: string
-                required: true
-                description: Maksimal 80 karakter.
-                options:
-                  maxlength: 80
-              - name: description
-                label: Deskripsi
-                type: text
-                required: true
-                description: Maksimal 300 karakter.
-                options:
-                  maxlength: 300
-          - name: logosTitle
-            label: Judul bagian logo
-            type: string
-            required: true
-            description: "Bagian logo hanya tampil bila ada minimal 1 logo aktif. Maksimal 80 karakter."
-            options:
-              maxlength: 80
-          - name: logos
-            label: Logo partner
-            type: object
-            list:
-              max: 30
-            description: "Hanya logo partner yang sudah memberi izin. Tampil abu-abu, berwarna saat disentuh kursor."
-            fields:
-              - name: name
-                label: Nama partner
-                type: string
-                required: true
-                description: "Juga dipakai sebagai teks alternatif logo. Maksimal 60 karakter."
-                options:
-                  maxlength: 60
-              - name: logo
-                label: Logo
-                type: image
-                required: true
-                description: "PNG/WebP berlatar transparan, lebar minimal 400 px. Dikompres otomatis ke WebP maks. 400 px."
-                options:
-                  media: partner-logos
-              - name: url
-                label: Link (opsional)
-                type: string
-                description: "Situs atau Instagram partner. Kosong = logo tidak bisa diklik."
-                pattern:
-                  regex: "^(https?://.+)?$"
-                  message: Harus diawali https://
-              - name: order
-                label: Urutan
-                type: number
-                default: 0
-                description: "Angka kecil tampil lebih dulu."
-                options:
-                  min: 0
-              - name: isActive
-                label: Tampilkan
-                type: boolean
-                default: true
-      - name: corporate
-        label: "5. Korporat & Event"
-        type: object
-        required: true
-        fields:
-          - name: enabled
-            label: Tampilkan section ini
-            type: boolean
-            default: true
-          - name: kicker
-            label: Teks kecil di atas judul
-            type: string
-            required: true
-            description: Maksimal 60 karakter.
-            options:
-              maxlength: 60
-          - name: title
-            label: Judul
-            type: string
-            required: true
-            description: Maksimal 80 karakter.
-            options:
-              maxlength: 80
-          - name: intro
-            label: Pengantar
-            type: text
-            description: "Opsional. Maksimal 300 karakter."
-            options:
-              maxlength: 300
-          - name: services
-            label: Jenis layanan
-            type: object
-            list:
-              max: 8
-            fields:
-              - name: title
-                label: Judul layanan
-                type: string
-                required: true
-                description: Maksimal 80 karakter.
-                options:
-                  maxlength: 80
-              - name: description
-                label: Deskripsi
-                type: text
-                required: true
-                description: Maksimal 300 karakter.
-                options:
-                  maxlength: 300
-              - name: icon
-                label: Ikon
-                type: select
-                default: star
-                options:
-                  values: [store, handshake, briefcase, pin, gift, tag, calendar, user, scissors, star, check, shave, wash]
-          - name: note
-            label: Catatan (opsional)
-            type: text
-            description: "Mis. minimal peserta atau area layanan. Kosong = tidak ditampilkan. Maksimal 300 karakter."
-            options:
-              maxlength: 300
-      - name: testimonials
-        label: "6. Testimoni partner"
-        type: object
-        required: true
-        fields:
-          - name: enabled
-            label: Tampilkan section ini
-            type: boolean
-            default: false
-            description: "Nyalakan hanya bila sudah ada testimoni ASLI (dengan izin partner)."
-          - name: kicker
-            label: Teks kecil di atas judul
-            type: string
-            required: true
-            description: Maksimal 60 karakter.
-            options:
-              maxlength: 60
-          - name: title
-            label: Judul
-            type: string
-            required: true
-            description: Maksimal 80 karakter.
-            options:
-              maxlength: 80
-          - name: items
-            label: Testimoni
-            type: object
-            list:
-              max: 10
-            fields:
-              - name: name
-                label: Nama
-                type: string
-                required: true
-                description: Maksimal 80 karakter.
-                options:
-                  maxlength: 80
-              - name: institution
-                label: Institusi / brand
-                type: string
-                description: "Opsional. Maksimal 80 karakter."
-                options:
-                  maxlength: 80
-              - name: quote
-                label: Kutipan
-                type: text
-                required: true
-                description: Maksimal 400 karakter.
-                options:
-                  maxlength: 400
-      - name: faq
-        label: "7. FAQ"
-        type: object
-        required: true
-        fields:
-          - name: enabled
-            label: Tampilkan section ini
-            type: boolean
-            default: true
-          - name: kicker
-            label: Teks kecil di atas judul
-            type: string
-            required: true
-            description: Maksimal 60 karakter.
-            options:
-              maxlength: 60
-          - name: title
-            label: Judul
-            type: string
-            required: true
-            description: Maksimal 80 karakter.
-            options:
-              maxlength: 80
-          - name: items
-            label: Pertanyaan
-            type: object
-            list:
-              max: 15
-            fields:
-              - name: question
-                label: Pertanyaan
-                type: string
-                required: true
-                description: Maksimal 160 karakter.
-                options:
-                  maxlength: 160
-              - name: answer
-                label: Jawaban
-                type: text
-                required: true
-                description: Maksimal 600 karakter.
-                options:
-                  maxlength: 600
-      - name: form
-        label: "8. Form pengajuan (ke WhatsApp)"
-        type: object
-        required: true
-        fields:
-          - name: enabled
-            label: Tampilkan section ini
-            type: boolean
-            default: true
-            description: "Bila dimatikan, tombol Ajukan Kerja Sama di hero juga disembunyikan."
-          - name: kicker
-            label: Teks kecil di atas judul
-            type: string
-            required: true
-            description: Maksimal 60 karakter.
-            options:
-              maxlength: 60
-          - name: title
-            label: Judul
-            type: string
-            required: true
-            description: Maksimal 80 karakter.
-            options:
-              maxlength: 80
-          - name: intro
-            label: Pengantar
-            type: text
-            description: "Opsional. Maksimal 300 karakter."
-            options:
-              maxlength: 300
-          - name: submitLabel
-            label: Label tombol kirim
-            type: string
-            required: true
-            description: "Contoh: Kirim via WhatsApp. Maksimal 40 karakter."
-            options:
-              maxlength: 40
-          - name: privacyNote
-            label: Catatan privasi (teks kecil di bawah tombol)
-            type: string
-            required: true
-            description: Maksimal 160 karakter.
-            options:
-              maxlength: 160
+              min: 0
 
   # ------------------------------------------------------------------ Promo
   - name: promos
