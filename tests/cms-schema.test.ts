@@ -11,7 +11,7 @@ import { parse } from 'yaml';
 import type { z } from 'zod';
 import { describe, expect, it } from 'vitest';
 import { CONTENT_FILES } from '../src/content/schema';
-import { validateCmsContent, type CmsField as FormField } from './helpers/pagesCms';
+import { setMedia, validateCmsContent, type CmsField as FormField, type CmsMedia } from './helpers/pagesCms';
 
 interface ZInfo {
   kind: string;
@@ -137,7 +137,8 @@ describe('.pages.yml sejalan dengan skema Zod', () => {
   });
 
   it('isi semua file konten lolos aturan form Pages CMS (admin tidak terkunci saat Save)', () => {
-    const config = parse(readFileSync('.pages.yml', 'utf8')) as { content: { name: string; path: string; list?: boolean; fields: FormField[] }[] };
+    const config = parse(readFileSync('.pages.yml', 'utf8')) as { media: CmsMedia[]; content: { name: string; path: string; list?: boolean; fields: FormField[] }[] };
+    setMedia(config.media);
     const problems = config.content.flatMap((c) => validateCmsContent(c, JSON.parse(readFileSync(c.path, 'utf8'))).map((e) => `${c.name} ${e}`));
     expect(problems).toEqual([]);
   });
@@ -152,6 +153,26 @@ describe('.pages.yml sejalan dengan skema Zod', () => {
     expect(validateCmsContent(pricing, [{ ...item, badge: 'Hot' }])[0]).toMatch(/badge: bukan pilihan/);
     expect(validateCmsContent(pricing, [{ ...item, name: 'x'.repeat(81) }])[0]).toMatch(/lebih dari 80 karakter/);
     expect(validateCmsContent(pricing, [{ ...item, badge: '', description: null }])).toEqual([]);
+  });
+
+  it('Galeri: entri lama + foto baru (upload .jpeg yang lalu dikompres ke .webp) bisa disimpan', () => {
+    const config = parse(readFileSync('.pages.yml', 'utf8')) as { media: CmsMedia[]; content: { name: string; list?: boolean; fields: FormField[] }[] };
+    setMedia(config.media);
+    const gallery = config.content.find((c) => c.name === 'gallery')!;
+    const existing = JSON.parse(readFileSync('src/content/gallery.json', 'utf8')) as Record<string, unknown>[];
+    const fresh = { image: '/uploads/gallery/whatsapp-image-2026-10-19-at-40400-pm.jpeg', altText: 'Hasil potongan textured crop', styleCategory: 'Crop', caption: 'Textured crop', order: 90, isActive: true };
+    expect(validateCmsContent(gallery, [...existing, fresh])).toEqual([]);
+    expect(validateCmsContent(gallery, [...existing, { ...fresh, image: '/uploads/gallery/whatsapp-image-2026-10-19-at-40400-pm.webp' }])).toEqual([]);
+    // Kolom opsional dikosongkan / tidak ditulis CMS
+    expect(validateCmsContent(gallery, [{ image: fresh.image, altText: fresh.altText }])).toEqual([]);
+    // Pelanggaran yang memang harus ditolak form
+    expect(validateCmsContent(gallery, [{ ...fresh, image: '' }])[0]).toMatch(/image: wajib diisi/);
+    expect(validateCmsContent(gallery, [{ ...fresh, image: '/uploads/products/a.webp' }])[0]).toMatch(/folder media \/uploads\/gallery/);
+    expect(validateCmsContent(gallery, [{ ...fresh, image: '/uploads/gallery/video.mp4' }])[0]).toMatch(/ekstensi \.mp4/);
+    expect(validateCmsContent(gallery, [{ ...fresh, altText: '' }])[0]).toMatch(/altText: wajib diisi/);
+    expect(validateCmsContent(gallery, [{ ...fresh, altText: 'x'.repeat(151) }])[0]).toMatch(/lebih dari 150 karakter/);
+    expect(validateCmsContent(gallery, [{ ...fresh, styleCategory: 'Pompadour Klasik' }])[0]).toMatch(/styleCategory: bukan pilihan/);
+    expect(validateCmsContent(gallery, [{ ...fresh, caption: 'x'.repeat(121) }])[0]).toMatch(/lebih dari 120 karakter/);
   });
 
   it('pemeriksaan ini benar-benar mendeteksi selisih', () => {
