@@ -143,6 +143,10 @@ const ICONS: Record<IconName, IconDef> = {
     ),
   },
   tattoo: { body: <path d="M3 19c5-1 7-5 9-9s4-6 9-6M3 13c3-1 5-3.5 6.5-7M11 21c4-1 7.5-3.5 10-8" /> },
+  // Halaman Partner
+  store: { body: <path d="M3.5 9.5L5 4h14l1.5 5.5M3.5 9.5a2.8 2.8 0 0 0 5.6 0 2.9 2.9 0 0 0 5.8 0 2.8 2.8 0 0 0 5.6 0M5 11.5V20h14v-8.5M9.5 20v-5h5v5" /> },
+  handshake: { body: <path d="M2.5 12l3-6.5 4 1.5 2.5-1 3.5 1.5 3-1.5 3 6.5-2.5 1.5M2.5 12l2.5 1.5M12 6l-3.5 3.5a1.5 1.5 0 0 0 2.1 2.1L12.5 10l5 4.5a1.4 1.4 0 0 1-2 2l-1-1M5 13.5l3.5 3.5a1.4 1.4 0 0 0 2-2M10.5 15l1.5 1.5a1.4 1.4 0 0 0 2-2" /> },
+  briefcase: { body: <path d="M4 7.5h16a1 1 0 0 1 1 1V19a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V8.5a1 1 0 0 1 1-1zM9 7.5V5.5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M3 13h18M10.5 13v1.5h3V13" /> },
 };
 
 interface IconProps extends Omit<SVGProps<SVGSVGElement>, 'name'> {
