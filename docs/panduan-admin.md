@@ -107,10 +107,22 @@ Harga "mulai" pada kartu **Layanan** di halaman utama dihitung otomatis dari Daf
 2. **Foto**: upload foto hasil potongan. Foto tegak tampil tinggi, foto lebar tampil lebar (otomatis).
 3. **Deskripsi foto** *(wajib)*: jelaskan isi foto, mis. `Mid fade dengan textured crop, tampak samping`.
 4. **Gaya rambut**: pilih Fade, Pompadour, Crop, Coloring, Perming, atau Lainnya.
-5. **Keterangan singkat** (opsional): tampil saat foto diperbesar.
-6. **Save**.
+5. **Keterangan singkat** (opsional): tampil saat foto diperbesar, dan sebagai label kecil di kolom foto berjalan.
+6. **Titik fokus**: bagian foto yang dipertahankan saat foto dipotong agar pas di kartu: **atas** (bawaan, kepala/wajah tetap terlihat), **tengah**, atau **bawah**.
+7. **Tampilkan di kolom foto berjalan** (bawaan menyala): lihat di bawah.
+8. **Save**.
 
 Foto dari HP langsung bisa dipakai. Sistem otomatis mengompresnya beberapa menit setelah upload (Anda mungkin melihat perubahan kecil tercatat atas nama *github-actions*; itu normal).
+
+### Kolom foto berjalan (section Lokasi)
+
+Di sebelah info cabang ada 2–3 kolom foto yang bergerak pelan. Isinya diambil dari **Galeri**, sama untuk semua cabang:
+- Yang ikut: foto yang **Tampilkan di website** *dan* **Tampilkan di kolom foto berjalan** keduanya menyala. Matikan toggle kedua untuk foto yang hanya ingin tampil di section Galeri (mis. foto suasana yang terlalu lebar).
+- **Urutan** sama dengan urutan Galeri; foto dibagi bergantian ke tiap kolom (9 foto atau lebih → 3 kolom).
+- **Label** di kartu = *Keterangan singkat*; bila kosong, memakai *Gaya rambut* (mis. "Fade"). Tidak ada nama orang.
+- Kepala terpotong di kartu? Ubah **Titik fokus** foto itu (biasanya **atas**).
+- Kurang dari 4 foto yang ikut, atau pengunjung memilih "kurangi gerakan" di HP/komputernya → foto tampil sebagai grid diam.
+- Pengunjung bisa menghentikan gerakan dengan menyentuh foto atau tombol **Jeda animasi foto**. Gerakan juga berhenti saat kursor di atas foto, saat section tidak terlihat, dan saat tab browser tidak aktif.
 
 ---
 
