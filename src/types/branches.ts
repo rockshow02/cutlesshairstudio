@@ -92,7 +92,8 @@ export interface BranchCopy {
     /** Judul daftar layanan di panel cabang */
     servicesTitle: string;
     /** {branch}: label kolom foto hairstylist berjalan */
-    barbersMarquee: string;
+    /** Label kolom foto berjalan (foto Galeri) di section Lokasi */
+    galleryMarquee: string;
     pauseMotion: string;
     playMotion: string;
     /** {branches} */
