@@ -1,5 +1,24 @@
 # Cutless Hair Studio, website multi-cabang (biaya Rp0)
 
+> ## ARSIP: Halaman Partner (`/partner/`)
+>
+> Branch **`archive/partner-page`** + tag **`partner-page-v1`** menyimpan halaman `/partner/` sebelum dicabut dari `staging`.
+> **Jangan di-merge** ke `staging`/`main` apa adanya; branch ini hanya arsip.
+>
+> - **Commit asal:** `5e6fc49` (`staging`, 20 Okt 2026, "Merge fix/e2e-fixtures ke staging"). Fitur masuk lewat merge `f94c405` (branch `feature/partner-page`).
+> - **Isi fitur:**
+>   - Halaman statis `/partner/` (prerender ringkasan teks, title/meta/OG sendiri, masuk sitemap): hero, 3 kartu jenis kerja sama, Kemitraan Cabang (alasan, yang didapat mitra, alur bernomor, kota target, kisaran investasi opsional), Brand & Kolaborasi (bentuk kolaborasi + logo partner), Korporat & Event, testimoni partner (default mati), FAQ (`<details>`), dan form pengajuan yang membuka WhatsApp (tanpa server).
+>   - Konten di Pages CMS → **Halaman Partner** (`src/content/partner.json`), toggle tampil per section, nomor WhatsApp partnership (kosong = nomor pusat).
+>   - Link "Partner" di footer & menu HP (`desktop: false` di `site.nav`).
+>   - File utama: `partner/index.html`, `src/partner.tsx`, `src/components/sections/Partner.tsx` + `.module.css`, `src/lib/partner.ts`, `src/types/partner.ts`, `src/content/partner.json`, `partnerOptions.ts`, `partnerCopy.ts`, koleksi `partner` di `.pages.yml`, `partnerBody`/`partnerPreload` + sitemap di `scripts/vite-content-plugin.ts`, tes `tests/partner.test.ts` & `e2e/partner.spec.ts`, panduan `docs/panduan-admin.md` §3e.
+> - **Cara mengaktifkan kembali:**
+>   1. Buat branch dari `staging` terbaru: `git checkout -b feature/partner-page-v2 origin/staging`.
+>   2. Ambil file khusus halaman ini dari tag: `git checkout partner-page-v1 -- partner/ src/partner.tsx src/components/sections/Partner.tsx src/components/sections/Partner.module.css src/lib/partner.ts src/content/partner.json src/content/partnerOptions.ts src/content/partnerCopy.ts tests/partner.test.ts e2e/partner.spec.ts`.
+>   3. Gabungkan manual (lihat `git diff origin/staging partner-page-v1`) bagian di file bersama: `partnerSchema` + `CONTENT_FILES`/`ContentBundle` di `src/content/schema.ts`, `getPartnerPage` di `src/lib/content.ts`, `partnerCopy` di `src/content/index.ts`, tipe di `src/types/partner.ts`, ikon `store`/`handshake`/`briefcase`, item nav Partner di `src/content/site.ts`, input `partner` di `vite.config.ts`, prerender & sitemap di plugin, koleksi + media `partner` di `.pages.yml`, folder `partner` di `scripts/optimize-images.mjs`, dan bagian §3e panduan admin.
+>   4. Logo partner kini ada di `src/content/partners.json` (pita logo beranda): sesuaikan halaman agar memakai data itu, atau kembalikan daftar `brand.logos`.
+>   5. Hapus redirect `/partner` di `public/_redirects`, lalu jalankan `npm test`, `npm run typecheck`, `npm run lint`, `npm run e2e`, `npm run build:staging`.
+
+
 Website Vite + React 18 + TypeScript + CSS Modules untuk beberapa cabang (saat ini Bogor & Cibubur). Konten yang sering berubah dikelola lewat **[Pages CMS](https://pagescms.org)**, CMS berbasis Git yang menyimpan konten sebagai file JSON di repo ini. Tanpa server/database: booking & pesan produk lewat WhatsApp cabang (lihat §13).
 
 | Kebutuhan | Layanan | Biaya |
