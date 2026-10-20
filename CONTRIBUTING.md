@@ -74,8 +74,9 @@ git add . && git commit && git push   # PR sinkron otomatis tertutup sebagai mer
 | `npm run preview:worker` | Build staging lalu `wrangler dev` di http://localhost:8787: menguji Worker sungguhan (redirect `/cabang/x` → `/cabang/x/`, halaman cabang hasil prerender, `/produk/`, header `_headers`, halaman 404) |
 | `npm run check:content` | Validasi konten seperti CI (`CONTENT_CHECK=warn` untuk mode longgar) |
 | `npm test` | Vitest: skema konten, srcset otomatis, pesan WhatsApp |
-| `npm run e2e` | Playwright 360 px & 1280 px terhadap `wrangler dev` (situs statis): tombol WhatsApp per cabang, tanpa request `/api/*`, rute lama → beranda/404 |
-| `npm run dev:worker` | Sama dengan `preview:worker` (dipakai `npm run e2e`) |
+| `npm run e2e` | Playwright 360 px & 1280 px terhadap `wrangler dev` (situs statis): tombol WhatsApp per cabang, halaman `/partner/`, tanpa request `/api/*`, rute lama → beranda/404. Menjalankan `npm run e2e:server` otomatis bila port 8787 kosong |
+| `npm run build:e2e` / `npm run e2e:server` | Build E2E (`--mode e2e`, `.env.e2e`): seperti staging, tetapi cabang & barber memakai **data uji tetap** dari `e2e/fixtures/content.ts`, sehingga perubahan di Pages CMS (mis. status cabang) tidak membuat tes gagal. Hanya untuk tes, tidak pernah di-deploy. Bila `wrangler dev` sudah jalan di 8787, pastikan isinya hasil `build:e2e` |
+| `npm run dev:worker` | Build staging + `wrangler dev` (pratinjau situs dengan data CMS asli) |
 | `npm run typecheck` / `npm run lint` | TypeScript / ESLint |
 
 Konten tidak valid di dev (mis. commit Pages CMS yang salah) tampil sebagai **overlay error** di browser, berisi nama file, entri, dan kolomnya.
@@ -112,7 +113,7 @@ Gratis untuk repo publik. **Settings → Rules → Rulesets → New ruleset → 
 - **Name:** `main produksi` · **Enforcement:** Active
 - **Bypass list → Add bypass:** *Repository admin* (agar edit Pages CMS pemilik tetap langsung tayang) dan *GitHub Actions* bila tersedia di daftar (agar workflow **Sinkron konten** bisa meng-commit WebP ke main). Bila *GitHub Actions* tidak bisa ditambahkan, gambar tetap dikompres saat build Cloudflare (`prebuild`); hanya commit WebP otomatis di main yang tertolak.
 - **Target branches:** Include default branch (`main`)
-- **Rules:** ✅ Restrict deletions · ✅ Require a pull request before merging (Required approvals: **0**, karena developer tunggal tidak bisa menyetujui PR sendiri) · ✅ Require status checks to pass → **Add checks → `verify`** · ✅ Block force pushes
+- **Rules:** ✅ Restrict deletions · ✅ Require a pull request before merging (Required approvals: **0**, karena developer tunggal tidak bisa menyetujui PR sendiri) · ✅ Require status checks to pass → **Add checks → `verify` dan `e2e`** · ✅ Block force pushes
 - **Create**.
 
 Lalu **Settings → Actions → General → Workflow permissions** → centang **Allow GitHub Actions to create and approve pull requests** → Save (dibutuhkan workflow sinkron main → staging).

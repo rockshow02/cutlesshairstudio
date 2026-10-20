@@ -15,5 +15,5 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true
   },
-  "include": ["vite.config.ts", "scripts/vite-content-plugin.ts", "src/content/schema.ts", "src/lib/dates.ts", "worker/index.ts"]
+  "include": ["vite.config.ts", "scripts/vite-content-plugin.ts", "src/content/schema.ts", "src/lib/dates.ts", "worker/index.ts", "e2e/fixtures/content.ts"]
 }
