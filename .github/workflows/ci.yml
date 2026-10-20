@@ -1,5 +1,5 @@
 # CI untuk setiap Pull Request (gratis di repo publik).
-# Job "verify" adalah status check WAJIB untuk merge ke main (lihat CONTRIBUTING.md → Branch protection).
+# Job "verify" dan "e2e" adalah status check WAJIB untuk merge ke main (lihat CONTRIBUTING.md → Branch protection).
 #   PR ke main    : hanya dari branch staging; konten harus SIAP TAYANG (CONTENT_CHECK=strict) + build produksi
 #   PR ke staging : konten boleh belum lengkap (peringatan saja) + build staging
 name: CI
@@ -68,3 +68,44 @@ jobs:
       - name: Build staging
         if: env.TARGET != 'main'
         run: npm run build:staging
+
+  # E2E Playwright (360 px & desktop) terhadap Worker statis lokal (wrangler dev, tanpa akun Cloudflare).
+  # Memakai build E2E dengan data uji tetap (e2e/fixtures/content.ts), jadi perubahan isi CMS
+  # (mis. status cabang) tidak membuat job ini gagal. Gratis di repo publik.
+  e2e:
+    name: e2e
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: npm
+
+      - name: Install dependensi
+        run: npm ci --no-audit --no-fund
+
+      - name: Cache browser Playwright
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: E2E 360 px & desktop (build E2E + wrangler dev otomatis)
+        run: npm run e2e
+        env:
+          CI: 'true'
+          WRANGLER_SEND_METRICS: 'false'
+
+      - name: Simpan trace bila gagal
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-trace
+          path: test-results/
+          retention-days: 7
