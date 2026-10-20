@@ -68,7 +68,7 @@ src/content/
   schema.ts                 skema Zod semua file di atas + cek relasi & siap tayang (acuan tunggal)
   *.ts                      teks statis: layanan, label UI, SEO, judul section, label statistik
 public/uploads/
-  branches/  barbers/  gallery/  promos/  products/  site/  hero/  about/  studio/  cta/    gambar dari Pages CMS (WebP)
+  branches/  barbers/  gallery/  promos/  products/  site/  hero/  about/  studio/  cta/  partner/  partner-logos/    gambar dari Pages CMS (WebP)
 src/lib/content.ts          lapisan data: getBranches(), getBranchBySlug(), getBarbers(slug?), getPricing(slug?), ...
 src/lib/contentTransforms.ts  filter isActive, urut order, harga per cabang, gabung dengan teks statis
 src/lib/BranchContext.tsx   cabang pilihan pengunjung (localStorage) + pemilih cabang
@@ -203,6 +203,7 @@ Pengamannya: **setiap perubahan tercatat sebagai commit** dan bisa di-rollback; 
 | `/cabang/` | Daftar semua cabang | `cabang/index.html` → `src/cabang.tsx` |
 | `/cabang/<slug>/` | Halaman cabang: alamat, peta, status hari ini, jam, barber, harga, promo, booking. **Diprerender** (title/meta/JSON-LD `HairSalon` unik, isi teks terbaca tanpa JavaScript) | template `cabang/index.html`, dibuat oleh `vite-content-plugin.ts` |
 | `/produk/` | Semua produk (bila **Tampilkan Produk** aktif) | `produk/index.html` → `src/produk.tsx` |
+| `/partner/` | Kemitraan cabang, brand & kolaborasi, korporat & event + form pengajuan → WhatsApp (tanpa server). Konten & toggle per section di Pages CMS → **Halaman Partner** (`src/content/partner.json`). Ringkasan teks & preload foto hero diprerender | `partner/index.html` → `src/partner.tsx` |
 | `/sitemap.xml`, `/robots.txt` | Dibuat saat build dari `siteUrl` + daftar cabang | `vite-content-plugin.ts` |
 
 Situs statis multi-halaman (Vite multi-page, tanpa router). Kerangka bersama (navbar, footer, pemilih cabang, tombol WA) ada di `src/components/layout/SiteShell.tsx`. Section Testimoni, Produk (+ menu), dan Before/After hanya tampil bila toggle-nya aktif.

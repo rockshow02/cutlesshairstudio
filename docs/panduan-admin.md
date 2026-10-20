@@ -171,6 +171,31 @@ Menu **CTA Penutup**: bagian ajakan booking besar di bawah halaman.
 - **Deskripsi foto** wajib bila foto latar diisi (maks. 150).
 - Kosongkan **Foto latar** untuk kembali ke foto bawaan.
 
+## 3e. Halaman Partner (`/partner/`)
+
+Menu **Halaman Partner** mengatur seluruh halaman kerja sama: kemitraan/buka cabang, brand & kolaborasi, serta layanan korporat & event. Link **Partner** ada di footer (kolom *Jelajahi*) dan di menu HP; navbar desktop sengaja tidak memuatnya agar tidak sesak.
+
+**Nomor WhatsApp partnership** (paling atas): tujuan tombol *Chat Tim Partnership* dan form pengajuan. Format `628xxxxxxxxxx`. **Kosongkan** untuk memakai *Nomor WhatsApp pusat* di Pengaturan Situs.
+
+Halaman terdiri dari 8 bagian, masing-masing punya tombol **Tampilkan section ini**. Bagian yang dimatikan hilang dari halaman, termasuk tombol/link yang menuju ke sana.
+
+| Bagian | Isi | Catatan |
+|---|---|---|
+| 1. Hero | Teks kecil, judul, subjudul, foto latar, label 2 tombol | Foto lebar minimal 1920 px (dikompres otomatis ke WebP 1920 & 1280 px). Kosong = foto CTA penutup. Deskripsi foto wajib bila foto diisi |
+| 2. Pilih jenis kerja sama | Maks. 3 kartu: jenis (`cabang` / `brand` / `korporat`), judul, deskripsi, ikon, label tombol | Tombol kartu menggulir ke section jenis itu. Kartu otomatis hilang bila section tujuannya dimatikan |
+| 3. Kemitraan Cabang | Alasan bermitra, Yang didapat mitra, Alur kemitraan (urutan = nomor langkah), Kota target (tampil sebagai chip), Kisaran investasi | **Kisaran investasi** opsional: kosong = tidak tampil. Isi hanya dengan angka yang sudah disetujui owner |
+| 4. Brand & Kolaborasi | Bentuk kolaborasi, Logo partner (nama, logo, link, urutan, tampilkan) | Bagian logo baru muncul bila ada minimal 1 logo aktif. Pasang **hanya logo partner yang sudah memberi izin**. Logo PNG/WebP berlatar transparan, tampil abu-abu dan berwarna saat disentuh kursor |
+| 5. Korporat & Event | Jenis layanan (judul, deskripsi, ikon), Catatan | Catatan opsional, mis. minimal peserta atau area layanan |
+| 6. Testimoni partner | Nama, institusi, kutipan | **Mati secara bawaan.** Nyalakan hanya bila sudah ada testimoni asli dengan izin partner |
+| 7. FAQ | Pertanyaan & jawaban | Tampil sebagai daftar buka-tutup |
+| 8. Form pengajuan | Judul, pengantar, label tombol kirim, catatan privasi | Mematikan form juga menyembunyikan tombol *Ajukan Kerja Sama* di hero |
+
+**Cara kerja form:** pengunjung memilih jenis kerja sama lalu mengisi nama, perusahaan/brand (opsional), kota, nomor WhatsApp (diawali 08 atau 62), dan pesan singkat. Tombol *Kirim via WhatsApp* membuka WhatsApp **di HP/laptop pengunjung** dengan pesan rapi berisi semua isian, ditujukan ke nomor partnership. Website tidak menyimpan atau mengirim data ke server mana pun; pengajuan baru sampai setelah pengunjung menekan kirim di WhatsApp.
+
+**Ikon** yang bisa dipilih: store (toko), handshake (jabat tangan), briefcase (tas kerja), pin, gift, tag, calendar, user, scissors, star, check, shave, wash.
+
+Setelah Save, tunggu ±2 menit lalu buka `/partner/` untuk mengecek.
+
 ## 4. Membuat promo
 
 1. Klik **Promo** → **Add an entry**.
@@ -325,6 +350,17 @@ Form Pages CMS menolak isian yang melebihi batas, dan website memeriksa batas ya
 | Pengaturan Situs | Pesan booking default | 500 | opsional |
 | Pengaturan Situs | Email | 100 | opsional |
 | Pengaturan Situs | Tagline footer | 160 | opsional |
+| Halaman Partner | Judul (semua bagian, kartu, poin, langkah, layanan) | 80 | wajib |
+| Halaman Partner | Teks kecil di atas judul | 60 | wajib |
+| Halaman Partner | Subjudul hero, pengantar, deskripsi kartu/poin/layanan, catatan | 300 | wajib (pengantar & catatan opsional) |
+| Halaman Partner | Label tombol | 40 | wajib |
+| Halaman Partner | Poin "Yang didapat mitra" | 160 per isian | opsional |
+| Halaman Partner | Kota target | 40 per isian | opsional |
+| Halaman Partner | Kisaran investasi | 160 | opsional |
+| Halaman Partner | Logo partner → Nama partner | 60 | wajib |
+| Halaman Partner | Testimoni → Kutipan | 400 | wajib |
+| Halaman Partner | FAQ → Pertanyaan / Jawaban | 160 / 600 | wajib |
+| Halaman Partner | Catatan privasi form | 160 | wajib |
 
 ---
 
