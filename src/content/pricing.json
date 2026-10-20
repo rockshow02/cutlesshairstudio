@@ -7,8 +7,7 @@
     "description": "",
     "badge": "",
     "order": 10,
-    "isActive": true,
-    "branchPrices": null
+    "isActive": true
   },
   {
     "name": "Black Grooming",
@@ -18,8 +17,7 @@
     "description": "",
     "badge": "",
     "order": 20,
-    "isActive": true,
-    "branchPrices": null
+    "isActive": true
   },
   {
     "name": "Woman Haircut",
@@ -29,8 +27,7 @@
     "description": "",
     "badge": "",
     "order": 30,
-    "isActive": true,
-    "branchPrices": null
+    "isActive": true
   },
   {
     "name": "Woman Haircut & Blow",
@@ -40,8 +37,7 @@
     "description": "",
     "badge": "",
     "order": 40,
-    "isActive": true,
-    "branchPrices": null
+    "isActive": true
   },
   {
     "name": "Woman Catok / Blow",
@@ -51,8 +47,7 @@
     "description": "",
     "badge": "",
     "order": 50,
-    "isActive": true,
-    "branchPrices": null
+    "isActive": true
   },
   {
     "name": "Woman Creambath",
@@ -62,8 +57,7 @@
     "description": "",
     "badge": "",
     "order": 60,
-    "isActive": true,
-    "branchPrices": null
+    "isActive": true
   },
   {
     "name": "Woman Dry Wash",
@@ -73,8 +67,7 @@
     "description": "",
     "badge": "",
     "order": 70,
-    "isActive": true,
-    "branchPrices": null
+    "isActive": true
   },
   {
     "name": "Woman Wash & Styling",
@@ -84,8 +77,7 @@
     "description": "",
     "badge": "",
     "order": 80,
-    "isActive": true,
-    "branchPrices": null
+    "isActive": true
   },
   {
     "name": "Creambath",
@@ -95,8 +87,7 @@
     "description": "",
     "badge": "",
     "order": 90,
-    "isActive": true,
-    "branchPrices": null
+    "isActive": true
   },
   {
     "name": "Hair Wash",
@@ -106,8 +97,7 @@
     "description": "",
     "badge": "",
     "order": 100,
-    "isActive": true,
-    "branchPrices": null
+    "isActive": true
   },
   {
     "name": "Hair Keratin Basic",
@@ -117,8 +107,7 @@
     "description": "",
     "badge": "",
     "order": 110,
-    "isActive": true,
-    "branchPrices": null
+    "isActive": true
   },
   {
     "name": "Hair Keratin Middle",
@@ -128,8 +117,7 @@
     "description": "",
     "badge": "",
     "order": 120,
-    "isActive": true,
-    "branchPrices": null
+    "isActive": true
   },
   {
     "name": "Dread Wash",
@@ -139,8 +127,7 @@
     "description": "",
     "badge": "",
     "order": 130,
-    "isActive": true,
-    "branchPrices": null
+    "isActive": true
   },
   {
     "name": "Coloring Natural",
@@ -150,8 +137,7 @@
     "description": "",
     "badge": "",
     "order": 140,
-    "isActive": true,
-    "branchPrices": null
+    "isActive": true
   },
   {
     "name": "Coloring Highlight",
@@ -161,8 +147,7 @@
     "description": "",
     "badge": "",
     "order": 150,
-    "isActive": true,
-    "branchPrices": null
+    "isActive": true
   },
   {
     "name": "Coloring Fashion Basic",
@@ -172,8 +157,7 @@
     "description": "",
     "badge": "",
     "order": 160,
-    "isActive": true,
-    "branchPrices": null
+    "isActive": true
   },
   {
     "name": "Coloring Fashion Middle",
@@ -183,8 +167,7 @@
     "description": "",
     "badge": "",
     "order": 170,
-    "isActive": true,
-    "branchPrices": null
+    "isActive": true
   },
   {
     "name": "Coloring Fashion Premium",
@@ -194,8 +177,7 @@
     "description": "",
     "badge": "",
     "order": 180,
-    "isActive": true,
-    "branchPrices": null
+    "isActive": true
   },
   {
     "name": "Bleaching",
@@ -205,8 +187,7 @@
     "description": "",
     "badge": "",
     "order": 190,
-    "isActive": true,
-    "branchPrices": null
+    "isActive": true
   },
   {
     "name": "Hair Perm",
@@ -216,8 +197,7 @@
     "description": "",
     "badge": "",
     "order": 200,
-    "isActive": true,
-    "branchPrices": null
+    "isActive": true
   },
   {
     "name": "Down Perming",
@@ -227,8 +207,7 @@
     "description": "",
     "badge": "",
     "order": 210,
-    "isActive": true,
-    "branchPrices": null
+    "isActive": true
   },
   {
     "name": "Cornrow Basic",
@@ -238,8 +217,7 @@
     "description": "",
     "badge": "",
     "order": 220,
-    "isActive": true,
-    "branchPrices": null
+    "isActive": true
   },
   {
     "name": "Cornrow Middle",
@@ -249,8 +227,7 @@
     "description": "",
     "badge": "",
     "order": 230,
-    "isActive": true,
-    "branchPrices": null
+    "isActive": true
   },
   {
     "name": "Cornrow Premium",
@@ -260,8 +237,7 @@
     "description": "",
     "badge": "",
     "order": 240,
-    "isActive": true,
-    "branchPrices": null
+    "isActive": true
   },
   {
     "name": "Braids Box Basic",
@@ -271,8 +247,7 @@
     "description": "",
     "badge": "",
     "order": 250,
-    "isActive": true,
-    "branchPrices": null
+    "isActive": true
   },
   {
     "name": "Braids Box Middle",
@@ -282,8 +257,7 @@
     "description": "",
     "badge": "",
     "order": 260,
-    "isActive": true,
-    "branchPrices": null
+    "isActive": true
   },
   {
     "name": "Braids Box Premium",
@@ -293,8 +267,7 @@
     "description": "",
     "badge": "",
     "order": 270,
-    "isActive": true,
-    "branchPrices": null
+    "isActive": true
   },
   {
     "name": "Dreadlock Basic",
@@ -304,8 +277,7 @@
     "description": "",
     "badge": "",
     "order": 280,
-    "isActive": true,
-    "branchPrices": null
+    "isActive": true
   },
   {
     "name": "Dreadlock Middle",
@@ -315,8 +287,7 @@
     "description": "",
     "badge": "",
     "order": 290,
-    "isActive": true,
-    "branchPrices": null
+    "isActive": true
   },
   {
     "name": "Dreadlock Premium",
@@ -326,8 +297,7 @@
     "description": "",
     "badge": "",
     "order": 300,
-    "isActive": true,
-    "branchPrices": null
+    "isActive": true
   },
   {
     "name": "Student Deal",
@@ -336,8 +306,7 @@
     "priceFrom": false,
     "description": "Signature Haircut\nTunjukkan kartu pelajar/KTM\nSenin – Kamis",
     "order": 150,
-    "isActive": true,
-    "branchPrices": null
+    "isActive": false
   },
   {
     "name": "Cutless Pass",
@@ -347,8 +316,7 @@
     "description": "4x Signature Haircut\nBerlaku 60 hari\nPrioritas jadwal booking",
     "badge": "Best Seller",
     "order": 160,
-    "isActive": true,
-    "branchPrices": null
+    "isActive": false
   },
   {
     "name": "Groom Package",
@@ -357,8 +325,7 @@
     "priceFrom": false,
     "description": "Haircut + Hot Towel Shave\nHair Spa & facial ringan\nStyling di hari H",
     "order": 170,
-    "isActive": true,
-    "branchPrices": null
+    "isActive": false
   },
   {
     "name": "Signature Haircut",
@@ -367,8 +334,7 @@
     "priceFrom": false,
     "description": "Konsultasi, cut, styling",
     "order": 10,
-    "isActive": false,
-    "branchPrices": null
+    "isActive": false
   },
   {
     "name": "Haircut + Wash",
@@ -377,8 +343,7 @@
     "priceFrom": false,
     "description": "Plus keramas & blow-dry",
     "order": 20,
-    "isActive": false,
-    "branchPrices": null
+    "isActive": false
   },
   {
     "name": "Skin Fade / Taper",
@@ -386,8 +351,7 @@
     "price": 85000,
     "priceFrom": false,
     "order": 30,
-    "isActive": false,
-    "branchPrices": null
+    "isActive": false
   },
   {
     "name": "Kids Haircut",
@@ -396,8 +360,7 @@
     "priceFrom": false,
     "description": "Di bawah 12 tahun",
     "order": 40,
-    "isActive": false,
-    "branchPrices": null
+    "isActive": false
   },
   {
     "name": "Hot Towel Shave",
@@ -405,8 +368,7 @@
     "price": 50000,
     "priceFrom": false,
     "order": 50,
-    "isActive": false,
-    "branchPrices": null
+    "isActive": false
   },
   {
     "name": "Beard Trim & Shape",
@@ -414,8 +376,7 @@
     "price": 40000,
     "priceFrom": false,
     "order": 60,
-    "isActive": false,
-    "branchPrices": null
+    "isActive": false
   },
   {
     "name": "Haircut + Shave",
@@ -423,8 +384,7 @@
     "price": 110000,
     "priceFrom": false,
     "order": 70,
-    "isActive": false,
-    "branchPrices": null
+    "isActive": false
   },
   {
     "name": "Hair Coloring",
@@ -433,8 +393,7 @@
     "priceFrom": true,
     "description": "Full color",
     "order": 80,
-    "isActive": false,
-    "branchPrices": null
+    "isActive": false
   },
   {
     "name": "Highlight / Bleaching",
@@ -442,8 +401,7 @@
     "price": 250000,
     "priceFrom": true,
     "order": 90,
-    "isActive": false,
-    "branchPrices": null
+    "isActive": false
   },
   {
     "name": "Perming",
@@ -452,8 +410,7 @@
     "priceFrom": true,
     "description": "Wavy / curly",
     "order": 100,
-    "isActive": false,
-    "branchPrices": null
+    "isActive": false
   },
   {
     "name": "Down Perm",
@@ -461,8 +418,7 @@
     "price": 120000,
     "priceFrom": false,
     "order": 110,
-    "isActive": false,
-    "branchPrices": null
+    "isActive": false
   },
   {
     "name": "Hair Spa",
@@ -471,8 +427,7 @@
     "priceFrom": false,
     "description": "Nutrisi & scalp care",
     "order": 120,
-    "isActive": false,
-    "branchPrices": null
+    "isActive": false
   },
   {
     "name": "Hair Tattoo",
@@ -480,8 +435,7 @@
     "price": 25000,
     "priceFrom": true,
     "order": 130,
-    "isActive": false,
-    "branchPrices": null
+    "isActive": false
   },
   {
     "name": "Hair Wash & Styling",
@@ -489,7 +443,6 @@
     "price": 35000,
     "priceFrom": false,
     "order": 140,
-    "isActive": false,
-    "branchPrices": null
+    "isActive": false
   }
 ]
