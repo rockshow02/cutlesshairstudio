@@ -336,7 +336,7 @@
     "priceFrom": false,
     "description": "Signature Haircut\nTunjukkan kartu pelajar/KTM\nSenin – Kamis",
     "order": 150,
-    "isActive": true,
+    "isActive": false,
     "branchPrices": null
   },
   {
@@ -347,7 +347,7 @@
     "description": "4x Signature Haircut\nBerlaku 60 hari\nPrioritas jadwal booking",
     "badge": "Best Seller",
     "order": 160,
-    "isActive": true,
+    "isActive": false,
     "branchPrices": null
   },
   {
@@ -357,7 +357,7 @@
     "priceFrom": false,
     "description": "Haircut + Hot Towel Shave\nHair Spa & facial ringan\nStyling di hari H",
     "order": 170,
-    "isActive": true,
+    "isActive": false,
     "branchPrices": null
   },
   {
