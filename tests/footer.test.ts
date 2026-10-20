@@ -6,7 +6,8 @@ import { site } from '../src/content/site';
 import { buildBranches, buildSite } from '../src/lib/contentTransforms';
 
 const settings = settingsSchema.parse({ ...JSON.parse(readFileSync('src/content/settings.json', 'utf8')), defaultWaMessage: 'Halo {brand} cabang {branch}' });
-const branchesJson = JSON.parse(readFileSync('src/content/branches.json', 'utf8'));
+// Status dipaksa "Aktif": tes tidak boleh ikut berubah saat admin mengubah status cabang di CMS
+const branchesJson = JSON.parse(readFileSync('src/content/branches.json', 'utf8')).map((b: object) => ({ ...b, status: 'Aktif' }));
 const branches = buildBranches(branchesJson, settings.siteName);
 
 describe('footer dinamis', () => {
