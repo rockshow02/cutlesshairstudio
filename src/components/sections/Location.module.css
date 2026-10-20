@@ -218,13 +218,15 @@
   color: var(--c-taupe-dark);
 }
 
-/* ---------- Foto hairstylist berjalan (marquee) ---------- */
-.barbers {
+/* ---------- Foto Galeri berjalan (marquee) ---------- */
+.gallery {
   position: relative;
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
   min-width: 0;
+  /* HP & tablet: ruang di bawah agar tombol WhatsApp melayang tidak menutupi kartu terakhir / tombol jeda */
+  padding-bottom: var(--fab-safe);
 }
 .columns {
   display: grid;
@@ -233,9 +235,9 @@
   border-radius: var(--radius);
 }
 .column {
-  /* Pinggir memudar (statis, bukan animasi) */
-  -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
-  mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+  /* Pinggir memudar (statis, tipis agar label kartu tidak lama tertutup) */
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 5%, #000 95%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 5%, #000 95%, transparent);
 }
 .column > div > div {
   gap: var(--space-3);
@@ -245,6 +247,7 @@
   position: relative;
   flex: none;
   width: 150px;
+  margin: 0;
   overflow: hidden;
   border-radius: var(--radius);
   background: var(--c-ink-2);
@@ -254,17 +257,52 @@
   width: 100%;
   aspect-ratio: 3 / 4;
   object-fit: cover;
+  object-position: 50% 0%;
+}
+.photo[data-focus='center'] .photoImg { object-position: 50% 50%; }
+.photo[data-focus='bottom'] .photoImg { object-position: 50% 100%; }
+/* Gradasi tipis di dasar kartu (di bawah label), label = chip berlatar gelap agar selalu terbaca */
+.photo::after {
+  content: '';
+  position: absolute;
+  inset: auto 0 0;
+  height: 40%;
+  background: linear-gradient(180deg, transparent, color-mix(in srgb, var(--c-ink) 55%, transparent));
+  pointer-events: none;
 }
 .photo figcaption {
   position: absolute;
-  inset: auto 0 0;
-  padding: var(--space-5) var(--space-3) var(--space-2);
-  background: linear-gradient(180deg, transparent, rgba(12, 16, 20, 0.85));
+  left: var(--space-2);
+  right: var(--space-2);
+  bottom: var(--space-2);
+  z-index: 1;
+  justify-self: start;
+  width: fit-content;
+  max-width: calc(100% - var(--space-4));
+  padding: 3px var(--space-2);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--c-ink) 82%, transparent);
   color: var(--c-bone);
-  font-size: var(--fs-xs);
+  font-size: 0.6875rem;
   font-weight: 700;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.06em;
+  line-height: 1.4;
   text-transform: uppercase;
+  /* Maks. 2 baris (kartu sempit), tidak dipotong di tengah kata */
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+}
+/* Foto sedikit (< 4) atau "kurangi gerakan": grid statis */
+.staticGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3);
+}
+.staticGrid .photo {
+  width: 100%;
 }
 .pause {
   display: inline-flex;
@@ -292,8 +330,8 @@
   .columns[data-count='3'] { --cols: 3; }
   .column {
     height: 100%;
-    -webkit-mask-image: linear-gradient(180deg, transparent, #000 10%, #000 90%, transparent);
-    mask-image: linear-gradient(180deg, transparent, #000 10%, #000 90%, transparent);
+    -webkit-mask-image: linear-gradient(180deg, transparent, #000 6%, #000 94%, transparent);
+    mask-image: linear-gradient(180deg, transparent, #000 6%, #000 94%, transparent);
   }
   .column > div > div {
     padding-right: 0;
@@ -302,12 +340,16 @@
   .photo {
     width: 100%;
   }
+  .staticGrid[data-count='3'] {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
 }
 @media (min-width: 1024px) {
-  .barbers {
+  .gallery {
     position: sticky;
     top: calc(var(--header-offset) + var(--space-5));
     align-self: start;
+    padding-bottom: 0;
   }
 }
 @media (prefers-reduced-motion: reduce) {

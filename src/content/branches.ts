@@ -45,7 +45,7 @@ export const branchesCopy: BranchCopy = {
     barbersFor: 'Hairstylist di cabang {branch}.',
     noBarbers: 'Belum ada data hairstylist untuk cabang ini.',
     servicesTitle: 'Layanan',
-    barbersMarquee: 'Hairstylist di cabang {branch}',
+    galleryMarquee: 'Foto hasil karya Cutless',
     pauseMotion: 'Jeda animasi foto',
     playMotion: 'Putar animasi foto',
     promoFor: 'Berlaku di cabang {branches}',

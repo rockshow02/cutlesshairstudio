@@ -17,6 +17,7 @@ import type {
   BranchCopy,
   GalleryContent,
   GalleryCopy,
+  GalleryItem,
   GalleryLayout,
   HeroContent,
   HeroExtras,
@@ -391,6 +392,8 @@ function layoutFromRatio(width: number, height: number): GalleryLayout {
   return 'square';
 }
 
+const GALLERY_FOCUS: Record<string, GalleryItem['focus']> = { atas: 'top', tengah: 'center', bawah: 'bottom' };
+
 export function buildGallery(entries: GalleryEntry[], copy: GalleryCopy, showBeforeAfter: boolean): GalleryContent {
   const items = activeSorted(entries).map((g, index) => {
     const image = toImage(g.image, g.altText);
@@ -400,6 +403,10 @@ export function buildGallery(entries: GalleryEntry[], copy: GalleryCopy, showBef
       caption: text(g.caption),
       layout: layoutFromRatio(image.width, image.height),
       styleCategory: g.styleCategory,
+      // Kartu kolom foto berjalan: ±150–240 px, pakai versi 600 px bila ada
+      thumb: responsiveImage(g.image, g.altText, '(min-width: 768px) 240px, 150px'),
+      focus: GALLERY_FOCUS[g.focalPoint ?? 'atas'] ?? 'top',
+      showInMarquee: g.showInMarquee !== false,
     };
   });
   return { ...copy, beforeAfter: showBeforeAfter ? copy.beforeAfter : [], items };

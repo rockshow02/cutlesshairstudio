@@ -173,6 +173,10 @@ describe('.pages.yml sejalan dengan skema Zod', () => {
     expect(validateCmsContent(gallery, [{ ...fresh, altText: 'x'.repeat(151) }])[0]).toMatch(/lebih dari 150 karakter/);
     expect(validateCmsContent(gallery, [{ ...fresh, styleCategory: 'Pompadour Klasik' }])[0]).toMatch(/styleCategory: bukan pilihan/);
     expect(validateCmsContent(gallery, [{ ...fresh, caption: 'x'.repeat(121) }])[0]).toMatch(/lebih dari 120 karakter/);
+    // Kolom foto berjalan: titik fokus & toggle
+    expect(validateCmsContent(gallery, [{ ...fresh, focalPoint: 'bawah', showInMarquee: false }])).toEqual([]);
+    expect(validateCmsContent(gallery, [{ ...fresh, focalPoint: 'kiri' }])[0]).toMatch(/focalPoint: bukan pilihan/);
+    expect(validateCmsContent(gallery, [{ ...fresh, showInMarquee: 'ya' }])[0]).toMatch(/showInMarquee: harus true\/false/);
   });
 
   it('pemeriksaan ini benar-benar mendeteksi selisih', () => {

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type KeyboardEvent } from 'react';
-import { AnimatePresence } from 'motion/react';
+import { AnimatePresence, useReducedMotion } from 'motion/react';
 import * as m from 'motion/react-m';
-import { getBarbers, getLocations, getServices } from '@/lib/content';
+import { getGallery, getLocations, getServices } from '@/lib/content';
 import { useContent } from '@/lib/useContent';
 import { useSite } from '@/lib/SiteContext';
 import { useBranch } from '@/lib/BranchContext';
@@ -10,8 +10,8 @@ import { getOpenStatus, todayIndex } from '@/lib/branchHours';
 import { formatPrice, formatTime } from '@/lib/format';
 import { pageUrl } from '@/lib/navigation';
 import { MOBILE_QUERY, useMediaQuery } from '@/lib/useMediaQuery';
-import { fillTemplate } from '@/lib/whatsapp';
-import type { Barber, Branch, LocationsContent } from '@/types';
+import { useFabZone } from '@/lib/fabZones';
+import type { Branch, GalleryItem, LocationsContent } from '@/types';
 import { DISTANCE, DURATION, EASE, MARQUEE } from '@/styles/motion';
 import { Section } from '@/components/ui/Section';
 import { SectionState } from '@/components/ui/SectionState';
@@ -24,7 +24,7 @@ import styles from './Location.module.css';
 
 type Labels = LocationsContent['labels'];
 
-/** Section Lokasi: chip cabang → info cabang berganti (fade + geser) + foto hairstylist cabang itu berjalan di samping. */
+/** Section Lokasi: chip cabang → info cabang berganti (fade + geser) + foto Galeri berjalan di samping (tidak ikut cabang). */
 export function Location() {
   const state = useContent(getLocations);
 
@@ -107,7 +107,7 @@ function Branches({ data }: { data: LocationsContent }) {
             </m.div>
           </AnimatePresence>
         </div>
-        <BranchBarbers branch={branch} labels={data.labels} />
+        <GalleryMarquee labels={data.labels} />
       </div>
     </>
   );
@@ -134,79 +134,103 @@ function BranchServices({ branch, title }: { branch: Branch; title: string }) {
 }
 
 /**
- * Foto hairstylist cabang terpilih: 2–3 kolom berjalan vertikal berlawanan arah (desktop),
- * satu baris horizontal (mobile). Berhenti saat di-hover/fokus, di-tap, atau lewat tombol jeda.
+ * Foto dari Galeri (Pages CMS → Galeri, "Tampilkan di kolom foto berjalan"), tidak terikat cabang.
+ * Desktop/tablet: 2–3 kolom berjalan vertikal berlawanan arah; HP: satu baris horizontal.
+ * Berhenti saat di-hover/fokus, di-tap, lewat tombol jeda, di luar layar, dan saat tab tidak aktif.
+ * Kurang dari 4 foto atau "kurangi gerakan" → grid statis tanpa animasi.
  */
-function BranchBarbers({ branch, labels }: { branch: Branch; labels: Labels }) {
-  const state = useContent(() => getBarbers(branch.slug), [branch.slug]);
+function GalleryMarquee({ labels }: { labels: Labels }) {
+  const state = useContent(getGallery);
   const mobile = useMediaQuery(MOBILE_QUERY);
+  const reduce = useReducedMotion();
   const [paused, setPaused] = useState(false);
-  const barbers = state.status === 'success' ? state.data.items : [];
-  if (barbers.length === 0) return null;
+  const pageHidden = usePageHidden();
+  // Tombol WhatsApp melayang disembunyikan selama kolom foto ini terlihat sebagian besar (tidak menutupi kartu)
+  const fabZone = useFabZone<HTMLDivElement>(0.35);
+  const items = state.status === 'success' ? state.data.items.filter((g) => g.showInMarquee) : [];
+  if (items.length === 0) return null;
 
-  const columns = mobile ? [fill(barbers, 5)] : splitColumns(barbers, barbers.length >= 6 ? 3 : 2);
-  const label = fillTemplate(labels.barbersMarquee, { branch: branch.name });
-
-  return (
-    <AnimatePresence mode="wait" initial={false}>
-      <m.div
-        key={branch.slug}
-        className={styles.barbers}
-        role="group"
-        aria-label={label}
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        transition={{ duration: DURATION.swap, ease: EASE.out }}
-        onPointerUp={(e) => e.pointerType === 'touch' && setPaused((p) => !p)}
-      >
-        <div className={styles.columns} data-count={columns.length}>
-          {columns.map((col, i) => (
-            <Marquee
-              key={i}
-              className={styles.column}
-              direction={mobile ? 'left' : i % 2 === 0 ? 'up' : 'down'}
-              duration={mobile ? MARQUEE.horizontal : MARQUEE.vertical + i * 4}
-              paused={paused}
-            >
-              {col.map((b, j) => (
-                <BarberPhoto key={`${b.id}-${j}`} barber={b} />
-              ))}
-            </Marquee>
+  if (items.length < MIN_MARQUEE || reduce) {
+    return (
+      <div ref={fabZone} className={styles.gallery} role="group" aria-label={labels.galleryMarquee}>
+        <ul className={styles.staticGrid} data-count={Math.min(items.length, 3)}>
+          {items.map((g) => (
+            <li key={g.id}>
+              <GalleryCard item={g} />
+            </li>
           ))}
-        </div>
-        <button type="button" className={styles.pause} onClick={() => setPaused((p) => !p)} aria-pressed={paused}>
-          <Icon name={paused ? 'play' : 'pause'} size={14} />
-          {paused ? labels.playMotion : labels.pauseMotion}
-        </button>
-      </m.div>
-    </AnimatePresence>
+        </ul>
+      </div>
+    );
+  }
+
+  const columns = mobile ? [fill(items, 6)] : splitColumns(items, items.length >= 9 ? 3 : 2);
+  return (
+    <div
+      ref={fabZone}
+      className={styles.gallery}
+      role="group"
+      aria-label={labels.galleryMarquee}
+      onPointerUp={(e) => e.pointerType === 'touch' && setPaused((p) => !p)}
+    >
+      <div className={styles.columns} data-count={columns.length}>
+        {columns.map((col, i) => (
+          <Marquee
+            key={i}
+            className={styles.column}
+            direction={mobile ? 'left' : i % 2 === 0 ? 'up' : 'down'}
+            duration={mobile ? MARQUEE.horizontal : MARQUEE.vertical + i * 4}
+            paused={paused || pageHidden}
+          >
+            {col.map((g, j) => (
+              <GalleryCard key={`${g.id}-${j}`} item={g} />
+            ))}
+          </Marquee>
+        ))}
+      </div>
+      <button type="button" className={styles.pause} onClick={() => setPaused((p) => !p)} aria-pressed={paused}>
+        <Icon name={paused ? 'play' : 'pause'} size={14} />
+        {paused ? labels.playMotion : labels.pauseMotion}
+      </button>
+    </div>
   );
 }
 
-function BarberPhoto({ barber }: { barber: Barber }) {
+/** Minimal foto aktif untuk animasi; di bawahnya tampil grid statis */
+const MIN_MARQUEE = 4;
+
+/** Kartu foto: label = keterangan, atau gaya rambut bila keterangan kosong (chip di atas gradasi) */
+function GalleryCard({ item }: { item: GalleryItem }) {
+  const label = item.caption ?? item.styleCategory;
   return (
-    <figure className={styles.photo}>
-      <ResponsiveImage image={barber.photo} className={styles.photoImg} />
-      <figcaption>{barber.name}</figcaption>
+    <figure className={styles.photo} data-focus={item.focus}>
+      <ResponsiveImage image={item.thumb} className={styles.photoImg} />
+      {label && <figcaption>{label}</figcaption>}
     </figure>
   );
 }
 
-/** Ulangi daftar sampai minimal n item (agar pita tidak kosong saat barber sedikit) */
+/** Tab browser tidak aktif → jeda animasi */
+function usePageHidden() {
+  const [hidden, setHidden] = useState(() => typeof document !== 'undefined' && document.visibilityState === 'hidden');
+  useEffect(() => {
+    const on = () => setHidden(document.visibilityState === 'hidden');
+    document.addEventListener('visibilitychange', on);
+    return () => document.removeEventListener('visibilitychange', on);
+  }, []);
+  return hidden;
+}
+
+/** Ulangi daftar sampai minimal n item (agar pita tidak kosong & putaran mulus saat foto sedikit) */
 function fill<T>(items: T[], n: number): T[] {
   const out: T[] = [];
   while (out.length < Math.max(n, items.length)) out.push(items[out.length % items.length]);
   return out;
 }
 
-/** Bagi ke beberapa kolom dengan urutan berbeda tiap kolom, masing-masing min. 3 foto */
+/** Bagi foto bergantian ke beberapa kolom (foto 1 → kolom 1, foto 2 → kolom 2, …); tiap kolom min. 4 kartu */
 function splitColumns<T>(items: T[], count: number): T[][] {
-  return Array.from({ length: count }, (_, c) => {
-    const rotated = [...items.slice(c), ...items.slice(0, c)];
-    const own = rotated.filter((_, i) => i % count === 0);
-    return fill(own.length >= 2 ? own : rotated, 3);
-  });
+  return Array.from({ length: count }, (_, c) => fill(items.filter((_, i) => i % count === c), 4));
 }
 
 /** Detail satu cabang: alamat, status hari ini, jam buka, peta, tombol. Dipakai juga di halaman /cabang/:slug/. */
