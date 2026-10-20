@@ -8,6 +8,7 @@
  *
  * Barber diganti seluruhnya dengan dua barber uji di cabang Bogor (satu bernomor WhatsApp sendiri, satu memakai
  * nomor cabang). Fotonya meminjam gambar yang sudah ada di public/uploads (tidak ada file uji yang ikut ter-deploy).
+ * Logo Partner diganti 5 partner uji (lihat E2E_PARTNERS).
  */
 import { existsSync, readdirSync } from 'node:fs';
 import path from 'node:path';
@@ -59,6 +60,27 @@ function existingPhoto(): string {
   throw new Error('E2E: tidak ada gambar .webp di public/uploads untuk foto barber uji');
 }
 
+/**
+ * Pita logo partner: 5 partner uji (nama fiktif). 3 memakai logo situs yang sudah ada (latar transparan),
+ * 2 tanpa logo (nama tampil sebagai teks). Satu berlink https.
+ */
+export const E2E_PARTNERS = [
+  { name: 'Partner Uji Satu', withLogo: true, url: 'https://example.com/partner-satu' },
+  { name: 'Partner Uji Dua', withLogo: false, url: '' },
+  { name: 'Partner Uji Tiga', withLogo: true, url: '' },
+  { name: 'Partner Uji Empat', withLogo: false, url: '' },
+  { name: 'Partner Uji Lima', withLogo: true, url: '' },
+] as const;
+export const E2E_PARTNER_LABEL = 'Partner & Kolaborasi';
+
+/** Logo .webp/.png yang sudah ada di public/uploads/site (logo situs) */
+function existingLogo(): string {
+  const dir = path.resolve('public', 'uploads', 'site');
+  const file = existsSync(dir) ? readdirSync(dir).find((f) => /\.(webp|png)$/i.test(f)) : undefined;
+  if (!file) throw new Error('E2E: tidak ada logo di public/uploads/site untuk logo partner uji');
+  return `/uploads/site/${file}`;
+}
+
 /** branches.json asli → cabang uji menimpa cabang dengan slug sama (field lain, mis. alamat & foto, tetap), sisanya utuh */
 function fixtureBranches(real: unknown): Json[] {
   const list = Array.isArray(real) ? (real as Json[]) : [];
@@ -75,5 +97,12 @@ function fixtureBranches(real: unknown): Json[] {
 export function applyE2EFixtures(file: string, data: unknown): unknown {
   if (file === 'branches.json') return fixtureBranches(data);
   if (file === 'barbers.json') return E2E_BARBERS.map((b) => ({ ...b, photo: existingPhoto() }));
+  if (file === 'partners.json') {
+    return {
+      enabled: true,
+      label: E2E_PARTNER_LABEL,
+      logos: E2E_PARTNERS.map((p, i) => ({ name: p.name, logo: p.withLogo ? existingLogo() : '', url: p.url, isActive: true, order: (i + 1) * 10 })),
+    };
+  }
   return data;
 }
