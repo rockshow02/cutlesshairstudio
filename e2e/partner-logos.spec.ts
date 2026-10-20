@@ -74,11 +74,19 @@ test.describe('animasi', () => {
     const strip = await openStrip(page);
     await expect(strip).toHaveAttribute('data-partner-strip', 'marquee');
     expect(await visibleNames(page)).toEqual(E2E_PARTNERS.map((p) => p.name));
-    const track = strip.locator('[data-axis="x"] > div').first();
+    const band = strip.locator('[data-axis="x"]');
+    const track = band.locator('> div').first();
     const pos = () => track.evaluate((el) => new DOMMatrix(getComputedStyle(el).transform).m41);
-    const a = await pos();
-    await page.waitForTimeout(700);
-    expect(await pos()).not.toBe(a);
+    // Desktop memakai smooth scroll (Lenis) yang bisa masih bergulir: pastikan pita di layar (tidak dijeda
+    // data-offscreen) lalu tunggu sampai pita bergerak
+    await expect(async () => {
+      await strip.scrollIntoViewIfNeeded();
+      await expect(strip).toBeInViewport({ ratio: 0.9 });
+      await expect(band).not.toHaveAttribute('data-offscreen', '');
+      const a = await pos();
+      await page.waitForTimeout(300);
+      expect(await pos()).not.toBe(a);
+    }).toPass({ timeout: 15_000 });
     if (!isMobile) {
       await strip.locator('[data-axis="x"]').hover();
       await page.waitForTimeout(150);
