@@ -12,6 +12,7 @@
 import { z } from 'zod';
 import { parseWIB } from '../lib/dates';
 import { PRICE_CATEGORIES } from './priceCategories';
+import { PARTNER_ICONS, PARTNER_TARGETS } from './partnerOptions';
 
 /* ---------- Helper ---------- */
 
@@ -351,6 +352,126 @@ export const studioSchema = z
     if (s.image && !s.imageAlt) ctx.addIssue({ code: 'custom', path: ['imageAlt'], message: 'deskripsi foto wajib diisi bila foto dipilih' });
   });
 
+/* ---------- Halaman Partner (/partner/) ---------- */
+
+export { PARTNER_TARGETS, PARTNER_ICONS };
+
+const sectionToggle = (on: boolean) => z.boolean().default(on);
+const titledPoint = z.object({ title: requiredText(80, 'judul poin'), description: requiredText(300, 'deskripsi poin') });
+
+export const partnerSchema = z.object({
+  /** Kosong = Nomor WhatsApp pusat (Pengaturan Situs) */
+  partnershipWhatsapp: optionalWa,
+  hero: z
+    .object({
+      enabled: sectionToggle(true),
+      kicker: requiredText(60, 'kicker'),
+      title: requiredText(80, 'judul'),
+      subtitle: requiredText(300, 'subjudul'),
+      image: z.union([sectionImage, z.literal('')]).nullish(),
+      imageAlt: optionalText(150),
+      primaryLabel: requiredText(40, 'label tombol utama'),
+      secondaryLabel: requiredText(40, 'label tombol kedua'),
+    })
+    .superRefine((h, ctx) => {
+      if (h.image && !h.imageAlt) ctx.addIssue({ code: 'custom', path: ['imageAlt'], message: 'deskripsi foto wajib diisi bila foto dipilih' });
+    }),
+  types: z.object({
+    enabled: sectionToggle(true),
+    kicker: requiredText(60, 'kicker'),
+    title: requiredText(80, 'judul'),
+    intro: optionalText(300),
+    items: z
+      .array(
+        z.object({
+          target: z.enum(PARTNER_TARGETS, { error: 'jenis harus cabang, brand, atau korporat' }),
+          title: requiredText(80, 'judul'),
+          description: requiredText(300, 'deskripsi'),
+          icon: z.enum(PARTNER_ICONS, { error: `ikon harus salah satu: ${PARTNER_ICONS.join(', ')}` }).default('star'),
+          buttonLabel: requiredText(40, 'label tombol'),
+        }),
+      )
+      .max(3, 'maksimal 3 kartu')
+      .default([]),
+  }),
+  franchise: z.object({
+    enabled: sectionToggle(true),
+    kicker: requiredText(60, 'kicker'),
+    title: requiredText(80, 'judul'),
+    intro: optionalText(300),
+    reasonsTitle: requiredText(80, 'judul alasan'),
+    reasons: z.array(titledPoint).max(8).default([]),
+    benefitsTitle: requiredText(80, 'judul yang didapat mitra'),
+    benefits: z.array(requiredText(160, 'poin')).max(10).default([]),
+    stepsTitle: requiredText(80, 'judul alur'),
+    steps: z.array(titledPoint).max(8).default([]),
+    citiesTitle: requiredText(80, 'judul kota'),
+    cities: z.array(requiredText(40, 'kota')).max(20).default([]),
+    /** Opsional; kosong = tidak ditampilkan */
+    investmentRange: optionalText(160),
+  }),
+  brand: z.object({
+    enabled: sectionToggle(true),
+    kicker: requiredText(60, 'kicker'),
+    title: requiredText(80, 'judul'),
+    intro: optionalText(300),
+    forms: z.array(titledPoint).max(8).default([]),
+    logosTitle: requiredText(80, 'judul logo partner'),
+    logos: z
+      .array(
+        z.object({
+          name: requiredText(60, 'nama'),
+          logo: imagePath,
+          url: optionalUrl,
+          order,
+          isActive,
+        }),
+      )
+      .max(30)
+      .default([]),
+  }),
+  corporate: z.object({
+    enabled: sectionToggle(true),
+    kicker: requiredText(60, 'kicker'),
+    title: requiredText(80, 'judul'),
+    intro: optionalText(300),
+    services: z
+      .array(
+        z.object({
+          title: requiredText(80, 'judul layanan'),
+          description: requiredText(300, 'deskripsi layanan'),
+          icon: z.enum(PARTNER_ICONS, { error: `ikon harus salah satu: ${PARTNER_ICONS.join(', ')}` }).default('star'),
+        }),
+      )
+      .max(8)
+      .default([]),
+    note: optionalText(300),
+  }),
+  testimonials: z.object({
+    enabled: sectionToggle(false),
+    kicker: requiredText(60, 'kicker'),
+    title: requiredText(80, 'judul'),
+    items: z
+      .array(z.object({ name: requiredText(80, 'nama'), institution: optionalText(80), quote: requiredText(400, 'kutipan') }))
+      .max(10)
+      .default([]),
+  }),
+  faq: z.object({
+    enabled: sectionToggle(true),
+    kicker: requiredText(60, 'kicker'),
+    title: requiredText(80, 'judul'),
+    items: z.array(z.object({ question: requiredText(160, 'pertanyaan'), answer: requiredText(600, 'jawaban') })).max(15).default([]),
+  }),
+  form: z.object({
+    enabled: sectionToggle(true),
+    kicker: requiredText(60, 'kicker'),
+    title: requiredText(80, 'judul'),
+    intro: optionalText(300),
+    submitLabel: requiredText(40, 'label tombol kirim'),
+    privacyNote: requiredText(160, 'catatan privasi'),
+  }),
+});
+
 /* ---------- CTA penutup ("Kursimu sudah siap.") ---------- */
 
 export const ctaSchema = z
@@ -382,6 +503,7 @@ export const CONTENT_FILES = {
   'about.json': aboutSchema,
   'studio.json': studioSchema,
   'cta.json': ctaSchema,
+  'partner.json': partnerSchema,
 } as const;
 
 /* ---------- Tipe hasil (dipakai src/lib/content.ts) ---------- */
@@ -400,6 +522,7 @@ export type HeroEntry = z.output<typeof heroSchema>;
 export type AboutEntry = z.output<typeof aboutSchema>;
 export type StudioEntry = z.output<typeof studioSchema>;
 export type CtaEntry = z.output<typeof ctaSchema>;
+export type PartnerEntry = z.output<typeof partnerSchema>;
 
 /* ---------- Pemeriksaan lintas file ---------- */
 
@@ -417,6 +540,7 @@ export interface ContentBundle {
   about: AboutEntry;
   studio: StudioEntry;
   cta: CtaEntry;
+  partner: PartnerEntry;
 }
 
 export interface ContentIssue {

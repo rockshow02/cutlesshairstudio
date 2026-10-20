@@ -24,6 +24,7 @@ export const site: SiteContent = {
     { label: 'Produk', href: '/produk/' },
     { label: 'Lokasi', sectionId: 'lokasi' },
     { label: 'Kontak', sectionId: 'kontak' },
+    { label: 'Partner', href: '/partner/', desktop: false },
   ],
   whatsapp: {
     // Diisi dari Pengaturan Situs (settings.json → mainWhatsappNumber = nomor pusat)

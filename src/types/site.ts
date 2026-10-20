@@ -6,6 +6,8 @@ export interface NavItem {
   sectionId?: string;
   /** Atau: halaman lain, path relatif root situs (mis. "/produk/") */
   href?: string;
+  /** false = tidak tampil di navbar desktop (tetap di menu mobile & footer), agar navbar tidak sesak */
+  desktop?: boolean;
 }
 
 /**

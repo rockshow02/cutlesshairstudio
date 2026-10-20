@@ -1,0 +1,189 @@
+{
+  "partnershipWhatsapp": "",
+  "hero": {
+    "enabled": true,
+    "kicker": "Partner Cutless",
+    "title": "Tumbuh bersama Cutless Hair Studio.",
+    "subtitle": "Buka cabang, berkolaborasi dengan brand kami, atau hadirkan layanan grooming untuk kantor dan acara Anda. Ceritakan rencana Anda, tim kami siap berdiskusi.",
+    "image": "",
+    "imageAlt": "",
+    "primaryLabel": "Ajukan Kerja Sama",
+    "secondaryLabel": "Chat Tim Partnership"
+  },
+  "types": {
+    "enabled": true,
+    "kicker": "Pilih jalur",
+    "title": "Tiga cara bekerja sama",
+    "intro": "Pilih jenis kerja sama yang paling sesuai, lalu lihat detailnya.",
+    "items": [
+      {
+        "target": "cabang",
+        "title": "Kemitraan Cabang",
+        "description": "Buka cabang Cutless di kota Anda dengan standar layanan, pelatihan, dan pendampingan dari tim kami.",
+        "icon": "store",
+        "buttonLabel": "Lihat Kemitraan"
+      },
+      {
+        "target": "brand",
+        "title": "Brand & Kolaborasi",
+        "description": "Kolaborasi produk, konten, event, atau sponsorship bersama komunitas pelanggan Cutless.",
+        "icon": "handshake",
+        "buttonLabel": "Lihat Kolaborasi"
+      },
+      {
+        "target": "korporat",
+        "title": "Korporat & Event",
+        "description": "Layanan grooming untuk karyawan, pernikahan, acara komunitas, hingga kunjungan ke lokasi Anda.",
+        "icon": "briefcase",
+        "buttonLabel": "Lihat Layanan"
+      }
+    ]
+  },
+  "franchise": {
+    "enabled": true,
+    "kicker": "Kemitraan cabang",
+    "title": "Buka cabang Cutless di kota Anda",
+    "intro": "Kami mencari mitra yang ingin menghadirkan pengalaman potong rambut yang rapi, nyaman, dan konsisten.",
+    "reasonsTitle": "Kenapa bermitra dengan kami",
+    "reasons": [
+      {
+        "title": "Standar layanan yang teruji",
+        "description": "Alur layanan, daftar harga, dan cara kerja hairstylist yang sudah berjalan di cabang-cabang kami."
+      },
+      {
+        "title": "Brand yang dikenal pelanggan",
+        "description": "Identitas visual, media sosial, dan website yang sudah aktif menjangkau pelanggan."
+      },
+      {
+        "title": "Pendampingan berkelanjutan",
+        "description": "Tim kami membantu sejak persiapan hingga cabang berjalan, termasuk evaluasi berkala."
+      }
+    ],
+    "benefitsTitle": "Yang didapat mitra",
+    "benefits": [
+      "Panduan desain interior dan tata letak studio",
+      "Pelatihan hairstylist dan staf sesuai standar Cutless",
+      "Daftar layanan dan standar operasional",
+      "Dukungan promosi di media sosial dan website Cutless",
+      "Pendampingan saat pembukaan cabang"
+    ],
+    "stepsTitle": "Alur kemitraan",
+    "steps": [
+      {
+        "title": "Konsultasi",
+        "description": "Ceritakan rencana Anda lewat WhatsApp, lalu kita jadwalkan diskusi."
+      },
+      {
+        "title": "Survei lokasi",
+        "description": "Tim kami meninjau calon lokasi bersama Anda."
+      },
+      {
+        "title": "Kesepakatan",
+        "description": "Kita sepakati bentuk kerja sama dan tanggung jawab masing-masing."
+      },
+      {
+        "title": "Persiapan",
+        "description": "Renovasi studio, rekrutmen, dan pelatihan tim."
+      },
+      {
+        "title": "Pembukaan",
+        "description": "Cabang baru dibuka dan dipromosikan bersama."
+      }
+    ],
+    "citiesTitle": "Kota target ekspansi",
+    "cities": ["Jakarta", "Sukabumi", "Cianjur", "Bandung"],
+    "investmentRange": ""
+  },
+  "brand": {
+    "enabled": true,
+    "kicker": "Brand & kolaborasi",
+    "title": "Berkolaborasi dengan Cutless",
+    "intro": "Kami terbuka untuk kolaborasi dengan brand dan kreator yang sejalan dengan gaya hidup pelanggan kami.",
+    "forms": [
+      {
+        "title": "Produk",
+        "description": "Uji coba atau penjualan produk perawatan rambut dan grooming di studio kami."
+      },
+      {
+        "title": "Konten",
+        "description": "Konten bersama untuk media sosial, dari tutorial gaya rambut hingga ulasan produk."
+      },
+      {
+        "title": "Event",
+        "description": "Acara bersama di studio atau di lokasi Anda, seperti pop-up dan sesi grooming."
+      },
+      {
+        "title": "Sponsorship",
+        "description": "Dukungan untuk acara komunitas, olahraga, atau musik yang sejalan dengan brand kami."
+      }
+    ],
+    "logosTitle": "Partner kami",
+    "logos": []
+  },
+  "corporate": {
+    "enabled": true,
+    "kicker": "Korporat & event",
+    "title": "Grooming untuk tim dan acara Anda",
+    "intro": "Hairstylist Cutless bisa datang ke kantor atau acara Anda dengan peralatan lengkap.",
+    "services": [
+      {
+        "title": "Grooming kantor",
+        "description": "Sesi potong rambut dan grooming untuk karyawan, di kantor atau di studio kami.",
+        "icon": "briefcase"
+      },
+      {
+        "title": "Wedding & groom",
+        "description": "Persiapan rambut pengantin pria dan pendamping sebelum acara.",
+        "icon": "gift"
+      },
+      {
+        "title": "Event & komunitas",
+        "description": "Booth grooming untuk acara perusahaan, kampus, atau komunitas.",
+        "icon": "calendar"
+      },
+      {
+        "title": "Home service",
+        "description": "Layanan potong rambut di rumah untuk keluarga atau kelompok kecil.",
+        "icon": "pin"
+      }
+    ],
+    "note": "Jumlah peserta, area layanan, dan jadwal dibicarakan lebih dulu lewat WhatsApp."
+  },
+  "testimonials": {
+    "enabled": false,
+    "kicker": "Kata partner",
+    "title": "Cerita dari partner kami",
+    "items": []
+  },
+  "faq": {
+    "enabled": true,
+    "kicker": "FAQ",
+    "title": "Pertanyaan yang sering diajukan",
+    "items": [
+      {
+        "question": "Bagaimana cara mengajukan kerja sama?",
+        "answer": "Isi form di bagian bawah halaman ini lalu tekan Kirim via WhatsApp. Pesan berisi data Anda akan terbuka di WhatsApp dan bisa langsung dikirim ke tim kami."
+      },
+      {
+        "question": "Apakah data saya disimpan di website?",
+        "answer": "Tidak. Isian form tidak dikirim ke server mana pun. Data hanya masuk ke WhatsApp Anda dan baru terkirim saat Anda menekan tombol kirim di WhatsApp."
+      },
+      {
+        "question": "Berapa lama tim kami membalas?",
+        "answer": "Kami berusaha membalas pada jam operasional. Jika belum dibalas, silakan kirim ulang pesan Anda."
+      },
+      {
+        "question": "Apakah kota saya bisa dibuka cabang?",
+        "answer": "Kota target kami tercantum di bagian Kemitraan Cabang, tetapi kota lain tetap bisa didiskusikan. Sampaikan lokasi Anda saat mengajukan."
+      }
+    ]
+  },
+  "form": {
+    "enabled": true,
+    "kicker": "Ajukan kerja sama",
+    "title": "Ceritakan rencana Anda",
+    "intro": "Isi form singkat ini. Pesan rapi berisi isian Anda akan terbuka di WhatsApp, siap dikirim ke tim partnership.",
+    "submitLabel": "Kirim via WhatsApp",
+    "privacyNote": "Data hanya dikirim lewat WhatsApp milik Anda. Website ini tidak menyimpan isian form."
+  }
+}

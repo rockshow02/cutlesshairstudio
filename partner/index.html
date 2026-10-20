@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#0c1014" />
+
+    <!-- SEO dasar (statis agar terbaca crawler & preview link WhatsApp/IG tanpa JavaScript).
+         %SITE_URL% / %BRAND% / %OG_IMAGE% diisi saat build dari src/content/settings.json
+         (scripts/vite-content-plugin.ts). Domain TIDAK ditulis manual di sini: ubah siteUrl di Pengaturan Situs. -->
+    <title>Kemitraan &amp; Kerja Sama | %BRAND%</title>
+    <meta name="description" content="Buka cabang, kolaborasi brand, atau layanan grooming untuk kantor dan acara bersama %BRAND%. Ajukan kerja sama langsung lewat WhatsApp." />
+    <link rel="canonical" href="%SITE_URL%/partner/" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="id_ID" />
+    <meta property="og:site_name" content="%BRAND%" />
+    <meta property="og:title" content="Kemitraan &amp; Kerja Sama | %BRAND%" />
+    <meta property="og:description" content="Kemitraan cabang, brand &amp; kolaborasi, serta layanan korporat &amp; event. Ajukan lewat WhatsApp." />
+    <meta property="og:url" content="%SITE_URL%/partner/" />
+    <meta property="og:image" content="%OG_IMAGE%" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:image" content="%OG_IMAGE%" />
+
+    <link rel="icon" href="/favicon.ico" sizes="any" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+
+    <!-- Foto hero partner (LCP), diisi saat build dari src/content/partner.json -->
+    <!--cutless:partner-preload-->
+
+    <!-- Fonts: Archivo (display, expanded) + Plus Jakarta Sans (body) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <!-- Font tidak memblokir render: dimuat paralel, diterapkan begitu siap (font-display: swap) -->
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@125,700;125,800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@125,700;125,800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" media="print" onload="this.media='all'" />
+    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@125,700;125,800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" /></noscript>
+  </head>
+  <body>
+    <!-- Ringkasan statis halaman partner (terbaca crawler), diganti React saat halaman dimuat -->
+    <div id="root"><!--cutless:partner-body--></div>
+    <noscript>Aktifkan JavaScript untuk mengisi form kerja sama, atau hubungi kami via WhatsApp.</noscript>
+    <script type="module" src="/src/partner.tsx"></script>
+  </body>
+</html>
