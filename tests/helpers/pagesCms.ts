@@ -9,8 +9,21 @@
  *  - fields/core/select: null/undefined → ""; "" boleh bila tidak wajib; nilai harus salah satu pilihan
  *    (multiple: array, tiap item harus pilihan; required = minimal 1)
  *  - list: array; required = minimal 1 item; list.min/max
- *  - boolean: true/false; date/image/file: string ("" boleh bila tidak wajib)
+ *  - boolean: true/false; date/file: string ("" boleh bila tidak wajib)
+ *  - fields/core/image: path disimpan dengan awalan media.output (mis. /uploads/gallery), dibaca sebagai media.input
+ *    (public/uploads/gallery) lalu harus diawali folder itu & berekstensi gambar (jpg, jpeg, png, webp, …)
  */
+export interface CmsMedia {
+  name: string;
+  input: string;
+  output: string;
+}
+const IMAGE_EXT = ['jpg', 'jpeg', 'apng', 'png', 'gif', 'svg', 'ico', 'avif', 'bmp', 'tif', 'tiff', 'webp'];
+let mediaConfigs: CmsMedia[] = [];
+/** Folder media dari .pages.yml (dipakai pemeriksaan field image) */
+export const setMedia = (media: CmsMedia[]) => {
+  mediaConfigs = media;
+};
 export interface CmsField {
   name: string;
   type: string;
@@ -18,7 +31,7 @@ export interface CmsField {
   required?: boolean;
   default?: unknown;
   list?: boolean | { min?: number; max?: number; default?: unknown };
-  options?: { maxlength?: number; minlength?: number; min?: number; max?: number; multiple?: boolean; values?: (string | { name?: string; value?: string })[] };
+  options?: { maxlength?: number; minlength?: number; min?: number; max?: number; multiple?: boolean; media?: string | false; values?: (string | { name?: string; value?: string })[] };
   pattern?: string | { regex: string; message?: string };
   fields?: CmsField[];
 }
@@ -89,6 +102,20 @@ function checkScalar(f: CmsField, v: unknown, at: string, out: string[]) {
     case 'boolean':
       if (typeof v !== 'boolean') fail('harus true/false');
       return;
+    case 'image': {
+      if (v !== null && v !== undefined && typeof v !== 'string') return fail('harus path gambar');
+      if (!v) return f.required ? fail('wajib diisi') : undefined;
+      const media = f.options?.media === false ? undefined : mediaConfigs.find((m) => m.name === f.options?.media) ?? mediaConfigs[0];
+      let path = v as string;
+      if (media) {
+        // read(): awalan output → input (tanpa garis miring di depan)
+        if (path.startsWith(media.output)) path = `${media.input}/${path.slice(media.output.length).replace(/^\//, '')}`.replace(/^\//, '');
+        if (!path.startsWith(media.input)) return fail(`harus di folder media ${media.output}`);
+      }
+      const ext = path.split('/').pop()!.split('.').pop() ?? '';
+      if (!IMAGE_EXT.includes(ext)) fail(`ekstensi .${ext} bukan gambar`);
+      return;
+    }
     default:
       // date, image, file, rich-text, code: teks
       if (typeof v !== 'string') return fail('harus teks');
