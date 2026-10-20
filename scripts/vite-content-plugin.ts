@@ -21,6 +21,7 @@ import { z } from 'zod';
 import { loadEnv, type Plugin, type ViteDevServer } from 'vite';
 import { CONTENT_FILES, crossCheck, type BranchEntry, type ContentBundle, type ContentIssue, type HeroEntry } from '../src/content/schema';
 import { srcSetOf, type ImageMeta } from '../src/lib/responsiveImage';
+import { applyE2EFixtures } from '../e2e/fixtures/content';
 
 const VIRTUAL_ID = 'virtual:image-meta';
 const RESOLVED_ID = `\0${VIRTUAL_ID}`;
@@ -73,7 +74,11 @@ interface LoadResult {
   bundle?: ContentBundle;
 }
 
-export async function loadContent(root: string): Promise<LoadResult> {
+/**
+ * `fixtures`: build E2E (mode e2e, E2E_FIXTURES=1 di .env.e2e) memakai data uji tetap dari e2e/fixtures/content.ts
+ * agar tes tidak bergantung pada isi CMS (mis. status cabang).
+ */
+export async function loadContent(root: string, { fixtures = false }: { fixtures?: boolean } = {}): Promise<LoadResult> {
   const contentDir = path.join(root, 'src', 'content');
   const publicDir = path.join(root, 'public');
   const errors: string[] = [];
@@ -83,6 +88,7 @@ export async function loadContent(root: string): Promise<LoadResult> {
     let data: unknown;
     try {
       data = JSON.parse(await readFile(path.join(contentDir, file), 'utf8'));
+      if (fixtures) data = applyE2EFixtures(file, data);
     } catch (error) {
       errors.push(`  • ${file}: file tidak bisa dibaca sebagai JSON (${(error as Error).message})`);
       continue;
@@ -362,6 +368,8 @@ export function contentPlugin(): Plugin {
   let siteUrlOverride = '';
   let analyticsToken = '';
   let lenient = false;
+  /** Build E2E: data uji tetap (e2e/fixtures/content.ts) untuk validasi, prerender, DAN bundle browser */
+  let fixtures = false;
   /** Masalah "siap tayang" terakhir (untuk badge DEV/STAGING) */
   let launchIssues: string[] = [];
   /** Pesan konten tidak valid terakhir di dev server (dikirim ulang ke browser yang baru terhubung) */
@@ -370,7 +378,7 @@ export function contentPlugin(): Plugin {
   let imageMeta: ImageMeta = {};
 
   const refresh = async () => {
-    const result = await loadContent(root);
+    const result = await loadContent(root, { fixtures });
     imageMeta = await readImageMeta(root);
     if (result.bundle && siteUrlOverride) {
       result.bundle = { ...result.bundle, settings: { ...result.bundle.settings, siteUrl: siteUrlOverride } };
@@ -411,7 +419,9 @@ export function contentPlugin(): Plugin {
       siteUrlOverride = (env.VITE_SITE_URL ?? '').trim().replace(/\/+$/, '');
       analyticsToken = (env.VITE_CF_ANALYTICS_TOKEN ?? '').trim();
       lenient = (env.CONTENT_CHECK || (appEnv === 'production' ? 'strict' : 'warn')) === 'warn';
-      if (isBuild) console.log(`• Environment: ${appEnv} · siteUrl: ${siteUrlOverride || '(Pengaturan Situs)'} · cek siap tayang: ${lenient ? 'warn' : 'strict'}`);
+      fixtures = env.E2E_FIXTURES === '1';
+      if (fixtures && appEnv === 'production') throw new Error('E2E_FIXTURES tidak boleh dipakai untuk build produksi');
+      if (isBuild) console.log(`• Environment: ${appEnv} · siteUrl: ${siteUrlOverride || '(Pengaturan Situs)'} · cek siap tayang: ${lenient ? 'warn' : 'strict'}${fixtures ? ' · DATA UJI E2E' : ''}`);
     },
 
     async buildStart() {
@@ -438,6 +448,14 @@ export function contentPlugin(): Plugin {
       return null;
     },
     async load(id) {
+      // Build E2E: import src/content/<file>.json di kode browser juga memakai data uji
+      if (fixtures) {
+        const file = path.relative(path.join(root, 'src', 'content'), id.split('?')[0]);
+        if (file.endsWith('.json') && !file.includes(path.sep) && !file.startsWith('..')) {
+          const data = JSON.parse(await readFile(id.split('?')[0], 'utf8'));
+          return JSON.stringify(applyE2EFixtures(file, data));
+        }
+      }
       if (id === RESOLVED_STATUS_ID) {
         return `export default ${JSON.stringify({ issues: appEnv === 'production' ? [] : launchIssues })};`;
       }
