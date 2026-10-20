@@ -1,28 +1,31 @@
 [
   {
     "name": "Yasslaw",
-    "role": "Head Hairstylist",
+    "role": "Professional Hair Stylist",
     "photo": "/uploads/barbers/yasslaw.webp",
     "branchSlug": "bogor-bantarjati",
-    "specialty": "Skin fade, Pompadour",
+    "specialty": "Hair Perm, Design Perm, Coloring",
+    "whatsappNumber": "6285810904296",
     "order": 10,
     "isActive": true
   },
   {
     "name": "Agus",
-    "role": "Senior Hairstylist",
+    "role": "Professional Hair Stylist",
     "photo": "/uploads/barbers/agus.webp",
     "branchSlug": "bogor-bantarjati",
-    "specialty": "Beard, Classic cut",
+    "specialty": "Hair Perm, Design Perm, Coloring",
+    "whatsappNumber": "6285718056716",
     "order": 20,
     "isActive": true
   },
   {
     "name": "Soemardi(erte)",
-    "role": "Color Specialist",
+    "role": "Professional Hair Artist",
     "photo": "/uploads/barbers/soemardi-erte.webp",
     "branchSlug": "bogor-bantarjati",
-    "specialty": "Coloring, Perming",
+    "specialty": "Cornrow, Dreadlock, Coloring, Et.c",
+    "whatsappNumber": "6288211078730",
     "order": 30,
     "isActive": true
   }
