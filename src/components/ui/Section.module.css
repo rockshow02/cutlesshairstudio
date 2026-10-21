@@ -14,3 +14,19 @@
   background: var(--c-paper);
   color: var(--c-ink);
 }
+
+/*
+ * Section bersebelahan dengan nada sama tidak boleh terlihat menyatu (urutan bisa berubah karena section opsional
+ * dari CMS: promo, produk, testimoni, cuci sepatu):
+ * - terang setelah terang → terang hangat (--c-paper-3) + garis tipis di atas
+ * - gelap setelah gelap  → garis tipis terang di atas
+ * surface="warm" memaksa latar terang hangat (mis. section partner setelah Daftar Harga).
+ */
+.light.warm,
+:global([data-tone='light']) + .light {
+  background: var(--c-paper-3);
+  border-top: 1px solid var(--c-line-dark);
+}
+:global([data-tone='dark']) + .dark {
+  border-top: 1px solid var(--c-line-light);
+}

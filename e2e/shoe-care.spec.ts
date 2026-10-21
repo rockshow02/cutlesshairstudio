@@ -47,6 +47,13 @@ test('beranda: section tampil setelah Daftar Harga, tombol layanan → WhatsApp 
   // Urutan: tepat setelah Daftar Harga (#harga), sebelum Hairstylist
   expect(await section.evaluate((el) => [el.previousElementSibling?.id, el.nextElementSibling?.id])).toEqual(['harga', 'hairstylist']);
   await expect(section.getByText(`Tersedia di ${bogor.name}`)).toBeVisible();
+  // Terpisah jelas dari Daftar Harga: latar berbeda + pita "Partner Cutless" di garis batas atas
+  const [bgShoe, bgPrice] = await page.evaluate(() => ['cuci-sepatu', 'harga'].map((id) => getComputedStyle(document.getElementById(id)!).backgroundColor));
+  expect(bgShoe).not.toBe(bgPrice);
+  const ribbon = section.getByText('Partner Cutless', { exact: true });
+  await expect(ribbon).toBeVisible();
+  const [ribbonBox, sectionTop] = [await ribbon.boundingBox(), (await section.boundingBox())!.y];
+  expect(Math.abs(ribbonBox!.y + ribbonBox!.height / 2 - sectionTop)).toBeLessThan(2);
   await expect(section.getByText('hanya tersedia di cabang')).toHaveCount(0);
 
   // Kartu layanan: nama, harga Rupiah tanpa desimal ("mulai" bila diatur), estimasi

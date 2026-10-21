@@ -5,7 +5,8 @@ import type { ShoeCareCopy } from '@/types';
  * ada di src/content/shoeCare.json (Pages CMS → Partner Cuci Sepatu).
  */
 export const shoeCareCopy: ShoeCareCopy = {
-  kicker: 'Partner Cutless',
+  kicker: 'Cuci Sepatu',
+  ribbon: 'Partner Cutless',
   availableAt: 'Tersedia di',
   onlyAt: 'Layanan cuci sepatu hanya tersedia di cabang',
   orderLabel: 'Pesan via WhatsApp',

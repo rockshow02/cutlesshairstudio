@@ -1,6 +1,28 @@
 /* Partner Cuci Sepatu: section terang (seperti Daftar Harga). Mobile-first (360 px), warna hanya dari token;
    teks kecil di latar terang memakai --c-taupe-dark / --c-ink-dim (kontras AA). */
 
+/* Latar terang hangat + garis tipis dari Section surface="warm"; pita "Partner Cutless" di garis batas atas */
+.ribbon {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-4);
+  border: 1px solid var(--c-line-dark);
+  border-radius: 999px;
+  background: var(--c-paper-3);
+  color: var(--c-taupe-dark);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  transform: translate(-50%, -50%);
+}
+
 .meta {
   display: flex;
   flex-wrap: wrap;

@@ -31,7 +31,12 @@ export function ShoeCareView({ data, otherBranch }: { data: ShoeCareContent; oth
   // Tombol WhatsApp melayang disembunyikan selama section terlihat (tidak menutupi tombol pesan)
   const zoneRef = useFabZone<HTMLDivElement>(0.05);
   return (
-    <Section id={data.id} tone="light" labelledBy="cuci-sepatu-title">
+    <Section id={data.id} tone="light" surface="warm" labelledBy="cuci-sepatu-title">
+      {/* Pita di garis batas atas: section partner, terpisah dari Daftar Harga */}
+      <p className={styles.ribbon}>
+        <Icon name="star" size={12} />
+        {copy.ribbon}
+      </p>
       <div ref={zoneRef}>
         <SectionTitle
           heading={data.heading}
