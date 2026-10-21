@@ -75,6 +75,12 @@ media:
     output: /uploads/cta
     categories: [image]
     rename: safe
+  - name: shoe-care
+    label: Foto Partner Cuci Sepatu
+    input: public/uploads/shoe-care
+    output: /uploads/shoe-care
+    categories: [image]
+    rename: safe
   - name: partner-logos
     label: Logo Partner
     input: public/uploads/partner-logos
@@ -309,6 +315,181 @@ content:
         type: boolean
         default: true
         description: "Matikan untuk menyembunyikan tanpa menghapus."
+
+  # ------------------------------------------------------------------ Partner Cuci Sepatu
+  - name: shoeCare
+    label: Partner Cuci Sepatu
+    type: file
+    path: src/content/shoeCare.json
+    format: json
+    fields:
+      - name: enabled
+        label: Tampilkan section
+        type: boolean
+        default: false
+        description: "Nyalakan setelah nama partner, harga, dan nomor WhatsApp ASLI sudah diisi. Section tampil setelah Daftar Harga di beranda dan di halaman cabang yang dipilih di bawah."
+      - name: branchSlug
+        label: Cabang
+        type: select
+        default: bogor-bantarjati
+        description: "Satu-satunya cabang tempat layanan ini tersedia. Pengunjung yang memilih cabang lain melihat catatan bahwa layanan hanya ada di cabang ini."
+        options:
+          # @branch-options-start (diisi otomatis dari branches.json oleh scripts/sync-pages-config.mjs)
+          values:
+            - name: "bogor-bantarjati"
+              label: "Bogor Bantarjati"
+            - name: "cibubur"
+              label: "Cibubur"
+          # @branch-options-end
+      - name: name
+        label: Nama partner
+        type: string
+        required: true
+        description: "Nama usaha cuci sepatu. Maksimal 60 karakter."
+        options:
+          maxlength: 60
+      - name: logo
+        label: Logo partner (opsional)
+        type: image
+        description: "PNG berlatar transparan atau SVG. Tampil kecil di samping judul."
+        options:
+          media: shoe-care
+      - name: tagline
+        label: Tagline
+        type: string
+        description: "Kalimat pendek di bawah judul. Maksimal 120 karakter."
+        options:
+          maxlength: 120
+      - name: description
+        label: Deskripsi singkat
+        type: text
+        description: "1–2 kalimat tentang layanan. Maksimal 300 karakter."
+        options:
+          maxlength: 300
+      - name: advantages
+        label: Keunggulan
+        type: object
+        required: true
+        list:
+          min: 2
+          max: 4
+        description: "2–4 poin singkat, tampil sebagai baris ikon."
+        fields:
+          - name: title
+            label: Judul
+            type: string
+            required: true
+            description: Maksimal 40 karakter.
+            options:
+              maxlength: 40
+          - name: description
+            label: Deskripsi
+            type: string
+            required: true
+            description: Maksimal 120 karakter.
+            options:
+              maxlength: 120
+          - name: icon
+            label: Ikon
+            type: select
+            default: check
+            description: "check = centang, clock = jam, star = bintang, tag = label harga, wash = tetes air, spa = daun, gift = hadiah, pin = lokasi, calendar = kalender, user = orang, info = info, scissors = gunting."
+            options:
+              values: [check, clock, star, tag, wash, spa, gift, pin, calendar, user, info, scissors]
+      - name: services
+        label: Layanan
+        type: object
+        required: true
+        list:
+          min: 1
+          max: 8
+        description: "1–8 layanan. Tiap layanan punya tombol Pesan via WhatsApp yang menyebut nama layanannya."
+        fields:
+          - name: name
+            label: Nama layanan
+            type: string
+            required: true
+            description: "Dipakai di pesan WhatsApp ({service}). Maksimal 40 karakter."
+            options:
+              maxlength: 40
+          - name: description
+            label: Deskripsi
+            type: string
+            description: "Opsional. Maksimal 120 karakter."
+            options:
+              maxlength: 120
+          - name: price
+            label: Harga (Rupiah)
+            type: number
+            required: true
+            description: "Angka saja tanpa titik, mis. 45000. Isi harga ASLI dari partner (0 = belum diisi; section tidak boleh tayang dengan harga 0)."
+            options:
+              min: 0
+          - name: priceFrom
+            label: Tulis "mulai" di depan harga
+            type: boolean
+            default: false
+          - name: estimate
+            label: Estimasi waktu
+            type: string
+            description: "Opsional, mis. ±2 hari atau ±30 menit. Maksimal 30 karakter."
+            options:
+              maxlength: 30
+          - name: isActive
+            label: Tampilkan
+            type: boolean
+            default: true
+          - name: order
+            label: Urutan
+            type: number
+            default: 0
+            description: "Angka kecil tampil lebih dulu."
+            options:
+              min: 0
+      - name: photos
+        label: Foto hasil (opsional)
+        type: object
+        list:
+          max: 8
+        description: "0–8 foto hasil kerja partner (dengan izin partner). Galeri hanya tampil bila ada foto. Dikompres otomatis ke WebP 1200 px + versi HP 600 px."
+        fields:
+          - name: image
+            label: Foto
+            type: image
+            required: true
+            options:
+              media: shoe-care
+          - name: alt
+            label: Deskripsi foto
+            type: string
+            required: true
+            description: "Jelaskan isi foto, mis. Sneakers putih sebelum dan sesudah dicuci. Maksimal 150 karakter."
+            options:
+              maxlength: 150
+      - name: notes
+        label: Catatan / ketentuan
+        type: string
+        list:
+          max: 10
+        description: "Teks kecil di bawah layanan, mis. durasi pengerjaan atau tanggung jawab barang titipan. Maksimal 160 karakter per poin."
+        options:
+          maxlength: 160
+      - name: whatsappNumber
+        label: Nomor WhatsApp partner (opsional)
+        type: string
+        description: "Format 628xxxxxxxxxx. Kosong = nomor WhatsApp cabang di atas."
+        pattern:
+          regex: '^(62\d{8,13})?$'
+          message: Format harus 628xxxxxxxxxx (tanpa +, spasi, atau strip)
+      - name: messageTemplate
+        label: Template pesan WhatsApp
+        type: text
+        description: "{service} = nama layanan (tombol utama: layanan cuci sepatu), {branch} = nama cabang. Pertahankan penanda (via website Cutless) agar pesanan dari website bisa dilacak. Maksimal 500 karakter."
+        pattern:
+          regex: '^(?:[^{}]|\{(?:service|branch)\})*$'
+          message: Placeholder yang boleh dipakai hanya {service} dan {branch}
+        options:
+          maxlength: 500
 
   # ------------------------------------------------------------------ Barber
   - name: barbers

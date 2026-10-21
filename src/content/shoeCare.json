@@ -1,0 +1,38 @@
+{
+  "enabled": false,
+  "branchSlug": "bogor-bantarjati",
+  "name": "Partner Cuci Sepatu",
+  "logo": "",
+  "tagline": "Sepatu bersih sambil potong rambut.",
+  "description": "Titipkan sepatu saat berkunjung ke Cutless, dikerjakan oleh partner cuci sepatu kami.",
+  "advantages": [
+    {
+      "title": "Titip saat potong rambut",
+      "description": "Bawa sepatu saat datang ke studio, ambil kembali sesuai estimasi waktu.",
+      "icon": "scissors"
+    },
+    {
+      "title": "Pesan lewat WhatsApp",
+      "description": "Tanyakan layanan dan jadwal ambil langsung lewat chat.",
+      "icon": "check"
+    }
+  ],
+  "services": [
+    {
+      "name": "Cuci sepatu",
+      "description": "",
+      "price": 0,
+      "priceFrom": true,
+      "estimate": "",
+      "isActive": true,
+      "order": 10
+    }
+  ],
+  "photos": [],
+  "notes": [
+    "Estimasi waktu dapat berubah tergantung kondisi sepatu dan antrean.",
+    "Ketentuan barang titipan mengikuti kebijakan partner; tanyakan lewat WhatsApp sebelum menitipkan."
+  ],
+  "whatsappNumber": "",
+  "messageTemplate": "Halo, saya mau pesan {service} di Cutless Hair Studio cabang {branch}. (via website Cutless)"
+}
