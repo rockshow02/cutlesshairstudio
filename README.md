@@ -68,7 +68,7 @@ src/content/
   schema.ts                 skema Zod semua file di atas + cek relasi & siap tayang (acuan tunggal)
   *.ts                      teks statis: layanan, label UI, SEO, judul section, label statistik
 public/uploads/
-  branches/  barbers/  gallery/  promos/  products/  site/  hero/  about/  studio/  cta/  partner-logos/    gambar dari Pages CMS (WebP)
+  branches/  barbers/  gallery/  promos/  products/  site/  hero/  about/  studio/  cta/  partner-logos/  shoe-care/    gambar dari Pages CMS (WebP)
 src/lib/content.ts          lapisan data: getBranches(), getBranchBySlug(), getBarbers(slug?), getPricing(slug?), ...
 src/lib/contentTransforms.ts  filter isActive, urut order, harga per cabang, gabung dengan teks statis
 src/lib/BranchContext.tsx   cabang pilihan pengunjung (localStorage) + pemilih cabang
@@ -209,7 +209,7 @@ Pengamannya: **setiap perubahan tercatat sebagai commit** dan bisa di-rollback; 
 | `/produk/` | Semua produk (bila **Tampilkan Produk** aktif) | `produk/index.html` → `src/produk.tsx` |
 | `/sitemap.xml`, `/robots.txt` | Dibuat saat build dari `siteUrl` + daftar cabang | `vite-content-plugin.ts` |
 
-Situs statis multi-halaman (Vite multi-page, tanpa router). Kerangka bersama (navbar, footer, pemilih cabang, tombol WA) ada di `src/components/layout/SiteShell.tsx`. Section Testimoni, Produk (+ menu), dan Before/After hanya tampil bila toggle-nya aktif. Pita **Logo Partner** (sebelum CTA penutup, `src/content/partners.json`) hanya tampil bila diaktifkan dan ada logo yang ditampilkan. `/partner` (dicabut, arsip `archive/partner-page` / tag `partner-page-v1`) diarahkan ke beranda.
+Situs statis multi-halaman (Vite multi-page, tanpa router). Kerangka bersama (navbar, footer, pemilih cabang, tombol WA) ada di `src/components/layout/SiteShell.tsx`. Section Testimoni, Produk (+ menu), dan Before/After hanya tampil bila toggle-nya aktif. Pita **Logo Partner** (sebelum CTA penutup, `src/content/partners.json`) hanya tampil bila diaktifkan dan ada logo yang ditampilkan. `/partner` (dicabut, arsip `archive/partner-page` / tag `partner-page-v1`) diarahkan ke beranda. Section **Partner Cuci Sepatu** (`#cuci-sepatu`, setelah Daftar Harga, `src/content/shoeCare.json`) mati secara bawaan; bila dinyalakan tampil di beranda & halaman cabang partner saja, tombol WhatsApp ke nomor partner (kosong → nomor cabang partner).
 
 ## 9. Kesiapan migrasi ke database
 
