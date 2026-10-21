@@ -9,14 +9,15 @@
          %SITE_URL% / %BRAND% / %CITIES% / %OG_IMAGE% diisi saat build dari src/content/settings.json & branches.json
          (scripts/vite-content-plugin.ts). Domain TIDAK ditulis manual di sini: ubah siteUrl di Pengaturan Situs. -->
     <title>%BRAND% | Barbershop &amp; Hair Studio di %CITIES%</title>
-    <meta name="description" content="%BRAND%, hair studio di %CITIES% untuk haircut, fade, pompadour, shaving, hair coloring, perming, dan hair spa. Pilih cabang terdekat &amp; booking via WhatsApp." />
+    <!-- %HOME_DESCRIPTION% = dari kategori layanan aktif (Pages CMS → Kartu Layanan + Daftar Harga), maks. 160 karakter -->
+    <meta name="description" content="%HOME_DESCRIPTION%" />
     <link rel="canonical" href="%SITE_URL%/" />
 
     <meta property="og:type" content="website" />
     <meta property="og:locale" content="id_ID" />
     <meta property="og:site_name" content="%BRAND%" />
     <meta property="og:title" content="%BRAND% | Good Style, Good Mood" />
-    <meta property="og:description" content="Hair studio di %CITIES%. Haircut, fade, coloring, perming. Booking langsung ke WhatsApp cabang." />
+    <meta property="og:description" content="%HOME_DESCRIPTION%" />
     <meta property="og:url" content="%SITE_URL%/" />
     <meta property="og:image" content="%OG_IMAGE%" />
     <meta property="og:image:width" content="1200" />
