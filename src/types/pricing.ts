@@ -49,6 +49,8 @@ export interface PricingContent {
   /** Ada item dengan harga khusus cabang */
   hasBranchPrices: boolean;
   categories: PriceCategory[];
+  /** Label kecil sebelum harga item "mulai" */
+  priceFromLabel: string;
   packagesTitle: string;
   packages: PricePackage[];
 }
@@ -58,6 +60,8 @@ export interface PricingCopy {
   heading: SectionHeading;
   /** Label kategori yang tampil di website, per kunci kategori */
   categoryLabels: Record<Exclude<PriceCategoryKey, 'Paket'>, string>;
+  /** Label kecil sebelum harga item "mulai" di Daftar Harga */
+  priceFromLabel: string;
   packagesTitle: string;
   packageCtaLabel: string;
   /** Tag kartu paket bila entri tidak punya badge */

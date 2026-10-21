@@ -248,10 +248,10 @@ content:
         label: Kategori
         type: select
         required: true
-        default: Haircut & Grooming
-        description: "Pilih \"Paket\" untuk paket/membership (tampil sebagai kartu)."
+        default: Haircut
+        description: "Kategori aktif: Haircut, Special Treatment, Woman Haircut & Treatment (urutan tampil). Kategori lama hanya untuk item nonaktif. Pilih \"Paket\" untuk paket/membership (tampil sebagai kartu)."
         options:
-          values: [Haircut & Grooming, Wanita, Treatment, Coloring, Perming, Braids & Dreadlock, Shaving, Kids, Paket]
+          values: [Haircut, Special Treatment, Woman Haircut & Treatment, Haircut & Grooming, Wanita, Treatment, Coloring, Perming, Braids & Dreadlock, Shaving, Kids, Paket]
       - name: price
         label: Harga (Rupiah)
         type: number
@@ -351,7 +351,7 @@ content:
         required: true
         description: "Harga 'mulai Rp…' diambil otomatis dari harga terendah item aktif kategori ini. Kategori tanpa item aktif → kartu tidak tampil. Satu kartu per kategori."
         options:
-          values: [Haircut & Grooming, Wanita, Treatment, Coloring, Perming, Braids & Dreadlock, Shaving, Kids]
+          values: [Haircut, Special Treatment, Woman Haircut & Treatment, Haircut & Grooming, Wanita, Treatment, Coloring, Perming, Braids & Dreadlock, Shaving, Kids]
       - name: order
         label: Urutan
         type: number

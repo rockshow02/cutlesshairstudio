@@ -1,8 +1,8 @@
 import { useId, useRef, useState, type KeyboardEvent } from 'react';
 import { getPricing } from '@/lib/content';
 import { useContent } from '@/lib/useContent';
-import { useSite } from '@/lib/SiteContext';
-import { formatPrice, formatRupiah } from '@/lib/format';
+import { formatRupiah, formatThousandsK } from '@/lib/format';
+import { priceCategoryAnchor } from '@/content/priceCategories';
 import { fillTemplate } from '@/lib/whatsapp';
 import { useBranch } from '@/lib/BranchContext';
 import { useBooking } from '@/lib/useBooking';
@@ -19,7 +19,6 @@ export function Pricing() {
   const { effective, pageBranch, copy, openPicker } = useBranch();
   // Harga sesuai cabang (harga khusus dari branchPrices, atau harga dasar)
   const state = useContent(() => getPricing(effective?.slug), [effective?.slug]);
-  const { site } = useSite();
   const book = useBooking();
 
   return (
@@ -47,7 +46,7 @@ export function Pricing() {
               </p>
             )}
 
-            <PriceCategories categories={data.categories.filter((c) => c.items.length > 0)} priceFromLabel={site.ui.priceFrom} />
+            <PriceCategories categories={data.categories.filter((c) => c.items.length > 0)} priceFromLabel={data.priceFromLabel} />
 
             {data.packages.length > 0 && (
               <>
@@ -95,7 +94,7 @@ export function Pricing() {
   );
 }
 
-function PriceRows({ category, priceFromLabel }: { category: PriceCategory; priceFromLabel: string }) {
+export function PriceRows({ category, priceFromLabel }: { category: PriceCategory; priceFromLabel: string }) {
   return (
     <ul>
       {category.items.map((item) => (
@@ -105,7 +104,11 @@ function PriceRows({ category, priceFromLabel }: { category: PriceCategory; pric
             {item.badge && <span className={styles.badge}>{item.badge}</span>}
             {item.description && <small>{item.description}</small>}
           </span>
-          <span className={styles.itemPrice}>{formatPrice(item.price, item.priceFrom, priceFromLabel)}</span>
+          {/* Format "K" khusus Daftar Harga (100000 → 100K); "Start from" kecil sebelum harga item "mulai" */}
+          <span className={styles.itemPrice}>
+            {item.priceFrom && <small className={styles.priceFrom}>{priceFromLabel}</small>}
+            {formatThousandsK(item.price)}
+          </span>
         </li>
       ))}
     </ul>
@@ -127,7 +130,7 @@ function PriceCategories({ categories, priceFromLabel }: { categories: PriceCate
     return (
       <div className={styles.categories}>
         {categories.map((category) => (
-          <div key={category.id} className={styles.category}>
+          <div key={category.id} id={priceCategoryAnchor(category.id)} className={styles.category}>
             <h3 className={styles.categoryName}>{category.name}</h3>
             <PriceRows category={category} priceFromLabel={priceFromLabel} />
           </div>

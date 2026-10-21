@@ -11,6 +11,10 @@ export const pricingCopy: PricingCopy = {
   },
   // Label kategori yang tampil di website (kunci = pilihan "Kategori" di Pages CMS)
   categoryLabels: {
+    Haircut: 'Haircut',
+    'Special Treatment': 'Special Treatment',
+    'Woman Haircut & Treatment': 'Woman Haircut & Treatment',
+    // Kategori lama (item nonaktif)
     'Haircut & Grooming': 'Haircut & Grooming',
     Wanita: 'Wanita',
     Treatment: 'Treatment',
@@ -20,6 +24,8 @@ export const pricingCopy: PricingCopy = {
     Shaving: 'Shaving & Beard',
     Kids: 'Kids',
   },
+  // Label kecil sebelum harga item "mulai" (Daftar Harga memakai format "K", mis. Start from 400K)
+  priceFromLabel: 'Start from',
   packagesTitle: 'Paket & Membership',
   packageCtaLabel: 'Ambil Paket',
   packageDefaultTag: 'Paket',

@@ -440,6 +440,7 @@ export function buildPricing(entries: PricingEntry[], copy: PricingCopy, branche
     branchName: branch?.name,
     hasBranchPrices: items.some((i) => (i.branchPrices ?? []).length > 0),
     categories,
+    priceFromLabel: copy.priceFromLabel,
     packagesTitle: copy.packagesTitle,
     packages,
   };
