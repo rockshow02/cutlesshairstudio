@@ -3,33 +3,27 @@
   "label": "Partner & Kolaborasi",
   "logos": [
     {
-      "name": "Partner Demo A",
-      "logo": "",
-      "url": "",
+      "name": "KAHF",
+      "logo": "/uploads/partner-logos/logokahf.png",
+      "url": "https://www.instagram.com/kahfeveryday/",
       "isActive": true,
       "order": 10,
       "isDemo": true
     },
     {
       "name": "Partner Demo B",
-      "logo": "",
-      "url": "",
       "isActive": true,
       "order": 20,
       "isDemo": true
     },
     {
       "name": "Partner Demo C",
-      "logo": "",
-      "url": "",
       "isActive": true,
       "order": 30,
       "isDemo": true
     },
     {
       "name": "Partner Demo D",
-      "logo": "",
-      "url": "",
       "isActive": true,
       "order": 40,
       "isDemo": true
