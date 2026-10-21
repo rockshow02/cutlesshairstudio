@@ -13,7 +13,7 @@ export const shoeCareCopy: ShoeCareCopy = {
   fromLabel: 'mulai',
   genericService: 'layanan cuci sepatu',
   // Sama dengan isi awal shoeCare.json; penanda "(via website Cutless)" untuk melacak pesanan dari website
-  defaultTemplate: 'Halo, saya mau pesan {service} di Cutless Hair Studio cabang {branch}. (via website Cutless)',
+  defaultTemplate: 'Halo {partner}, saya mau pesan {service} di Cutless Hair Studio cabang {branch}. (via website Cutless)',
   servicesTitle: 'Layanan',
   galleryTitle: 'Hasil cuci',
   notesTitle: 'Catatan',

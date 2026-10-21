@@ -10,7 +10,7 @@ export interface ShoeCareCopy {
   orderLabel: string;
   mainLabel: string;
   fromLabel: string;
-  /** Pengisi {service} untuk tombol utama (tanpa layanan tertentu) */
+  /** Pengisi {service} untuk tombol utama (tanpa layanan tertentu); {partner} = nama partner, {branch} = nama cabang */
   genericService: string;
   /** Template bawaan bila "Template pesan WhatsApp" di CMS kosong */
   defaultTemplate: string;

@@ -114,7 +114,7 @@ function shoeCareFixture(): Json {
     ],
     notes: ['Catatan uji pertama.', 'Catatan uji kedua.'],
     whatsappNumber: E2E_SHOE_CARE.whatsappNumber,
-    messageTemplate: 'Halo, saya mau pesan {service} di Cutless Hair Studio cabang {branch}. (via website Cutless)',
+    messageTemplate: 'Halo {partner}, saya mau pesan {service} di Cutless Hair Studio cabang {branch}. (via website Cutless)',
   };
 }
 
