@@ -2,8 +2,8 @@
   "enabled": true,
   "isDemo": true,
   "branchSlug": "bogor-bantarjati",
-  "name": "Cuci Sepatu Bogor (Demo)",
-  "logo": "",
+  "name": "Top Clean ID",
+  "logo": "/uploads/shoe-care/2486013095567662256202931055588118495427594n.jpg",
   "tagline": "Sepatu bersih sambil potong rambut.",
   "description": "Titipkan sepatu saat berkunjung ke Cutless Bogor Bantarjati, dikerjakan oleh partner cuci sepatu kami.",
   "advantages": [
@@ -61,12 +61,10 @@
       "order": 40
     }
   ],
-  "photos": [],
   "notes": [
     "Estimasi waktu dapat berubah tergantung kondisi sepatu dan antrean.",
     "Sepatu yang tidak diambil lebih dari 30 hari setelah selesai di luar tanggung jawab partner.",
     "Hasil pada bahan tertentu (mis. suede tua) bisa berbeda; tanyakan lewat WhatsApp sebelum menitipkan."
   ],
-  "whatsappNumber": "",
   "messageTemplate": "Halo {partner}, saya mau pesan {service} di Cutless Hair Studio cabang {branch}. (via website Cutless)"
 }
