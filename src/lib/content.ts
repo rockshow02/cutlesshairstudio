@@ -28,6 +28,7 @@ import studioJson from '@/content/studio.json';
 import ctaJson from '@/content/cta.json';
 import partnersJson from '@/content/partners.json';
 import shoeCareJson from '@/content/shoeCare.json';
+import servicesJson from '@/content/services.json';
 import type {
   AboutEntry,
   AnnouncementEntry,
@@ -38,6 +39,7 @@ import type {
   HeroEntry,
   PartnersEntry,
   ShoeCareEntry,
+  ServiceCardEntry,
   PricingEntry,
   ProductEntry,
   PromoEntry,
@@ -112,6 +114,7 @@ const data = {
   cta: ctaJson as unknown as CtaEntry,
   partners: partnersJson as unknown as PartnersEntry,
   shoeCare: shoeCareJson as unknown as ShoeCareEntry,
+  services: servicesJson as unknown as ServiceCardEntry[],
 };
 
 /** Default Zod (jeda 5 detik, crossfade) juga diterapkan di browser karena Pages CMS bisa tidak menulis field kosong */
@@ -175,7 +178,7 @@ export const getSocials = (): Promise<SocialLink[]> => resolve(() => buildSocial
 export const getPricing = (branchSlug?: string): Promise<PricingContent> =>
   resolve(() => buildPricing(data.pricing, local.pricingCopy, branchList(), branchSlug));
 export const getServices = (branchSlug?: string): Promise<ServicesContent> =>
-  resolve(() => buildServices(local.services, data.pricing, branchSlug));
+  resolve(() => buildServices(data.services, local.servicesCopy, data.pricing, branchSlug));
 export const getBarbers = (branchSlug?: string): Promise<BarbersContent> =>
   resolve(() => buildBarbers(data.barbers, local.barbersCopy, branchList(), branchSlug));
 /** Promo aktif (tanggal dievaluasi saat dipanggil). branchSlug → hanya promo yang berlaku di cabang itu. */

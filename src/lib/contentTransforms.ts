@@ -40,7 +40,10 @@ import type {
   PromoContent,
   PromoCopy,
   Rating,
+  Service,
   ServicesContent,
+  ServicesCopy,
+  IconName,
   ShowcaseContent,
   ShowcaseCopy,
   ShoeCareContent,
@@ -64,6 +67,7 @@ import type {
   PricingEntry,
   ProductEntry,
   PromoEntry,
+  ServiceCardEntry,
   SettingsEntry,
   ShoeCareEntry,
   StudioEntry,
@@ -452,12 +456,23 @@ export function startingPrices(entries: PricingEntry[], branchSlug?: string): Pa
   return result;
 }
 
-export function buildServices(base: ServicesContent, pricing: PricingEntry[], branchSlug?: string): ServicesContent {
+/**
+ * Kartu Layanan (Pages CMS → Kartu Layanan) sinkron dengan Daftar Harga: hanya kartu tampil yang kategorinya punya
+ * item harga aktif; "mulai Rp…" = harga terendah item aktif kategori itu (cabang terpilih, atau terendah semua cabang).
+ */
+export function buildServices(entries: ServiceCardEntry[], copy: ServicesCopy, pricing: PricingEntry[], branchSlug?: string): ServicesContent {
   const prices = startingPrices(pricing, branchSlug);
-  return {
-    ...base,
-    items: base.items.map((s) => ({ ...s, startingPrice: s.pricingCategory ? prices[s.pricingCategory] : undefined })),
-  };
+  const items = activeSorted(entries)
+    .map((s, index) => ({
+      id: makeId(s.name, index),
+      name: s.name,
+      description: s.description,
+      icon: (s.icon ?? 'scissors') as IconName,
+      pricingCategory: s.pricingCategory as Service['pricingCategory'],
+      startingPrice: prices[s.pricingCategory as PriceCategoryKey],
+    }))
+    .filter((s) => s.startingPrice !== undefined);
+  return { heading: copy.heading, items };
 }
 
 /* ---------- Barber ---------- */
