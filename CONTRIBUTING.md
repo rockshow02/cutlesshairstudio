@@ -111,14 +111,14 @@ Tidak ada rahasia di file `.env.*` (semua `VITE_*` terbaca di browser). Override
 Gratis untuk repo publik. **Settings → Rules → Rulesets → New ruleset → New branch ruleset**:
 
 - **Name:** `main produksi` · **Enforcement:** Active
-- **Bypass list → Add bypass:** *Repository admin* (agar edit Pages CMS pemilik tetap langsung tayang) dan *GitHub Actions* bila tersedia di daftar (agar workflow **Sinkron konten** bisa meng-commit WebP ke main). Bila *GitHub Actions* tidak bisa ditambahkan, gambar tetap dikompres saat build Cloudflare (`prebuild`); hanya commit WebP otomatis di main yang tertolak.
+- **Bypass list → Add bypass:** *Repository admin* (agar edit Pages CMS pemilik tetap langsung tayang) **Apps → Pages CMS** (collaborator Pages CMS tanpa akun GitHub menyimpan lewat GitHub App ini; tanpa bypass, simpanan mereka di `main` ditolak) dan *GitHub Actions* bila tersedia di daftar (agar workflow **Sinkron konten** bisa meng-commit WebP ke main). Bila *GitHub Actions* tidak bisa ditambahkan, gambar tetap dikompres saat build Cloudflare (`prebuild`); hanya commit WebP otomatis di main yang tertolak.
 - **Target branches:** Include default branch (`main`)
 - **Rules:** ✅ Restrict deletions · ✅ Require a pull request before merging (Required approvals: **0**, karena developer tunggal tidak bisa menyetujui PR sendiri) · ✅ Require status checks to pass → **Add checks → `verify` dan `e2e`** · ✅ Block force pushes
 - **Create**.
 
 Lalu **Settings → Actions → General → Workflow permissions** → centang **Allow GitHub Actions to create and approve pull requests** → Save (dibutuhkan workflow sinkron main → staging).
 
-> **Konsekuensi:** kolaborator *non-admin* yang memakai Pages CMS di branch `main` akan ditolak (wajib PR). Staff sebaiknya memakai branch `staging`, atau jadikan admin hanya orang yang boleh mengubah produksi langsung.
+> **Konsekuensi:** setelah launch, pengeditan harian konten dilakukan di branch `main` lewat Pages CMS. Pemilik (admin repo) dan collaborator Pages CMS (lewat bypass aplikasi **Pages CMS**) bisa langsung menyimpan; akun GitHub *non-admin* lain akan ditolak (wajib PR). Nama & email pengedit tercatat di commit (`settings.commit.identity: user` di `.pages.yml`).
 
 ## Tentang Decap CMS (alternatif offline): tidak dipasang
 

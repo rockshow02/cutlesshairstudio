@@ -169,11 +169,15 @@ Dua Worker terpisah dari repo yang sama (`wrangler.jsonc` → environment `stagi
 
 ## 6. Menambah admin
 
-1. Admin membuat akun GitHub gratis (github.com/signup).
-2. Pemilik repo: **Settings → Collaborators → Add people** → masukkan username/email admin.
-3. Admin menerima undangan (email dari GitHub).
-4. Admin buka **[app.pagescms.org](https://app.pagescms.org)** → **Sign in with GitHub** → pilih repo `cutlesshairstudio` → branch `main`.
-5. Panduan non-teknis: [`docs/panduan-admin.md`](docs/panduan-admin.md).
+**Staf (disarankan): collaborator Pages CMS, tanpa akun GitHub**
+1. Pemilik login di **[app.pagescms.org](https://app.pagescms.org)** (Sign in with GitHub) → repo `cutlesshairstudio` → menu **Collaborators** → undang email staf.
+2. Staf login dengan **Continue with email** (kode 6 digit lewat email, berlaku 5 menit) → branch `main`.
+3. Collaborator bisa mengedit konten & media, tetapi tidak bisa mengubah `.pages.yml` atau mengelola collaborator. Nama & email pengedit tercatat di commit (`settings.commit.identity: user`).
+4. Sekali saja: tambahkan aplikasi **Pages CMS** ke *Bypass list* ruleset `main` (lihat `CONTRIBUTING.md` → Branch protection), agar simpanan collaborator di `main` tidak ditolak.
+
+**Admin dengan akun GitHub** (mis. pemilik kedua): buat akun GitHub → pemilik repo **Settings → Collaborators → Add people** → terima undangan → **Sign in with GitHub** di app.pagescms.org → branch `main`.
+
+Panduan non-teknis: [`docs/panduan-admin.md`](docs/panduan-admin.md).
 
 ### Keterbatasan hak akses
 
