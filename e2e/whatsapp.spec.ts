@@ -12,10 +12,13 @@ const { bogor, cibubur } = E2E_BRANCHES;
 const fixtureBuild = !process.env.E2E_BASE_URL;
 const barbers: readonly { name: string; branchSlug: string; whatsappNumber?: string; isActive?: boolean }[] = E2E_BARBERS;
 
-/** Tombol booking/pesan (footer berisi WhatsApp PUSAT untuk pertanyaan umum, sengaja tidak termasuk) */
+/**
+ * Tombol booking/pesan. Sengaja tidak termasuk: footer (WhatsApp PUSAT untuk pertanyaan umum) dan section Cuci Sepatu
+ * (selalu ke nomor partner / cabang partner, diuji di shoe-care.spec.ts).
+ */
 const waLinks = (page: import('@playwright/test').Page) =>
   page.locator('a[href^="https://wa.me/"]').evaluateAll((els) =>
-    els.filter((a) => !a.closest('footer')).map((a) => ({ href: (a as HTMLAnchorElement).href, label: (a.textContent ?? '').trim().replace(/\s+/g, ' ') })),
+    els.filter((a) => !a.closest('footer, #cuci-sepatu')).map((a) => ({ href: (a as HTMLAnchorElement).href, label: (a.textContent ?? '').trim().replace(/\s+/g, ' ') })),
   );
 
 test('belum memilih cabang: tombol hero → pemilih cabang → WhatsApp cabang itu dengan pesan menyebut cabang', async ({ page, context, apiCalls }) => {
