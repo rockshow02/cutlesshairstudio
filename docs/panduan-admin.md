@@ -227,7 +227,7 @@ Catatan:
 
 ## 3f. Partner Cuci Sepatu (section #cuci-sepatu)
 
-Menu **Partner Cuci Sepatu** mengatur satu section untuk partner jasa cuci sepatu. Section berlatar terang tampil **setelah Daftar Harga** di beranda dan di halaman cabang yang dipilih (bawaan: **Bogor Bantarjati**). Di halaman cabang lain section tidak tampil. Pengunjung yang memilih cabang lain tetap melihat section dengan catatan *"Layanan cuci sepatu hanya tersedia di cabang …"*, dan tombol WhatsApp tetap ke nomor partner.
+Menu **Partner Cuci Sepatu** mengatur satu section untuk partner jasa cuci sepatu. Section berlatar terang hangat (berbeda dari Daftar Harga, dengan pita kecil *Partner Cutless* di garis atasnya) tampil **setelah Daftar Harga** di beranda dan di halaman cabang yang dipilih (bawaan: **Bogor Bantarjati**). Di halaman cabang lain section tidak tampil. Pengunjung yang memilih cabang lain tetap melihat section dengan catatan *"Layanan cuci sepatu hanya tersedia di cabang …"*, dan tombol WhatsApp tetap ke nomor partner.
 
 **Section mati secara bawaan.** Isi dulu data asli partner, baru nyalakan.
 

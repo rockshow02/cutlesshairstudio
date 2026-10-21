@@ -105,6 +105,10 @@ describe('section Cuci Sepatu', () => {
     const plain = renderToStaticMarkup(createElement(ShoeCareView, { data, otherBranch: false }));
     expect(plain).not.toContain('hanya tersedia di cabang');
     expect(plain).toContain('id="cuci-sepatu"');
+    // Terpisah dari Daftar Harga (juga terang): latar terang hangat + pita "Partner Cutless" di batas atas
+    expect(plain).toContain('data-tone="light"');
+    expect(plain).toContain('data-surface="warm"');
+    expect(plain).toContain('Partner Cutless</p>');
     expect(plain).toContain('Tersedia di Bogor Bantarjati');
     expect(plain).toContain('Titip Sepatu via WhatsApp');
     // Galeri hanya bila ada foto
