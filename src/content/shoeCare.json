@@ -1,15 +1,21 @@
 {
-  "enabled": false,
+  "enabled": true,
+  "isDemo": true,
   "branchSlug": "bogor-bantarjati",
-  "name": "Partner Cuci Sepatu",
+  "name": "Cuci Sepatu Bogor (Demo)",
   "logo": "",
   "tagline": "Sepatu bersih sambil potong rambut.",
-  "description": "Titipkan sepatu saat berkunjung ke Cutless, dikerjakan oleh partner cuci sepatu kami.",
+  "description": "Titipkan sepatu saat berkunjung ke Cutless Bogor Bantarjati, dikerjakan oleh partner cuci sepatu kami.",
   "advantages": [
     {
       "title": "Titip saat potong rambut",
       "description": "Bawa sepatu saat datang ke studio, ambil kembali sesuai estimasi waktu.",
       "icon": "scissors"
+    },
+    {
+      "title": "Perawatan sesuai bahan",
+      "description": "Kanvas, kulit, suede, dan mesh dibersihkan dengan cara yang berbeda.",
+      "icon": "wash"
     },
     {
       "title": "Pesan lewat WhatsApp",
@@ -19,19 +25,47 @@
   ],
   "services": [
     {
-      "name": "Cuci sepatu",
-      "description": "",
-      "price": 0,
-      "priceFrom": true,
-      "estimate": "",
+      "name": "Fast Clean",
+      "description": "Pembersihan bagian luar dan sol.",
+      "price": 35000,
+      "priceFrom": false,
+      "estimate": "±1 hari",
       "isActive": true,
       "order": 10
+    },
+    {
+      "name": "Deep Clean",
+      "description": "Pembersihan menyeluruh bagian luar, dalam, sol, dan tali.",
+      "price": 55000,
+      "priceFrom": true,
+      "estimate": "±2–3 hari",
+      "isActive": true,
+      "order": 20
+    },
+    {
+      "name": "Unyellowing",
+      "description": "Mengurangi warna kuning pada sol karet.",
+      "price": 75000,
+      "priceFrom": true,
+      "estimate": "±3 hari",
+      "isActive": true,
+      "order": 30
+    },
+    {
+      "name": "Repaint",
+      "description": "Mewarnai ulang bagian yang pudar.",
+      "price": 150000,
+      "priceFrom": true,
+      "estimate": "±5 hari",
+      "isActive": true,
+      "order": 40
     }
   ],
   "photos": [],
   "notes": [
     "Estimasi waktu dapat berubah tergantung kondisi sepatu dan antrean.",
-    "Ketentuan barang titipan mengikuti kebijakan partner; tanyakan lewat WhatsApp sebelum menitipkan."
+    "Sepatu yang tidak diambil lebih dari 30 hari setelah selesai di luar tanggung jawab partner.",
+    "Hasil pada bahan tertentu (mis. suede tua) bisa berbeda; tanyakan lewat WhatsApp sebelum menitipkan."
   ],
   "whatsappNumber": "",
   "messageTemplate": "Halo {partner}, saya mau pesan {service} di Cutless Hair Studio cabang {branch}. (via website Cutless)"
