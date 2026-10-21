@@ -6,6 +6,7 @@ import { About } from '@/components/sections/About';
 import { Showcase } from '@/components/sections/Showcase';
 import { Services } from '@/components/sections/Services';
 import { Pricing } from '@/components/sections/Pricing';
+import { ShoeCare } from '@/components/sections/ShoeCare';
 import { Barbers } from '@/components/sections/Barbers';
 import { Gallery } from '@/components/sections/Gallery';
 import { Products } from '@/components/sections/Products';
@@ -40,6 +41,8 @@ export default function App() {
         <Showcase />
         <Services />
         <Pricing />
+        {/* Partner Cuci Sepatu: tidak dirender bila dimatikan di Pages CMS */}
+        <ShoeCare />
         <Barbers />
         <Gallery />
         <Products variant="teaser" />

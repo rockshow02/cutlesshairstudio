@@ -19,11 +19,14 @@ export const site: SiteContent = {
   nav: [
     { label: 'Layanan', sectionId: 'layanan' },
     { label: 'Harga', sectionId: 'harga' },
+    // Hanya menu HP & footer (navbar desktop sudah penuh), dan hanya saat section Cuci Sepatu tampil (buildSite)
+    { label: 'Cuci Sepatu', sectionId: 'cuci-sepatu', desktop: false },
     { label: 'Hairstylist', sectionId: 'hairstylist' },
     { label: 'Galeri', sectionId: 'galeri' },
     { label: 'Produk', href: '/produk/' },
     { label: 'Lokasi', sectionId: 'lokasi' },
-    { label: 'Kontak', sectionId: 'kontak' },  ],
+    { label: 'Kontak', sectionId: 'kontak' },
+  ],
   whatsapp: {
     // Diisi dari Pengaturan Situs (settings.json → mainWhatsappNumber = nomor pusat)
     number: '',
@@ -46,7 +49,7 @@ export const site: SiteContent = {
   email: '',
   // Diisi dari Pengaturan Situs (siteUrl & toggle section)
   siteUrl: '',
-  features: { testimonials: false, products: false, beforeAfter: false },
+  features: { testimonials: false, products: false, beforeAfter: false, shoeCare: false },
   intro: { enabled: true },
   // TODO: sesuaikan dengan rentang harga asli
   priceRange: 'Rp60.000 - Rp450.000',

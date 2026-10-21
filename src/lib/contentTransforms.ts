@@ -43,6 +43,8 @@ import type {
   ServicesContent,
   ShowcaseContent,
   ShowcaseCopy,
+  ShoeCareContent,
+  ShoeCareCopy,
   SiteContent,
   SocialLink,
   Testimonial,
@@ -63,14 +65,15 @@ import type {
   ProductEntry,
   PromoEntry,
   SettingsEntry,
+  ShoeCareEntry,
   StudioEntry,
   TestimonialEntry,
 } from '@/content/schema';
 import { srcSetOf } from './responsiveImage';
 import { PRICE_CATEGORIES } from '@/content/priceCategories';
-import { formatNumber } from './format';
+import { formatNumber, formatPrice } from './format';
 import { isActiveNow, parseWIB, toIsoWIB } from './dates';
-import { fillTemplate } from './whatsapp';
+import { fillTemplate, templateLink } from './whatsapp';
 
 /* ---------- Helper umum ---------- */
 
@@ -129,6 +132,55 @@ export function buildPartnerLogos(p: PartnersEntry | null | undefined, brandName
     items,
     animated: items.length > PARTNER_STATIC_MAX,
   };
+}
+
+/* ---------- Partner Cuci Sepatu (Pages CMS → Partner Cuci Sepatu) ---------- */
+
+export const SHOE_CARE_ID = 'cuci-sepatu';
+
+/**
+ * Section #cuci-sepatu. null = dimatikan, cabangnya tidak ada, atau belum ada layanan yang ditampilkan.
+ * Semua tombol WhatsApp ke nomor partner; kosong → nomor WhatsApp cabang partner (bukan cabang pilihan pengunjung).
+ */
+export function buildShoeCare(p: ShoeCareEntry | null | undefined, branches: Branch[], copy: ShoeCareCopy): ShoeCareContent | null {
+  if (!p || p.enabled !== true) return null;
+  const branch = branches.find((b) => b.slug === p.branchSlug);
+  const services = activeSorted(p.services ?? []);
+  if (!branch || services.length === 0) return null;
+  const number = text(p.whatsappNumber) ?? branch.whatsappNumber;
+  const template = text(p.messageTemplate) ?? copy.defaultTemplate;
+  const link = (service: string) => templateLink(number, template, { service, branch: branch.name });
+  const logo = text(p.logo);
+  const tagline = text(p.tagline);
+  return {
+    id: SHOE_CARE_ID,
+    heading: { kicker: copy.kicker, title: p.name, ...(tagline ? { intro: tagline } : {}) },
+    name: p.name,
+    description: text(p.description),
+    logo: logo ? toImage(logo, p.name, { width: 240, height: 120 }) : undefined,
+    branch: { slug: branch.slug, name: branch.name, pageUrl: branch.pageUrl },
+    advantages: (p.advantages ?? []).map((a) => ({ title: a.title, description: a.description, icon: a.icon ?? 'check' })),
+    services: services.map((s) => ({
+      name: s.name,
+      description: text(s.description),
+      price: formatPrice(s.price, s.priceFrom, copy.fromLabel),
+      estimate: text(s.estimate),
+      href: link(s.name),
+    })),
+    photos: (p.photos ?? []).map((ph) => responsiveImage(ph.image, ph.alt, '(min-width: 768px) 25vw, 70vw', { width: 1200, height: 900 })),
+    notes: (p.notes ?? []).map((n) => n.trim()).filter(Boolean),
+    mainHref: link(copy.genericService),
+    copy,
+  };
+}
+
+/**
+ * Tempat section Cuci Sepatu: halaman cabang lain → tidak tampil; beranda dengan cabang pilihan lain → tampil
+ * dengan catatan "hanya tersedia di cabang …"; selain itu tampil biasa.
+ */
+export function shoeCarePlacement(partnerSlug: string, ctx: { pageSlug?: string; selectedSlug?: string }): 'hidden' | 'available' | 'other-branch' {
+  if (ctx.pageSlug) return ctx.pageSlug === partnerSlug ? 'available' : 'hidden';
+  return ctx.selectedSlug && ctx.selectedSlug !== partnerSlug ? 'other-branch' : 'available';
 }
 
 /* ---------- Hero (Pages CMS → Hero) ---------- */
@@ -269,10 +321,10 @@ export function buildLocations(branches: Branch[], copy: BranchCopy): LocationsC
 
 /* ---------- Pengaturan situs ---------- */
 
-export function buildSite(s: SettingsEntry, base: SiteContent, branches: Branch[]): SiteContent {
+export function buildSite(s: SettingsEntry, base: SiteContent, branches: Branch[], extra: { shoeCare?: boolean } = {}): SiteContent {
   const logo = text(s.logo);
   const vars = { brand: s.siteName, cities: joinIndonesian(operatingCities(branches)) };
-  const features = { testimonials: s.showTestimonials, products: s.showProducts, beforeAfter: s.showBeforeAfter };
+  const features = { testimonials: s.showTestimonials, products: s.showProducts, beforeAfter: s.showBeforeAfter, shoeCare: Boolean(extra.shoeCare) };
   return {
     ...base,
     brandName: s.siteName,
@@ -280,7 +332,9 @@ export function buildSite(s: SettingsEntry, base: SiteContent, branches: Branch[
     features,
     intro: { enabled: s.enablePreloader !== false, video: text(s.preloaderVideo) },
     // Link menu ikut hilang bila section-nya dimatikan
-    nav: base.nav.filter((item) => !(item.href?.startsWith('/produk') && !features.products)),
+    nav: base.nav.filter(
+      (item) => !(item.href?.startsWith('/produk') && !features.products) && !(item.sectionId === SHOE_CARE_ID && !features.shoeCare),
+    ),
     logo: logo ? { ...base.logo, stacked: toImage(logo, s.siteName, base.logo.stacked) } : base.logo,
     whatsapp: {
       ...base.whatsapp,

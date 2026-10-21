@@ -210,6 +210,13 @@ function branchJsonLd(b: BranchEntry, bundle: ContentBundle) {
 
 const jsonLdTag = (data: unknown) => `<script type="application/ld+json">${JSON.stringify(data).replace(/</g, '\\u003c')}</script>`;
 
+/** Partner Cuci Sepatu tampil di halaman cabang ini (sama dengan buildShoeCare di src/lib/contentTransforms.ts) */
+export function shoeCareAt(b: BranchEntry, bundle: ContentBundle): string | null {
+  const p = bundle.shoeCare;
+  if (!p?.enabled || p.branchSlug !== b.slug || !p.services.some((s) => s.isActive !== false)) return null;
+  return p.name;
+}
+
 function branchHead(b: BranchEntry, bundle: ContentBundle): string {
   const { siteUrl, siteName } = bundle.settings;
   const url = `${siteUrl}/cabang/${b.slug}/`;
@@ -218,7 +225,7 @@ function branchHead(b: BranchEntry, bundle: ContentBundle): string {
   const description = clip(
     b.status === 'Segera Dibuka'
       ? `${siteName} segera hadir di ${b.city}. Cabang baru dengan hairstylist yang sama on point-nya.`
-      : `${siteName} cabang ${b.name}: cek jam buka hari ini, daftar harga, hairstylist, promo, dan booking via WhatsApp. ${where}`
+      : `${siteName} cabang ${b.name}: cek jam buka hari ini, daftar harga, hairstylist, promo, ${shoeCareAt(b, bundle) ? 'layanan cuci sepatu, ' : ''}dan booking via WhatsApp. ${where}`
   );
   const image = b.photo ? imageUrl(siteUrl, b.photo) : `${siteUrl}${OG_IMAGE}`;
   return [
@@ -247,6 +254,7 @@ function branchBody(b: BranchEntry, bundle: ContentBundle): string {
     b.status !== 'Aktif' ? `<p>${esc(b.status)}</p>` : '',
     isWa(b.whatsappNumber) && b.status === 'Aktif' ? `<p>WhatsApp: <a href="https://wa.me/${b.whatsappNumber}">+${b.whatsappNumber}</a></p>` : '',
     hours ? `<h2>Jam operasional</h2><ul>${hours}</ul>` : '',
+    shoeCareAt(b, bundle) ? `<p>Layanan cuci sepatu oleh ${esc(shoeCareAt(b, bundle)!)} tersedia di cabang ini.</p>` : '',
     '<p><a href="/cabang/">Semua cabang</a> · <a href="/">Beranda</a></p>',
     '</div>',
   ].join('');
