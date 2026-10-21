@@ -58,6 +58,8 @@ const coordinate = (min: number, max: number, label: string) =>
 
 const order = z.number().int('urutan harus bilangan bulat').min(0).default(0);
 const isActive = z.boolean().default(true);
+/** Data demo (dummy untuk staging): badge "DEMO" di staging/dev, build produksi (mode ketat) GAGAL bila tayang */
+const isDemo = z.boolean().default(false);
 
 /** Slug cabang: huruf kecil, angka, tanda minus. Dipakai di URL /cabang/<slug>/ */
 const SLUG_REGEX = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
@@ -371,6 +373,7 @@ export const partnersSchema = z.object({
         url: optionalHttpsUrl,
         isActive,
         order,
+        isDemo,
       }),
     )
     .max(40, 'maksimal 40 logo')
@@ -393,6 +396,8 @@ const shoeCareLogo = z.union([
 export const shoeCareSchema = z.object({
   /** false = section tidak tampil (bawaan sampai konten asli diisi) */
   enabled: z.boolean().default(false),
+  /** Seluruh isi section adalah data demo */
+  isDemo,
   /** Satu-satunya cabang tempat layanan tersedia */
   branchSlug: z
     .union([branchSlugRef, z.literal('')])
@@ -616,6 +621,14 @@ export function crossCheck(c: ContentBundle): { errors: ContentIssue[]; launch: 
   }
   if (c.settings.showProducts && shown(c.products).length === 0) {
     launch.push({ file: 'settings.json', where: 'Tampilkan produk', message: 'aktif tetapi belum ada produk; isi Produk dulu atau matikan' });
+  }
+  // Data demo yang TAYANG: peringatan di staging, menggagalkan build produksi (mode ketat)
+  const DEMO = 'data demo masih tayang: hapus atau matikan "Data demo", lalu isi konten asli (lihat panduan admin → Data demo)';
+  if (c.shoeCare.enabled && c.shoeCare.isDemo) launch.push({ file: 'shoeCare.json', where: `Partner Cuci Sepatu "${c.shoeCare.name}"`, message: DEMO });
+  if (c.partners.enabled !== false) {
+    shown(c.partners.logos ?? []).forEach((l) => {
+      if (l.isDemo) launch.push({ file: 'partners.json', where: `logo "${l.name}"`, message: DEMO });
+    });
   }
   if (c.shoeCare.enabled) {
     const services = shown(c.shoeCare.services);
