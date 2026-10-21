@@ -74,7 +74,7 @@ import type {
   TestimonialEntry,
 } from '@/content/schema';
 import { srcSetOf } from './responsiveImage';
-import { PRICE_CATEGORIES } from '@/content/priceCategories';
+import { PRICE_CATEGORIES, priceCategoryAnchor } from '@/content/priceCategories';
 import { formatNumber, formatPrice } from './format';
 import { isActiveNow, parseWIB, toIsoWIB } from './dates';
 import { fillTemplate, templateLink } from './whatsapp';
@@ -458,21 +458,22 @@ export function startingPrices(entries: PricingEntry[], branchSlug?: string): Pa
 }
 
 /**
- * Kartu Layanan (Pages CMS → Kartu Layanan) sinkron dengan Daftar Harga: hanya kartu tampil yang kategorinya punya
- * item harga aktif; "mulai Rp…" = harga terendah item aktif kategori itu (cabang terpilih, atau terendah semua cabang).
+ * Kartu Layanan (Pages CMS → Kartu Layanan): kartu deskriptif tanpa harga. Kategori harga (opsional) hanya untuk tautan
+ * "Lihat harga" ke kategori itu di Daftar Harga, dan hanya bila kategori punya item aktif (untuk cabang ini).
  */
 export function buildServices(entries: ServiceCardEntry[], copy: ServicesCopy, pricing: PricingEntry[], branchSlug?: string): ServicesContent {
-  const prices = startingPrices(pricing, branchSlug);
-  const items = activeSorted(entries)
-    .map((s, index) => ({
+  const priced = startingPrices(pricing, branchSlug);
+  const items: Service[] = activeSorted(entries).map((s, index) => {
+    const category = text(s.pricingCategory) as Service['pricingCategory'] | undefined;
+    const linked = category && priced[category] !== undefined ? category : undefined;
+    return {
       id: makeId(s.name, index),
       name: s.name,
       description: s.description,
       icon: (s.icon ?? 'scissors') as IconName,
-      pricingCategory: s.pricingCategory as Service['pricingCategory'],
-      startingPrice: prices[s.pricingCategory as PriceCategoryKey],
-    }))
-    .filter((s) => s.startingPrice !== undefined);
+      ...(linked ? { pricingCategory: linked, priceHref: `#${priceCategoryAnchor(linked)}` } : {}),
+    };
+  });
   return { heading: copy.heading, items };
 }
 

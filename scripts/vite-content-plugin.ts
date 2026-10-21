@@ -22,7 +22,7 @@ import { loadEnv, type Plugin, type ViteDevServer } from 'vite';
 import { CONTENT_FILES, crossCheck, type BranchEntry, type ContentBundle, type ContentIssue, type HeroEntry } from '../src/content/schema';
 import { srcSetOf, type ImageMeta } from '../src/lib/responsiveImage';
 import { applyE2EFixtures } from '../e2e/fixtures/content';
-import { branchDescription, homeDescription, pricedServiceNames } from '../src/content/serviceSeo';
+import { activeCategoryNames, branchDescription, homeDescription } from '../src/content/serviceSeo';
 
 const VIRTUAL_ID = 'virtual:image-meta';
 const RESOLVED_ID = `\0${VIRTUAL_ID}`;
@@ -225,7 +225,7 @@ function branchHead(b: BranchEntry, bundle: ContentBundle): string {
   const description = clip(
     b.status === 'Segera Dibuka'
       ? `${siteName} segera hadir di ${b.city}. Cabang baru dengan hairstylist yang sama on point-nya.`
-      : branchDescription(siteName, b.name, pricedServiceNames(bundle.services, bundle.pricing), Boolean(shoeCareAt(b, bundle)))
+      : branchDescription(siteName, b.name, activeCategoryNames(bundle.pricing), Boolean(shoeCareAt(b, bundle)))
   );
   const image = b.photo ? imageUrl(siteUrl, b.photo) : `${siteUrl}${OG_IMAGE}`;
   return [
@@ -286,8 +286,8 @@ function fillHtml(html: string, bundle: ContentBundle | undefined, meta: ImageMe
     .replaceAll('%SITE_URL%', siteUrl)
     .replaceAll('%BRAND%', esc(siteName))
     .replaceAll('%CITIES%', esc(citiesOf(bundle)))
-    // Meta beranda dari kategori layanan aktif (Kartu Layanan + Daftar Harga), maks. 160 karakter
-    .replaceAll('%HOME_DESCRIPTION%', esc(homeDescription(siteName, citiesOf(bundle), pricedServiceNames(bundle.services, bundle.pricing))))
+    // Meta beranda dari kategori Daftar Harga yang punya item aktif, maks. 160 karakter
+    .replaceAll('%HOME_DESCRIPTION%', esc(homeDescription(siteName, citiesOf(bundle), activeCategoryNames(bundle.pricing))))
     .replaceAll('%OG_IMAGE%', `${siteUrl}${OG_IMAGE}`)
     .replace('<!--cutless:jsonld-->', allBranches)
     .replace('<!--cutless:hero-preload-->', heroPreload(bundle.hero, meta));

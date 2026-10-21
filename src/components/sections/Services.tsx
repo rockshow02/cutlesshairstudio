@@ -1,9 +1,10 @@
+import type { MouseEvent } from 'react';
 import { getServices } from '@/lib/content';
 import { useContent } from '@/lib/useContent';
 import { useSite } from '@/lib/SiteContext';
 import { useBranch } from '@/lib/BranchContext';
 import { useBooking } from '@/lib/useBooking';
-import { formatPrice } from '@/lib/format';
+import { selectPriceCategory } from '@/lib/priceCategoryEvent';
 import type { Service } from '@/types';
 import { Section } from '@/components/ui/Section';
 import { SectionState } from '@/components/ui/SectionState';
@@ -41,12 +42,32 @@ export function Services() {
 function ServiceCard({ service, index }: { service: Service; index: number }) {
   const { site } = useSite();
   const book = useBooking();
-  const hasPrice = service.startingPrice !== undefined;
-  // Kategori tanpa harga aktif → "Tanya harga" ke WhatsApp cabang
-  const target = hasPrice
-    ? book({ kind: 'service', vars: { service: service.name } })
-    : book({ kind: 'priceQuestion', vars: { service: service.name } });
+  const target = book({ kind: 'service', vars: { service: service.name } });
+  return (
+    <ServiceCardView
+      service={service}
+      index={index}
+      bookHref={target.href}
+      bookExternal={target.external}
+      onBook={target.onClick}
+      viewPriceLabel={site.ui.viewPrice}
+      bookLabel={site.ui.book}
+    />
+  );
+}
 
+interface ServiceCardViewProps {
+  service: Service;
+  index: number;
+  bookHref: string;
+  bookExternal?: boolean;
+  onBook?: (event: MouseEvent<HTMLElement>) => void;
+  viewPriceLabel: string;
+  bookLabel: string;
+}
+
+/** Kartu deskriptif tanpa harga; harga ada di Daftar Harga (tautan "Lihat harga" bila kategori diatur & aktif) */
+export function ServiceCardView({ service, index, bookHref, bookExternal = true, onBook, viewPriceLabel, bookLabel }: ServiceCardViewProps) {
   return (
     <Card className={styles.card}>
       {service.image && <ResponsiveImage image={service.image} className={styles.photo} />}
@@ -59,14 +80,14 @@ function ServiceCard({ service, index }: { service: Service; index: number }) {
       <h3 className={styles.name}>{service.name}</h3>
       <p className={styles.desc}>{service.description}</p>
       <CardFooter className={styles.foot}>
-        {hasPrice && <span className={styles.price}>{formatPrice(service.startingPrice as number, true, site.ui.priceFrom)}</span>}
-        <a
-          className={styles.link}
-          href={target.href}
-          onClick={target.onClick}
-          {...(target.external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
-        >
-          {hasPrice ? site.ui.book : site.ui.askPrice}
+        {service.priceHref && service.pricingCategory && (
+          <a className={styles.priceLink} href={service.priceHref} onClick={() => selectPriceCategory(service.pricingCategory!)}>
+            {viewPriceLabel}
+            <span className="visually-hidden"> {service.name}</span>
+          </a>
+        )}
+        <a className={styles.link} href={bookHref} onClick={onBook} {...(bookExternal ? { target: '_blank', rel: 'noopener noreferrer' } : {})}>
+          {bookLabel}
           <span className="visually-hidden"> {service.name}</span>
           <Icon name="arrow" size={16} />
         </a>

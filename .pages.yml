@@ -328,14 +328,14 @@ content:
         label: Judul kartu
         type: string
         required: true
-        description: "Biasanya sama dengan nama kategori harga, mis. Wanita. Juga dipakai di pesan WhatsApp dan deskripsi Google. Maksimal 40 karakter."
+        description: "Mis. Coloring. Juga dipakai di pesan WhatsApp tombol Booking. Maksimal 40 karakter."
         options:
           maxlength: 40
       - name: description
         label: Deskripsi
         type: text
         required: true
-        description: "Sebutkan layanan yang ADA di Daftar Harga kategori ini, mis. Cornrow, braids box, dan dreadlock. Maksimal 160 karakter."
+        description: "Kartu deskriptif bebas (tanpa harga). Sebutkan layanan yang memang tersedia, mis. Cornrow, braids box, dan dreadlock. Maksimal 160 karakter."
         options:
           maxlength: 160
       - name: icon
@@ -346,10 +346,9 @@ content:
         options:
           values: [scissors, wash, shave, color, perm, kids, spa, tattoo, user, star, gift, tag]
       - name: pricingCategory
-        label: Kategori harga
+        label: Kategori harga (opsional)
         type: select
-        required: true
-        description: "Harga 'mulai Rp…' diambil otomatis dari harga terendah item aktif kategori ini. Kategori tanpa item aktif → kartu tidak tampil. Satu kartu per kategori."
+        description: "Hanya untuk tautan \"Lihat harga\" yang menggulir ke kategori ini di Daftar Harga. Tautan tidak tampil bila kosong atau kategori tanpa item aktif. Kartu tidak menampilkan harga."
         options:
           values: [Haircut, Special Treatment, Woman Haircut & Treatment, Haircut & Grooming, Wanita, Treatment, Coloring, Perming, Braids & Dreadlock, Shaving, Kids]
       - name: order

@@ -230,3 +230,13 @@
     gap: var(--space-5);
   }
 }
+
+/* Target anchor kategori di HP (tab): tanpa ukuran, menghormati offset navbar */
+.anchor {
+  display: block;
+  height: 0;
+  scroll-margin-top: calc(var(--header-offset) + var(--space-4));
+}
+.category {
+  scroll-margin-top: calc(var(--header-offset) + var(--space-4));
+}

@@ -78,6 +78,7 @@ export const site: SiteContent = {
     empty: 'Konten belum tersedia. Hubungi kami via WhatsApp untuk info terbaru.',
     error: 'Konten gagal dimuat. Coba muat ulang halaman.',
     askPrice: 'Tanya harga',
+    viewPrice: 'Lihat harga',
     priceFrom: 'mulai',
     previous: 'Sebelumnya',
     next: 'Berikutnya',

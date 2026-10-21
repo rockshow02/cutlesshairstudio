@@ -1,8 +1,9 @@
-import { useId, useRef, useState, type KeyboardEvent } from 'react';
+import { useEffect, useId, useRef, useState, type KeyboardEvent } from 'react';
 import { getPricing } from '@/lib/content';
 import { useContent } from '@/lib/useContent';
 import { formatRupiah, formatThousandsK } from '@/lib/format';
 import { priceCategoryAnchor } from '@/content/priceCategories';
+import { categoryFromHash, PRICE_CATEGORY_EVENT } from '@/lib/priceCategoryEvent';
 import { fillTemplate } from '@/lib/whatsapp';
 import { useBranch } from '@/lib/BranchContext';
 import { useBooking } from '@/lib/useBooking';
@@ -126,6 +127,28 @@ function PriceCategories({ categories, priceFromLabel }: { categories: PriceCate
   const tabsRef = useRef<HTMLDivElement>(null);
   const active = categories.find((c) => c.id === activeId) ?? categories[0];
 
+  // "Lihat harga" di kartu Layanan / hash #harga-<kategori> → pilih tab kategori itu (HP)
+  const ids = categories.map((c) => c.id).join('|');
+  useEffect(() => {
+    const keys = ids.split('|');
+    const fromHash = categoryFromHash(keys);
+    if (fromHash) setActiveId(fromHash);
+    const onSelect = (e: Event) => {
+      const key = (e as CustomEvent<string>).detail;
+      if (keys.includes(key)) setActiveId(key);
+    };
+    const onHash = () => {
+      const key = categoryFromHash(keys);
+      if (key) setActiveId(key);
+    };
+    window.addEventListener(PRICE_CATEGORY_EVENT, onSelect);
+    window.addEventListener('hashchange', onHash);
+    return () => {
+      window.removeEventListener(PRICE_CATEGORY_EVENT, onSelect);
+      window.removeEventListener('hashchange', onHash);
+    };
+  }, [ids]);
+
   if (!mobile || categories.length < 2) {
     return (
       <div className={styles.categories}>
@@ -157,6 +180,10 @@ function PriceCategories({ categories, priceFromLabel }: { categories: PriceCate
 
   return (
     <div className={styles.tabbed}>
+      {/* Target anchor #harga-<kategori> di HP (kategori tampil sebagai tab) */}
+      {categories.map((c) => (
+        <span key={c.id} id={priceCategoryAnchor(c.id)} className={styles.anchor} aria-hidden="true" />
+      ))}
       <div ref={tabsRef} className={styles.tabs} role="tablist" aria-label="Kategori harga" onKeyDown={onKeyDown}>
         {categories.map((c) => (
           <button

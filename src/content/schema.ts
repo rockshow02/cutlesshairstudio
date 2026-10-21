@@ -391,8 +391,10 @@ export const serviceCardSchema = z.object({
   name: requiredText(40, 'judul kartu'),
   description: requiredText(160, 'deskripsi kartu'),
   icon: z.enum(SERVICE_ICONS, { error: `ikon harus salah satu: ${SERVICE_ICONS.join(', ')}` }).default('scissors'),
-  /** "mulai Rp…" = harga terendah item aktif kategori ini; kategori tanpa item aktif → kartu tidak tampil */
-  pricingCategory: z.enum(SERVICE_CATEGORIES as [string, ...string[]], { error: `kategori harga harus salah satu: ${SERVICE_CATEGORIES.join(', ')}` }),
+  /** Opsional: tautan "Lihat harga" ke kategori ini di Daftar Harga (tampil bila kategori punya item aktif) */
+  pricingCategory: z
+    .union([z.enum(SERVICE_CATEGORIES as [string, ...string[]], { error: `kategori harga harus salah satu: ${SERVICE_CATEGORIES.join(', ')}` }), z.literal('')])
+    .nullish(),
   order,
   isActive,
 });
@@ -642,14 +644,6 @@ export function crossCheck(c: ContentBundle): { errors: ContentIssue[]; launch: 
   if (c.settings.showProducts && shown(c.products).length === 0) {
     launch.push({ file: 'settings.json', where: 'Tampilkan produk', message: 'aktif tetapi belum ada produk; isi Produk dulu atau matikan' });
   }
-  // Kartu Layanan sinkron dengan Daftar Harga: satu kartu tampil per kategori yang punya harga aktif
-  const pricedCategories = [...new Set(shown(c.pricing).map((p) => p.category))].filter((cat) => cat !== 'Paket');
-  const cardCount = (cat: string) => shown(c.services).filter((s) => s.pricingCategory === cat).length;
-  pricedCategories.forEach((cat) => {
-    if (cardCount(cat) === 0) launch.push({ file: 'services.json', where: `kategori "${cat}"`, message: 'punya harga aktif di Daftar Harga tetapi belum ada kartu Layanan yang tampil' });
-    if (cardCount(cat) > 1) launch.push({ file: 'services.json', where: `kategori "${cat}"`, message: 'lebih dari satu kartu Layanan tampil untuk kategori yang sama' });
-  });
-
   // Data demo yang TAYANG: peringatan di staging, menggagalkan build produksi (mode ketat)
   const DEMO = 'data demo masih tayang: hapus atau matikan "Data demo", lalu isi konten asli (lihat panduan admin → Data demo)';
   if (c.shoeCare.enabled && c.shoeCare.isDemo) launch.push({ file: 'shoeCare.json', where: `Partner Cuci Sepatu "${c.shoeCare.name}"`, message: DEMO });
