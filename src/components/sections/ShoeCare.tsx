@@ -10,6 +10,7 @@ import { Card, CardFooter } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Icon } from '@/components/ui/Icon';
 import { ResponsiveImage } from '@/components/ui/ResponsiveImage';
+import { DemoBadge } from '@/components/ui/DemoBadge';
 import styles from './ShoeCare.module.css';
 
 /**
@@ -47,6 +48,7 @@ export function ShoeCareView({ data, otherBranch }: { data: ShoeCareContent; oth
               {data.description && <p className={styles.description}>{data.description}</p>}
               <div className={styles.meta}>
                 {data.logo && <ResponsiveImage image={data.logo} className={styles.logo} />}
+                <DemoBadge show={data.isDemo} />
                 <span className={styles.available}>
                   <Icon name="pin" size={14} />
                   {copy.availableAt} {data.branch.name}

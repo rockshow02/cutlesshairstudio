@@ -6,6 +6,7 @@ import { usePageHidden } from '@/lib/usePageHidden';
 import { asset } from '@/lib/asset';
 import type { ImageAsset, PartnerLogo, PartnerLogosContent } from '@/types';
 import { Marquee } from '@/components/motion/Marquee';
+import { DemoBadge } from '@/components/ui/DemoBadge';
 import styles from './PartnerLogos.module.css';
 
 /**
@@ -94,7 +95,12 @@ function Loop({ items }: { items: PartnerLogo[] }) {
 }
 
 function Item({ partner }: { partner: PartnerLogo }) {
-  const content = partner.logo ? <LogoMark image={partner.logo} /> : <span className={styles.name}>{partner.name}</span>;
+  const content = (
+    <>
+      {partner.logo ? <LogoMark image={partner.logo} /> : <span className={styles.name}>{partner.name}</span>}
+      <DemoBadge show={partner.isDemo} className={styles.demo} />
+    </>
+  );
   if (!partner.url) return <span className={styles.item}>{content}</span>;
   return (
     <a className={styles.item} href={partner.url} target="_blank" rel="noopener noreferrer">
