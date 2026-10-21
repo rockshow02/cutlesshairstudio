@@ -95,16 +95,21 @@ Cabang baru muncul sebagai pilihan di menu Barber, Harga, Promo, dan Pengumuman 
 
 ## 1. Mengubah harga
 
-1. Klik **Daftar Harga** → buka layanan yang mau diubah, misalnya *Signature Haircut*.
-2. Ubah **Harga (Rupiah)**: tulis **angka saja, tanpa titik dan tanpa "Rp"**. Contoh: `85000` (tampil *Rp 85.000*).
+Daftar Harga tampil dalam **3 kategori** (urutan ini): **Haircut**, **Special Treatment**, **Woman Haircut & Treatment**. Harga ditulis singkat dengan akhiran **K** tanpa "Rp": `100000` tampil **100K**, `1500000` tampil **1500K**.
+
+1. Klik **Daftar Harga** → buka layanan yang mau diubah, misalnya *White Grooming*.
+2. Ubah **Harga (Rupiah)**: tulis **angka saja, tanpa titik dan tanpa "Rp"**. Contoh: `100000` (tampil *100K*).
 3. Klik **Save**.
 
 Lainnya:
-- **Harga mulai**: aktifkan bila harga bisa lebih mahal (tampil *mulai Rp 150.000*).
+- **Harga mulai**: aktifkan bila harga bisa lebih mahal. Tampil label kecil **Start from** sebelum harga, mis. *Start from 400K*.
+- **Keterangan**: baris kecil di bawah nama layanan, mis. *Haircut + Hair Wash*. Kosongkan bila tidak perlu (tidak tampil).
+- **Kategori**: pilih salah satu dari 3 kategori di atas. Kategori lama (*Haircut & Grooming, Wanita, Treatment, Coloring, Perming, Braids & Dreadlock, Shaving, Kids*) hanya untuk item **nonaktif** yang disimpan; bila item lama dinyalakan lagi, pindahkan dulu ke salah satu dari 3 kategori.
 - **Label khusus**: *Best Seller*, *Baru*, atau *Promo*. Kosongkan bila tidak perlu.
 - **Urutan**: angka kecil tampil lebih dulu (pakai kelipatan 10 agar mudah menyisipkan: 10, 20, 30).
 - **Tambah layanan**: **Add an entry** → isi nama, kategori, harga → **Save**.
-- **Paket/membership**: pilih kategori **Paket**. Di **Keterangan**, tulis isi paket **satu poin per baris**:
+- **Menyembunyikan layanan**: matikan **Aktif** (data tidak hilang).
+- **Paket/membership**: pilih kategori **Paket** (tetap tampil dalam Rupiah biasa). Di **Keterangan**, tulis isi paket **satu poin per baris**:
   ```
   4x Signature Haircut
   Berlaku 60 hari
@@ -112,28 +117,23 @@ Lainnya:
   ```
   Paket berlabel *Best Seller* tampil sebagai kartu yang menonjol.
 
-**Harga berbeda per cabang:** **Harga (Rupiah)** adalah harga dasar untuk semua cabang. Bila satu cabang berbeda, buka **Harga khusus cabang** → **Add an entry** → pilih **Cabang** → isi **Harga di cabang ini** → **Save**. Pengunjung yang sudah memilih cabang melihat harga cabangnya; yang belum memilih melihat *mulai Rp…* (harga terendah).
-
-Harga "mulai" pada kartu **Layanan** di halaman utama dihitung otomatis dari Daftar Harga, jadi tidak perlu diubah terpisah.
+**Harga berbeda per cabang:** **Harga (Rupiah)** adalah harga dasar untuk semua cabang. Bila satu cabang berbeda, buka **Harga khusus cabang** → **Add an entry** → pilih **Cabang** → isi **Harga di cabang ini** → **Save**. Pengunjung yang sudah memilih cabang melihat harga cabangnya; yang belum memilih melihat *Start from* harga terendah.
 
 ---
 
 ## 1a. Kartu Layanan (section Layanan & daftar layanan di Lokasi)
 
-Menu **Kartu Layanan** mengatur kartu di section **Layanan** dan daftar layanan cabang di section **Lokasi**. Kartu **otomatis sinkron dengan Daftar Harga**:
-- Satu kartu per **kategori harga** (Haircut & Grooming, Wanita, Treatment, Coloring, Perming, Braids & Dreadlock, …).
-- **"mulai Rp…"** dihitung otomatis dari harga **terendah item aktif** di kategori itu (untuk cabang yang dipilih pengunjung). Tidak perlu diketik.
-- Kategori yang **tidak punya item harga aktif** → kartunya **tidak tampil** otomatis, walau **Tampilkan** menyala.
-- Deskripsi Google beranda & halaman cabang ikut dibuat dari judul kartu yang tampil.
+Menu **Kartu Layanan** mengatur kartu di section **Layanan** dan daftar layanan cabang di section **Lokasi**. Kartu bersifat **deskriptif dan tidak menampilkan harga** (harga hanya di Daftar Harga).
 
 Kolom tiap kartu:
-- **Judul kartu** (wajib, maks. 40): biasanya nama kategori, mis. *Wanita*. Ikut tertulis di pesan WhatsApp.
-- **Deskripsi** (wajib, maks. 160): sebutkan layanan yang **ada** di Daftar Harga kategori itu. Jangan menulis layanan yang tidak ada harganya.
-- **Ikon**, **Kategori harga** (wajib, satu kartu per kategori), **Urutan** (angka kecil tampil lebih dulu), **Tampilkan**.
+- **Judul kartu** (wajib, maks. 40), mis. *Coloring*. Ikut tertulis di pesan WhatsApp tombol **Booking**.
+- **Deskripsi** (wajib, maks. 160): sebutkan layanan yang memang tersedia, mis. *Cornrow, braids box (non-extension), dan dreadlock*. Jangan menyebut layanan yang sudah dinonaktifkan di Daftar Harga.
+- **Ikon**, **Urutan** (angka kecil tampil lebih dulu), **Tampilkan**.
+- **Kategori harga** (opsional): bila diisi, kartu menampilkan tautan **Lihat harga** yang menggulir ke kategori itu di Daftar Harga (di HP, tab kategori itu langsung terpilih). Tautan tidak tampil bila kosong atau kategorinya tanpa item aktif. Beberapa kartu boleh memakai kategori yang sama.
 
-**Menambah kategori baru:** tambahkan item di **Daftar Harga** dengan kategori itu, lalu buat kartunya di **Kartu Layanan**. Bila ada kategori berharga aktif tanpa kartu, atau dua kartu tampil untuk kategori yang sama, website asli menolak tayang dan badge **STAGING** menyebut masalahnya.
+Deskripsi Google beranda & halaman cabang dibuat otomatis dari **kategori Daftar Harga yang punya item aktif** (maks. 160 karakter).
 
-Kartu lama yang disembunyikan (Tampilkan mati, tidak dihapus): *Haircut + Wash, Shaving & Beard, Kids Haircut, Hair Spa, Hair Tattoo*. Nyalakan lagi bila item harganya diaktifkan kembali.
+Kartu lama yang disembunyikan (Tampilkan mati, tidak dihapus): *Haircut + Wash, Shaving & Beard, Kids Haircut, Hair Spa, Hair Tattoo*.
 
 ## 2. Menambah atau menonaktifkan barber
 
@@ -242,29 +242,29 @@ Catatan:
 - 1–2 logo tampil diam di tengah; 3 logo atau lebih berjalan dan berhenti saat disentuh kursor. Pengunjung dengan pengaturan "kurangi gerakan" melihat deret diam yang bisa digeser.
 - Halaman `/partner/` lama sudah dicabut (diarahkan ke beranda); arsipnya ada di branch `archive/partner-page` (tag `partner-page-v1`).
 
-## 3f. Partner Cuci Sepatu (section #cuci-sepatu)
+## 3f. Partner Cuci Sepatu (halaman /cuci-sepatu/)
 
-Menu **Partner Cuci Sepatu** mengatur satu section untuk partner jasa cuci sepatu. Section berlatar terang hangat (berbeda dari Daftar Harga, dengan pita kecil *Partner Cutless* di garis atasnya) tampil **setelah Daftar Harga** di beranda dan di halaman cabang yang dipilih (bawaan: **Bogor Bantarjati**). Di halaman cabang lain section tidak tampil. Pengunjung yang memilih cabang lain tetap melihat section dengan catatan *"Layanan cuci sepatu hanya tersedia di cabang …"*, dan tombol WhatsApp tetap ke nomor partner.
+Menu **Partner Cuci Sepatu** mengatur **halaman tersendiri** `/cuci-sepatu/` untuk partner jasa cuci sepatu di satu cabang (bawaan: **Bogor Bantarjati**), plus **kartu teaser kecil** setelah Daftar Harga di beranda dan di halaman cabang partner (tombol **Lihat Layanan** ke halaman).
 
-**Section mati secara bawaan.** Isi dulu data asli partner, baru nyalakan.
+Susunan halaman: **hero** (foto besar, logo, nama, tagline, badge *Tersedia di [cabang]*, tombol *Titip Sepatu via WhatsApp* & *Lihat Daftar Menu*) → **About Us** (judul, paragraf, foto, poin keunggulan) → **Layanan** (tanpa harga, tombol *Pesan via WhatsApp* per layanan) → **Galeri** hasil (klik foto untuk memperbesar; tidak tampil bila belum ada foto) → **catatan & tombol WhatsApp** → **lokasi cabang** (alamat, jam buka, petunjuk arah).
+
+**Tombol tampil/sembunyi:**
+- **Tampilkan halaman**: mati = `/cuci-sepatu` dialihkan ke beranda, teaser, menu *Cuci Sepatu* (HP & footer), dan sebutan cuci sepatu di Google halaman cabang hilang. Halaman juga otomatis tidak tampil bila belum ada layanan yang ditampilkan.
+- **Tampilkan teaser di beranda**: kartu teaser setelah Daftar Harga (beranda & halaman cabang partner).
+- **Data demo**: lihat §3g.
 
 **Cara mengisi:**
-1. **Cabang**: cabang tempat layanan tersedia.
-2. **Nama partner** (wajib, maks. 60), **Logo** (opsional, PNG transparan atau SVG), **Tagline** (maks. 120), **Deskripsi singkat** (maks. 300).
-3. **Keunggulan**: 2–4 poin (judul maks. 40, deskripsi maks. 120, pilih ikon).
-4. **Layanan**: 1–8 layanan. Isi **Nama layanan** (maks. 40, ikut tertulis di pesan WhatsApp), **Deskripsi** (opsional, maks. 120), **Harga** (angka saja, mis. `45000`), centang **"mulai"** bila harga bisa naik, **Estimasi waktu** (mis. `±2 hari`, maks. 30), **Tampilkan**, dan **Urutan**.
-   - Harga awal **0** berarti belum diisi. Website menolak tayang di produksi bila section dinyalakan dengan harga 0.
-5. **Foto hasil** (opsional, 0–8 foto, dengan izin partner): wajib diberi **Deskripsi foto** (maks. 150). Dikompres otomatis ke WebP 1200 px + versi HP 600 px. Galeri hanya tampil bila ada foto.
-6. **Catatan / ketentuan**: poin kecil (maks. 160), mis. durasi pengerjaan atau tanggung jawab barang titipan.
-7. **Nomor WhatsApp partner** (opsional, format `628xxxxxxxxxx`). **Kosong = nomor WhatsApp cabang** di atas.
-8. **Template pesan WhatsApp** (maks. 500). Placeholder yang bisa dipakai (penulisan harus persis, huruf kecil):
-   - `{partner}` = **Nama partner** (ikut berubah otomatis bila nama partner diganti),
-   - `{service}` = nama layanan (tombol utama: *layanan cuci sepatu*),
-   - `{branch}` = nama cabang.
+1. **Cabang**, **Nama partner** (wajib, maks. 60), **Logo** (PNG transparan/SVG), **Tagline** (maks. 120), **Deskripsi singkat** (maks. 300, tampil di hero).
+2. **Foto hero**: foto lebar minimal 1920 px. Kosong = foto hasil pertama, lalu foto CTA penutup. Dipakai juga sebagai gambar saat link dibagikan (WhatsApp/sosial media).
+3. **About Us**: **Judul** (opsional, maks. 60; kosong = *Tentang [nama partner]*), **Paragraf** (1–3, maks. 400 per paragraf), **Foto** (opsional; **Deskripsi foto** wajib bila foto diisi, maks. 150).
+4. **Keunggulan**: 2–4 poin (judul maks. 40, deskripsi maks. 120, ikon).
+5. **Layanan**: 1–8 layanan, **tanpa harga**: nama (maks. 40), deskripsi (maks. 120), estimasi waktu (maks. 30), **ikon atau foto** opsional, **Tampilkan**, **Urutan**.
+6. **Link Daftar Menu** (opsional): daftar menu & harga partner, harus diawali `https://` (boleh link **Google Drive**: buka file → *Bagikan* → *Siapa saja yang memiliki link* → salin). Tombol *Lihat Daftar Menu* dibuka di tab baru dan tidak tampil bila kosong.
+7. **Foto hasil** (0–8, dengan izin partner; deskripsi foto wajib), **Catatan / ketentuan** (maks. 160 per poin).
+8. **Nomor WhatsApp partner** (opsional, `628xxxxxxxxxx`; kosong = nomor WhatsApp cabang di atas).
+9. **Template pesan WhatsApp** (maks. 500). Placeholder (huruf kecil persis): `{partner}` = nama partner, `{service}` = nama layanan (tombol umum: *layanan cuci sepatu*), `{branch}` = nama cabang. Pertahankan penanda `(via website Cutless)` agar pesanan dari website bisa dikenali partner.
 
-   Placeholder lain (mis. `{nama}`, `{Partner}`) ditolak saat Save. Bawaan: *Halo {partner}, saya mau pesan {service} di Cutless Hair Studio cabang {branch}. (via website Cutless)* → mis. *Halo Sepatu Kinclong, saya mau pesan Deep Clean di Cutless Hair Studio cabang Bogor Bantarjati. (via website Cutless)*. **Pertahankan penanda `(via website Cutless)`** agar pesanan dari website bisa dikenali partner.
-
-**Cara menyalakan:** setelah nama, harga, dan nomor WhatsApp asli terisi, centang **Tampilkan section** → **Save**. Tunggu ±2 menit, lalu cek beranda dan halaman cabang. Menu **Cuci Sepatu** otomatis muncul di menu HP dan footer (tidak di navbar desktop), dan deskripsi Google halaman cabang menyebut layanan cuci sepatu. Matikan centang untuk menyembunyikan lagi; datanya tidak hilang.
+Setelah **Save**, tunggu ±2 menit, lalu buka `/cuci-sepatu/` dan beranda. Judul Google halaman: *Cuci Sepatu [nama partner] di Cutless [cabang]*; deskripsinya dari tagline + nama layanan.
 
 ## 3g. Data demo (hapus/matikan sebelum launch)
 
@@ -276,13 +276,13 @@ Beberapa isian di **staging** sengaja diisi **data dummy** agar section bisa did
 
 | Menu | Isian demo |
 |---|---|
-| Partner Cuci Sepatu | Seluruh section: nama *Cuci Sepatu Bogor (Demo)*, 3 keunggulan, 4 layanan & harga fiktif (Fast Clean Rp 35.000, Deep Clean mulai Rp 55.000, Unyellowing mulai Rp 75.000, Repaint mulai Rp 150.000), 3 catatan ketentuan. Tanpa logo & foto; nomor WhatsApp partner kosong (memakai WhatsApp cabang Bogor Bantarjati) |
+| Partner Cuci Sepatu | Seluruh section: nama *Cuci Sepatu Bogor (Demo)*, 3 keunggulan, 4 layanan fiktif (Fast Clean, Deep Clean, Unyellowing, Repaint), 3 catatan ketentuan. Tanpa logo & foto; nomor WhatsApp partner kosong (memakai WhatsApp cabang Bogor Bantarjati) |
 | Logo Partner | 4 logo teks: *Partner Demo A*, *Partner Demo B*, *Partner Demo C*, *Partner Demo D* (tanpa gambar & link) |
 
 **Cara menghapus atau mematikan sebelum launch:**
 - **Partner Cuci Sepatu**, pilih salah satu:
   - *Sudah ada data partner asli*: ganti nama, keunggulan, layanan, harga, catatan, (opsional) logo, foto, dan nomor WhatsApp partner → **hilangkan centang Data demo** → **Save**.
-  - *Belum ada partner*: **hilangkan centang Tampilkan section** → **Save** (section, menu *Cuci Sepatu*, dan sebutan di Google hilang; data tetap tersimpan untuk nanti).
+  - *Belum ada partner*: **hilangkan centang Tampilkan halaman** → **Save** (halaman dialihkan ke beranda; teaser, menu *Cuci Sepatu*, dan sebutan di Google hilang; data tetap tersimpan untuk nanti).
 - **Logo Partner**: hapus keempat entri *Partner Demo A–D* (ikon tempat sampah), atau matikan **Tampilkan** pada tiap entri → **Save**. Tambahkan logo partner asli seperti biasa (tanpa centang Data demo). Bila belum ada logo asli, pita logo otomatis tidak tampil.
 - Cek: badge **STAGING** tidak lagi menyebut data demo, dan tidak ada badge **DEMO** di beranda.
 
@@ -365,6 +365,7 @@ Klik **Pengaturan Situs**. Menu ini hanya berisi data merek. Alamat dan jam buka
 | Alamat website (domain resmi) | Link yang dibagikan di Google/WhatsApp/sosial media. Ganti **hanya** saat pindah domain, mis. `https://cutlesshairstudio.id` (tanpa `/` di akhir) | wajib |
 | Nomor WhatsApp pusat | Pertanyaan umum & kontak di footer. Booking memakai nomor cabang | wajib, format `628xxxxxxxxxx` |
 | Pesan booking default | Pesan otomatis tombol booking. `{brand}` = nama usaha, `{branch}` = nama cabang | maks. **500** karakter (emoji dihitung 2) |
+| Template pesan booking kapster | Pesan semua tombol **Booking [nama barber]**. Placeholder (huruf kecil): `{brand}` = nama usaha, `{branch}` = cabang barber, `{barber}` = nama barber yang diklik. Kosong = template bawaan (formulir reservasi). Tombol booking umum tetap memakai *Pesan booking default* | maks. **500** karakter (emoji dihitung 2); sisakan ruang untuk nama barber & cabang |
 | Link Instagram / TikTok | Ikon sosial media di footer. **Kosongkan untuk menyembunyikan** | link lengkap `https://…` |
 | Email | Baris email di footer. **Kosongkan untuk menyembunyikan** | format email valid, maks. 100 karakter |
 | Tagline footer | Kalimat di bawah logo footer. Tulis `{cities}` untuk kota cabang otomatis, mis. *Hair studio di {cities}. Goodstyle, goodmood.* → *Hair studio di Bogor & Cibubur. …* | maks. **160** karakter |
@@ -442,6 +443,7 @@ Form Pages CMS menolak isian yang melebihi batas, dan website memeriksa batas ya
 | Produk | Deskripsi singkat | 400 | opsional |
 | Pengaturan Situs | Nama usaha | 80 | wajib |
 | Pengaturan Situs | Pesan booking default | 500 | opsional |
+| Pengaturan Situs | Template pesan booking kapster | 500 (emoji dihitung 2) | opsional |
 | Pengaturan Situs | Email | 100 | opsional |
 | Pengaturan Situs | Tagline footer | 160 | opsional |
 | Logo Partner | Label kecil di atas pita | 40 | opsional |
@@ -450,6 +452,9 @@ Form Pages CMS menolak isian yang melebihi batas, dan website memeriksa batas ya
 | Partner Cuci Sepatu | Tagline / Deskripsi singkat | 120 / 300 | opsional |
 | Partner Cuci Sepatu | Keunggulan → Judul / Deskripsi | 40 / 120 | wajib (2–4 poin) |
 | Partner Cuci Sepatu | Layanan → Nama / Deskripsi / Estimasi waktu | 40 / 120 / 30 | nama wajib (1–8 layanan) |
+| Partner Cuci Sepatu | Judul About Us | 60 | opsional |
+| Partner Cuci Sepatu | Paragraf About Us | 400 per paragraf | wajib (1–3 paragraf) |
+| Partner Cuci Sepatu | Deskripsi foto About Us | 150 | wajib bila foto diisi |
 | Partner Cuci Sepatu | Foto hasil → Deskripsi foto | 150 | wajib bila foto diisi |
 | Partner Cuci Sepatu | Catatan / ketentuan | 160 per poin | opsional |
 | Partner Cuci Sepatu | Template pesan WhatsApp | 500 | opsional |
