@@ -249,6 +249,28 @@ Menu **Partner Cuci Sepatu** mengatur satu section untuk partner jasa cuci sepat
 
 **Cara menyalakan:** setelah nama, harga, dan nomor WhatsApp asli terisi, centang **Tampilkan section** → **Save**. Tunggu ±2 menit, lalu cek beranda dan halaman cabang. Menu **Cuci Sepatu** otomatis muncul di menu HP dan footer (tidak di navbar desktop), dan deskripsi Google halaman cabang menyebut layanan cuci sepatu. Matikan centang untuk menyembunyikan lagi; datanya tidak hilang.
 
+## 3g. Data demo (hapus/matikan sebelum launch)
+
+Beberapa isian di **staging** sengaja diisi **data dummy** agar section bisa didemokan ke klien sebelum konten asli tersedia. Isian ini ditandai centang **Data demo (hapus/matikan sebelum launch)**:
+- di staging dan saat pengembangan muncul badge kecil kuning **DEMO** di sampingnya;
+- **website asli (produksi) menolak tayang** selama masih ada data demo yang tampil. Build gagal dengan pesan *"data demo masih tayang: hapus atau matikan Data demo …"* yang menyebut isian mana saja. Badge **STAGING** di pojok layar juga menghitungnya sebagai *belum siap*.
+
+**Data demo saat ini (staging):**
+
+| Menu | Isian demo |
+|---|---|
+| Partner Cuci Sepatu | Seluruh section: nama *Cuci Sepatu Bogor (Demo)*, 3 keunggulan, 4 layanan & harga fiktif (Fast Clean Rp 35.000, Deep Clean mulai Rp 55.000, Unyellowing mulai Rp 75.000, Repaint mulai Rp 150.000), 3 catatan ketentuan. Tanpa logo & foto; nomor WhatsApp partner kosong (memakai WhatsApp cabang Bogor Bantarjati) |
+| Logo Partner | 4 logo teks: *Partner Demo A*, *Partner Demo B*, *Partner Demo C*, *Partner Demo D* (tanpa gambar & link) |
+
+**Cara menghapus atau mematikan sebelum launch:**
+- **Partner Cuci Sepatu**, pilih salah satu:
+  - *Sudah ada data partner asli*: ganti nama, keunggulan, layanan, harga, catatan, (opsional) logo, foto, dan nomor WhatsApp partner → **hilangkan centang Data demo** → **Save**.
+  - *Belum ada partner*: **hilangkan centang Tampilkan section** → **Save** (section, menu *Cuci Sepatu*, dan sebutan di Google hilang; data tetap tersimpan untuk nanti).
+- **Logo Partner**: hapus keempat entri *Partner Demo A–D* (ikon tempat sampah), atau matikan **Tampilkan** pada tiap entri → **Save**. Tambahkan logo partner asli seperti biasa (tanpa centang Data demo). Bila belum ada logo asli, pita logo otomatis tidak tampil.
+- Cek: badge **STAGING** tidak lagi menyebut data demo, dan tidak ada badge **DEMO** di beranda.
+
+> Jangan pernah membuat testimoni, rating, ulasan, atau nama orang/brand nyata sebagai data demo.
+
 ## 4. Membuat promo
 
 1. Klik **Promo** → **Add an entry**.
