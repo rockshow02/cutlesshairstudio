@@ -47,7 +47,7 @@ Tidak perlu akun GitHub. Pastikan pemilik sudah mengundang email Anda.
 1. Buka **https://app.pagescms.org** → **Sign in with GitHub** → izinkan akses (sekali saja).
 2. Pilih repo **cutlesshairstudio** → branch **`main`**.
 
-Menu konten ada di kiri: **Cabang, Daftar Harga, Barber, Galeri, Hero, Tentang Kami, Kartu Studio, CTA Penutup, Logo Partner, Partner Cuci Sepatu, Promo, Pengumuman, Testimoni, Produk, Pengaturan Situs**.
+Menu konten ada di kiri: **Cabang, Daftar Harga, Barber, Galeri, Hero, Tentang Kami, Kartu Studio, CTA Penutup, Kartu Layanan, Logo Partner, Partner Cuci Sepatu, Promo, Pengumuman, Testimoni, Produk, Pengaturan Situs**.
 
 ### Yang bisa dan tidak bisa dilakukan collaborator
 
@@ -117,6 +117,23 @@ Lainnya:
 Harga "mulai" pada kartu **Layanan** di halaman utama dihitung otomatis dari Daftar Harga, jadi tidak perlu diubah terpisah.
 
 ---
+
+## 1a. Kartu Layanan (section Layanan & daftar layanan di Lokasi)
+
+Menu **Kartu Layanan** mengatur kartu di section **Layanan** dan daftar layanan cabang di section **Lokasi**. Kartu **otomatis sinkron dengan Daftar Harga**:
+- Satu kartu per **kategori harga** (Haircut & Grooming, Wanita, Treatment, Coloring, Perming, Braids & Dreadlock, …).
+- **"mulai Rp…"** dihitung otomatis dari harga **terendah item aktif** di kategori itu (untuk cabang yang dipilih pengunjung). Tidak perlu diketik.
+- Kategori yang **tidak punya item harga aktif** → kartunya **tidak tampil** otomatis, walau **Tampilkan** menyala.
+- Deskripsi Google beranda & halaman cabang ikut dibuat dari judul kartu yang tampil.
+
+Kolom tiap kartu:
+- **Judul kartu** (wajib, maks. 40): biasanya nama kategori, mis. *Wanita*. Ikut tertulis di pesan WhatsApp.
+- **Deskripsi** (wajib, maks. 160): sebutkan layanan yang **ada** di Daftar Harga kategori itu. Jangan menulis layanan yang tidak ada harganya.
+- **Ikon**, **Kategori harga** (wajib, satu kartu per kategori), **Urutan** (angka kecil tampil lebih dulu), **Tampilkan**.
+
+**Menambah kategori baru:** tambahkan item di **Daftar Harga** dengan kategori itu, lalu buat kartunya di **Kartu Layanan**. Bila ada kategori berharga aktif tanpa kartu, atau dua kartu tampil untuk kategori yang sama, website asli menolak tayang dan badge **STAGING** menyebut masalahnya.
+
+Kartu lama yang disembunyikan (Tampilkan mati, tidak dihapus): *Haircut + Wash, Shaving & Beard, Kids Haircut, Hair Spa, Hair Tattoo*. Nyalakan lagi bila item harganya diaktifkan kembali.
 
 ## 2. Menambah atau menonaktifkan barber
 
@@ -385,6 +402,8 @@ Form Pages CMS menolak isian yang melebihi batas, dan website memeriksa batas ya
 | Cabang | Alamat lengkap | 300 | opsional |
 | Daftar Harga | Nama layanan | 80 | wajib |
 | Daftar Harga | Keterangan | 300 | opsional |
+| Kartu Layanan | Judul kartu | 40 | wajib |
+| Kartu Layanan | Deskripsi | 160 | wajib |
 | Barber | Nama panggilan | 60 | wajib |
 | Barber | Jabatan | 60 | opsional |
 | Barber | Spesialisasi | 120 | opsional |
