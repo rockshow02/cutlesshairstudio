@@ -227,7 +227,7 @@ Catatan:
 
 ## 3f. Partner Cuci Sepatu (section #cuci-sepatu)
 
-Menu **Partner Cuci Sepatu** mengatur satu section untuk partner jasa cuci sepatu. Section tampil **setelah Daftar Harga** di beranda dan di halaman cabang yang dipilih (bawaan: **Bogor Bantarjati**). Di halaman cabang lain section tidak tampil. Pengunjung yang memilih cabang lain tetap melihat section dengan catatan *"Layanan cuci sepatu hanya tersedia di cabang …"*, dan tombol WhatsApp tetap ke nomor partner.
+Menu **Partner Cuci Sepatu** mengatur satu section untuk partner jasa cuci sepatu. Section berlatar terang tampil **setelah Daftar Harga** di beranda dan di halaman cabang yang dipilih (bawaan: **Bogor Bantarjati**). Di halaman cabang lain section tidak tampil. Pengunjung yang memilih cabang lain tetap melihat section dengan catatan *"Layanan cuci sepatu hanya tersedia di cabang …"*, dan tombol WhatsApp tetap ke nomor partner.
 
 **Section mati secara bawaan.** Isi dulu data asli partner, baru nyalakan.
 
@@ -240,7 +240,12 @@ Menu **Partner Cuci Sepatu** mengatur satu section untuk partner jasa cuci sepat
 5. **Foto hasil** (opsional, 0–8 foto, dengan izin partner): wajib diberi **Deskripsi foto** (maks. 150). Dikompres otomatis ke WebP 1200 px + versi HP 600 px. Galeri hanya tampil bila ada foto.
 6. **Catatan / ketentuan**: poin kecil (maks. 160), mis. durasi pengerjaan atau tanggung jawab barang titipan.
 7. **Nomor WhatsApp partner** (opsional, format `628xxxxxxxxxx`). **Kosong = nomor WhatsApp cabang** di atas.
-8. **Template pesan WhatsApp** (maks. 500). Pakai `{service}` (nama layanan; tombol utama: *layanan cuci sepatu*) dan `{branch}` (nama cabang). Placeholder lain ditolak. **Pertahankan penanda `(via website Cutless)`** agar pesanan dari website bisa dikenali partner.
+8. **Template pesan WhatsApp** (maks. 500). Placeholder yang bisa dipakai (penulisan harus persis, huruf kecil):
+   - `{partner}` = **Nama partner** (ikut berubah otomatis bila nama partner diganti),
+   - `{service}` = nama layanan (tombol utama: *layanan cuci sepatu*),
+   - `{branch}` = nama cabang.
+
+   Placeholder lain (mis. `{nama}`, `{Partner}`) ditolak saat Save. Bawaan: *Halo {partner}, saya mau pesan {service} di Cutless Hair Studio cabang {branch}. (via website Cutless)* → mis. *Halo Sepatu Kinclong, saya mau pesan Deep Clean di Cutless Hair Studio cabang Bogor Bantarjati. (via website Cutless)*. **Pertahankan penanda `(via website Cutless)`** agar pesanan dari website bisa dikenali partner.
 
 **Cara menyalakan:** setelah nama, harga, dan nomor WhatsApp asli terisi, centang **Tampilkan section** → **Save**. Tunggu ±2 menit, lalu cek beranda dan halaman cabang. Menu **Cuci Sepatu** otomatis muncul di menu HP dan footer (tidak di navbar desktop), dan deskripsi Google halaman cabang menyebut layanan cuci sepatu. Matikan centang untuk menyembunyikan lagi; datanya tidak hilang.
 
