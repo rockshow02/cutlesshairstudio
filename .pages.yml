@@ -328,6 +328,11 @@ content:
         type: boolean
         default: false
         description: "Nyalakan setelah nama partner, harga, dan nomor WhatsApp ASLI sudah diisi. Section tampil setelah Daftar Harga di beranda dan di halaman cabang yang dipilih di bawah."
+      - name: isDemo
+        label: Data demo (hapus/matikan sebelum launch)
+        type: boolean
+        default: false
+        description: "Centang untuk isian dummy (badge DEMO tampil di staging). Build produksi GAGAL selama data demo masih tayang. Matikan setelah semua isian diganti data asli partner."
       - name: branchSlug
         label: Cabang
         type: select
@@ -934,6 +939,11 @@ content:
             description: "Angka kecil tampil lebih dulu."
             options:
               min: 0
+          - name: isDemo
+            label: Data demo (hapus/matikan sebelum launch)
+            type: boolean
+            default: false
+            description: "Centang untuk isian dummy (badge DEMO tampil di staging). Build produksi GAGAL selama data demo masih tayang."
 
   # ------------------------------------------------------------------ Promo
   - name: promos

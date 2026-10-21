@@ -301,6 +301,7 @@ Harga efektif satu layanan di satu cabang: `COALESCE(bp.price, pi.price)` dari `
 - [ ] Statistik: isi angka asli lalu nyalakan toggle yang ingin ditampilkan (rating/ulasan sesuai Google)
 - [ ] Testimoni asli (minimal 3) → nyalakan **Tampilkan section Testimoni**
 - [ ] Produk dengan harga & foto asli → nyalakan **Tampilkan Produk**
+- [ ] ⛔ **Data demo** dihapus/dimatikan: Partner Cuci Sepatu (*Cuci Sepatu Bogor (Demo)*) & Logo Partner (*Partner Demo A–D*). Build produksi gagal selama data demo tayang (panduan admin §3g)
 - [ ] Coba booking dari HP untuk tiap cabang: pesan WA menyebut cabang yang benar dan masuk ke nomor yang benar
 - [ ] Buka `/cabang/<slug>/` tiap cabang, `/sitemap.xml`, lalu daftarkan sitemap di Google Search Console (gratis)
 

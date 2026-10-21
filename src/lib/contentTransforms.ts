@@ -123,6 +123,7 @@ export function buildPartnerLogos(p: PartnersEntry | null | undefined, brandName
       // Lebar/tinggi asli dari file (cegah layout shift); tinggi tampil diatur CSS
       logo: logo ? toImage(logo, l.name, { width: 400, height: 200 }) : null,
       url: text(l.url) ?? null,
+      isDemo: l.isDemo === true,
     };
   });
   if (items.length === 0) return null;
@@ -154,6 +155,7 @@ export function buildShoeCare(p: ShoeCareEntry | null | undefined, branches: Bra
   const tagline = text(p.tagline);
   return {
     id: SHOE_CARE_ID,
+    isDemo: p.isDemo === true,
     heading: { kicker: copy.kicker, title: p.name, ...(tagline ? { intro: tagline } : {}) },
     name: p.name,
     description: text(p.description),

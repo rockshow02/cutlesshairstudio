@@ -7,6 +7,8 @@ export interface PartnerLogo {
   logo: ImageAsset | null;
   /** null = tidak bisa diklik */
   url: string | null;
+  /** Data demo → badge DEMO (staging/dev) */
+  isDemo: boolean;
 }
 
 export interface PartnerLogosContent {

@@ -128,3 +128,8 @@ a.item:focus-visible {
     opacity: 0;
   }
 }
+
+/* Badge DEMO (staging/dev) di samping nama/logo, tidak memengaruhi tinggi pita */
+.demo {
+  margin-left: 0.6rem;
+}

@@ -36,6 +36,8 @@ export interface ShoeCareService {
 /** Section #cuci-sepatu (Pages CMS → Partner Cuci Sepatu). null = dimatikan / belum ada layanan → tidak dirender */
 export interface ShoeCareContent {
   id: string;
+  /** Data demo → badge DEMO (staging/dev) */
+  isDemo: boolean;
   heading: SectionHeading;
   name: string;
   description?: string;
