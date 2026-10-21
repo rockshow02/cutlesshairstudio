@@ -1,12 +1,4 @@
 {
   "enabled": true,
-  "label": "Partner & Kolaborasi",
-  "logos": [
-    {
-      "name": "Chat GPT",
-      "url": "https://chatgpt.com/",
-      "isActive": true,
-      "order": 0
-    }
-  ]
+  "label": "Partner & Kolaborasi"
 }
