@@ -61,7 +61,7 @@ test('beranda: section tampil setelah Daftar Harga, tombol layanan → WhatsApp 
     const href = await section.getByRole('link', { name: `Pesan via WhatsApp: ${s.name}` }).getAttribute('href');
     const msg = parseWa(href!);
     expect(msg.number).toBe(E2E_SHOE_CARE.whatsappNumber);
-    expect(msg.text).toBe(`Halo, saya mau pesan ${s.name} di Cutless Hair Studio cabang ${bogor.name}. (via website Cutless)`);
+    expect(msg.text).toBe(`Halo ${E2E_SHOE_CARE.name}, saya mau pesan ${s.name} di Cutless Hair Studio cabang ${bogor.name}. (via website Cutless)`);
   }
   // Klik sungguhan membuka tab wa.me
   const first = section.getByRole('link', { name: `Pesan via WhatsApp: ${E2E_SHOE_CARE.services[0].name}` });
