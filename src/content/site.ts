@@ -35,7 +35,8 @@ export const site: SiteContent = {
       // Template booking menyebut cabang. general ditimpa "Pesan booking default" di Pengaturan Situs.
       general: 'Halo {brand} cabang {branch}, saya mau booking haircut untuk [hari/jam].',
       service: 'Halo {brand} cabang {branch}, saya mau booking {service} untuk [hari/jam].',
-      barber: 'Halo {brand} cabang {branch}, saya mau booking haircut dengan {barber} untuk [hari/jam].',
+      // Tombol "Booking [nama barber]"; ditimpa "Template pesan booking kapster" di Pengaturan Situs
+      barber: "Halo Kak! Untuk reservasi di {brand} cabang {branch}, mohon isi formulir berikut ya:\nNama Lengkap:\nNomor HP / WA:\nHari & Tanggal:\nJam Kedatangan:\nPilihan Layanan: (mis. Haircut / Treatment / Coloring)\nKapster Pilihan: {barber}\nKirim kembali format ini jika sudah diisi, kami akan segera mengonfirmasi jadwalnya. 😊\nCatatan: Toleransi keterlambatan maks. 15 menit. Lewat dari itu, slot dialihkan ke antrean berikutnya. Terima kasih telah memilih {brand}!",
       branch: 'Halo {brand} cabang {branch}, saya mau booking haircut untuk [hari/jam].',
       package: 'Halo {brand} cabang {branch}, saya mau ambil paket {package}. Bisa dibantu?',
       // Ke nomor pusat (bukan cabang)

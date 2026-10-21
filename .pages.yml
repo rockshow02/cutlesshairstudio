@@ -1307,6 +1307,15 @@ content:
         description: "Boleh pakai {brand} dan {branch} (nama cabang). Contoh: Halo {brand} cabang {branch}, saya mau booking haircut untuk [hari/jam]. Maksimal 500 karakter."
         options:
           maxlength: 500
+      - name: barberWaMessage
+        label: Template pesan booking kapster
+        type: text
+        description: "Dipakai semua tombol \"Booking [nama barber]\". Placeholder (huruf kecil): {brand} = nama usaha, {branch} = cabang barber, {barber} = nama barber yang diklik. Kosong = template bawaan. Maksimal 500 karakter (emoji dihitung 2); sisakan ruang untuk nama barber & cabang."
+        pattern:
+          regex: '^(?:[^{}]|\{(?:brand|branch|barber)\})*$'
+          message: Placeholder yang boleh dipakai hanya {brand}, {branch}, dan {barber} (huruf kecil)
+        options:
+          maxlength: 500
       - name: instagramUrl
         label: Link Instagram
         type: string

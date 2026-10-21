@@ -35,6 +35,8 @@ const sectionImage = z
 const requiredText = (max: number, label: string) => z.string().trim().min(1, `${label} wajib diisi`).max(max, `maksimal ${max} karakter`);
 
 export const WA_REGEX = /^62\d{8,13}$/;
+/** Placeholder template pesan booking kapster (Pengaturan Situs) */
+export const BARBER_TEMPLATE_PATTERN = /^(?:[^{}]|\{(?:brand|branch|barber)\})*$/;
 const WA_MESSAGE = 'format nomor WhatsApp harus 62xxxxxxxxxx (tanpa +, spasi, atau strip)';
 const waNumber = z.string().regex(WA_REGEX, WA_MESSAGE);
 const optionalWa = z.union([waNumber, z.literal('')]).nullish();
@@ -238,6 +240,14 @@ export const settingsSchema = z.object({
   /** Nomor pusat untuk pertanyaan umum (bukan booking cabang) */
   mainWhatsappNumber: waNumber,
   defaultWaMessage: optionalText(500),
+  /** Pesan tombol "Booking [nama barber]"; {brand}, {branch} (cabang barber), {barber}. Kosong = template bawaan */
+  barberWaMessage: z
+    .string()
+    .max(500, 'maksimal 500 karakter (emoji dihitung 2)')
+    // Zod menghitung per code point; batas WhatsApp/Pages CMS mengikuti panjang JavaScript (emoji = 2)
+    .refine((v) => v.length <= 500, 'maksimal 500 karakter (emoji dihitung 2)')
+    .regex(BARBER_TEMPLATE_PATTERN, 'placeholder yang boleh dipakai hanya {brand}, {branch}, dan {barber} (huruf kecil)')
+    .nullish(),
   instagramUrl: optionalUrl,
   tiktokUrl: optionalUrl,
   /** Opsional: kosong = baris email di footer tidak ditampilkan */

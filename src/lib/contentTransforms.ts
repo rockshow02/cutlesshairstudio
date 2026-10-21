@@ -346,7 +346,11 @@ export function buildSite(s: SettingsEntry, base: SiteContent, branches: Branch[
       ...base.whatsapp,
       number: s.mainWhatsappNumber,
       displayNumber: formatPhoneDisplay(s.mainWhatsappNumber),
-      templates: { ...base.whatsapp.templates, general: text(s.defaultWaMessage) ?? base.whatsapp.templates.general },
+      templates: {
+        ...base.whatsapp.templates,
+        general: text(s.defaultWaMessage) ?? base.whatsapp.templates.general,
+        barber: text(s.barberWaMessage) ?? base.whatsapp.templates.barber,
+      },
     },
     seo: {
       ...base.seo,
