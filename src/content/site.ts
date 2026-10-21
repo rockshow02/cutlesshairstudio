@@ -19,8 +19,8 @@ export const site: SiteContent = {
   nav: [
     { label: 'Layanan', sectionId: 'layanan' },
     { label: 'Harga', sectionId: 'harga' },
-    // Hanya menu HP & footer (navbar desktop sudah penuh), dan hanya saat section Cuci Sepatu tampil (buildSite)
-    { label: 'Cuci Sepatu', sectionId: 'cuci-sepatu', desktop: false },
+    // Halaman /cuci-sepatu/: hanya menu HP & footer (navbar desktop sudah penuh), dan hanya saat halaman aktif (buildSite)
+    { label: 'Cuci Sepatu', href: '/cuci-sepatu/', desktop: false },
     { label: 'Hairstylist', sectionId: 'hairstylist' },
     { label: 'Galeri', sectionId: 'galeri' },
     { label: 'Produk', href: '/produk/' },

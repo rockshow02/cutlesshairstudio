@@ -372,10 +372,15 @@ content:
     format: json
     fields:
       - name: enabled
-        label: Tampilkan section
+        label: Tampilkan halaman
         type: boolean
         default: false
-        description: "Nyalakan setelah nama partner, harga, dan nomor WhatsApp ASLI sudah diisi. Section tampil setelah Daftar Harga di beranda dan di halaman cabang yang dipilih di bawah."
+        description: "Halaman /cuci-sepatu/ beserta teaser, menu Cuci Sepatu (HP & footer), dan sebutan di Google halaman cabang. Mati = /cuci-sepatu dialihkan ke beranda dan semua link hilang."
+      - name: showTeaser
+        label: Tampilkan teaser di beranda
+        type: boolean
+        default: true
+        description: "Kartu kecil setelah Daftar Harga (beranda & halaman cabang partner) dengan tombol Lihat Layanan ke /cuci-sepatu/. Hanya tampil bila halaman aktif."
       - name: isDemo
         label: Data demo (hapus/matikan sebelum launch)
         type: boolean
@@ -404,7 +409,7 @@ content:
       - name: logo
         label: Logo partner (opsional)
         type: image
-        description: "PNG berlatar transparan atau SVG. Tampil kecil di samping judul."
+        description: "PNG berlatar transparan atau SVG. Tampil di hero halaman & teaser."
         options:
           media: shoe-care
       - name: tagline
@@ -416,9 +421,50 @@ content:
       - name: description
         label: Deskripsi singkat
         type: text
-        description: "1–2 kalimat tentang layanan. Maksimal 300 karakter."
+        description: "1–2 kalimat di hero halaman. Maksimal 300 karakter."
         options:
           maxlength: 300
+      - name: heroImage
+        label: Foto hero
+        type: image
+        description: "Foto latar besar di atas halaman (landscape, minimal 1920 px). Dikompres otomatis ke WebP 1920 px + versi 1280 & 600 px. Kosong = foto hasil pertama, lalu foto CTA penutup."
+        options:
+          media: shoe-care
+      - name: aboutTitle
+        label: Judul About Us
+        type: string
+        description: "Opsional. Kosong = Tentang [nama partner]. Maksimal 60 karakter."
+        options:
+          maxlength: 60
+      - name: aboutParagraphs
+        label: Paragraf About Us
+        type: text
+        required: true
+        list:
+          min: 1
+          max: 3
+        description: "1–3 paragraf tentang partner. Paragraf pertama tampil lebih besar. Maksimal 400 karakter per paragraf."
+        options:
+          maxlength: 400
+      - name: aboutImage
+        label: Foto About Us
+        type: image
+        description: "Opsional. Foto pendamping (tegak 4:5 paling pas)."
+        options:
+          media: shoe-care
+      - name: aboutImageAlt
+        label: Deskripsi foto About Us
+        type: string
+        description: "Wajib bila Foto About Us diisi. Maksimal 150 karakter."
+        options:
+          maxlength: 150
+      - name: menuUrl
+        label: Link Daftar Menu
+        type: string
+        description: "Opsional: daftar menu & harga partner (boleh link Google Drive), harus diawali https://. Tombol Lihat Daftar Menu dibuka di tab baru dan tidak tampil bila kosong."
+        pattern:
+          regex: '^(https://\S+)?$'
+          message: Harus diawali https://
       - name: advantages
         label: Keunggulan
         type: object
@@ -456,7 +502,7 @@ content:
         list:
           min: 1
           max: 8
-        description: "1–8 layanan. Tiap layanan punya tombol Pesan via WhatsApp yang menyebut nama layanannya."
+        description: "1–8 layanan, tampil TANPA harga (harga ada di Daftar Menu). Tiap layanan punya tombol Pesan via WhatsApp yang menyebut nama layanannya."
         fields:
           - name: name
             label: Nama layanan
@@ -471,23 +517,24 @@ content:
             description: "Opsional. Maksimal 120 karakter."
             options:
               maxlength: 120
-          - name: price
-            label: Harga (Rupiah)
-            type: number
-            required: true
-            description: "Angka saja tanpa titik, mis. 45000. Isi harga ASLI dari partner (0 = belum diisi; section tidak boleh tayang dengan harga 0)."
-            options:
-              min: 0
-          - name: priceFrom
-            label: Tulis "mulai" di depan harga
-            type: boolean
-            default: false
           - name: estimate
             label: Estimasi waktu
             type: string
             description: "Opsional, mis. ±2 hari atau ±30 menit. Maksimal 30 karakter."
             options:
               maxlength: 30
+          - name: icon
+            label: Ikon (opsional)
+            type: select
+            description: "Tampil di kartu bila foto kosong. check = centang, clock = jam, star = bintang, tag = label, wash = tetes air, spa = daun, gift = hadiah, pin = lokasi, calendar = kalender, user = orang, info = info, scissors = gunting."
+            options:
+              values: [check, clock, star, tag, wash, spa, gift, pin, calendar, user, info, scissors]
+          - name: image
+            label: Foto (opsional)
+            type: image
+            description: "Foto kecil di kartu layanan (menggantikan ikon)."
+            options:
+              media: shoe-care
           - name: isActive
             label: Tampilkan
             type: boolean

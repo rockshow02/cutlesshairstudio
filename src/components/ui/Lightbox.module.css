@@ -1,0 +1,79 @@
+/* Lightbox foto: latar gelap, foto pas layar, tombol bulat besar (target sentuh ≥ 44 px). */
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-sheet);
+  display: grid;
+  place-items: center;
+  padding: var(--space-8) var(--space-4);
+  background: rgba(12, 16, 20, 0.94);
+}
+.figure {
+  display: grid;
+  gap: var(--space-3);
+  margin: 0;
+  max-width: min(1200px, 100%);
+  max-height: 100%;
+}
+.img {
+  display: block;
+  width: auto;
+  max-width: 100%;
+  max-height: calc(100svh - 10rem);
+  margin-inline: auto;
+  object-fit: contain;
+  border-radius: var(--radius);
+}
+.caption {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-4);
+  font-size: var(--fs-sm);
+  color: var(--c-bone-dim);
+}
+.count {
+  flex: none;
+  font-variant-numeric: tabular-nums;
+}
+.btn {
+  position: absolute;
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border: 1px solid var(--c-line-light);
+  border-radius: 50%;
+  background: var(--c-ink-2);
+  color: var(--c-bone);
+  cursor: pointer;
+}
+.btn:hover {
+  background: var(--c-charcoal);
+}
+.btn:focus-visible {
+  outline: 2px solid var(--c-sand);
+  outline-offset: 2px;
+}
+.close {
+  top: var(--space-4);
+  right: var(--space-4);
+}
+.prev,
+.next {
+  top: 50%;
+  transform: translateY(-50%);
+}
+.prev {
+  left: var(--space-3);
+}
+.next {
+  right: var(--space-3);
+}
+@media (max-width: 599px) {
+  .prev,
+  .next {
+    top: auto;
+    bottom: var(--space-4);
+    transform: none;
+  }
+}

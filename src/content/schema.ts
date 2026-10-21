@@ -43,6 +43,8 @@ const optionalWa = z.union([waNumber, z.literal('')]).nullish();
 /** Nomor WA wajib; boleh berisi penanda TODO sementara (ditolak pemeriksaan launch) */
 const waOrTodo = z.union([waNumber, todoMarker], { error: `${WA_MESSAGE}, atau "TODO" bila belum ada` });
 
+/** Link https saja (dibuka di tab baru): logo partner, daftar menu cuci sepatu */
+const optionalHttpsUrl = z.union([z.string().trim().regex(/^https:\/\/\S+$/, 'link harus diawali https://'), z.literal('')]).nullish();
 const optionalUrl = z.union([z.url({ message: 'harus berupa link lengkap (https://...)' }), z.literal('')]).nullish();
 
 /** "2026-10-20" atau "2026-10-20T10:00" (dibaca sebagai WIB) atau ISO lengkap dengan zona waktu */
@@ -366,8 +368,6 @@ export const studioSchema = z
 
 /* ---------- Logo Partner (pita logo di beranda, sebelum CTA penutup) ---------- */
 
-/** Link partner: hanya https (dibuka di tab baru) */
-const optionalHttpsUrl = z.union([z.string().trim().regex(/^https:\/\/\S+$/, 'link harus diawali https://'), z.literal('')]).nullish();
 
 export const partnersSchema = z.object({
   /** false = pita logo tidak dirender sama sekali */
@@ -422,9 +422,12 @@ const shoeCareLogo = z.union([
   z.literal(''),
 ]).nullish();
 
-export const shoeCareSchema = z.object({
-  /** false = section tidak tampil (bawaan sampai konten asli diisi) */
+export const shoeCareSchema = z
+  .object({
+  /** false = halaman /cuci-sepatu/ tidak ada (301 ke beranda), teaser & semua link hilang */
   enabled: z.boolean().default(false),
+  /** Kartu teaser kecil setelah Daftar Harga (beranda & halaman cabang partner) */
+  showTeaser: z.boolean().default(true),
   /** Seluruh isi section adalah data demo */
   isDemo,
   /** Satu-satunya cabang tempat layanan tersedia */
@@ -436,6 +439,14 @@ export const shoeCareSchema = z.object({
   logo: shoeCareLogo,
   tagline: optionalText(120),
   description: optionalText(300),
+  /** Foto latar hero; kosong → foto hasil pertama → foto CTA penutup */
+  heroImage: optionalImage,
+  aboutTitle: optionalText(60),
+  aboutParagraphs: z.array(requiredText(400, 'paragraf About Us')).min(1, 'minimal 1 paragraf About Us').max(3, 'maksimal 3 paragraf'),
+  aboutImage: optionalImage,
+  aboutImageAlt: optionalText(150),
+  /** Daftar menu & harga partner (mis. Google Drive), dibuka di tab baru; kosong = tombol tidak tampil */
+  menuUrl: optionalHttpsUrl,
   advantages: z
     .array(
       z.object({
@@ -451,10 +462,10 @@ export const shoeCareSchema = z.object({
       z.object({
         name: requiredText(40, 'nama layanan'),
         description: optionalText(120),
-        /** Rupiah, bilangan bulat */
-        price: z.number({ error: 'harga harus angka' }).int('harga harus bilangan bulat (tanpa koma)').min(0, 'harga tidak boleh minus'),
-        priceFrom: z.boolean().default(false),
         estimate: optionalText(30),
+        /** Opsional: ikon atau foto kecil di kartu (harga tidak ditampilkan; lihat Daftar Menu) */
+        icon: z.union([z.enum(SHOE_CARE_ICONS, { error: `ikon harus salah satu: ${SHOE_CARE_ICONS.join(', ')}` }), z.literal('')]).nullish(),
+        image: optionalImage,
         isActive,
         order,
       }),
@@ -474,7 +485,10 @@ export const shoeCareSchema = z.object({
     .max(500, 'maksimal 500 karakter')
     .regex(SHOE_CARE_TEMPLATE_PATTERN, 'placeholder yang boleh dipakai hanya {partner}, {service}, dan {branch}')
     .nullish(),
-});
+  })
+  .superRefine((s, ctx) => {
+    if (s.aboutImage && !s.aboutImageAlt) ctx.addIssue({ code: 'custom', path: ['aboutImageAlt'], message: 'deskripsi foto About Us wajib diisi bila foto dipilih' });
+  });
 
 /* ---------- CTA penutup ("Kursimu sudah siap.") ---------- */
 
@@ -664,10 +678,7 @@ export function crossCheck(c: ContentBundle): { errors: ContentIssue[]; launch: 
   }
   if (c.shoeCare.enabled) {
     const services = shown(c.shoeCare.services);
-    if (services.length === 0) launch.push({ file: 'shoeCare.json', where: 'Tampilkan section', message: 'aktif tetapi belum ada layanan yang ditampilkan' });
-    services.forEach((s) => {
-      if (s.price <= 0) launch.push({ file: 'shoeCare.json', where: `layanan "${s.name}"`, message: 'harga masih 0, isi harga asli sebelum section ditampilkan' });
-    });
+    if (services.length === 0) launch.push({ file: 'shoeCare.json', where: 'Tampilkan halaman', message: 'aktif tetapi belum ada layanan yang ditampilkan' });
   }
   const stats = c.settings.stats;
   const missingStat = (show: boolean, value: unknown, label: string) => {
