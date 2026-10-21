@@ -5,25 +5,60 @@ Panduan ini untuk pemilik dan staf. Tidak perlu keahlian teknis.
 > **Booking lewat WhatsApp:** semua tombol booking dan pesan produk membuka WhatsApp cabang yang dipilih pengunjung. Cabang, Barber, Daftar Harga, dan Produk diedit di Pages CMS seperti di bawah.
 
 **Panel admin:** https://app.pagescms.org
-**Login:** pakai akun **GitHub** Anda (gratis).
+**Login:**
+- **Pemilik (owner):** akun **GitHub** → *Sign in with GitHub*.
+- **Staf (collaborator):** cukup **email**, tanpa akun GitHub → *Continue with email* (kode 6 digit dikirim ke email).
 
 > **Kapan perubahan tampil?** Setiap kali Anda klik **Save**, website diperbarui otomatis dalam **sekitar 1–2 menit**. Setelah itu buka website dan tekan *refresh*.
+
+> **Branch mana yang diedit?**
+> - **Setelah website resmi tayang (launch): semua pengeditan harian dilakukan di branch `main`** (= website asli yang dilihat pelanggan).
+> - Branch `staging` hanya untuk uji coba fitur baru oleh developer (tampil di alamat berlabel *STAGING*, tidak dilihat pelanggan). Perubahan di `staging` **tidak** otomatis pindah ke website asli.
+> - Bila ragu, pakai **`main`**.
 
 ---
 
 ## Sebelum mulai (sekali saja)
 
-1. **Buat akun GitHub** di https://github.com/signup (gratis). Catat username Anda.
-2. Kirim username/email GitHub ke pemilik/developer. Anda akan diundang sebagai **kolaborator**.
-3. Buka email dari GitHub berjudul *"invited you to collaborate"* → klik **View invitation** → **Accept invitation**.
+### Pemilik: mengundang staf sebagai collaborator
+
+1. Login di https://app.pagescms.org dengan **Sign in with GitHub**, buka repo **cutlesshairstudio**.
+2. Di menu kiri, klik **Collaborators** (hanya terlihat oleh pemilik akun GitHub).
+3. Masukkan **email** staf, lalu undang. Staf tidak perlu membuat akun GitHub.
+4. Kirim ke staf link langsung ke panel website: **https://app.pagescms.org/rockshow02/cutlesshairstudio/main**.
+5. Untuk mencabut akses (mis. staf berhenti), hapus email-nya dari **Collaborators**.
+
+> **Penting sebelum staf mengedit `main` (sekali, oleh pemilik):** aturan perlindungan branch `main` di GitHub (*Settings → Rules → Rulesets → main produksi*) mewajibkan Pull Request. Simpanan collaborator dikirim lewat aplikasi **Pages CMS** (GitHub App), bukan akun pemilik, sehingga akan **ditolak** kecuali aplikasi itu ada di daftar pengecualian. Buka ruleset → **Bypass list → Add bypass → Apps → Pages CMS** → Save. Lihat juga `CONTRIBUTING.md` → *Branch protection*.
+
+### Staf: login pertama
+
+Tidak perlu akun GitHub. Pastikan pemilik sudah mengundang email Anda.
 
 ## Cara login
 
-1. Buka **https://app.pagescms.org**.
-2. Klik **Sign in with GitHub** → izinkan akses (sekali saja).
-3. Pilih repo **cutlesshairstudio** → branch **main**.
-   Branch **main** = website asli. Branch **staging** hanya untuk uji coba (hasilnya tampil di alamat staging berlabel *STAGING*, tidak dilihat pelanggan). Bila ragu, pakai **main**.
-4. Menu konten ada di kiri: **Cabang, Daftar Harga, Barber, Galeri, Hero, Tentang Kami, Kartu Studio, CTA Penutup, Promo, Pengumuman, Testimoni, Produk, Pengaturan Situs**.
+**Staf (collaborator), lewat email:**
+1. Buka link dari pemilik (atau **https://app.pagescms.org**).
+2. Di kolom **Email**, ketik email yang diundang → klik **Continue with email**.
+3. Buka email dari Pages CMS berjudul *"Your Pages CMS temporary code is …"*, salin **kode 6 digit**.
+4. Ketik kode di layar **Verify your login** → klik **Verify code**. Kode berlaku **5 menit**; bila kedaluwarsa, minta kode baru (tombol kirim ulang).
+5. Pilih repo **cutlesshairstudio** dan pastikan branch **`main`** (lihat nama branch di kiri atas).
+
+**Pemilik, lewat GitHub:**
+1. Buka **https://app.pagescms.org** → **Sign in with GitHub** → izinkan akses (sekali saja).
+2. Pilih repo **cutlesshairstudio** → branch **`main`**.
+
+Menu konten ada di kiri: **Cabang, Daftar Harga, Barber, Galeri, Hero, Tentang Kami, Kartu Studio, CTA Penutup, Logo Partner, Promo, Pengumuman, Testimoni, Produk, Pengaturan Situs**.
+
+### Yang bisa dan tidak bisa dilakukan collaborator
+
+| Bisa | Tidak bisa (hanya pemilik dengan akun GitHub) |
+|---|---|
+| Mengedit semua menu konten di atas (harga, barber, promo, pengumuman, galeri, dll.) | Mengubah pengaturan panel (`.pages.yml`): menambah/menghapus menu atau kolom |
+| Menambah, mengubah, dan menghapus entri sesuai menu | Mengundang atau menghapus collaborator lain |
+| Upload, ganti, dan hapus foto/video di folder media | Mengelola cache panel |
+| Menyimpan ke branch (gunakan **`main`** setelah launch) | Mengakses repo lain selain **cutlesshairstudio** |
+
+Setiap **Save** tercatat atas **nama dan email pengedit** di riwayat perubahan (GitHub), jadi pemilik bisa melihat siapa mengubah apa dan kapan.
 
 Tips umum:
 - Setiap kolom punya keterangan kecil di bawahnya. Baca dulu bila ragu.
