@@ -34,5 +34,5 @@
     "Ketentuan barang titipan mengikuti kebijakan partner; tanyakan lewat WhatsApp sebelum menitipkan."
   ],
   "whatsappNumber": "",
-  "messageTemplate": "Halo, saya mau pesan {service} di Cutless Hair Studio cabang {branch}. (via website Cutless)"
+  "messageTemplate": "Halo {partner}, saya mau pesan {service} di Cutless Hair Studio cabang {branch}. (via website Cutless)"
 }

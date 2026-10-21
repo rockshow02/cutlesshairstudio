@@ -382,7 +382,7 @@ export const partnersSchema = z.object({
 /** Ikon keunggulan yang boleh dipilih admin (subset src/components/ui/Icon.tsx) */
 export const SHOE_CARE_ICONS = ['check', 'clock', 'star', 'tag', 'wash', 'spa', 'gift', 'pin', 'calendar', 'user', 'info', 'scissors'] as const satisfies readonly IconName[];
 /** Placeholder yang boleh dipakai di template pesan WhatsApp */
-export const SHOE_CARE_TEMPLATE_PATTERN = /^(?:[^{}]|\{(?:service|branch)\})*$/;
+export const SHOE_CARE_TEMPLATE_PATTERN = /^(?:[^{}]|\{(?:partner|service|branch)\})*$/;
 
 /** Logo partner: PNG/WebP (hasil kompres) atau SVG */
 const shoeCareLogo = z.union([
@@ -438,7 +438,7 @@ export const shoeCareSchema = z.object({
     .string()
     .trim()
     .max(500, 'maksimal 500 karakter')
-    .regex(SHOE_CARE_TEMPLATE_PATTERN, 'placeholder yang boleh dipakai hanya {service} dan {branch}')
+    .regex(SHOE_CARE_TEMPLATE_PATTERN, 'placeholder yang boleh dipakai hanya {partner}, {service}, dan {branch}')
     .nullish(),
 });
 

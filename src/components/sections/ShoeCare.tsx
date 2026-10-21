@@ -31,11 +31,12 @@ export function ShoeCareView({ data, otherBranch }: { data: ShoeCareContent; oth
   // Tombol WhatsApp melayang disembunyikan selama section terlihat (tidak menutupi tombol pesan)
   const zoneRef = useFabZone<HTMLDivElement>(0.05);
   return (
-    <Section id={data.id} tone="dark" labelledBy="cuci-sepatu-title">
+    <Section id={data.id} tone="light" labelledBy="cuci-sepatu-title">
       <div ref={zoneRef}>
         <SectionTitle
           heading={data.heading}
           id="cuci-sepatu-title"
+          tone="light"
           aside={
             <>
               {data.description && <p className={styles.description}>{data.description}</p>}
@@ -79,7 +80,7 @@ export function ShoeCareView({ data, otherBranch }: { data: ShoeCareContent; oth
         <ul className={styles.services} role="list">
           {data.services.map((s) => (
             <li key={s.name}>
-              <Card tone="dark" as="article" className={styles.service}>
+              <Card tone="light" as="article" className={styles.service}>
                 <h4 className={styles.serviceName}>{s.name}</h4>
                 {s.description && <p className={styles.serviceText}>{s.description}</p>}
                 <p className={styles.price}>{s.price}</p>
@@ -91,7 +92,7 @@ export function ShoeCareView({ data, otherBranch }: { data: ShoeCareContent; oth
                   </p>
                 )}
                 <CardFooter>
-                  <Button href={s.href} external variant="ghost" icon="whatsapp" block aria-label={`${copy.orderLabel}: ${s.name}`}>
+                  <Button href={s.href} external variant="outline-dark" icon="whatsapp" block aria-label={`${copy.orderLabel}: ${s.name}`}>
                     {copy.orderLabel}
                   </Button>
                 </CardFooter>

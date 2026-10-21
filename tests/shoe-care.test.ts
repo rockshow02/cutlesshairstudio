@@ -62,15 +62,21 @@ describe('section Cuci Sepatu', () => {
     expect(wa(build(entry({ branchSlug: 'cibubur' }))!.mainHref).number).toBe('6281100000202');
   });
 
-  it('pesan per layanan mengisi {service}; tombol utama memakai pesan umum; penanda "via website Cutless"', () => {
+  it('pesan per layanan mengisi {partner} & {service}; tombol utama memakai pesan umum; penanda "via website Cutless"', () => {
     const data = build()!;
     expect(data.services.map((s) => s.name)).toEqual(['Deep Clean', 'Fast Clean']);
-    expect(wa(data.services[0].href).text).toBe('Halo, saya mau pesan Deep Clean di Cutless Hair Studio cabang Bogor Bantarjati. (via website Cutless)');
+    expect(wa(data.services[0].href).text).toBe('Halo Cuci Sepatu Uji, saya mau pesan Deep Clean di Cutless Hair Studio cabang Bogor Bantarjati. (via website Cutless)');
     expect(wa(data.services[1].href).text).toContain('pesan Fast Clean di');
-    expect(wa(data.mainHref).text).toBe('Halo, saya mau pesan layanan cuci sepatu di Cutless Hair Studio cabang Bogor Bantarjati. (via website Cutless)');
+    expect(wa(data.mainHref).text).toBe('Halo Cuci Sepatu Uji, saya mau pesan layanan cuci sepatu di Cutless Hair Studio cabang Bogor Bantarjati. (via website Cutless)');
     // Template dari CMS; kosong → bawaan
     const custom = build(entry({ messageTemplate: 'Order {service} @ {branch}' }))!;
     expect(wa(custom.services[0].href).text).toBe('Order Deep Clean @ Bogor Bantarjati');
+    // {partner} = Nama partner (ikut berubah bila nama diganti); boleh dipakai berulang & di mana saja
+    const named = build(entry({ name: 'Sepatu Kinclong', messageTemplate: '{partner}: {service} ({branch}) - {partner}' }))!;
+    expect(wa(named.services[1].href).text).toBe('Sepatu Kinclong: Fast Clean (Bogor Bantarjati) - Sepatu Kinclong');
+    expect(wa(named.mainHref).text).toBe('Sepatu Kinclong: layanan cuci sepatu (Bogor Bantarjati) - Sepatu Kinclong');
+    // Template tanpa {partner} tetap jalan
+    expect(wa(build(entry({ messageTemplate: 'Pesan {service}' }))!.mainHref).text).toBe('Pesan layanan cuci sepatu');
     expect(wa(build(entry({ messageTemplate: '' }))!.mainHref).text).toContain('(via website Cutless)');
     // Helper umum
     expect(wa(templateLink('081234', 'Halo {service}  ,  {branch}', { service: 'A', branch: 'B' })).text).toBe('Halo A, B');
@@ -137,6 +143,12 @@ describe('CMS Partner Cuci Sepatu', () => {
     expect(validateCmsContent(cms, { ...raw, messageTemplate: 'Halo {brand}' })[0]).toMatch(/messageTemplate/);
     expect(shoeCareSchema.safeParse({ ...raw, messageTemplate: 'Halo {brand}' }).success).toBe(false);
     expect(validateCmsContent(cms, { ...raw, messageTemplate: '{service} di {branch}' })).toEqual([]);
+    // {partner} diizinkan di form & Zod
+    const withPartner = 'Halo {partner}, {service} di {branch}';
+    expect(validateCmsContent(cms, { ...raw, messageTemplate: withPartner })).toEqual([]);
+    expect(shoeCareSchema.safeParse({ ...raw, messageTemplate: withPartner }).success).toBe(true);
+    expect(shoeCareSchema.safeParse({ ...raw, messageTemplate: 'Halo {partner} {nama}' }).success).toBe(false);
+    expect(validateCmsContent(cms, { ...raw, messageTemplate: 'Halo {Partner}' })[0]).toMatch(/messageTemplate/);
     // Nomor partner
     expect(validateCmsContent(cms, { ...raw, whatsappNumber: '0812345678' })[0]).toMatch(/whatsappNumber/);
     expect(shoeCareSchema.safeParse({ ...raw, whatsappNumber: '0812345678' }).success).toBe(false);
@@ -151,7 +163,9 @@ describe('CMS Partner Cuci Sepatu', () => {
     // Cabang kosong di CMS → bawaan bogor-bantarjati
     expect(shoeCareSchema.parse({ ...raw, branchSlug: '' }).branchSlug).toBe('bogor-bantarjati');
     // Template bawaan sama dengan isi awal
-    expect(shoeCareCopy.defaultTemplate).toContain('{service}');
+    expect(shoeCareCopy.defaultTemplate).toBe('Halo {partner}, saya mau pesan {service} di Cutless Hair Studio cabang {branch}. (via website Cutless)');
+    expect(raw.messageTemplate).toBe(shoeCareCopy.defaultTemplate);
+    expect(f('messageTemplate').description).toContain('{partner}');
     expect(shoeCareCopy.defaultTemplate).toContain('(via website Cutless)');
   });
 });

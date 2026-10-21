@@ -484,10 +484,10 @@ content:
       - name: messageTemplate
         label: Template pesan WhatsApp
         type: text
-        description: "{service} = nama layanan (tombol utama: layanan cuci sepatu), {branch} = nama cabang. Pertahankan penanda (via website Cutless) agar pesanan dari website bisa dilacak. Maksimal 500 karakter."
+        description: "{partner} = nama partner, {service} = nama layanan (tombol utama: layanan cuci sepatu), {branch} = nama cabang. Pertahankan penanda (via website Cutless) agar pesanan dari website bisa dilacak. Maksimal 500 karakter."
         pattern:
-          regex: '^(?:[^{}]|\{(?:service|branch)\})*$'
-          message: Placeholder yang boleh dipakai hanya {service} dan {branch}
+          regex: '^(?:[^{}]|\{(?:partner|service|branch)\})*$'
+          message: Placeholder yang boleh dipakai hanya {partner}, {service}, dan {branch}
         options:
           maxlength: 500
 

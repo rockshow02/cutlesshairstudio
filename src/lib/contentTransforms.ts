@@ -149,7 +149,7 @@ export function buildShoeCare(p: ShoeCareEntry | null | undefined, branches: Bra
   if (!branch || services.length === 0) return null;
   const number = text(p.whatsappNumber) ?? branch.whatsappNumber;
   const template = text(p.messageTemplate) ?? copy.defaultTemplate;
-  const link = (service: string) => templateLink(number, template, { service, branch: branch.name });
+  const link = (service: string) => templateLink(number, template, { partner: p.name, service, branch: branch.name });
   const logo = text(p.logo);
   const tagline = text(p.tagline);
   return {

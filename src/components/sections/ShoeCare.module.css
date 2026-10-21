@@ -1,4 +1,5 @@
-/* Partner Cuci Sepatu. Mobile-first (360 px), warna hanya dari token. */
+/* Partner Cuci Sepatu: section terang (seperti Daftar Harga). Mobile-first (360 px), warna hanya dari token;
+   teks kecil di latar terang memakai --c-taupe-dark / --c-ink-dim (kontras AA). */
 
 .meta {
   display: flex;
@@ -18,20 +19,20 @@
   gap: var(--space-2);
   min-height: 32px;
   padding: var(--space-1) var(--space-3);
-  border: 1px solid var(--c-line-light);
+  border: 1px solid var(--c-line-dark);
   border-radius: 999px;
   font-size: var(--fs-sm);
   font-weight: 600;
-  color: var(--c-bone);
+  color: var(--c-ink);
 }
 .available svg {
-  color: var(--c-sand);
+  color: var(--c-taupe-dark);
 }
 
 .description {
   max-width: 34rem;
   font-size: var(--fs-sm);
-  color: var(--c-bone-dim);
+  color: var(--c-ink-dim);
 }
 
 .notice {
@@ -41,14 +42,14 @@
   max-width: 44rem;
   margin-bottom: var(--space-6);
   padding: var(--space-4);
-  border-left: 2px solid var(--c-sand);
-  background: var(--c-ink-2);
+  border-left: 2px solid var(--c-taupe-dark);
+  background: var(--c-paper-2);
   font-size: var(--fs-sm);
 }
 .notice svg {
   flex: none;
   margin-top: 1px;
-  color: var(--c-sand);
+  color: var(--c-taupe-dark);
 }
 
 /* Keunggulan: baris ikon */
@@ -81,9 +82,9 @@
   place-items: center;
   width: 40px;
   height: 40px;
-  border: 1px solid var(--c-line-light);
+  border: 1px solid var(--c-line-dark);
   border-radius: 50%;
-  color: var(--c-sand);
+  color: var(--c-taupe-dark);
 }
 .advTitle {
   display: block;
@@ -93,7 +94,7 @@
 .advText {
   display: block;
   font-size: var(--fs-sm);
-  color: var(--c-bone-dim);
+  color: var(--c-ink-dim);
 }
 
 .subTitle {
@@ -132,7 +133,7 @@
 }
 .serviceText {
   font-size: var(--fs-sm);
-  color: var(--c-bone-dim);
+  color: var(--c-ink-dim);
 }
 .price {
   margin-top: var(--space-2);
@@ -146,7 +147,7 @@
   align-items: center;
   gap: var(--space-2);
   font-size: var(--fs-sm);
-  color: var(--c-bone-dim);
+  color: var(--c-ink-dim);
 }
 
 /* Galeri hasil: geser horizontal di HP, grid di desktop */
@@ -174,7 +175,7 @@
   aspect-ratio: 4 / 3;
   overflow: hidden;
   border-radius: var(--radius);
-  background: var(--c-ink-2);
+  background: var(--c-paper-2);
 }
 .photo picture {
   display: contents;
@@ -189,7 +190,7 @@
   max-width: 44rem;
   margin-bottom: var(--space-6);
   font-size: var(--fs-xs);
-  color: var(--c-bone-dim);
+  color: var(--c-ink-dim);
 }
 .notesTitle {
   margin-bottom: var(--space-2);
@@ -198,7 +199,7 @@
   font-weight: 700;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: var(--c-bone);
+  color: var(--c-ink);
 }
 .notes ul {
   display: grid;
