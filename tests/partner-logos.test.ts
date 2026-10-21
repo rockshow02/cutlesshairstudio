@@ -28,9 +28,8 @@ describe('pita logo partner', () => {
     expect(build(entry([logo('Satu')], { enabled: false }))).toBeNull();
     expect(html(entry([]))).toBe('');
     expect(html(entry([logo('Satu')], { enabled: false }))).toBe('');
-    // partners.json saat ini (daftar kosong) → tidak ada pita
-    const current = partnersSchema.parse(JSON.parse(readFileSync('src/content/partners.json', 'utf8')));
-    expect(build(current)).toBeNull();
+    // Field kosong yang tidak ditulis Pages CMS → default Zod (tampil, daftar kosong) → tetap tanpa pita
+    expect(build(partnersSchema.parse({}))).toBeNull();
   });
 
   it('logo kosong → nama partner sebagai teks; logo ada → <img> dengan alt nama partner', () => {
@@ -79,9 +78,9 @@ describe('CMS Logo Partner', () => {
     expect(f('logos').fields!.find((x) => x.name === 'name')!.options?.maxlength).toBe(60);
     expect(f('logos').fields!.find((x) => x.name === 'logo')!.options?.media).toBe('partner-logos');
     setMedia(config.media);
+    // Isi saat ini (apa pun yang diisi admin lewat CMS) harus lolos form & Zod
     expect(validateCmsContent(cms, raw)).toEqual([]);
-    // Tanpa seed brand nyata
-    expect(raw.logos).toEqual([]);
+    expect(partnersSchema.safeParse(raw).success).toBe(true);
   });
 
   it('form & Zod menolak isian yang tidak valid', () => {
