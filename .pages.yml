@@ -316,6 +316,55 @@ content:
         default: true
         description: "Matikan untuk menyembunyikan tanpa menghapus."
 
+  # ------------------------------------------------------------------ Kartu Layanan
+  - name: services
+    label: Kartu Layanan
+    type: file
+    path: src/content/services.json
+    format: json
+    list: true
+    fields:
+      - name: name
+        label: Judul kartu
+        type: string
+        required: true
+        description: "Biasanya sama dengan nama kategori harga, mis. Wanita. Juga dipakai di pesan WhatsApp dan deskripsi Google. Maksimal 40 karakter."
+        options:
+          maxlength: 40
+      - name: description
+        label: Deskripsi
+        type: text
+        required: true
+        description: "Sebutkan layanan yang ADA di Daftar Harga kategori ini, mis. Cornrow, braids box, dan dreadlock. Maksimal 160 karakter."
+        options:
+          maxlength: 160
+      - name: icon
+        label: Ikon
+        type: select
+        default: scissors
+        description: "scissors = gunting, wash = tetes air, shave = pisau cukur, color = palet, perm = gelombang, kids = wajah anak, spa = daun, tattoo = garis, user = orang, star = bintang, gift = hadiah, tag = label."
+        options:
+          values: [scissors, wash, shave, color, perm, kids, spa, tattoo, user, star, gift, tag]
+      - name: pricingCategory
+        label: Kategori harga
+        type: select
+        required: true
+        description: "Harga 'mulai Rp…' diambil otomatis dari harga terendah item aktif kategori ini. Kategori tanpa item aktif → kartu tidak tampil. Satu kartu per kategori."
+        options:
+          values: [Haircut & Grooming, Wanita, Treatment, Coloring, Perming, Braids & Dreadlock, Shaving, Kids]
+      - name: order
+        label: Urutan
+        type: number
+        default: 0
+        description: "Angka kecil tampil lebih dulu."
+        options:
+          min: 0
+      - name: isActive
+        label: Tampilkan
+        type: boolean
+        default: true
+        description: "Matikan untuk menyembunyikan kartu tanpa menghapusnya."
+
   # ------------------------------------------------------------------ Partner Cuci Sepatu
   - name: shoeCare
     label: Partner Cuci Sepatu
