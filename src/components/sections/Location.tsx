@@ -3,11 +3,10 @@ import { AnimatePresence, useReducedMotion } from 'motion/react';
 import * as m from 'motion/react-m';
 import { getGallery, getLocations, getServices } from '@/lib/content';
 import { useContent } from '@/lib/useContent';
-import { useSite } from '@/lib/SiteContext';
 import { useBranch } from '@/lib/BranchContext';
 import { useBooking } from '@/lib/useBooking';
 import { getOpenStatus, todayIndex } from '@/lib/branchHours';
-import { formatPrice, formatTime } from '@/lib/format';
+import { formatTime } from '@/lib/format';
 import { pageUrl } from '@/lib/navigation';
 import { MOBILE_QUERY, useMediaQuery } from '@/lib/useMediaQuery';
 import { useFabZone } from '@/lib/fabZones';
@@ -114,9 +113,8 @@ function Branches({ data }: { data: LocationsContent }) {
   );
 }
 
-/** Layanan + harga "mulai" di cabang ini (dari Daftar Harga) */
+/** Layanan di cabang ini (Pages CMS → Kartu Layanan), tanpa harga; harga lengkap di Daftar Harga */
 function BranchServices({ branch, title }: { branch: Branch; title: string }) {
-  const { site } = useSite();
   const state = useContent(() => getServices(branch.slug), [branch.slug]);
   if (state.status !== 'success' || state.data.items.length === 0) return null;
   return (
@@ -126,7 +124,6 @@ function BranchServices({ branch, title }: { branch: Branch; title: string }) {
         {state.data.items.map((s) => (
           <li key={s.id}>
             <span>{s.name}</span>
-            {s.startingPrice !== undefined && <span className={styles.servicePrice}>{formatPrice(s.startingPrice, true, site.ui.priceFrom)}</span>}
           </li>
         ))}
       </ul>

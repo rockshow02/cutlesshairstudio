@@ -3,7 +3,7 @@
     "name": "Haircut & Grooming",
     "description": "Pilihan White Grooming dan Black Grooming.",
     "icon": "scissors",
-    "pricingCategory": "Haircut & Grooming",
+    "pricingCategory": "Haircut",
     "order": 10,
     "isActive": true
   },
@@ -11,23 +11,23 @@
     "name": "Wanita",
     "description": "Haircut, haircut & blow, catok/blow, creambath, dry wash, serta wash & styling.",
     "icon": "user",
-    "pricingCategory": "Wanita",
+    "pricingCategory": "Woman Haircut & Treatment",
     "order": 20,
     "isActive": true
   },
   {
     "name": "Treatment",
-    "description": "Hair wash, creambath, hair keratin, dan dread wash.",
+    "description": "Hair wash, creambath, dan hair keratin.",
     "icon": "spa",
-    "pricingCategory": "Treatment",
+    "pricingCategory": "Special Treatment",
     "order": 30,
     "isActive": true
   },
   {
     "name": "Coloring",
-    "description": "Coloring natural, highlight, fashion color, dan bleaching.",
+    "description": "Coloring natural, coloring fashion, dan bleaching.",
     "icon": "color",
-    "pricingCategory": "Coloring",
+    "pricingCategory": "Special Treatment",
     "order": 40,
     "isActive": true
   },
@@ -35,15 +35,15 @@
     "name": "Perming",
     "description": "Hair perm dan down perming.",
     "icon": "perm",
-    "pricingCategory": "Perming",
+    "pricingCategory": "Special Treatment",
     "order": 50,
     "isActive": true
   },
   {
     "name": "Braids & Dreadlock",
-    "description": "Cornrow, braids box, dan dreadlock, masing-masing pilihan basic, middle, dan premium.",
+    "description": "Cornrow, braids box (non-extension), dan dreadlock.",
     "icon": "tattoo",
-    "pricingCategory": "Braids & Dreadlock",
+    "pricingCategory": "Special Treatment",
     "order": 60,
     "isActive": true
   },

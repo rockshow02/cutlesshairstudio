@@ -1,0 +1,400 @@
+/* Halaman /cuci-sepatu/: foto besar, judul tegas, jarak lega. Mobile-first (360 px), warna hanya dari token. */
+
+.missing {
+  padding-top: calc(var(--header-offset) + var(--nav-safe-top) + var(--space-8));
+}
+.missingTitle {
+  margin-bottom: var(--space-6);
+  font-size: var(--fs-h2);
+}
+
+/* ---------- Hero ---------- */
+.hero {
+  position: relative;
+  z-index: var(--z-content);
+  display: grid;
+  min-height: min(92svh, 56rem);
+  background: var(--c-ink);
+  color: var(--c-bone);
+  overflow: hidden;
+  isolation: isolate;
+}
+.hero > * {
+  grid-area: 1 / 1;
+  min-width: 0;
+}
+.heroBg {
+  z-index: -2;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  contain: size;
+}
+.heroShade {
+  z-index: -1;
+  background:
+    linear-gradient(180deg, rgba(12, 16, 20, 0.65) 0%, rgba(12, 16, 20, 0.1) 30%),
+    linear-gradient(0deg, rgba(12, 16, 20, 0.96) 0%, rgba(12, 16, 20, 0.82) 40%, rgba(12, 16, 20, 0.3) 100%);
+}
+.heroInner {
+  align-self: end;
+  width: 100%;
+  padding-top: calc(var(--header-offset) + var(--nav-safe-top) + var(--space-8));
+  padding-bottom: var(--space-8);
+}
+.heroLogo {
+  width: auto;
+  height: 64px;
+  max-width: 160px;
+  margin-bottom: var(--space-5);
+  object-fit: contain;
+}
+.heroTitle {
+  max-width: 18ch;
+  font-size: var(--fs-display);
+  line-height: 0.98;
+  letter-spacing: -0.03em;
+  text-transform: uppercase;
+  overflow-wrap: anywhere;
+}
+.heroTagline {
+  max-width: 36rem;
+  margin-top: var(--space-4);
+  font-size: var(--fs-lg);
+  font-weight: 600;
+}
+.heroText {
+  max-width: 36rem;
+  margin-top: var(--space-3);
+  color: var(--c-bone-dim);
+}
+.heroMeta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+  margin-top: var(--space-5);
+}
+.available {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 32px;
+  padding: var(--space-1) var(--space-3);
+  border: 1px solid var(--c-line-light);
+  border-radius: 999px;
+  font-size: var(--fs-sm);
+  font-weight: 600;
+}
+.available svg {
+  color: var(--c-sand);
+}
+.notice {
+  display: flex;
+  gap: var(--space-3);
+  align-items: flex-start;
+  max-width: 36rem;
+  margin-top: var(--space-4);
+  padding: var(--space-3) var(--space-4);
+  border-left: 2px solid var(--c-sand);
+  background: var(--c-ink-2);
+  font-size: var(--fs-sm);
+}
+.notice svg {
+  flex: none;
+  color: var(--c-sand);
+}
+.heroActions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin-top: var(--space-6);
+}
+@media (min-width: 600px) {
+  .heroActions {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+}
+
+/* ---------- About ---------- */
+.about {
+  display: grid;
+  gap: var(--space-7);
+}
+@media (min-width: 900px) {
+  .aboutWithImage {
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+    gap: var(--space-8);
+    align-items: center;
+  }
+}
+.paragraphs {
+  display: grid;
+  gap: var(--space-4);
+  max-width: 40rem;
+  margin-top: calc(var(--section-head-gap) * -0.4);
+  color: var(--c-ink-dim);
+}
+.paragraphs p:first-child {
+  font-size: var(--fs-lg);
+  color: var(--c-ink);
+}
+.aboutMedia {
+  overflow: hidden;
+  border-radius: var(--radius-lg);
+  aspect-ratio: 4 / 5;
+  background: var(--c-paper-2);
+}
+.aboutMedia picture {
+  display: contents;
+}
+.aboutImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.advantages {
+  display: grid;
+  gap: var(--space-4);
+  margin: var(--space-7) 0 0;
+  padding: 0;
+  list-style: none;
+}
+@media (min-width: 600px) {
+  .advantages {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+.advantage {
+  display: flex;
+  gap: var(--space-3);
+  align-items: flex-start;
+  min-width: 0;
+}
+.advIcon {
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--c-line-dark);
+  border-radius: 50%;
+  color: var(--c-taupe-dark);
+}
+.advTitle {
+  display: block;
+  margin-bottom: var(--space-1);
+}
+.advText {
+  display: block;
+  font-size: var(--fs-sm);
+  color: var(--c-ink-dim);
+}
+
+/* ---------- Layanan ---------- */
+.services {
+  display: grid;
+  gap: var(--space-4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+@media (min-width: 600px) {
+  .services {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (min-width: 1024px) {
+  .services {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--space-5);
+  }
+}
+.service {
+  gap: var(--space-3);
+}
+.serviceImg {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  margin-bottom: var(--space-2);
+  object-fit: cover;
+  border-radius: var(--radius);
+}
+.serviceIcon {
+  display: inline-grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  border: 1px solid var(--c-line-light);
+  border-radius: 50%;
+  color: var(--c-sand);
+}
+.serviceName {
+  font-size: var(--fs-h3);
+  line-height: 1.2;
+}
+.serviceText {
+  font-size: var(--fs-sm);
+  color: var(--c-bone-dim);
+}
+.estimate {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--fs-sm);
+  color: var(--c-bone-dim);
+}
+.servicesMenu {
+  display: flex;
+  justify-content: center;
+  margin-top: var(--space-7);
+}
+
+/* ---------- Galeri ---------- */
+.gallery {
+  display: grid;
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+@media (min-width: 600px) {
+  .gallery {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (min-width: 1024px) {
+  .gallery {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--space-4);
+  }
+}
+.photo {
+  display: block;
+  width: 100%;
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  border-radius: var(--radius-lg);
+  aspect-ratio: 4 / 3;
+  background: var(--c-paper-2);
+  cursor: zoom-in;
+}
+.photo picture {
+  display: contents;
+}
+.photo:focus-visible {
+  outline: 2px solid var(--c-taupe-dark);
+  outline-offset: 3px;
+}
+.photoImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform var(--dur) var(--ease);
+}
+@media (hover: hover) {
+  .photo:hover .photoImg {
+    transform: scale(1.03);
+  }
+}
+
+/* ---------- Catatan & CTA ---------- */
+.closing {
+  display: grid;
+  gap: var(--space-8);
+}
+.notes {
+  max-width: 44rem;
+  padding: var(--space-5);
+  border: 1px solid var(--c-line-light);
+  border-radius: var(--radius);
+  font-size: var(--fs-sm);
+  color: var(--c-bone-dim);
+}
+.notesTitle {
+  margin-bottom: var(--space-3);
+  font-family: var(--f-body);
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--c-bone);
+}
+.notes ul {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+  padding-left: 1.1em;
+}
+.cta {
+  max-width: 44rem;
+  margin-inline: auto;
+  text-align: center;
+}
+.ctaTitle {
+  margin-bottom: var(--space-4);
+  font-size: clamp(2rem, 1rem + 5vw, 4.5rem);
+  line-height: 0.98;
+  letter-spacing: -0.03em;
+  text-transform: uppercase;
+}
+.ctaText {
+  max-width: 32rem;
+  margin: 0 auto var(--space-6);
+  color: var(--c-bone-dim);
+}
+.ctaActions {
+  display: flex;
+  justify-content: center;
+}
+
+/* ---------- Lokasi ---------- */
+.location {
+  display: grid;
+  gap: var(--space-6);
+}
+@media (min-width: 768px) {
+  .location {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-items: start;
+  }
+}
+.address {
+  display: flex;
+  gap: var(--space-3);
+  align-items: flex-start;
+  max-width: 30rem;
+  margin-bottom: var(--space-5);
+}
+.address svg {
+  flex: none;
+  margin-top: 3px;
+  color: var(--c-taupe-dark);
+}
+.hours {
+  width: 100%;
+  max-width: 26rem;
+  border-collapse: collapse;
+  font-size: var(--fs-sm);
+}
+.hours caption {
+  margin-bottom: var(--space-2);
+  text-align: left;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  font-size: var(--fs-xs);
+}
+.hours th,
+.hours td {
+  padding: var(--space-2) 0;
+  border-bottom: 1px solid var(--c-line-dark);
+  text-align: left;
+  font-weight: 400;
+}
+.hours td {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}

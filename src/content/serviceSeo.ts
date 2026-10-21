@@ -1,20 +1,16 @@
 /**
- * Nama layanan aktif untuk meta description (beranda & halaman cabang), dari Pages CMS → Kartu Layanan + Daftar Harga.
+ * Kategori layanan aktif untuk meta description (beranda & halaman cabang), dari Pages CMS → Daftar Harga.
  * Tanpa alias "@/" & tanpa Zod: dipakai plugin build (scripts/vite-content-plugin.ts) dan frontend.
  */
-import type { PricingEntry, ServiceCardEntry } from './schema';
+import type { PricingEntry } from './schema';
+import { PRICE_CATEGORIES } from './priceCategories';
 
 export const META_MAX = 160;
 
-/** Kartu tampil yang kategorinya punya item harga aktif, urut seperti section Layanan (sama dengan buildServices) */
-export function pricedServiceNames(services: ServiceCardEntry[], pricing: PricingEntry[]): string[] {
-  const priced = new Set(pricing.filter((p) => p.isActive !== false).map((p) => p.category));
-  const names = services
-    .map((s, index) => ({ s, index }))
-    .filter(({ s }) => s.isActive !== false && priced.has(s.pricingCategory as PricingEntry['category']))
-    .sort((a, b) => (a.s.order ?? 0) - (b.s.order ?? 0) || a.index - b.index)
-    .map(({ s }) => s.name.trim());
-  return [...new Set(names)];
+/** Kategori Daftar Harga yang punya item aktif (tanpa Paket), urut seperti di section Daftar Harga */
+export function activeCategoryNames(pricing: PricingEntry[]): string[] {
+  const active = new Set(pricing.filter((p) => p.isActive !== false).map((p) => p.category));
+  return PRICE_CATEGORIES.filter((c) => c !== 'Paket' && active.has(c));
 }
 
 /** "A", "A dan B", "A, B, dan C" */

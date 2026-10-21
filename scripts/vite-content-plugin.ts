@@ -13,7 +13,7 @@
  *    [DEV]/[STAGING], modul `virtual:content-status` untuk badge. Web Analytics hanya di produksi.
  * 5. Prerender /cabang/<slug>/index.html per cabang (title/meta unik + JSON-LD HairSalon + ringkasan statis).
  */
-import { readdir, readFile, mkdir, stat, writeFile } from 'node:fs/promises';
+import { readdir, readFile, mkdir, rm, stat, writeFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import path from 'node:path';
 import sharp from 'sharp';
@@ -22,7 +22,8 @@ import { loadEnv, type Plugin, type ViteDevServer } from 'vite';
 import { CONTENT_FILES, crossCheck, type BranchEntry, type ContentBundle, type ContentIssue, type HeroEntry } from '../src/content/schema';
 import { srcSetOf, type ImageMeta } from '../src/lib/responsiveImage';
 import { applyE2EFixtures } from '../e2e/fixtures/content';
-import { branchDescription, homeDescription, pricedServiceNames } from '../src/content/serviceSeo';
+import { activeCategoryNames, branchDescription, homeDescription } from '../src/content/serviceSeo';
+import { SHOE_CARE_PATH, shoeCareDescription, shoeCareImage, shoeCareRedirects, shoeCareTitle, shoeCareVisible } from '../src/content/shoeCareSeo';
 
 const VIRTUAL_ID = 'virtual:image-meta';
 const RESOLVED_ID = `\0${VIRTUAL_ID}`;
@@ -211,11 +212,38 @@ function branchJsonLd(b: BranchEntry, bundle: ContentBundle) {
 
 const jsonLdTag = (data: unknown) => `<script type="application/ld+json">${JSON.stringify(data).replace(/</g, '\\u003c')}</script>`;
 
-/** Partner Cuci Sepatu tampil di halaman cabang ini (sama dengan buildShoeCare di src/lib/contentTransforms.ts) */
+/** Halaman /cuci-sepatu/ aktif & partnernya di cabang ini → nama partner (untuk meta & ringkasan halaman cabang) */
 export function shoeCareAt(b: BranchEntry, bundle: ContentBundle): string | null {
   const p = bundle.shoeCare;
-  if (!p?.enabled || p.branchSlug !== b.slug || !p.services.some((s) => s.isActive !== false)) return null;
-  return p.name;
+  return shoeCareVisible(p, bundle.branches) && p.branchSlug === b.slug ? p.name : null;
+}
+
+/** Head & ringkasan statis /cuci-sepatu/ (diganti React saat dimuat). Halaman mati → isi netral (dialihkan 301). */
+function shoeCareFill(html: string, bundle: ContentBundle): string {
+  const p = bundle.shoeCare;
+  const { siteUrl, siteName } = bundle.settings;
+  const branch = bundle.branches.find((b) => b.slug === p.branchSlug);
+  const visible = shoeCareVisible(p, bundle.branches) && branch;
+  const title = visible ? shoeCareTitle(p, branch.name) : `Cuci Sepatu | ${siteName}`;
+  const description = visible ? shoeCareDescription(p, branch.name) : `Layanan cuci sepatu partner ${siteName}.`;
+  const image = visible ? imageUrl(siteUrl, shoeCareImage(p, bundle.cta.image || '/images/cta/studio.jpg')) : `${siteUrl}${OG_IMAGE}`;
+  const services = visible ? p.services.filter((s) => s.isActive !== false) : [];
+  const body = visible
+    ? [
+        '<div class="prerender">',
+        `<h1>${esc(p.name)}</h1>`,
+        p.tagline ? `<p>${esc(p.tagline)}</p>` : '',
+        `<p>Tersedia di Cutless ${esc(branch.name)}${branch.address ? `: ${esc(branch.address)}` : ''}</p>`,
+        `<h2>Layanan</h2><ul>${services.map((s) => `<li>${esc(s.name)}${s.description ? `: ${esc(s.description)}` : ''}</li>`).join('')}</ul>`,
+        '<p><a href="/">Beranda</a> · <a href="/cabang/">Semua cabang</a></p>',
+        '</div>',
+      ].join('')
+    : '';
+  return html
+    .replaceAll('%SHOE_TITLE%', esc(title))
+    .replaceAll('%SHOE_DESCRIPTION%', esc(description))
+    .replaceAll('%SHOE_IMAGE%', image)
+    .replace('<!--cutless:shoe-body-->', body);
 }
 
 function branchHead(b: BranchEntry, bundle: ContentBundle): string {
@@ -225,7 +253,7 @@ function branchHead(b: BranchEntry, bundle: ContentBundle): string {
   const description = clip(
     b.status === 'Segera Dibuka'
       ? `${siteName} segera hadir di ${b.city}. Cabang baru dengan hairstylist yang sama on point-nya.`
-      : branchDescription(siteName, b.name, pricedServiceNames(bundle.services, bundle.pricing), Boolean(shoeCareAt(b, bundle)))
+      : branchDescription(siteName, b.name, activeCategoryNames(bundle.pricing), Boolean(shoeCareAt(b, bundle)))
   );
   const image = b.photo ? imageUrl(siteUrl, b.photo) : `${siteUrl}${OG_IMAGE}`;
   return [
@@ -282,15 +310,17 @@ function fillHtml(html: string, bundle: ContentBundle | undefined, meta: ImageMe
   if (!bundle) return html;
   const { siteUrl, siteName } = bundle.settings;
   const allBranches = jsonLdTag(bundle.branches.map((b) => branchJsonLd(b, bundle)));
-  return html
+  const out = html
     .replaceAll('%SITE_URL%', siteUrl)
     .replaceAll('%BRAND%', esc(siteName))
     .replaceAll('%CITIES%', esc(citiesOf(bundle)))
-    // Meta beranda dari kategori layanan aktif (Kartu Layanan + Daftar Harga), maks. 160 karakter
-    .replaceAll('%HOME_DESCRIPTION%', esc(homeDescription(siteName, citiesOf(bundle), pricedServiceNames(bundle.services, bundle.pricing))))
+    // Meta beranda dari kategori Daftar Harga yang punya item aktif, maks. 160 karakter
+    .replaceAll('%HOME_DESCRIPTION%', esc(homeDescription(siteName, citiesOf(bundle), activeCategoryNames(bundle.pricing))))
     .replaceAll('%OG_IMAGE%', `${siteUrl}${OG_IMAGE}`)
     .replace('<!--cutless:jsonld-->', allBranches)
     .replace('<!--cutless:hero-preload-->', heroPreload(bundle.hero, meta));
+  // Halaman /cuci-sepatu/: title, meta, Open Graph & ringkasan dari Partner Cuci Sepatu
+  return out.includes('%SHOE_TITLE%') ? shoeCareFill(out, bundle) : out;
 }
 
 const HEAD_REGION = /<!--cutless:head-start-->[\s\S]*?<!--cutless:head-end-->/;
@@ -303,6 +333,8 @@ function sitemap(bundle: ContentBundle): string {
     '/cabang/',
     ...bundle.branches.map((b) => `/cabang/${b.slug}/`),
     ...(bundle.settings.showProducts ? ['/produk/'] : []),
+    // Halaman Cuci Sepatu hanya saat aktif (mati → 301 ke beranda)
+    ...(shoeCareVisible(bundle.shoeCare, bundle.branches) ? [SHOE_CARE_PATH] : []),
   ];
   const body = urls.map((u) => `  <url><loc>${siteUrl}${u}</loc><lastmod>${today}</lastmod></url>`).join('\n');
   return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${body}\n</urlset>\n`;
@@ -469,6 +501,16 @@ export function contentPlugin(): Plugin {
       if (appEnv !== 'production' && existsSync(headersFile)) {
         const current = await readFile(headersFile, 'utf8');
         if (!current.includes('X-Robots-Tag')) await writeFile(headersFile, current.trimEnd() + '\n' + NOINDEX_HEADERS);
+      }
+      // Halaman Cuci Sepatu mati: HTML-nya dihapus & /cuci-sepatu dialihkan 301 ke beranda
+      const shoeRules = shoeCareRedirects(shoeCareVisible(bundle.shoeCare, bundle.branches));
+      if (shoeRules.length) {
+        await rm(path.join(outDir, 'cuci-sepatu'), { recursive: true, force: true });
+        const redirectsFile = path.join(outDir, '_redirects');
+        const current = existsSync(redirectsFile) ? await readFile(redirectsFile, 'utf8') : '';
+        if (!current.includes('/cuci-sepatu')) {
+          await writeFile(redirectsFile, `${current.trimEnd()}\n# Halaman Cuci Sepatu mati (Pages CMS → Partner Cuci Sepatu → Tampilkan halaman)\n${shoeRules.join('\n')}\n`);
+        }
       }
       const template = path.join(outDir, 'cabang', 'index.html');
       if (!existsSync(template)) return;

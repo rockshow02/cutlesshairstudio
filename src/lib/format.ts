@@ -17,6 +17,15 @@ export function formatPrice(value: number, from: boolean | undefined, fromLabel:
   return from ? `${fromLabel} ${price}` : price;
 }
 
+/**
+ * Format ribuan "K" khusus Daftar Harga (tanpa "Rp", tanpa pemisah ribuan):
+ * 100000 → "100K", 1500000 → "1500K", 12500 → "12,5K", 500 → "0,5K".
+ */
+export function formatThousandsK(value: number): string {
+  const k = Math.round(value / 100) / 10;
+  return `${Number.isInteger(k) ? k : k.toFixed(1).replace('.', ',')}K`;
+}
+
 /** 5000 -> "5.000" */
 export function formatNumber(value: number): string {
   return numberFormatter.format(value);

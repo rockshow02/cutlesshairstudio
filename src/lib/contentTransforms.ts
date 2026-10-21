@@ -74,8 +74,8 @@ import type {
   TestimonialEntry,
 } from '@/content/schema';
 import { srcSetOf } from './responsiveImage';
-import { PRICE_CATEGORIES } from '@/content/priceCategories';
-import { formatNumber, formatPrice } from './format';
+import { PRICE_CATEGORIES, priceCategoryAnchor } from '@/content/priceCategories';
+import { formatNumber } from './format';
 import { isActiveNow, parseWIB, toIsoWIB } from './dates';
 import { fillTemplate, templateLink } from './whatsapp';
 
@@ -141,13 +141,14 @@ export function buildPartnerLogos(p: PartnersEntry | null | undefined, brandName
 
 /* ---------- Partner Cuci Sepatu (Pages CMS → Partner Cuci Sepatu) ---------- */
 
-export const SHOE_CARE_ID = 'cuci-sepatu';
+export const SHOE_CARE_PAGE = '/cuci-sepatu/';
 
 /**
- * Section #cuci-sepatu. null = dimatikan, cabangnya tidak ada, atau belum ada layanan yang ditampilkan.
+ * Halaman /cuci-sepatu/ & teaser. null = "Tampilkan halaman" mati, cabangnya tidak ada, atau belum ada layanan tampil.
  * Semua tombol WhatsApp ke nomor partner; kosong → nomor WhatsApp cabang partner (bukan cabang pilihan pengunjung).
+ * Foto hero: CMS → foto hasil pertama → `fallbackImage` (foto CTA penutup).
  */
-export function buildShoeCare(p: ShoeCareEntry | null | undefined, branches: Branch[], copy: ShoeCareCopy): ShoeCareContent | null {
+export function buildShoeCare(p: ShoeCareEntry | null | undefined, branches: Branch[], copy: ShoeCareCopy, fallbackImage?: ImageAsset): ShoeCareContent | null {
   if (!p || p.enabled !== true) return null;
   const branch = branches.find((b) => b.slug === p.branchSlug);
   const services = activeSorted(p.services ?? []);
@@ -156,25 +157,43 @@ export function buildShoeCare(p: ShoeCareEntry | null | undefined, branches: Bra
   const template = text(p.messageTemplate) ?? copy.defaultTemplate;
   const link = (service: string) => templateLink(number, template, { partner: p.name, service, branch: branch.name });
   const logo = text(p.logo);
-  const tagline = text(p.tagline);
+  const photos = (p.photos ?? []).map((ph) => responsiveImage(ph.image, ph.alt, '(min-width: 1024px) 33vw, (min-width: 600px) 50vw, 100vw', { width: 1200, height: 900 }));
+  const hero = text(p.heroImage);
+  const aboutImage = text(p.aboutImage);
+  const placeholder: ImageAsset = { src: '/images/cta/studio.jpg', alt: p.name, width: 750, height: 423 };
   return {
-    id: SHOE_CARE_ID,
+    pageUrl: SHOE_CARE_PAGE,
     isDemo: p.isDemo === true,
-    heading: { kicker: copy.kicker, title: p.name, ...(tagline ? { intro: tagline } : {}) },
+    showTeaser: p.showTeaser !== false,
     name: p.name,
+    tagline: text(p.tagline),
     description: text(p.description),
-    logo: logo ? toImage(logo, p.name, { width: 240, height: 120 }) : undefined,
+    logo: logo ? toImage(logo, p.name, { width: 240, height: 240 }) : undefined,
+    heroImage: hero
+      ? responsiveImage(hero, `${p.name}, ${copy.kicker.toLowerCase()}`, '100vw', { width: 1920, height: 1080 })
+      : (photos[0] ?? fallbackImage ?? placeholder),
     branch: { slug: branch.slug, name: branch.name, pageUrl: branch.pageUrl },
+    about: {
+      heading: { kicker: copy.aboutKicker, title: text(p.aboutTitle) ?? fillTemplate(copy.aboutTitleFallback, { partner: p.name }) },
+      paragraphs: (p.aboutParagraphs ?? []).map((t) => t.trim()).filter(Boolean),
+      image: aboutImage ? responsiveImage(aboutImage, text(p.aboutImageAlt) ?? p.name, '(min-width: 900px) 40vw, 100vw', { width: 1200, height: 900 }) : undefined,
+    },
     advantages: (p.advantages ?? []).map((a) => ({ title: a.title, description: a.description, icon: a.icon ?? 'check' })),
-    services: services.map((s) => ({
-      name: s.name,
-      description: text(s.description),
-      price: formatPrice(s.price, s.priceFrom, copy.fromLabel),
-      estimate: text(s.estimate),
-      href: link(s.name),
-    })),
-    photos: (p.photos ?? []).map((ph) => responsiveImage(ph.image, ph.alt, '(min-width: 768px) 25vw, 70vw', { width: 1200, height: 900 })),
+    services: services.map((s) => {
+      const image = text(s.image);
+      const icon = text(s.icon) as IconName | undefined;
+      return {
+        name: s.name,
+        description: text(s.description),
+        estimate: text(s.estimate),
+        ...(icon ? { icon } : {}),
+        ...(image ? { image: responsiveImage(image, s.name, '(min-width: 768px) 33vw, 100vw', { width: 1200, height: 900 }) } : {}),
+        href: link(s.name),
+      };
+    }),
+    photos,
     notes: (p.notes ?? []).map((n) => n.trim()).filter(Boolean),
+    menuUrl: text(p.menuUrl),
     mainHref: link(copy.genericService),
     copy,
   };
@@ -339,14 +358,18 @@ export function buildSite(s: SettingsEntry, base: SiteContent, branches: Branch[
     intro: { enabled: s.enablePreloader !== false, video: text(s.preloaderVideo) },
     // Link menu ikut hilang bila section-nya dimatikan
     nav: base.nav.filter(
-      (item) => !(item.href?.startsWith('/produk') && !features.products) && !(item.sectionId === SHOE_CARE_ID && !features.shoeCare),
+      (item) => !(item.href?.startsWith('/produk') && !features.products) && !(item.href === SHOE_CARE_PAGE && !features.shoeCare),
     ),
     logo: logo ? { ...base.logo, stacked: toImage(logo, s.siteName, base.logo.stacked) } : base.logo,
     whatsapp: {
       ...base.whatsapp,
       number: s.mainWhatsappNumber,
       displayNumber: formatPhoneDisplay(s.mainWhatsappNumber),
-      templates: { ...base.whatsapp.templates, general: text(s.defaultWaMessage) ?? base.whatsapp.templates.general },
+      templates: {
+        ...base.whatsapp.templates,
+        general: text(s.defaultWaMessage) ?? base.whatsapp.templates.general,
+        barber: text(s.barberWaMessage) ?? base.whatsapp.templates.barber,
+      },
     },
     seo: {
       ...base.seo,
@@ -440,6 +463,7 @@ export function buildPricing(entries: PricingEntry[], copy: PricingCopy, branche
     branchName: branch?.name,
     hasBranchPrices: items.some((i) => (i.branchPrices ?? []).length > 0),
     categories,
+    priceFromLabel: copy.priceFromLabel,
     packagesTitle: copy.packagesTitle,
     packages,
   };
@@ -457,21 +481,22 @@ export function startingPrices(entries: PricingEntry[], branchSlug?: string): Pa
 }
 
 /**
- * Kartu Layanan (Pages CMS → Kartu Layanan) sinkron dengan Daftar Harga: hanya kartu tampil yang kategorinya punya
- * item harga aktif; "mulai Rp…" = harga terendah item aktif kategori itu (cabang terpilih, atau terendah semua cabang).
+ * Kartu Layanan (Pages CMS → Kartu Layanan): kartu deskriptif tanpa harga. Kategori harga (opsional) hanya untuk tautan
+ * "Lihat harga" ke kategori itu di Daftar Harga, dan hanya bila kategori punya item aktif (untuk cabang ini).
  */
 export function buildServices(entries: ServiceCardEntry[], copy: ServicesCopy, pricing: PricingEntry[], branchSlug?: string): ServicesContent {
-  const prices = startingPrices(pricing, branchSlug);
-  const items = activeSorted(entries)
-    .map((s, index) => ({
+  const priced = startingPrices(pricing, branchSlug);
+  const items: Service[] = activeSorted(entries).map((s, index) => {
+    const category = text(s.pricingCategory) as Service['pricingCategory'] | undefined;
+    const linked = category && priced[category] !== undefined ? category : undefined;
+    return {
       id: makeId(s.name, index),
       name: s.name,
       description: s.description,
       icon: (s.icon ?? 'scissors') as IconName,
-      pricingCategory: s.pricingCategory as Service['pricingCategory'],
-      startingPrice: prices[s.pricingCategory as PriceCategoryKey],
-    }))
-    .filter((s) => s.startingPrice !== undefined);
+      ...(linked ? { pricingCategory: linked, priceHref: `#${priceCategoryAnchor(linked)}` } : {}),
+    };
+  });
   return { heading: copy.heading, items };
 }
 

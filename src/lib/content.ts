@@ -168,7 +168,8 @@ export const getCitiesLabel = (): Promise<string> => resolve(() => joinIndonesia
 
 /* ---------- Data merek ---------- */
 
-const shoeCare = () => buildShoeCare(data.shoeCare, branchList(), local.shoeCareCopy);
+const shoeCare = () =>
+  buildShoeCare(data.shoeCare, branchList(), local.shoeCareCopy, buildCtaBanner(data.cta, local.ctaBannerCopy).backgroundImage);
 export const getSite = (): Promise<SiteContent> =>
   resolve(() => buildSite(data.settings, local.site, branchList(), { shoeCare: shoeCare() !== null }));
 export const getSocials = (): Promise<SocialLink[]> => resolve(() => buildSocials(data.settings, local.socials));

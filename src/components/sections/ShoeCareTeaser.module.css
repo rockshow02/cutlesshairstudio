@@ -1,0 +1,75 @@
+/* Teaser Cuci Sepatu: satu kartu ringkas (satu baris di desktop, bertumpuk rapi di HP). Warna dari token. */
+.section {
+  padding-block: var(--space-8);
+}
+
+.ribbon {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-4);
+  border: 1px solid var(--c-line-dark);
+  border-radius: 999px;
+  background: var(--c-paper-3);
+  color: var(--c-taupe-dark);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  transform: translate(-50%, -50%);
+}
+
+.card {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-4) var(--space-5);
+  padding: var(--space-5);
+  border: 1px solid var(--c-line-dark);
+  border-radius: var(--radius);
+  background: var(--c-paper-2);
+  color: var(--c-ink);
+}
+.logo {
+  flex: none;
+  width: 56px;
+  height: 56px;
+  object-fit: contain;
+}
+.text {
+  flex: 1 1 14rem;
+  min-width: 0;
+}
+.kicker {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-1);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--c-taupe-dark);
+}
+.name {
+  font-size: var(--fs-h3);
+  line-height: 1.2;
+}
+.tagline {
+  margin-top: var(--space-1);
+  font-size: var(--fs-sm);
+  color: var(--c-ink-dim);
+}
+.cta {
+  flex: none;
+}
+@media (max-width: 599px) {
+  .cta {
+    width: 100%;
+  }
+}

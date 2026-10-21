@@ -65,10 +65,19 @@
   border-top: 1px solid var(--c-line-light);
   padding-top: var(--space-4);
 }
-.price {
+/* Tautan ke kategori di Daftar Harga (kartu tidak menampilkan harga) */
+.priceLink {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--touch);
   font-size: var(--fs-sm);
   font-weight: 600;
   color: var(--c-sand-light);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.priceLink:hover {
+  color: var(--c-bone);
 }
 .link {
   display: inline-flex;

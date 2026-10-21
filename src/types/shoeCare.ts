@@ -1,9 +1,10 @@
 import type { IconName, ImageAsset, SectionHeading } from './common';
 
-/** Label UI statis section Cuci Sepatu (src/content/shoeCare.ts) */
+/** Label UI statis halaman & teaser Cuci Sepatu (src/content/shoeCare.ts) */
 export interface ShoeCareCopy {
+  /** Kicker hero & judul teaser */
   kicker: string;
-  /** Pita kecil di garis batas atas section */
+  /** Pita kecil di garis batas atas teaser */
   ribbon: string;
   /** "Tersedia di" + nama cabang */
   availableAt: string;
@@ -11,43 +12,65 @@ export interface ShoeCareCopy {
   onlyAt: string;
   orderLabel: string;
   mainLabel: string;
-  fromLabel: string;
+  menuLabel: string;
+  teaserCta: string;
   /** Pengisi {service} untuk tombol utama (tanpa layanan tertentu); {partner} = nama partner, {branch} = nama cabang */
   genericService: string;
   /** Template bawaan bila "Template pesan WhatsApp" di CMS kosong */
   defaultTemplate: string;
+  /** Judul About Us bila kosong; {partner} = nama partner */
+  aboutTitleFallback: string;
+  aboutKicker: string;
+  servicesKicker: string;
   servicesTitle: string;
+  galleryKicker: string;
   galleryTitle: string;
   notesTitle: string;
+  closingKicker: string;
+  closingTitle: string;
+  /** {branch} = nama cabang */
+  closingText: string;
+  locationKicker: string;
+  hoursTitle: string;
+  closed: string;
+  directions: string;
   estimateLabel: string;
-  viewBranch: string;
+  lightbox: { open: string; close: string; prev: string; next: string };
 }
 
 export interface ShoeCareService {
   name: string;
   description?: string;
-  /** Sudah diformat, mis. "mulai Rp 45.000" */
-  price: string;
   estimate?: string;
+  icon?: IconName;
+  image?: ImageAsset;
   /** wa.me dengan {service} = nama layanan */
   href: string;
 }
 
-/** Section #cuci-sepatu (Pages CMS → Partner Cuci Sepatu). null = dimatikan / belum ada layanan → tidak dirender */
+/** Halaman /cuci-sepatu/ & teaser (Pages CMS → Partner Cuci Sepatu). null = halaman mati / belum ada layanan */
 export interface ShoeCareContent {
-  id: string;
+  /** URL halaman, mis. "/cuci-sepatu/" */
+  pageUrl: string;
   /** Data demo → badge DEMO (staging/dev) */
   isDemo: boolean;
-  heading: SectionHeading;
+  /** Kartu teaser di beranda & halaman cabang partner */
+  showTeaser: boolean;
   name: string;
+  tagline?: string;
   description?: string;
   logo?: ImageAsset;
+  /** Foto latar hero (CMS → foto hasil pertama → foto CTA penutup) */
+  heroImage: ImageAsset;
   /** Satu-satunya cabang tempat layanan tersedia */
   branch: { slug: string; name: string; pageUrl: string };
+  about: { heading: SectionHeading; paragraphs: string[]; image?: ImageAsset };
   advantages: { title: string; description: string; icon: IconName }[];
   services: ShoeCareService[];
   photos: ImageAsset[];
   notes: string[];
+  /** Daftar menu & harga partner (tab baru); kosong = tombol tidak tampil */
+  menuUrl?: string;
   /** wa.me tombol utama (pesan umum) */
   mainHref: string;
   copy: ShoeCareCopy;

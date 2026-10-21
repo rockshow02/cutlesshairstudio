@@ -12,7 +12,7 @@ import { ResponsiveImage } from '@/components/ui/ResponsiveImage';
 import { BranchPanel } from '@/components/sections/Location';
 import { Promo } from '@/components/sections/Promo';
 import { Pricing } from '@/components/sections/Pricing';
-import { ShoeCare } from '@/components/sections/ShoeCare';
+import { ShoeCareTeaser } from '@/components/sections/ShoeCareTeaser';
 import { Barbers } from '@/components/sections/Barbers';
 import { CtaBanner } from '@/components/sections/CtaBanner';
 import { Deferred } from '@/components/ui/Deferred';
@@ -51,8 +51,8 @@ export function BranchPage() {
         </Section>
         <Promo />
         <Pricing />
-        {/* Hanya di halaman cabang partner cuci sepatu */}
-        <ShoeCare />
+        {/* Teaser Cuci Sepatu: hanya di halaman cabang partner */}
+        <ShoeCareTeaser />
         <Barbers />
         {b.bookable && <CtaBanner />}
       </Deferred>

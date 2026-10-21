@@ -16,7 +16,8 @@ describe('pesan WhatsApp', () => {
 
   it('layanan, hairstylist, paket menyebut cabang & pilihan', () => {
     expect(bookingMessage(s, 'service', { service: 'Skin Fade / Taper', branch: 'Cibubur' })).toContain('cabang Cibubur, saya mau booking Skin Fade / Taper');
-    expect(bookingMessage(s, 'barber', { barber: 'Dimas', branch: 'Cibubur' })).toContain('dengan Dimas');
+    expect(bookingMessage(s, 'barber', { barber: 'Dimas', branch: 'Cibubur' })).toContain('Kapster Pilihan: Dimas');
+    expect(bookingMessage(s, 'barber', { barber: 'Dimas', branch: 'Cibubur' })).toContain('cabang Cibubur');
     expect(bookingMessage(s, 'package', { package: 'Groom Package', branch: 'Cibubur' })).toContain('paket Groom Package');
   });
 

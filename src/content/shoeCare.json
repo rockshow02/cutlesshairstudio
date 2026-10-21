@@ -1,11 +1,20 @@
 {
   "enabled": true,
+  "showTeaser": true,
   "isDemo": false,
   "branchSlug": "bogor-bantarjati",
   "name": "Top Clean ID",
   "logo": "/uploads/shoe-care/2486013095567662256202931055588118495427594n.webp",
   "tagline": "Sepatu bersih sambil potong rambut.",
   "description": "Titipkan sepatu saat berkunjung ke Cutless Bogor Bantarjati, dikerjakan oleh partner cuci sepatu kami.",
+  "heroImage": "",
+  "aboutTitle": "Tentang Kami",
+  "aboutParagraphs": [
+    "Titipkan sepatu saat berkunjung ke Cutless Bogor Bantarjati, dikerjakan oleh partner cuci sepatu kami."
+  ],
+  "aboutImage": "",
+  "aboutImageAlt": "",
+  "menuUrl": "",
   "advantages": [
     {
       "title": "Titip saat potong rambut",
@@ -27,8 +36,6 @@
     {
       "name": "Fast Clean",
       "description": "Pembersihan bagian luar dan sol.",
-      "price": 35000,
-      "priceFrom": false,
       "estimate": "±1 hari",
       "isActive": true,
       "order": 10
@@ -36,8 +43,6 @@
     {
       "name": "Deep Clean",
       "description": "Pembersihan menyeluruh bagian luar, dalam, sol, dan tali.",
-      "price": 55000,
-      "priceFrom": true,
       "estimate": "±2–3 hari",
       "isActive": true,
       "order": 20
@@ -45,8 +50,6 @@
     {
       "name": "Unyellowing",
       "description": "Mengurangi warna kuning pada sol karet.",
-      "price": 75000,
-      "priceFrom": true,
       "estimate": "±3 hari",
       "isActive": true,
       "order": 30
@@ -54,8 +57,6 @@
     {
       "name": "Repaint",
       "description": "Mewarnai ulang bagian yang pudar.",
-      "price": 150000,
-      "priceFrom": true,
       "estimate": "±5 hari",
       "isActive": true,
       "order": 40

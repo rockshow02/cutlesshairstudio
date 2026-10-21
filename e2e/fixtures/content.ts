@@ -9,6 +9,7 @@
  * Barber diganti seluruhnya dengan dua barber uji di cabang Bogor (satu bernomor WhatsApp sendiri, satu memakai
  * nomor cabang). Fotonya meminjam gambar yang sudah ada di public/uploads (tidak ada file uji yang ikut ter-deploy).
  * Logo Partner diganti 5 partner uji (lihat E2E_PARTNERS). Partner Cuci Sepatu dinyalakan dengan data uji (E2E_SHOE_CARE).
+ * Daftar Harga diganti daftar uji 3 kategori (E2E_PRICING): format "K" & "Start from".
  */
 import { existsSync, readdirSync } from 'node:fs';
 import path from 'node:path';
@@ -81,27 +82,35 @@ function existingLogo(): string {
   return `/uploads/site/${file}`;
 }
 
-/** Partner Cuci Sepatu uji (nama & harga fiktif) di cabang Bogor, nomor WhatsApp partner sendiri */
+/** Partner Cuci Sepatu uji (nama fiktif, tanpa harga) di cabang Bogor, nomor WhatsApp partner sendiri */
 export const E2E_SHOE_CARE = {
   name: 'Cuci Sepatu Uji',
   branchSlug: 'bogor-bantarjati',
   whatsappNumber: '6281100000505',
   services: [
-    { name: 'Deep Clean Uji', description: 'Pembersihan menyeluruh bagian luar dan dalam.', price: 45000, priceFrom: true, estimate: '±2 hari' },
-    { name: 'Fast Clean Uji', description: 'Pembersihan bagian luar.', price: 30000, priceFrom: false, estimate: '±30 menit' },
-    { name: 'Unyellowing Uji', description: 'Mengurangi warna kuning pada sol.', price: 60000, priceFrom: true, estimate: '' },
+    { name: 'Deep Clean Uji', description: 'Pembersihan menyeluruh bagian luar dan dalam.', estimate: '±2 hari', icon: 'wash' },
+    { name: 'Fast Clean Uji', description: 'Pembersihan bagian luar.', estimate: '±30 menit', icon: 'clock' },
+    { name: 'Unyellowing Uji', description: 'Mengurangi warna kuning pada sol.', estimate: '' },
   ],
+  menuUrl: 'https://drive.google.com/file/d/uji-daftar-menu/view',
 } as const;
 
 function shoeCareFixture(): Json {
   const photo = existingPhoto();
   return {
     enabled: true,
+    showTeaser: true,
     branchSlug: E2E_SHOE_CARE.branchSlug,
     name: E2E_SHOE_CARE.name,
     logo: '',
     tagline: 'Tagline uji cuci sepatu.',
     description: 'Deskripsi uji layanan cuci sepatu partner.',
+    heroImage: '',
+    aboutTitle: 'Tentang partner uji',
+    aboutParagraphs: ['Paragraf About Us uji pertama.', 'Paragraf About Us uji kedua.'],
+    aboutImage: '',
+    aboutImageAlt: '',
+    menuUrl: E2E_SHOE_CARE.menuUrl,
     advantages: [
       { title: 'Keunggulan uji satu', description: 'Deskripsi keunggulan satu.', icon: 'check' },
       { title: 'Keunggulan uji dua', description: 'Deskripsi keunggulan dua.', icon: 'clock' },
@@ -117,6 +126,16 @@ function shoeCareFixture(): Json {
     messageTemplate: 'Halo {partner}, saya mau pesan {service} di Cutless Hair Studio cabang {branch}. (via website Cutless)',
   };
 }
+
+/** Daftar Harga uji: 3 kategori aktif (urutan tampil), item lama nonaktif */
+export const E2E_PRICING = [
+  { name: 'White Grooming Uji', category: 'Haircut', description: 'Haircut + Hair Wash', price: 100000, priceFrom: false },
+  { name: 'Black Grooming Uji', category: 'Haircut', price: 175000, priceFrom: false },
+  { name: 'Coloring Fashion Uji', category: 'Special Treatment', description: 'Fashion / trend hair coloring', price: 400000, priceFrom: true },
+  { name: 'Dreadlock Uji', category: 'Special Treatment', price: 1500000, priceFrom: true },
+  { name: 'Woman Haircut Uji', category: 'Woman Haircut & Treatment', description: 'Haircut + Hair Wash', price: 150000, priceFrom: false },
+  { name: 'Item Lama Uji', category: 'Coloring', price: 450000, priceFrom: false, isActive: false },
+] as const;
 
 /** branches.json asli → cabang uji menimpa cabang dengan slug sama (field lain, mis. alamat & foto, tetap), sisanya utuh */
 function fixtureBranches(real: unknown): Json[] {
@@ -135,6 +154,7 @@ export function applyE2EFixtures(file: string, data: unknown): unknown {
   if (file === 'branches.json') return fixtureBranches(data);
   if (file === 'barbers.json') return E2E_BARBERS.map((b) => ({ ...b, photo: existingPhoto() }));
   if (file === 'shoeCare.json') return shoeCareFixture();
+  if (file === 'pricing.json') return E2E_PRICING.map((p, i) => ({ isActive: true, ...p, order: (i + 1) * 10 }));
   if (file === 'partners.json') {
     return {
       enabled: true,

@@ -4,6 +4,7 @@ import { useContent } from '@/lib/useContent';
 import { SiteProvider } from '@/lib/SiteContext';
 import { BranchProvider } from '@/lib/BranchContext';
 import { useScrollToHash } from '@/lib/useScrollToHash';
+import { useLegacyShoeCareAnchor } from '@/lib/useLegacyShoeCareAnchor';
 import { MotionProvider } from '@/components/motion/MotionProvider';
 import { IntroProvider, Preloader } from '@/components/motion/Preloader';
 import { PageTransition } from '@/components/motion/PageTransition';
@@ -44,6 +45,8 @@ export function SiteShell({ children, pageBranchSlug }: SiteShellProps) {
   // Title/meta/canonical tiap halaman ditulis statis saat build dari data CMS (scripts/vite-content-plugin.ts)
   // Link dari halaman lain ke section (mis. /produk/ → /#harga)
   useScrollToHash(introDone && ready);
+  // #cuci-sepatu (anchor section lama) → halaman /cuci-sepatu/
+  useLegacyShoeCareAnchor(ready);
 
   return (
     <MotionProvider>

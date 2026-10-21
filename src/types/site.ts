@@ -54,6 +54,8 @@ export interface UiLabels {
   error: string;
   /** Tombol pengganti harga "mulai" bila kategori belum punya harga */
   askPrice: string;
+  /** Tautan kartu Layanan ke kategori di Daftar Harga */
+  viewPrice: string;
   priceFrom: string;
   previous: string;
   next: string;

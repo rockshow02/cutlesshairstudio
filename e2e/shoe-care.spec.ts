@@ -3,14 +3,14 @@ import { E2E_BRANCHES, E2E_SHOE_CARE } from './fixtures/content';
 import { expectNoHorizontalScroll, parseWa, test } from './helpers';
 
 /**
- * Partner Cuci Sepatu (data uji e2e/fixtures/content.ts, bukan data CMS) di 360 px & desktop: section tampil setelah
- * Daftar Harga, tombol layanan → wa.me partner dengan pesan benar, catatan bila cabang lain dipilih, hanya di halaman
- * cabang partner, menu HP & footer, meta description cabang.
+ * Halaman /cuci-sepatu/ & teaser (data uji e2e/fixtures/content.ts, bukan data CMS) di 360 px & desktop: buka langsung
+ * (+ refresh), dari teaser & anchor lama, hero/About/layanan/galeri + lightbox, tombol daftar menu, tombol layanan →
+ * wa.me partner, tanpa scroll horizontal, tombol WA melayang tidak menutupi tombol pesan, menu & meta.
  */
 test.skip(!!process.env.E2E_BASE_URL, 'butuh build E2E (data uji)');
 
 const { bogor, cibubur } = E2E_BRANCHES;
-const SECTION = '#cuci-sepatu';
+const PAGE = '/cuci-sepatu/';
 
 /** Gulir ke elemen. Desktop memakai roda mouse (smooth scroll Lenis tidak mengikuti lompatan scroll native di CI). */
 async function scrollTo(page: Page, target: Locator, isMobile: boolean) {
@@ -39,99 +39,120 @@ const fabOverlaps = (button: Locator) =>
     });
   });
 
-test('beranda: section tampil setelah Daftar Harga, tombol layanan → WhatsApp partner dengan pesan benar', async ({ page, context, isMobile, apiCalls }) => {
-  await page.goto('/', { waitUntil: 'domcontentloaded' });
-  const section = page.locator(SECTION);
-  await scrollTo(page, section, isMobile);
-  await expect(section.getByRole('heading', { level: 2, name: E2E_SHOE_CARE.name })).toBeVisible();
-  // Urutan: tepat setelah Daftar Harga (#harga), sebelum Hairstylist
-  expect(await section.evaluate((el) => [el.previousElementSibling?.id, el.nextElementSibling?.id])).toEqual(['harga', 'hairstylist']);
-  await expect(section.getByText(`Tersedia di ${bogor.name}`)).toBeVisible();
-  // Terpisah jelas dari Daftar Harga: latar berbeda + pita "Partner Cutless" di garis batas atas
-  const [bgShoe, bgPrice] = await page.evaluate(() => ['cuci-sepatu', 'harga'].map((id) => getComputedStyle(document.getElementById(id)!).backgroundColor));
-  expect(bgShoe).not.toBe(bgPrice);
-  const ribbon = section.getByText('Partner Cutless', { exact: true });
-  await expect(ribbon).toBeVisible();
-  const [ribbonBox, sectionTop] = [await ribbon.boundingBox(), (await section.boundingBox())!.y];
-  expect(Math.abs(ribbonBox!.y + ribbonBox!.height / 2 - sectionTop)).toBeLessThan(2);
-  await expect(section.getByText('hanya tersedia di cabang')).toHaveCount(0);
-
-  // Kartu layanan: nama, harga Rupiah tanpa desimal ("mulai" bila diatur), estimasi
-  const cards = section.locator('article');
-  await expect(cards).toHaveCount(E2E_SHOE_CARE.services.length);
-  await expect(cards.first()).toContainText(/mulai Rp\s45\.000/);
-  await expect(cards.nth(1)).toContainText(/Rp\s30\.000/);
-  await expect(cards.nth(1)).not.toContainText('mulai');
-  await expect(cards.first()).toContainText('±2 hari');
-
-  for (const s of E2E_SHOE_CARE.services) {
-    const href = await section.getByRole('link', { name: `Pesan via WhatsApp: ${s.name}` }).getAttribute('href');
-    const msg = parseWa(href!);
-    expect(msg.number).toBe(E2E_SHOE_CARE.whatsappNumber);
-    expect(msg.text).toBe(`Halo ${E2E_SHOE_CARE.name}, saya mau pesan ${s.name} di Cutless Hair Studio cabang ${bogor.name}. (via website Cutless)`);
+test('buka /cuci-sepatu langsung & refresh: HTML statis, hero, About, layanan, galeri + lightbox, daftar menu', async ({ page, request, context, isMobile, apiCalls }) => {
+  for (const path of [PAGE, '/cuci-sepatu']) {
+    const res = await request.get(path);
+    expect(res.status(), path).toBe(200);
+    const html = await res.text();
+    expect(html).toContain(`<title>[STAGING] Cuci Sepatu ${E2E_SHOE_CARE.name} di Cutless ${bogor.name}</title>`);
+    expect(html).toMatch(/<meta name="description" content="Tagline uji cuci sepatu\. Layanan: Deep Clean Uji, Fast Clean Uji, dan Unyellowing Uji\." \/>/);
+    expect(html).toMatch(/<meta property="og:image" content="[^"]+\.(webp|jpe?g|png)"/);
   }
-  // Klik sungguhan membuka tab wa.me
-  const first = section.getByRole('link', { name: `Pesan via WhatsApp: ${E2E_SHOE_CARE.services[0].name}` });
-  await scrollTo(page, first, isMobile);
+  await page.goto(PAGE, { waitUntil: 'domcontentloaded' });
+  await page.reload({ waitUntil: 'domcontentloaded' });
+
+  // Hero
+  await expect(page.getByRole('heading', { level: 1, name: E2E_SHOE_CARE.name })).toBeVisible();
+  await expect(page.getByText(`Tersedia di ${bogor.name}`).first()).toBeVisible();
+  const hero = page.locator('#top');
+  const main = hero.getByRole('link', { name: 'Titip Sepatu via WhatsApp' });
+  expect(parseWa((await main.getAttribute('href'))!)).toEqual({
+    number: E2E_SHOE_CARE.whatsappNumber,
+    text: `Halo ${E2E_SHOE_CARE.name}, saya mau pesan layanan cuci sepatu di Cutless Hair Studio cabang ${bogor.name}. (via website Cutless)`,
+  });
+  const menu = hero.getByRole('link', { name: 'Lihat Daftar Menu' });
+  await expect(menu).toHaveAttribute('href', E2E_SHOE_CARE.menuUrl);
+  await expect(menu).toHaveAttribute('target', '_blank');
+  await expect(menu).toHaveAttribute('rel', 'noopener noreferrer');
+
+  // About Us
+  await expect(page.locator('#tentang')).toContainText('Paragraf About Us uji pertama.');
+
+  // Layanan: tanpa harga, tombol per layanan ke wa.me partner
+  const services = page.locator('#layanan');
+  await expect(services.locator('article')).toHaveCount(E2E_SHOE_CARE.services.length);
+  await expect(services).not.toContainText(/Rp\s?\d|mulai/);
+  await expect(services.getByRole('link', { name: 'Lihat Daftar Menu' })).toHaveAttribute('href', E2E_SHOE_CARE.menuUrl);
+  for (const s of E2E_SHOE_CARE.services) {
+    const href = await services.getByRole('link', { name: `Pesan via WhatsApp: ${s.name}` }).getAttribute('href');
+    expect(parseWa(href!)).toEqual({
+      number: E2E_SHOE_CARE.whatsappNumber,
+      text: `Halo ${E2E_SHOE_CARE.name}, saya mau pesan ${s.name} di Cutless Hair Studio cabang ${bogor.name}. (via website Cutless)`,
+    });
+  }
+  const order = services.getByRole('link', { name: `Pesan via WhatsApp: ${E2E_SHOE_CARE.services[0].name}` });
+  await scrollTo(page, order, isMobile);
   await page.waitForTimeout(400);
-  expect(await fabOverlaps(first), 'tombol WA melayang menutupi tombol pesan').toBe(false);
+  expect(await fabOverlaps(order), 'tombol WA melayang menutupi tombol pesan').toBe(false);
   const popup = context.waitForEvent('page');
-  await first.click();
+  await order.click();
   expect(parseWa((await popup).url()).text).toContain(E2E_SHOE_CARE.services[0].name);
 
-  // Tombol utama: pesan umum
-  const main = section.getByRole('link', { name: 'Titip Sepatu via WhatsApp' });
-  const mainWa = parseWa((await main.getAttribute('href'))!);
-  expect(mainWa.number).toBe(E2E_SHOE_CARE.whatsappNumber);
-  expect(mainWa.text).toContain('pesan layanan cuci sepatu di');
-  await scrollTo(page, main, isMobile);
-  await page.waitForTimeout(400);
-  expect(await fabOverlaps(main), 'tombol WA melayang menutupi tombol utama').toBe(false);
+  // Galeri + lightbox: klik untuk memperbesar, Esc menutup, panah berganti foto, fokus kembali
+  const thumb = page.getByRole('button', { name: 'Perbesar foto: Foto hasil uji satu' });
+  await scrollTo(page, thumb, isMobile);
+  await thumb.click();
+  const dialog = page.getByRole('dialog');
+  await expect(dialog).toBeVisible();
+  await expect(dialog.getByRole('button', { name: 'Tutup' })).toBeFocused();
+  await page.keyboard.press('ArrowRight');
+  await expect(dialog).toHaveAttribute('aria-label', 'Foto hasil uji dua');
+  await page.keyboard.press('Escape');
+  await expect(dialog).toHaveCount(0);
+  await expect(thumb).toBeFocused();
+  await thumb.press('Enter');
+  await expect(page.getByRole('dialog')).toBeVisible();
+  await page.getByRole('dialog').getByRole('button', { name: 'Tutup' }).click();
+  await expect(page.getByRole('dialog')).toHaveCount(0);
 
-  // Galeri (ada foto) & catatan
-  await expect(section.getByRole('img', { name: 'Foto hasil uji satu' })).toBeAttached();
-  await expect(section.getByText('Catatan uji pertama.')).toBeVisible();
+  // Catatan, CTA penutup, lokasi
+  await expect(page.locator('#titip')).toContainText('Catatan uji pertama.');
+  await expect(page.locator('#lokasi').getByRole('link', { name: 'Petunjuk Arah' })).toBeAttached();
   await expectNoHorizontalScroll(page);
   expect(apiCalls).toEqual([]);
 });
 
-test('cabang lain dipilih: section tetap tampil dengan catatan, WhatsApp tetap ke partner', async ({ page, isMobile }) => {
+test('teaser beranda → /cuci-sepatu; anchor lama #cuci-sepatu → halaman; menu HP & footer', async ({ page, isMobile }) => {
   await page.goto('/', { waitUntil: 'domcontentloaded' });
-  await page.evaluate((slug) => localStorage.setItem('cutless:branch', slug), cibubur.slug);
-  await page.reload({ waitUntil: 'domcontentloaded' });
-  const section = page.locator(SECTION);
-  await scrollTo(page, section, isMobile);
-  await expect(section.getByText(`Layanan cuci sepatu hanya tersedia di cabang ${bogor.name}`)).toBeVisible();
-  const href = await section.getByRole('link', { name: 'Titip Sepatu via WhatsApp' }).getAttribute('href');
-  expect(parseWa(href!).number).toBe(E2E_SHOE_CARE.whatsappNumber);
-  expect(parseWa(href!).text).toContain(`cabang ${bogor.name}`);
+  const teaser = page.locator('#cuci-sepatu-teaser');
+  await scrollTo(page, teaser, isMobile);
+  // Tepat setelah Daftar Harga, tanpa tombol WhatsApp (hanya ringkasan)
+  expect(await teaser.evaluate((el) => el.previousElementSibling?.id)).toBe('harga');
+  await expect(teaser.getByRole('heading', { name: E2E_SHOE_CARE.name })).toBeVisible();
+  await expect(teaser).toContainText('Tagline uji cuci sepatu.');
+  await expect(teaser.locator('a[href^="https://wa.me/"]')).toHaveCount(0);
   await expectNoHorizontalScroll(page);
-});
+  await teaser.getByRole('link', { name: /Lihat Layanan/ }).click();
+  await expect(page).toHaveURL(/\/cuci-sepatu\/$/);
+  await expect(page.getByRole('heading', { level: 1, name: E2E_SHOE_CARE.name })).toBeVisible();
 
-test('halaman cabang: tampil di cabang partner, tidak di cabang lain; meta description cabang partner', async ({ page, request }) => {
-  await page.goto(`/cabang/${bogor.slug}/`, { waitUntil: 'domcontentloaded' });
-  await expect(page.locator(SECTION)).toBeAttached({ timeout: 20_000 });
-  await page.goto(`/cabang/${cibubur.slug}/`, { waitUntil: 'domcontentloaded' });
-  await expect(page.locator('#harga')).toBeAttached({ timeout: 20_000 });
-  await expect(page.locator(SECTION)).toHaveCount(0);
+  // Anchor lama
+  await page.goto('/#cuci-sepatu', { waitUntil: 'domcontentloaded' });
+  await expect(page).toHaveURL(/\/cuci-sepatu\/$/, { timeout: 20_000 });
 
-  const meta = async (slug: string) => (await (await request.get(`/cabang/${slug}/`)).text()).match(/<meta name="description" content="([^"]*)"/)?.[1] ?? '';
-  expect(await meta(bogor.slug)).toContain('cuci sepatu');
-  expect(await meta(cibubur.slug)).not.toContain('cuci sepatu');
-  // Beranda tidak menyebut
-  expect(((await (await request.get('/')).text()).match(/<meta name="description" content="([^"]*)"/)?.[1] ?? '')).not.toContain('cuci sepatu');
-});
-
-test('navigasi: "Cuci Sepatu" di menu HP & footer, tidak di navbar desktop', async ({ page, isMobile }) => {
+  // Navbar desktop tidak menampilkan; menu HP & footer ke /cuci-sepatu/
   await page.goto('/', { waitUntil: 'domcontentloaded' });
   await expect(page.locator('header').getByRole('navigation', { name: 'Menu utama' }).getByRole('link', { name: 'Cuci Sepatu' })).toHaveCount(0);
   if (isMobile) {
     await page.getByRole('button', { name: 'Buka menu' }).click();
-    const link = page.getByRole('navigation', { name: 'Menu utama' }).getByRole('link', { name: 'Cuci Sepatu' });
-    await expect(link).toBeVisible();
-    await expect(link).toHaveAttribute('href', /#cuci-sepatu$/);
+    await expect(page.getByRole('navigation', { name: 'Menu utama' }).getByRole('link', { name: 'Cuci Sepatu' })).toHaveAttribute('href', /\/cuci-sepatu\/$/);
+    await page.getByRole('button', { name: 'Tutup menu' }).click();
   }
   const footer = page.locator('footer');
   await expect(footer).toBeAttached({ timeout: 20_000 });
-  await expect(footer.getByRole('link', { name: 'Cuci Sepatu' })).toHaveAttribute('href', /#cuci-sepatu$/);
+  await expect(footer.getByRole('link', { name: 'Cuci Sepatu' })).toHaveAttribute('href', /\/cuci-sepatu\/$/);
+});
+
+test('halaman cabang: teaser hanya di cabang partner; meta description cabang partner menyebut cuci sepatu', async ({ page, request }) => {
+  await page.goto(`/cabang/${bogor.slug}/`, { waitUntil: 'domcontentloaded' });
+  await expect(page.locator('#cuci-sepatu-teaser')).toBeAttached({ timeout: 20_000 });
+  await page.goto(`/cabang/${cibubur.slug}/`, { waitUntil: 'domcontentloaded' });
+  await expect(page.locator('#harga')).toBeAttached({ timeout: 20_000 });
+  await expect(page.locator('#cuci-sepatu-teaser')).toHaveCount(0);
+
+  const meta = async (path: string) => (await (await request.get(path)).text()).match(/<meta name="description" content="([^"]*)"/)?.[1] ?? '';
+  expect(await meta(`/cabang/${bogor.slug}/`)).toContain('cuci sepatu');
+  expect(await meta(`/cabang/${cibubur.slug}/`)).not.toContain('cuci sepatu');
+  expect(await meta('/')).not.toContain('cuci sepatu');
+  expect((await (await request.get('/sitemap.xml')).text())).toContain('/cuci-sepatu/');
 });
