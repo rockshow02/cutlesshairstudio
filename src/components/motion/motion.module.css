@@ -92,6 +92,8 @@
 /* Warna lapisan = warna section sebelumnya */
 :global([data-tone='dark']) + :global([data-tone='light']) > .toneShift { --tone-from: var(--c-ink); }
 :global([data-tone='light']) + :global([data-tone='dark']) > .toneShift { --tone-from: var(--c-paper); }
+:global([data-surface='warm']) + :global([data-tone='dark']) > .toneShift,
+:global([data-tone='light']) + :global([data-tone='light']) + :global([data-tone='dark']) > .toneShift { --tone-from: var(--c-paper-3); }
 
 @supports (animation-timeline: view()) {
   @media (prefers-reduced-motion: no-preference) {

@@ -17,6 +17,7 @@
   --c-concrete: #7e7d82;
   --c-paper: #efebe5;        /* latar section terang */
   --c-paper-2: #f7f5f1;      /* kartu di section terang */
+  --c-paper-3: #e8e1d6;      /* latar terang hangat (section partner), paper dicampur sand-light */
   --c-bone: #f2efea;         /* teks utama di latar gelap */
   --c-bone-dim: rgba(242, 239, 234, 0.7);
   --c-ink-dim: rgba(12, 16, 20, 0.72);
