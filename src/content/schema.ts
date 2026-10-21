@@ -12,6 +12,7 @@
 import { z } from 'zod';
 import { parseWIB } from '../lib/dates';
 import { PRICE_CATEGORIES } from './priceCategories';
+import type { IconName } from '../types/common';
 
 /* ---------- Helper ---------- */
 
@@ -376,6 +377,71 @@ export const partnersSchema = z.object({
     .default([]),
 });
 
+/* ---------- Partner Cuci Sepatu (section #cuci-sepatu, setelah Daftar Harga) ---------- */
+
+/** Ikon keunggulan yang boleh dipilih admin (subset src/components/ui/Icon.tsx) */
+export const SHOE_CARE_ICONS = ['check', 'clock', 'star', 'tag', 'wash', 'spa', 'gift', 'pin', 'calendar', 'user', 'info', 'scissors'] as const satisfies readonly IconName[];
+/** Placeholder yang boleh dipakai di template pesan WhatsApp */
+export const SHOE_CARE_TEMPLATE_PATTERN = /^(?:[^{}]|\{(?:service|branch)\})*$/;
+
+/** Logo partner: PNG/WebP (hasil kompres) atau SVG */
+const shoeCareLogo = z.union([
+  z.string().regex(/^\/uploads\/[\w./-]+\.(webp|png|svg)$/i, 'logo harus PNG, WebP, atau SVG di /uploads/...'),
+  z.literal(''),
+]).nullish();
+
+export const shoeCareSchema = z.object({
+  /** false = section tidak tampil (bawaan sampai konten asli diisi) */
+  enabled: z.boolean().default(false),
+  /** Satu-satunya cabang tempat layanan tersedia */
+  branchSlug: z
+    .union([branchSlugRef, z.literal('')])
+    .nullish()
+    .transform((v) => v || 'bogor-bantarjati'),
+  name: requiredText(60, 'nama partner'),
+  logo: shoeCareLogo,
+  tagline: optionalText(120),
+  description: optionalText(300),
+  advantages: z
+    .array(
+      z.object({
+        title: requiredText(40, 'judul keunggulan'),
+        description: requiredText(120, 'deskripsi keunggulan'),
+        icon: z.enum(SHOE_CARE_ICONS, { error: `ikon harus salah satu: ${SHOE_CARE_ICONS.join(', ')}` }).default('check'),
+      }),
+    )
+    .min(2, 'minimal 2 keunggulan')
+    .max(4, 'maksimal 4 keunggulan'),
+  services: z
+    .array(
+      z.object({
+        name: requiredText(40, 'nama layanan'),
+        description: optionalText(120),
+        /** Rupiah, bilangan bulat */
+        price: z.number({ error: 'harga harus angka' }).int('harga harus bilangan bulat (tanpa koma)').min(0, 'harga tidak boleh minus'),
+        priceFrom: z.boolean().default(false),
+        estimate: optionalText(30),
+        isActive,
+        order,
+      }),
+    )
+    .min(1, 'minimal 1 layanan')
+    .max(8, 'maksimal 8 layanan'),
+  photos: z
+    .array(z.object({ image: imagePath, alt: requiredText(150, 'deskripsi foto') }))
+    .max(8, 'maksimal 8 foto')
+    .default([]),
+  notes: z.array(requiredText(160, 'catatan')).max(10, 'maksimal 10 catatan').default([]),
+  /** Kosong = nomor WhatsApp cabang di atas */
+  whatsappNumber: optionalWa,
+  messageTemplate: z
+    .string()
+    .trim()
+    .max(500, 'maksimal 500 karakter')
+    .regex(SHOE_CARE_TEMPLATE_PATTERN, 'placeholder yang boleh dipakai hanya {service} dan {branch}')
+    .nullish(),
+});
+
 /* ---------- CTA penutup ("Kursimu sudah siap.") ---------- */
 
 export const ctaSchema = z
@@ -408,6 +474,7 @@ export const CONTENT_FILES = {
   'studio.json': studioSchema,
   'cta.json': ctaSchema,
   'partners.json': partnersSchema,
+  'shoeCare.json': shoeCareSchema,
 } as const;
 
 /* ---------- Tipe hasil (dipakai src/lib/content.ts) ---------- */
@@ -427,6 +494,7 @@ export type AboutEntry = z.output<typeof aboutSchema>;
 export type StudioEntry = z.output<typeof studioSchema>;
 export type CtaEntry = z.output<typeof ctaSchema>;
 export type PartnersEntry = z.output<typeof partnersSchema>;
+export type ShoeCareEntry = z.output<typeof shoeCareSchema>;
 
 /* ---------- Pemeriksaan lintas file ---------- */
 
@@ -445,6 +513,7 @@ export interface ContentBundle {
   studio: StudioEntry;
   cta: CtaEntry;
   partners: PartnersEntry;
+  shoeCare: ShoeCareEntry;
 }
 
 export interface ContentIssue {
@@ -496,6 +565,7 @@ export function crossCheck(c: ContentBundle): { errors: ContentIssue[]; launch: 
       if (!known.has(bp.branchSlug)) errors.push({ file: 'pricing.json', where: `${labelOf(p, i)} → harga cabang`, message: unknown(bp.branchSlug) });
     }),
   );
+  if (!known.has(c.shoeCare.branchSlug)) errors.push({ file: 'shoeCare.json', where: 'cabang', message: unknown(c.shoeCare.branchSlug) });
   (['promos', 'announcements'] as const).forEach((key) =>
     c[key].forEach((entry, i) =>
       (entry.branchSlugs ?? []).forEach((slug) => {
@@ -516,6 +586,7 @@ export function crossCheck(c: ContentBundle): { errors: ContentIssue[]; launch: 
     { file: 'settings.json', entries: [c.settings as unknown as Record<string, unknown>] },
     ...(c.settings.showTestimonials ? [{ file: 'testimonials.json', entries: shown(c.testimonials) }] : []),
     ...(c.settings.showProducts ? [{ file: 'products.json', entries: shown(c.products) }] : []),
+    ...(c.shoeCare.enabled ? [{ file: 'shoeCare.json', entries: [c.shoeCare as unknown as Record<string, unknown>] }] : []),
   ];
 
   for (const { file, entries } of displayed) {
@@ -545,6 +616,13 @@ export function crossCheck(c: ContentBundle): { errors: ContentIssue[]; launch: 
   }
   if (c.settings.showProducts && shown(c.products).length === 0) {
     launch.push({ file: 'settings.json', where: 'Tampilkan produk', message: 'aktif tetapi belum ada produk; isi Produk dulu atau matikan' });
+  }
+  if (c.shoeCare.enabled) {
+    const services = shown(c.shoeCare.services);
+    if (services.length === 0) launch.push({ file: 'shoeCare.json', where: 'Tampilkan section', message: 'aktif tetapi belum ada layanan yang ditampilkan' });
+    services.forEach((s) => {
+      if (s.price <= 0) launch.push({ file: 'shoeCare.json', where: `layanan "${s.name}"`, message: 'harga masih 0, isi harga asli sebelum section ditampilkan' });
+    });
   }
   const stats = c.settings.stats;
   const missingStat = (show: boolean, value: unknown, label: string) => {

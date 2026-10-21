@@ -47,7 +47,7 @@ Tidak perlu akun GitHub. Pastikan pemilik sudah mengundang email Anda.
 1. Buka **https://app.pagescms.org** → **Sign in with GitHub** → izinkan akses (sekali saja).
 2. Pilih repo **cutlesshairstudio** → branch **`main`**.
 
-Menu konten ada di kiri: **Cabang, Daftar Harga, Barber, Galeri, Hero, Tentang Kami, Kartu Studio, CTA Penutup, Logo Partner, Promo, Pengumuman, Testimoni, Produk, Pengaturan Situs**.
+Menu konten ada di kiri: **Cabang, Daftar Harga, Barber, Galeri, Hero, Tentang Kami, Kartu Studio, CTA Penutup, Logo Partner, Partner Cuci Sepatu, Promo, Pengumuman, Testimoni, Produk, Pengaturan Situs**.
 
 ### Yang bisa dan tidak bisa dilakukan collaborator
 
@@ -225,6 +225,25 @@ Catatan:
 - 1–2 logo tampil diam di tengah; 3 logo atau lebih berjalan dan berhenti saat disentuh kursor. Pengunjung dengan pengaturan "kurangi gerakan" melihat deret diam yang bisa digeser.
 - Halaman `/partner/` lama sudah dicabut (diarahkan ke beranda); arsipnya ada di branch `archive/partner-page` (tag `partner-page-v1`).
 
+## 3f. Partner Cuci Sepatu (section #cuci-sepatu)
+
+Menu **Partner Cuci Sepatu** mengatur satu section untuk partner jasa cuci sepatu. Section tampil **setelah Daftar Harga** di beranda dan di halaman cabang yang dipilih (bawaan: **Bogor Bantarjati**). Di halaman cabang lain section tidak tampil. Pengunjung yang memilih cabang lain tetap melihat section dengan catatan *"Layanan cuci sepatu hanya tersedia di cabang …"*, dan tombol WhatsApp tetap ke nomor partner.
+
+**Section mati secara bawaan.** Isi dulu data asli partner, baru nyalakan.
+
+**Cara mengisi:**
+1. **Cabang**: cabang tempat layanan tersedia.
+2. **Nama partner** (wajib, maks. 60), **Logo** (opsional, PNG transparan atau SVG), **Tagline** (maks. 120), **Deskripsi singkat** (maks. 300).
+3. **Keunggulan**: 2–4 poin (judul maks. 40, deskripsi maks. 120, pilih ikon).
+4. **Layanan**: 1–8 layanan. Isi **Nama layanan** (maks. 40, ikut tertulis di pesan WhatsApp), **Deskripsi** (opsional, maks. 120), **Harga** (angka saja, mis. `45000`), centang **"mulai"** bila harga bisa naik, **Estimasi waktu** (mis. `±2 hari`, maks. 30), **Tampilkan**, dan **Urutan**.
+   - Harga awal **0** berarti belum diisi. Website menolak tayang di produksi bila section dinyalakan dengan harga 0.
+5. **Foto hasil** (opsional, 0–8 foto, dengan izin partner): wajib diberi **Deskripsi foto** (maks. 150). Dikompres otomatis ke WebP 1200 px + versi HP 600 px. Galeri hanya tampil bila ada foto.
+6. **Catatan / ketentuan**: poin kecil (maks. 160), mis. durasi pengerjaan atau tanggung jawab barang titipan.
+7. **Nomor WhatsApp partner** (opsional, format `628xxxxxxxxxx`). **Kosong = nomor WhatsApp cabang** di atas.
+8. **Template pesan WhatsApp** (maks. 500). Pakai `{service}` (nama layanan; tombol utama: *layanan cuci sepatu*) dan `{branch}` (nama cabang). Placeholder lain ditolak. **Pertahankan penanda `(via website Cutless)`** agar pesanan dari website bisa dikenali partner.
+
+**Cara menyalakan:** setelah nama, harga, dan nomor WhatsApp asli terisi, centang **Tampilkan section** → **Save**. Tunggu ±2 menit, lalu cek beranda dan halaman cabang. Menu **Cuci Sepatu** otomatis muncul di menu HP dan footer (tidak di navbar desktop), dan deskripsi Google halaman cabang menyebut layanan cuci sepatu. Matikan centang untuk menyembunyikan lagi; datanya tidak hilang.
+
 ## 4. Membuat promo
 
 1. Klik **Promo** → **Add an entry**.
@@ -381,6 +400,13 @@ Form Pages CMS menolak isian yang melebihi batas, dan website memeriksa batas ya
 | Pengaturan Situs | Tagline footer | 160 | opsional |
 | Logo Partner | Label kecil di atas pita | 40 | opsional |
 | Logo Partner | Logo → Nama partner | 60 | wajib |
+| Partner Cuci Sepatu | Nama partner | 60 | wajib |
+| Partner Cuci Sepatu | Tagline / Deskripsi singkat | 120 / 300 | opsional |
+| Partner Cuci Sepatu | Keunggulan → Judul / Deskripsi | 40 / 120 | wajib (2–4 poin) |
+| Partner Cuci Sepatu | Layanan → Nama / Deskripsi / Estimasi waktu | 40 / 120 / 30 | nama wajib (1–8 layanan) |
+| Partner Cuci Sepatu | Foto hasil → Deskripsi foto | 150 | wajib bila foto diisi |
+| Partner Cuci Sepatu | Catatan / ketentuan | 160 per poin | opsional |
+| Partner Cuci Sepatu | Template pesan WhatsApp | 500 | opsional |
 
 ---
 

@@ -12,6 +12,15 @@ export function buildWhatsAppLink(number: string, message?: string): string {
   return message ? `${base}?text=${encodeURIComponent(message)}` : base;
 }
 
+/**
+ * Link wa.me dari template + nomor + placeholder (mis. Partner Cuci Sepatu: {service}, {branch}).
+ * Placeholder tanpa nilai dibiarkan; spasi ganda/spasi sebelum tanda baca akibat nilai kosong dirapikan.
+ */
+export function templateLink(number: string, template: string, vars: Record<string, string | undefined>): string {
+  const message = fillTemplate(template, vars).replace(/[ \t]{2,}/g, ' ').replace(/ ([.,!?])/g, '$1').trim();
+  return buildWhatsAppLink(number, message);
+}
+
 /** Isi placeholder {nama} pada template. Placeholder tanpa nilai dibiarkan apa adanya. */
 export function fillTemplate(template: string, vars: Record<string, string | number | undefined>): string {
   return template.replace(/\{(\w+)\}/g, (match, key: string) => {

@@ -4,7 +4,7 @@
  * Sumber konten (tanpa server, tanpa API, biaya Rp0):
  *   - src/content/*.json : dikelola admin lewat Pages CMS (cabang, harga, barber, galeri, promo,
  *                          pengumuman, testimoni, produk, pengaturan situs, hero, tentang kami, kartu studio,
- *                          CTA penutup, logo partner).
+ *                          CTA penutup, logo partner, partner cuci sepatu).
  *                          Divalidasi Zod saat build.
  *   - src/content/*.ts   : teks statis (layanan, label UI, dll.).
  *
@@ -27,6 +27,7 @@ import aboutJson from '@/content/about.json';
 import studioJson from '@/content/studio.json';
 import ctaJson from '@/content/cta.json';
 import partnersJson from '@/content/partners.json';
+import shoeCareJson from '@/content/shoeCare.json';
 import type {
   AboutEntry,
   AnnouncementEntry,
@@ -36,6 +37,7 @@ import type {
   GalleryEntry,
   HeroEntry,
   PartnersEntry,
+  ShoeCareEntry,
   PricingEntry,
   ProductEntry,
   PromoEntry,
@@ -53,6 +55,7 @@ import type {
   CtaBannerContent,
   GalleryContent,
   PartnerLogosContent,
+  ShoeCareContent,
   HeroContent,
   LocationsContent,
   PricingContent,
@@ -74,6 +77,7 @@ import {
   buildGallery,
   buildLocations,
   buildPartnerLogos,
+  buildShoeCare,
   buildPricing,
   buildProducts,
   buildPromos,
@@ -107,6 +111,7 @@ const data = {
   studio: studioJson as unknown as StudioEntry,
   cta: ctaJson as unknown as CtaEntry,
   partners: partnersJson as unknown as PartnersEntry,
+  shoeCare: shoeCareJson as unknown as ShoeCareEntry,
 };
 
 /** Default Zod (jeda 5 detik, crossfade) juga diterapkan di browser karena Pages CMS bisa tidak menulis field kosong */
@@ -160,7 +165,9 @@ export const getCitiesLabel = (): Promise<string> => resolve(() => joinIndonesia
 
 /* ---------- Data merek ---------- */
 
-export const getSite = (): Promise<SiteContent> => resolve(() => buildSite(data.settings, local.site, branchList()));
+const shoeCare = () => buildShoeCare(data.shoeCare, branchList(), local.shoeCareCopy);
+export const getSite = (): Promise<SiteContent> =>
+  resolve(() => buildSite(data.settings, local.site, branchList(), { shoeCare: shoeCare() !== null }));
 export const getSocials = (): Promise<SocialLink[]> => resolve(() => buildSocials(data.settings, local.socials));
 
 /* ---------- Per cabang (branchSlug opsional) ---------- */
@@ -194,3 +201,5 @@ export const getShowcase = (): Promise<ShowcaseContent> =>
 /** Pita logo partner di beranda (Pages CMS → Logo Partner). null = dimatikan / belum ada logo aktif → tidak dirender */
 export const getPartnerLogos = (): Promise<PartnerLogosContent | null> =>
   resolve(() => buildPartnerLogos(data.partners, data.settings.siteName));
+/** Section Cuci Sepatu (Pages CMS → Partner Cuci Sepatu). null = dimatikan / belum ada layanan → tidak dirender */
+export const getShoeCare = (): Promise<ShoeCareContent | null> => resolve(shoeCare);

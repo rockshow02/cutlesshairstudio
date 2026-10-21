@@ -8,7 +8,7 @@
  *
  * Barber diganti seluruhnya dengan dua barber uji di cabang Bogor (satu bernomor WhatsApp sendiri, satu memakai
  * nomor cabang). Fotonya meminjam gambar yang sudah ada di public/uploads (tidak ada file uji yang ikut ter-deploy).
- * Logo Partner diganti 5 partner uji (lihat E2E_PARTNERS).
+ * Logo Partner diganti 5 partner uji (lihat E2E_PARTNERS). Partner Cuci Sepatu dinyalakan dengan data uji (E2E_SHOE_CARE).
  */
 import { existsSync, readdirSync } from 'node:fs';
 import path from 'node:path';
@@ -81,6 +81,43 @@ function existingLogo(): string {
   return `/uploads/site/${file}`;
 }
 
+/** Partner Cuci Sepatu uji (nama & harga fiktif) di cabang Bogor, nomor WhatsApp partner sendiri */
+export const E2E_SHOE_CARE = {
+  name: 'Cuci Sepatu Uji',
+  branchSlug: 'bogor-bantarjati',
+  whatsappNumber: '6281100000505',
+  services: [
+    { name: 'Deep Clean Uji', description: 'Pembersihan menyeluruh bagian luar dan dalam.', price: 45000, priceFrom: true, estimate: '±2 hari' },
+    { name: 'Fast Clean Uji', description: 'Pembersihan bagian luar.', price: 30000, priceFrom: false, estimate: '±30 menit' },
+    { name: 'Unyellowing Uji', description: 'Mengurangi warna kuning pada sol.', price: 60000, priceFrom: true, estimate: '' },
+  ],
+} as const;
+
+function shoeCareFixture(): Json {
+  const photo = existingPhoto();
+  return {
+    enabled: true,
+    branchSlug: E2E_SHOE_CARE.branchSlug,
+    name: E2E_SHOE_CARE.name,
+    logo: '',
+    tagline: 'Tagline uji cuci sepatu.',
+    description: 'Deskripsi uji layanan cuci sepatu partner.',
+    advantages: [
+      { title: 'Keunggulan uji satu', description: 'Deskripsi keunggulan satu.', icon: 'check' },
+      { title: 'Keunggulan uji dua', description: 'Deskripsi keunggulan dua.', icon: 'clock' },
+      { title: 'Keunggulan uji tiga', description: 'Deskripsi keunggulan tiga.', icon: 'wash' },
+    ],
+    services: E2E_SHOE_CARE.services.map((s, i) => ({ ...s, isActive: true, order: (i + 1) * 10 })),
+    photos: [
+      { image: photo, alt: 'Foto hasil uji satu' },
+      { image: photo, alt: 'Foto hasil uji dua' },
+    ],
+    notes: ['Catatan uji pertama.', 'Catatan uji kedua.'],
+    whatsappNumber: E2E_SHOE_CARE.whatsappNumber,
+    messageTemplate: 'Halo, saya mau pesan {service} di Cutless Hair Studio cabang {branch}. (via website Cutless)',
+  };
+}
+
 /** branches.json asli → cabang uji menimpa cabang dengan slug sama (field lain, mis. alamat & foto, tetap), sisanya utuh */
 function fixtureBranches(real: unknown): Json[] {
   const list = Array.isArray(real) ? (real as Json[]) : [];
@@ -97,6 +134,7 @@ function fixtureBranches(real: unknown): Json[] {
 export function applyE2EFixtures(file: string, data: unknown): unknown {
   if (file === 'branches.json') return fixtureBranches(data);
   if (file === 'barbers.json') return E2E_BARBERS.map((b) => ({ ...b, photo: existingPhoto() }));
+  if (file === 'shoeCare.json') return shoeCareFixture();
   if (file === 'partners.json') {
     return {
       enabled: true,
