@@ -28,5 +28,15 @@
     "whatsappNumber": "6288211078730",
     "order": 30,
     "isActive": true
+  },
+  {
+    "name": "Nauval",
+    "role": "Hairstylist",
+    "photo": "/uploads/barbers/29bfccb8-37cc-441f-92d0-1b7d53cf1c4b.jpeg",
+    "branchSlug": "cibubur",
+    "specialty": "Haircut, Permink, Coloring",
+    "whatsappNumber": "6285286118019",
+    "order": 31,
+    "isActive": true
   }
 ]
