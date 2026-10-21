@@ -1,5 +1,15 @@
 [
   {
+    "name": "Soemardi(erte)",
+    "role": "Professional Hair Artist",
+    "photo": "/uploads/barbers/soemardi-erte.webp",
+    "branchSlug": "bogor-bantarjati",
+    "specialty": "Cornrow, Dreadlock, Coloring, Et.c",
+    "whatsappNumber": "6288211078730",
+    "order": 30,
+    "isActive": true
+  },
+  {
     "name": "Yasslaw",
     "role": "Professional Hair Stylist",
     "photo": "/uploads/barbers/yasslaw.webp",
@@ -17,16 +27,6 @@
     "specialty": "Hair Perm, Design Perm, Coloring",
     "whatsappNumber": "6285718056716",
     "order": 20,
-    "isActive": true
-  },
-  {
-    "name": "Soemardi(erte)",
-    "role": "Professional Hair Artist",
-    "photo": "/uploads/barbers/soemardi-erte.webp",
-    "branchSlug": "bogor-bantarjati",
-    "specialty": "Cornrow, Dreadlock, Coloring, Et.c",
-    "whatsappNumber": "6288211078730",
-    "order": 30,
     "isActive": true
   },
   {
