@@ -3,6 +3,8 @@ import type { IconName, ImageAsset, SectionHeading } from './common';
 /** Label UI statis section Cuci Sepatu (src/content/shoeCare.ts) */
 export interface ShoeCareCopy {
   kicker: string;
+  /** Pita kecil di garis batas atas section */
+  ribbon: string;
   /** "Tersedia di" + nama cabang */
   availableAt: string;
   /** "Layanan cuci sepatu hanya tersedia di cabang" + nama cabang */
