@@ -1,10 +1,18 @@
 # Konfigurasi Pages CMS (https://pagescms.org) untuk website Cutless Hair Studio.
-# Admin login di https://app.pagescms.org dengan akun GitHub (harus kolaborator repo ini).
+# Admin login di https://app.pagescms.org: pemilik dengan akun GitHub, staf sebagai collaborator Pages CMS
+# (diundang lewat email, login dengan kode email, tanpa akun GitHub). Panduan: docs/panduan-admin.md.
 # Setiap "Simpan" = 1 commit ke branch yang dipilih → Cloudflare build & deploy otomatis (±1–2 menit).
 #
 # Skema field harus sama dengan src/content/schema.ts (validasi Zod saat build).
 # Pilihan cabang (blok "@branch-options") disinkronkan otomatis dari src/content/branches.json
 # oleh GitHub Actions (npm run sync-cms). Jangan diedit manual.
+
+settings:
+  commit:
+    # Collaborator (tanpa akun GitHub) menyimpan lewat token GitHub App Pages CMS. "user" = nama & email
+    # pengedit dicatat sebagai committer, sehingga riwayat commit menunjukkan siapa yang mengubah konten.
+    # Bawaan Pages CMS "app" hanya mencatat identitas aplikasi. https://pagescms.org/docs/configuration/settings/
+    identity: user
 
 media:
   - name: branches
