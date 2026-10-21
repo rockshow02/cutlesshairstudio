@@ -8,7 +8,7 @@ import { CONTENT_FILES, crossCheck, partnersSchema, shoeCareSchema, type Content
 import { shoeCareCopy } from '../src/content/shoeCare';
 import { buildPartnerLogos, buildShoeCare } from '../src/lib/contentTransforms';
 import { PartnerStrip } from '../src/components/sections/PartnerLogos';
-import { ShoeCareView } from '../src/components/sections/ShoeCare';
+import { ShoeCarePageView } from '../src/components/pages/ShoeCarePage';
 import type { Branch } from '../src/types';
 import type { CmsField } from './helpers/pagesCms';
 
@@ -26,7 +26,8 @@ const shoe = (extra: Record<string, unknown> = {}) =>
       { title: 'A', description: 'a' },
       { title: 'B', description: 'b' },
     ],
-    services: [{ name: 'Fast Clean', price: 35000 }],
+    aboutParagraphs: ['Paragraf uji.'],
+    services: [{ name: 'Fast Clean' }],
     ...extra,
   });
 const partners = (logos: Record<string, unknown>[], extra: Record<string, unknown> = {}) => partnersSchema.parse({ enabled: true, logos, ...extra });
@@ -75,7 +76,7 @@ describe('badge DEMO', () => {
     );
     expect(strip.match(/>Demo</g)).toHaveLength(1);
     const view = (isDemo: boolean) =>
-      renderToStaticMarkup(createElement(ShoeCareView, { data: buildShoeCare(shoe({ isDemo }), BRANCHES, shoeCareCopy)!, otherBranch: false }));
+      renderToStaticMarkup(createElement(ShoeCarePageView, { data: buildShoeCare(shoe({ isDemo }), BRANCHES, shoeCareCopy)!, otherBranch: false }));
     expect(view(true)).toContain('>Demo</span>');
     expect(view(false)).not.toContain('>Demo<');
   });

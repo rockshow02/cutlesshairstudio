@@ -1,12 +1,14 @@
 /** Daftar Harga: 3 kategori aktif berurutan, format "K" + "Start from", deskripsi, paket tidak berubah. Data uji sendiri. */
 import { readFileSync } from 'node:fs';
 import { createElement } from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import { pricingCopy } from '../src/content/pricing';
 import { PRICE_CATEGORIES, priceCategoryAnchor } from '../src/content/priceCategories';
 import { pricingItemSchema, type PricingEntry } from '../src/content/schema';
 import { buildPricing } from '../src/lib/contentTransforms';
 import { formatRupiah, formatThousandsK } from '../src/lib/format';
+import { PriceRows } from '../src/components/sections/Pricing';
 
 const item = (name: string, category: string, price: number, extra: Record<string, unknown> = {}): PricingEntry =>
   pricingItemSchema.parse({ name, category, price, ...extra });
@@ -59,9 +61,7 @@ describe('daftar harga', () => {
     ]);
   });
 
-  it('tampilan: "Start from" + harga K, deskripsi di bawah nama (tidak ada bila kosong)', async () => {
-    const { renderToStaticMarkup } = await import('react-dom/server');
-    const { PriceRows } = await import('../src/components/sections/Pricing');
+  it('tampilan: "Start from" + harga K, deskripsi di bawah nama (tidak ada bila kosong)', () => {
     const category = buildPricing(ENTRIES, pricingCopy, []).categories[1];
     const html = renderToStaticMarkup(createElement(PriceRows, { category, priceFromLabel: 'Start from' }));
     expect(html).toContain('Start from</small>400K');

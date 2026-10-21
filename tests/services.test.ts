@@ -8,6 +8,8 @@ import { servicesCopy } from '../src/content/services';
 import { activeCategoryNames, branchDescription, fitDescription, homeDescription, joinList, META_MAX } from '../src/content/serviceSeo';
 import { buildServices } from '../src/lib/contentTransforms';
 import { categoryFromHash } from '../src/lib/priceCategoryEvent';
+import { renderToStaticMarkup } from 'react-dom/server';
+import { ServiceCardView } from '../src/components/sections/Services';
 import { setMedia, validateCmsContent, type CmsField, type CmsMedia } from './helpers/pagesCms';
 
 const price = (name: string, category: string, value: number, extra: Record<string, unknown> = {}): PricingEntry =>
@@ -45,9 +47,7 @@ describe('kartu Layanan tanpa harga', () => {
     for (const s of items) expect(Object.keys(s)).not.toContain('startingPrice');
   });
 
-  it('tampilan kartu: tidak ada "mulai Rp"/"Tanya harga"; ada "Lihat harga" & "Booking"', async () => {
-    const { renderToStaticMarkup } = await import('react-dom/server');
-    const { ServiceCardView } = await import('../src/components/sections/Services');
+  it('tampilan kartu: tidak ada "mulai Rp"/"Tanya harga"; ada "Lihat harga" & "Booking"', () => {
     const [withLink, , , noLink] = buildServices(CARDS, servicesCopy, PRICING).items;
     const html = (s: (typeof withLink)) => renderToStaticMarkup(createElement(ServiceCardView, { service: s, index: 0, bookHref: 'https://wa.me/62811', viewPriceLabel: 'Lihat harga', bookLabel: 'Booking' }));
     expect(html(withLink)).toContain('href="#harga-haircut"');

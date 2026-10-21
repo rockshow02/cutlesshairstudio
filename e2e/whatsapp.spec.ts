@@ -71,7 +71,7 @@ test('setelah cabang dipilih: semua tombol booking/pesan di beranda langsung ke 
   expect(apiCalls).toEqual([]);
 });
 
-test('kartu hairstylist: WhatsApp hairstylist (atau cabangnya) dengan nama hairstylist & cabang', async ({ page }) => {
+test('kartu hairstylist: WhatsApp hairstylist (atau cabangnya) dengan nama kapster & cabang', async ({ page, context }) => {
   test.skip(!fixtureBuild, 'butuh build E2E (data uji)');
   await page.goto('/', { waitUntil: 'domcontentloaded' });
   await page.evaluate((slug) => localStorage.setItem('cutless:branch', slug), bogor.slug);
@@ -86,6 +86,17 @@ test('kartu hairstylist: WhatsApp hairstylist (atau cabangnya) dengan nama hairs
     expect(barber, wa.text).toBeTruthy();
     expect(wa.number).toBe(barber!.whatsappNumber || bogor.whatsappNumber);
     expect(wa.text).toContain(`cabang ${bogor.name}`);
+    // Template pesan booking kapster (Pengaturan Situs): {barber} = nama barber yang diklik
+    expect(wa.text).toContain(`Kapster Pilihan: ${barber!.name}`);
+    expect(wa.text).toContain('Nama Lengkap:');
+  }
+  // Klik tombol "Booking [nama]" sungguhan membuka wa.me dengan nama kapster yang benar
+  const first = active[0];
+  const button = page.locator('#hairstylist a[href^="https://wa.me/"]', { hasText: first.name }).first();
+  if (await button.count()) {
+    const popup = context.waitForEvent('page');
+    await button.click();
+    expect(parseWa((await popup).url()).text).toContain(`Kapster Pilihan: ${first.name}`);
   }
 });
 
