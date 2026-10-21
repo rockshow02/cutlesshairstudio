@@ -1,5 +1,13 @@
 {
   "enabled": true,
   "label": "Partner & Kolaborasi",
-  "logos": []
+  "logos": [
+    {
+      "name": "Chat GPT",
+      "logo": "/uploads/partner-logos/chatgpt-logo.webp",
+      "url": "https://chatgpt.com/",
+      "isActive": true,
+      "order": 0
+    }
+  ]
 }
