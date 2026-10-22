@@ -442,7 +442,9 @@ export const shoeCareSchema = z
   /** Foto latar hero; kosong → foto hasil pertama → foto CTA penutup */
   heroImage: optionalImage,
   aboutTitle: optionalText(60),
-  aboutParagraphs: z.array(requiredText(400, 'paragraf About Us')).min(1, 'minimal 1 paragraf About Us').max(3, 'maksimal 3 paragraf'),
+  /** 0–3 paragraf; kosong = Deskripsi singkat. Sengaja tidak wajib: field list wajib yang baru ditambahkan membuat Save
+   *  ditolak ("Required at …") dari editor Pages CMS yang masih memuat konfigurasi lama. */
+  aboutParagraphs: z.array(requiredText(400, 'paragraf About Us')).max(3, 'maksimal 3 paragraf').default([]),
   aboutImage: optionalImage,
   aboutImageAlt: optionalText(150),
   /** Daftar menu & harga partner (mis. Google Drive), dibuka di tab baru; kosong = tombol tidak tampil */

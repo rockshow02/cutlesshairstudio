@@ -439,11 +439,9 @@ content:
       - name: aboutParagraphs
         label: Paragraf About Us
         type: text
-        required: true
         list:
-          min: 1
           max: 3
-        description: "1–3 paragraf tentang partner. Paragraf pertama tampil lebih besar. Maksimal 400 karakter per paragraf."
+        description: "0–3 paragraf tentang partner, satu paragraf per isian (Add an entry untuk paragraf berikutnya; jangan menempel beberapa paragraf di satu isian). Paragraf pertama tampil lebih besar. Kosong = Deskripsi singkat. Maksimal 400 karakter per paragraf."
         options:
           maxlength: 400
       - name: aboutImage
