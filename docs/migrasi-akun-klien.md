@@ -38,7 +38,7 @@ Konfigurasi ada di `wrangler.jsonc`. Nama Worker harus sama dengan nama di dashb
 | Deploy command | `npx wrangler deploy` | `npx wrangler deploy --env staging` |
 | Binding | `ASSETS` (folder `dist/`) | `ASSETS` (folder `dist/`) |
 | Vars / secrets | didefinisikan, belum dipakai situs statis | tidak ada |
-| D1 | `DB` → `cutless-prod`, `database_id` masih placeholder (belum dibuat) | tidak ada |
+| D1 / database | tidak ada (binding D1 sisa booking online dihapus Okt 2026) | tidak ada |
 
 Langkah, oleh klien di akun Cloudflare-nya:
 
@@ -49,6 +49,7 @@ Langkah, oleh klien di akun Cloudflare-nya:
 - [ ] Deploy pertama keduanya hijau (Workers & Pages → Worker → **Deployments**).
 - [ ] (Opsional) Domain sendiri: Worker produksi → **Settings → Domains & Routes → Add → Custom domain**.
 - [ ] (Opsional) Cloudflare Access untuk staging dan Web Analytics: lihat `README.md` §5.
+- [ ] Database D1 lama (sisa booking online staging) di akun pengembang, bila masih ada: tidak dipakai situs dan tidak perlu dipindah. Hapus hanya dengan persetujuan pemilik (datanya sudah diekspor ke `src/content/*.json`).
 - [ ] Worker lama di akun pengembang: **matikan setelah** situs baru terverifikasi (langkah 5). Hapus hanya dengan persetujuan klien.
 
 ## 3. URL dan nama akun yang ditulis di repo

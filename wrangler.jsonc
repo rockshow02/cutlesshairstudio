@@ -1,12 +1,11 @@
-// Cloudflare Workers: situs statis (dist/) + API booking (/api/*) + D1. Dipakai oleh Workers Builds saat deploy.
+// Cloudflare Workers: situs statis (dist/) lewat binding ASSETS. Dipakai oleh Workers Builds saat deploy.
 //   Produksi: npm run build         && npx wrangler deploy               → Worker "cutlesshairstudio"
 //   Staging : npm run build:staging && npx wrangler deploy --env staging → Worker "cutlesshairstudio-staging"
 // "name" harus sama dengan nama Worker di dashboard Cloudflare (subdomain *.workers.dev).
-// Uji lokal: npm run dev:worker (build staging + wrangler dev di http://localhost:8787, D1 lokal)
+// Uji lokal: npm run dev:worker (build staging + wrangler dev di http://localhost:8787)
 //
-// PENTING: fitur booking baru disiapkan untuk STAGING. Blok produksi (paling atas) hanya didefinisikan:
-// database produksi belum dibuat/dimigrasi dan secrets produksi belum diisi. Jangan deploy produksi
-// dari branch ini; produksi menunggu persetujuan klien (lihat docs/booking-setup.md).
+// Situs statis (booking lewat WhatsApp). Tanpa D1: fitur booking online yang memakai database diarsipkan di
+// branch archive/booking-online-dan-toko.
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "cutlesshairstudio",
@@ -22,15 +21,6 @@
     // Hanya rute ini yang menjalankan Worker; file statis lain langsung dari CDN (tidak memakai kuota request)
     "run_worker_first": ["/api/*", "/masuk*", "/profil*", "/booking*", "/admin*", "/kebijakan-privasi*"]
   },
-  // Produksi: DIDEFINISIKAN SAJA. Ganti database_id setelah klien menyetujui & database produksi dibuat.
-  "d1_databases": [
-    {
-      "binding": "DB",
-      "database_name": "cutless-prod",
-      "database_id": "00000000-0000-0000-0000-000000000000",
-      "migrations_dir": "migrations"
-    }
-  ],
   "vars": {
     "APP_ENV": "production",
     "AUTH_PHONE_PASSWORD_ENABLED": "false",
@@ -45,7 +35,7 @@
     // dist/ hasil build staging sudah berisi robots.txt "Disallow: /" dan header X-Robots-Tag: noindex (dist/_headers).
     "staging": {
       // Situs statis saja (booking lewat WhatsApp; fitur booking online, akun, & toko diarsipkan di branch
-      // archive/booking-online-dan-toko). Tanpa D1, tanpa vars/secrets, tanpa Cron Trigger.
+      // archive/booking-online-dan-toko). Tanpa vars/secrets, tanpa Cron Trigger.
       "name": "cutlesshairstudio-staging",
       "assets": {
         "directory": "./dist",
