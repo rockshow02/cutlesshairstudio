@@ -198,4 +198,17 @@ describe('.pages.yml sejalan dengan skema Zod', () => {
     config.content.forEach((c) => walk(c.name, c.fields));
     expect(missing).toEqual([]);
   });
+
+  it('setiap field gambar menyebut ukuran yang disarankan & "Kompres di bawah 1 MB sebelum upload"', () => {
+    const config = parse(readFileSync('.pages.yml', 'utf8')) as { content: { name: string; fields: (CmsField & { description?: string })[] }[] };
+    const missing: string[] = [];
+    const walk = (path: string, fields: (CmsField & { description?: string })[]) =>
+      fields.forEach((f) => {
+        const d = f.description ?? '';
+        if (f.type === 'image' && !(/Kompres di bawah 1 MB sebelum upload/.test(d) && /\d{3,4}\s?(×\s?\d{3,4}\s?)?px/.test(d))) missing.push(`${path}.${f.name}`);
+        if (f.fields) walk(`${path}.${f.name}`, f.fields as (CmsField & { description?: string })[]);
+      });
+    config.content.forEach((c) => walk(c.name, c.fields));
+    expect(missing).toEqual([]);
+  });
 });

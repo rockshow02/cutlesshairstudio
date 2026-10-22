@@ -168,3 +168,60 @@ export function validateCmsContent(entry: { fields: CmsField[]; list?: boolean }
   }
   return out;
 }
+
+/* ---------- Simulasi simpan dari Pages CMS (lib/schema.ts + app/api/.../files/[path]/route.ts) ---------- */
+
+const isEmptyValue = (v: unknown) => v === null || v === undefined || v === '';
+
+/** Seperti sanitizeObject Pages CMS: hapus ""/null/undefined, list yang semua isinya kosong, dan objek kosong */
+export function sanitizeObject(value: unknown): unknown {
+  if (Array.isArray(value)) {
+    return value.map((v) => (v && typeof v === 'object' ? sanitizeObject(v) : v)).filter((v) => !isEmptyValue(v));
+  }
+  if (value && typeof value === 'object') {
+    const out: Record<string, unknown> = { ...(value as Record<string, unknown>) };
+    for (const key of Object.keys(out)) {
+      if (out[key] && typeof out[key] === 'object') out[key] = sanitizeObject(out[key]);
+      const v = out[key];
+      if (
+        (Array.isArray(v) && v.every(isEmptyValue)) ||
+        (v && typeof v === 'object' && !Array.isArray(v) && Object.keys(v).length === 0) ||
+        isEmptyValue(v)
+      ) {
+        delete out[key];
+      }
+    }
+    return out;
+  }
+  return value;
+}
+
+/** Seperti deepMap Pages CMS: hanya field yang didefinisikan di .pages.yml yang ikut tersimpan */
+function keepDefinedFields(fields: CmsField[], data: Record<string, unknown>): Record<string, unknown> {
+  const out: Record<string, unknown> = {};
+  for (const f of fields) {
+    const v = data[f.name];
+    if (f.list) out[f.name] = Array.isArray(v) ? v.map((item) => (f.type === 'object' ? keepDefinedFields(f.fields ?? [], (item ?? {}) as Record<string, unknown>) : item)) : v;
+    else if (f.type === 'object') out[f.name] = keepDefinedFields(f.fields ?? [], (v ?? {}) as Record<string, unknown>);
+    else out[f.name] = v;
+  }
+  return out;
+}
+
+/**
+ * Isi file seperti setelah admin membuka entri di Pages CMS lalu menekan Save tanpa mengubah apa pun:
+ * sanitize → initializeState (nilai form) → validasi form → simpan hanya field terdefinisi → sanitize (null, "", list
+ * kosong, objek kosong dihapus). `errors` = pesan validasi yang membuat Save ditolak.
+ */
+export function simulateCmsSave(entry: { fields: CmsField[]; list?: boolean }, content: unknown): { saved: unknown; errors: string[] } {
+  if (entry.list) {
+    const items = (sanitizeObject(content) as unknown[] | undefined) ?? [];
+    const formValues = items.map((item) => initialize(entry.fields, item as Record<string, unknown>));
+    const errors = validateCmsContent(entry, formValues);
+    const saved = sanitizeObject({ listWrapper: formValues.map((v) => keepDefinedFields(entry.fields, v)) }) as { listWrapper?: unknown[] };
+    return { saved: saved.listWrapper ?? [], errors };
+  }
+  const formValues = initialize(entry.fields, sanitizeObject(content) as Record<string, unknown>);
+  const errors = validateCmsContent(entry, formValues);
+  return { saved: sanitizeObject(keepDefinedFields(entry.fields, formValues)), errors };
+}

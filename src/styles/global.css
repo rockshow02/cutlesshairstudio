@@ -9,8 +9,8 @@
 html {
   -webkit-text-size-adjust: 100%;
   scroll-behavior: smooth;
-  /* Anchor tidak tertutup navbar fixed */
-  scroll-padding-top: var(--header-offset);
+  /* Offset navbar fixed untuk anchor diberikan lewat scroll-margin-top tiap section (di bawah). Jangan menambah
+     scroll-padding-top di sini: browser & Lenis menjumlahkan keduanya → section mendarat 2× tinggi navbar. */
 }
 
 body {
@@ -52,7 +52,7 @@ button { font: inherit; color: inherit; }
   outline-offset: 3px;
 }
 
-/* Section anchor juga diberi offset (untuk browser yang mengabaikan scroll-padding) */
+/* Anchor (#harga, link navbar) mendarat tepat di bawah navbar fixed */
 section[id], footer[id] {
   scroll-margin-top: var(--header-offset);
 }
@@ -89,7 +89,7 @@ html:not(.lenis) {
 section[data-snap] {
   scroll-snap-align: start;
   /* Rata ke tepi atas layar (navbar otomatis sembunyi saat scroll ke bawah) */
-  scroll-margin-top: calc(var(--header-offset) * -1);
+  scroll-margin-top: 0;
 }
 
 /* ---- Ringkasan statis halaman cabang (sebelum React dimuat; untuk crawler) ---- */

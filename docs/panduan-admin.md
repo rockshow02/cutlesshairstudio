@@ -9,7 +9,7 @@ Panduan ini untuk pemilik dan staf. Tidak perlu keahlian teknis.
 - **Pemilik (owner):** akun **GitHub** → *Sign in with GitHub*.
 - **Staf (collaborator):** cukup **email**, tanpa akun GitHub → *Continue with email* (kode 6 digit dikirim ke email).
 
-> **Kapan perubahan tampil?** Setiap kali Anda klik **Save**, website diperbarui otomatis dalam **sekitar 1–2 menit**. Setelah itu buka website dan tekan *refresh*.
+> **Kapan perubahan tampil?** Setiap kali Anda klik **Save**, website diperbarui otomatis dalam **sekitar 3–5 menit**. Lihat bagian **Setelah Save** dan **Jika Save ditolak** di bawah.
 
 > **Branch mana yang diedit?**
 > - **Setelah website resmi tayang (launch): semua pengeditan harian dilakukan di branch `main`** (= website asli yang dilihat pelanggan).
@@ -461,11 +461,40 @@ Form Pages CMS menolak isian yang melebihi batas, dan website memeriksa batas ya
 
 ---
 
+## Setelah Save
+
+1. **Tunggu 3–5 menit.** Setiap Save memicu proses otomatis: foto baru dikompres, website dibangun ulang, lalu dipasang. Foto baru bisa butuh sedikit lebih lama (ada commit otomatis *"sinkron gambar"*; nama file foto bisa berubah menjadi `.webp`, itu normal).
+2. Buka **hanya** alamat ini:
+   - Website utama (branch `main`): **https://cutlesshairstudio.adi-yansyaaah.workers.dev** (atau domain resmi setelah launch).
+   - Staging (branch `staging`, untuk uji coba, berlabel *STAGING*): **https://cutlesshairstudio-staging.adi-yansyaaah.workers.dev**
+3. Tekan **Ctrl+F5** (Windows) / **Cmd+Shift+R** (Mac) agar browser tidak menampilkan versi lama. Di HP: tutup tab lalu buka lagi, atau pakai tab penyamaran.
+4. **Abaikan alamat berkode versi**, mis. `https://3f9c1a2b-cutlesshairstudio-staging.….workers.dev` (dari email/notifikasi Cloudflare). Itu salinan satu versi tertentu, sering bukan yang terbaru.
+5. Di staging, badge **STAGING** di pojok kiri atas menyebut jumlah isian yang *belum siap* tayang. Klik untuk melihat daftarnya.
+6. Masih belum berubah setelah 10 menit? Lihat **Jika Save ditolak** dan **Bila ada masalah**.
+
+> **Pages CMS sudah lama terbuka?** Bila developer baru saja mengubah kolom/menu, **muat ulang Pages CMS (Ctrl+F5) sebelum mengedit**. Editor yang masih memakai pengaturan lama bisa menolak Save atau tidak menampilkan kolom baru.
+
+## Jika Save ditolak
+
+Pesan muncul di pojok layar Pages CMS atau di bawah kolom (merah). Isian Anda **belum tersimpan**, jadi salin dulu teks panjang yang sudah diketik ke Notes sebelum memuat ulang.
+
+| Pesan | Artinya | Cara memperbaiki |
+|---|---|---|
+| *Please fix the errors before saving* | Ada kolom yang belum benar | Gulir ke atas/bawah, cari kolom bertanda merah, baca pesan di bawahnya |
+| *Content validation failed: Required at **nama-kolom*** | Editor memakai pengaturan lama, kolom yang sekarang dibutuhkan tidak terkirim | Salin teks yang sudah diketik → **Ctrl+F5** (muat ulang Pages CMS) → isi lagi → Save |
+| *This field is required* / *Field requires at least one item* | Kolom wajib (bertanda *Required*) kosong / daftar wajib belum punya isian | Isi kolomnya, atau klik **Add an entry** |
+| *Maximum length is N characters* | Teks terlalu panjang | Persingkat sampai di bawah N (emoji dihitung 2 karakter) |
+| *Format harus 628xxxxxxxxxx* | Nomor WhatsApp salah format | Hanya angka, diawali `62`, tanpa `+`/spasi/strip |
+| *Harus diawali https://* | Link tidak lengkap | Salin link lengkap dari browser (diawali `https://`) |
+| *Placeholder yang boleh dipakai hanya …* | Template pesan memakai `{…}` yang tidak dikenal | Pakai hanya placeholder yang disebut di keterangan kolom, huruf kecil persis, mis. `{branch}` |
+| *harus di folder media …* / *ekstensi … bukan gambar* | Foto diambil dari folder lain atau bukan gambar | Pilih/upload foto lewat tombol di kolom itu sendiri; JPG/PNG/WebP |
+| Save berhasil, tetapi website tidak berubah setelah 10 menit | Isian lolos Pages CMS tetapi ditolak saat website dibangun (mis. data demo di website utama, deskripsi foto kosong, nomor contoh) | Website tetap menampilkan versi sebelumnya (aman). Cek badge STAGING atau hubungi developer |
+
 ## Bila ada masalah
 
 | Masalah | Solusi |
 |---|---|
-| Perubahan belum muncul | Tunggu 2 menit, refresh website. Masih belum? Lihat baris berikut |
+| Perubahan belum muncul | Tunggu 3–5 menit, tekan Ctrl+F5 di alamat website utama/staging (bukan alamat berkode versi). Masih belum? Lihat baris berikut |
 | Perubahan tidak pernah muncul | Kemungkinan ada isian yang salah sehingga sistem menolak memperbarui website (website tetap menampilkan versi sebelumnya, jadi aman). Hubungi developer, atau cek pesan error di Cloudflare |
 | Kolom ditolak saat Save | Baca pesan merah di bawah kolom (mis. format nomor WA atau jam) |
 | Nomor WA ditolak | Harus diawali `62`, hanya angka, mis. `628129876xxxx` |

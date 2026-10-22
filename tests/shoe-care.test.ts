@@ -83,6 +83,7 @@ describe('data halaman Cuci Sepatu', () => {
     expect(build()!.about.heading.title).toBe('Tentang Cuci Sepatu Uji');
     expect(build(entry({ aboutTitle: 'Kenalan dulu' }))!.about.heading.title).toBe('Kenalan dulu');
     expect(build()!.about.paragraphs).toEqual(['Paragraf satu.', 'Paragraf dua.']);
+    expect(build(entry({ aboutParagraphs: [], description: 'Deskripsi uji.' }))!.about.paragraphs).toEqual(['Deskripsi uji.']);
   });
 });
 
@@ -167,7 +168,8 @@ describe('CMS Partner Cuci Sepatu', () => {
     expect(f('showTeaser')).toMatchObject({ label: 'Tampilkan teaser di beranda', type: 'boolean', default: true });
     expect(f('heroImage')).toMatchObject({ label: 'Foto hero', type: 'image' });
     expect(f('aboutTitle').options?.maxlength).toBe(60);
-    expect(f('aboutParagraphs')).toMatchObject({ required: true, list: { min: 1, max: 3 } });
+    expect(f('aboutParagraphs')).toMatchObject({ list: { max: 3 } });
+    expect(f('aboutParagraphs').required).toBeFalsy();
     expect(f('aboutParagraphs').options?.maxlength).toBe(400);
     expect(f('aboutImage').type).toBe('image');
     expect(f('aboutImageAlt').options?.maxlength).toBe(150);
@@ -184,7 +186,9 @@ describe('CMS Partner Cuci Sepatu', () => {
     expect(validateCmsContent(cms, { ...raw, menuUrl: 'http://drive.google.com/x' })[0]).toMatch(/menuUrl/);
     expect(validateCmsContent(cms, { ...raw, menuUrl: 'https://drive.google.com/drive/folders/abc' })).toEqual([]);
     expect(shoeCareSchema.safeParse({ ...raw, menuUrl: 'drive.google.com/x' }).success).toBe(false);
-    expect(validateCmsContent(cms, { ...raw, aboutParagraphs: [] })[0]).toMatch(/minimal 1/);
+    // Boleh kosong (bukan field wajib; editor lama tidak menolak Save) → About memakai Deskripsi singkat
+    expect(validateCmsContent(cms, { ...raw, aboutParagraphs: [] })).toEqual([]);
+    expect(shoeCareSchema.safeParse({ ...raw, aboutParagraphs: undefined }).success).toBe(true);
     expect(validateCmsContent(cms, { ...raw, aboutParagraphs: ['a', 'b', 'c', 'd'] })[0]).toMatch(/maksimal 3/);
     expect(validateCmsContent(cms, { ...raw, aboutParagraphs: ['x'.repeat(401)] })[0]).toMatch(/lebih dari 400/);
     expect(validateCmsContent(cms, { ...raw, aboutTitle: 'x'.repeat(61) })[0]).toMatch(/lebih dari 60/);

@@ -175,7 +175,12 @@ export function buildShoeCare(p: ShoeCareEntry | null | undefined, branches: Bra
     branch: { slug: branch.slug, name: branch.name, pageUrl: branch.pageUrl },
     about: {
       heading: { kicker: copy.aboutKicker, title: text(p.aboutTitle) ?? fillTemplate(copy.aboutTitleFallback, { partner: p.name }) },
-      paragraphs: (p.aboutParagraphs ?? []).map((t) => t.trim()).filter(Boolean),
+      // Kosong → Deskripsi singkat
+      paragraphs: (() => {
+        const list = (p.aboutParagraphs ?? []).map((t) => t.trim()).filter(Boolean);
+        const fallback = text(p.description);
+        return list.length ? list : fallback ? [fallback] : [];
+      })(),
       image: aboutImage ? responsiveImage(aboutImage, text(p.aboutImageAlt) ?? p.name, '(min-width: 900px) 40vw, 100vw', { width: 1200, height: 900 }) : undefined,
     },
     advantages: (p.advantages ?? []).map((a) => ({ title: a.title, description: a.description, icon: a.icon ?? 'check' })),

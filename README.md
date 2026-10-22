@@ -167,6 +167,8 @@ Dua Worker terpisah dari repo yang sama (`wrangler.jsonc` → environment `stagi
 
 **Deploy lewat GitHub Actions (alternatif, bila tidak memakai Workers Builds):** buat API token Cloudflare (template *Edit Cloudflare Workers*), simpan di **GitHub → Settings → Secrets and variables → Actions** sebagai `CLOUDFLARE_API_TOKEN` (+ `CLOUDFLARE_ACCOUNT_ID`), lalu jalankan `npm run build:staging && npx wrangler deploy --env staging` di workflow. Repo ini memakai Workers Builds, jadi tidak ada token yang perlu disimpan.
 
+**Pindah ke akun klien** (GitHub, Cloudflare, Pages CMS): ikuti [`docs/migrasi-akun-klien.md`](docs/migrasi-akun-klien.md).
+
 ## 6. Menambah admin
 
 **Staf (disarankan): collaborator Pages CMS, tanpa akun GitHub**

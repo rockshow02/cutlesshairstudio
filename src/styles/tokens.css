@@ -1,3 +1,14 @@
+/*
+ * Font cadangan selama Archivo (Google Fonts) belum termuat: Arial Black diperlebar 118% (rasio lebar Archivo wdth 125
+ * terhadap Arial Black, diukur di judul situs) agar judul membungkus di baris yang sama → tanpa pergeseran layout (CLS)
+ * saat font asli masuk. Setelah Archivo termuat, tampilan tidak berubah.
+ */
+@font-face {
+  font-family: 'Archivo Fallback';
+  src: local('Arial Black'), local('ArialBlack'), local('Arial-Black');
+  size-adjust: 118%;
+}
+
 /* ==========================================================================
    Design tokens Cutless Hair Studio
    Palet diambil dari feed Instagram Cutless (disetujui di eksekusi pertama).
@@ -44,7 +55,7 @@
   --c-neutral: #4a4844;      --c-neutral-bg: #e7e3dd;  --c-neutral-line: var(--c-concrete);
 
   /* ---- Tipografi ---- */
-  --f-display: 'Archivo', 'Arial Black', 'Helvetica Neue', Arial, sans-serif;
+  --f-display: 'Archivo', 'Archivo Fallback', 'Arial Black', 'Helvetica Neue', Arial, sans-serif;
   --f-body: 'Plus Jakarta Sans', system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
   --fs-xs: 0.75rem;   /* 12 */
   --fs-sm: 0.875rem;  /* 14 */
