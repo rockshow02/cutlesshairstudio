@@ -12,21 +12,21 @@
     },
     {
       "name": "Partner Demo B",
-      "isActive": true,
+      "isActive": false,
       "order": 20,
-      "isDemo": true
+      "isDemo": false
     },
     {
       "name": "Partner Demo C",
-      "isActive": true,
+      "isActive": false,
       "order": 30,
-      "isDemo": true
+      "isDemo": false
     },
     {
       "name": "Partner Demo D",
-      "isActive": true,
+      "isActive": false,
       "order": 40,
-      "isDemo": true
+      "isDemo": false
     }
   ]
 }
