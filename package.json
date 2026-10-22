@@ -45,11 +45,11 @@
     "typescript-eslint": "^8.71.2",
     "vite": "^6.3.5",
     "vitest": "^3.2.7",
-    "wrangler": "^4.86.0",
+    "wrangler": "^4.151.3",
     "yaml": "^2.8.1",
     "zod": "^4.6.5"
   },
   "engines": {
-    "node": ">=20.19"
+    "node": ">=22"
   }
 }
