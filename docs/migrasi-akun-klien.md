@@ -37,7 +37,7 @@ Konfigurasi ada di `wrangler.jsonc`. Nama Worker harus sama dengan nama di dashb
 | Build command | `npm run build` | `npm run build:staging` |
 | Deploy command | `npx wrangler deploy` | `npx wrangler deploy --env staging` |
 | Binding | `ASSETS` (folder `dist/`) | `ASSETS` (folder `dist/`) |
-| Vars / secrets | didefinisikan, belum dipakai situs statis | tidak ada |
+| Vars / secrets | tidak ada (sisa booking online dihapus Okt 2026) | tidak ada |
 | D1 / database | tidak ada (binding D1 sisa booking online dihapus Okt 2026) | tidak ada |
 
 Langkah, oleh klien di akun Cloudflare-nya:

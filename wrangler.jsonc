@@ -5,7 +5,7 @@
 // Uji lokal: npm run dev:worker (build staging + wrangler dev di http://localhost:8787)
 //
 // Situs statis (booking lewat WhatsApp). Tanpa D1: fitur booking online yang memakai database diarsipkan di
-// branch archive/booking-online-dan-toko.
+// branch archive/booking-online-dan-toko. Tanpa vars/secrets: daftar vars dan secrets fitur itu ada di README branch arsip.
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "cutlesshairstudio",
@@ -20,15 +20,6 @@
     "not_found_handling": "404-page",
     // Hanya rute ini yang menjalankan Worker; file statis lain langsung dari CDN (tidak memakai kuota request)
     "run_worker_first": ["/api/*", "/masuk*", "/profil*", "/booking*", "/admin*", "/kebijakan-privasi*"]
-  },
-  "vars": {
-    "APP_ENV": "production",
-    "AUTH_PHONE_PASSWORD_ENABLED": "false",
-    "AUTH_MOCK_ENABLED": "false",
-    "PBKDF2_ITERATIONS": "100000",
-    "ACCESS_TEAM_DOMAIN": "",
-    "ACCESS_AUD": "",
-    "TURNSTILE_SITE_KEY": ""
   },
   "env": {
     // Worker terpisah: URL, versi, database, dan pengaturan (mis. Cloudflare Access) tidak tercampur dengan produksi.
