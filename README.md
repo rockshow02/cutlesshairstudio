@@ -21,6 +21,36 @@
 > 4. Google OAuth client & Turnstile site untuk domain staging, Cloudflare Access application untuk `/admin*` dan `/api/admin*` (langkah lengkap: `docs/booking-setup.md`).
 > 5. `.env.staging`: `VITE_BOOKING_ENABLED=true`. Flag fitur: `LOYALTY_ENABLED`, `SHOP_ENABLED` (env) + aktifkan program/toko dari `/admin`.
 > 6. Uji: `npm test`, `npm run e2e` (Worker lokal + D1 lokal).
+>
+> **Vars & secrets Worker yang dibutuhkan bila fitur ini diaktifkan kembali**
+>
+> Sejak 22 Okt 2026 `wrangler.jsonc` di `staging`/`main` tidak lagi punya `vars`, `d1_databases`, maupun Cron Trigger (situs statis).
+> Salin kembali dari `wrangler.jsonc` branch ini: `vars` + `d1_databases` di blok produksi (atas) **dan** di `env.staging`
+> (vars tidak diwariskan ke environment), plus `triggers.crons` dan `assets.run_worker_first`.
+>
+> | Nama | Jenis | Produksi | Staging | Fungsi |
+> |---|---|---|---|---|
+> | `APP_ENV` | var | `production` | `staging` | Lingkungan (cookie, log, perilaku uji) |
+> | `AUTH_PHONE_PASSWORD_ENABLED` | var | `false` | `false` | Login WA + password |
+> | `AUTH_MOCK_ENABLED` | var | `false` | `true` | Login uji (E2E); butuh secret `AUTH_MOCK_SECRET` |
+> | `PBKDF2_ITERATIONS` | var | `100000` | `100000` | Hash password |
+> | `ACCESS_TEAM_DOMAIN` | var | isi | `<tim>.cloudflareaccess.com` | Cloudflare Access untuk `/admin*`, `/api/admin*` |
+> | `ACCESS_AUD` | var | isi | AUD tag aplikasi Access | Verifikasi JWT Access |
+> | `TURNSTILE_SITE_KEY` | var | isi | site key | Turnstile (publik) |
+> | `LOYALTY_ENABLED` | var, opsional | (kosong = mati) | `true` | Cutless Stamp |
+> | `SHOP_ENABLED` | var, opsional | (kosong = mati) | `true` | Cutless Shop |
+> | `SHIPPING_PROVIDER` | var, opsional | `manual` | `manual` | `rajaongkir` = ongkir otomatis |
+> | `DB` | binding D1 | `cutless-prod` (belum dibuat) | `cutless-staging` | Database |
+> | `GOOGLE_CLIENT_ID` | secret | wajib | wajib | Google OAuth |
+> | `GOOGLE_CLIENT_SECRET` | secret | wajib | wajib | Google OAuth |
+> | `TURNSTILE_SECRET_KEY` | secret | wajib | wajib | Turnstile |
+> | `AUTH_MOCK_SECRET` | secret | — | wajib bila mock aktif | Login uji |
+> | `TELEGRAM_BOT_TOKEN` | secret, opsional | opsional | opsional | Notifikasi booking |
+> | `RAJAONGKIR_API_KEY` | secret, opsional | opsional | opsional | Ongkir otomatis |
+> | `ADMIN_DEV_EMAIL` | `.dev.vars` lokal saja | — | — | Admin tanpa Access di laptop |
+>
+> Nilai staging lama (domain Access, AUD, site key Turnstile) ada di `env.staging.vars` branch ini; buat ulang bila akun Cloudflare berganti.
+> Secret diisi dengan `npx wrangler secret put <NAMA> [--env staging]` (lokal: `.dev.vars`). Tipe lengkap: `worker/env.ts`.
 
 
 Website Vite + React 18 + TypeScript + CSS Modules untuk beberapa cabang (saat ini Bogor & Cibubur). Konten yang sering berubah dikelola lewat **[Pages CMS](https://pagescms.org)**, CMS berbasis Git yang menyimpan konten sebagai file JSON di repo ini. Produksi: tanpa server/database. Staging: tambahan booking online (Worker API + D1, lihat §13).
