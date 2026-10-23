@@ -12,6 +12,9 @@ export const shoeCareCopy: ShoeCareCopy = {
   orderLabel: 'Pesan via WhatsApp',
   mainLabel: 'Titip Sepatu via WhatsApp',
   menuLabel: 'Lihat Daftar Menu',
+  priceMissing: 'Lihat di daftar menu',
+  priceLabel: 'Harga',
+  moreInMenu: 'Layanan lain (paket kombinasi, tas, topi, dompet) ada di daftar menu.',
   teaserCta: 'Lihat Layanan',
   genericService: 'layanan cuci sepatu',
   // Sama dengan isi awal shoeCare.json; penanda "(via website Cutless)" untuk melacak pesanan dari website

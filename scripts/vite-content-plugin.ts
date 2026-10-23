@@ -13,13 +13,13 @@
  *    [DEV]/[STAGING], modul `virtual:content-status` untuk badge. Web Analytics hanya di produksi.
  * 5. Prerender /cabang/<slug>/index.html per cabang (title/meta unik + JSON-LD HairSalon + ringkasan statis).
  */
-import { readdir, readFile, mkdir, rm, stat, writeFile } from 'node:fs/promises';
+import { cp, readdir, readFile, mkdir, rm, stat, writeFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import path from 'node:path';
 import sharp from 'sharp';
 import { z } from 'zod';
 import { loadEnv, type Plugin, type ViteDevServer } from 'vite';
-import { CONTENT_FILES, crossCheck, type BranchEntry, type ContentBundle, type ContentIssue, type HeroEntry } from '../src/content/schema';
+import { CONTENT_FILES, crossCheck, SHOE_CARE_MENU_FILE_MAX_BYTES, type BranchEntry, type ContentBundle, type ContentIssue, type HeroEntry } from '../src/content/schema';
 import { srcSetOf, type ImageMeta } from '../src/lib/responsiveImage';
 import { applyE2EFixtures } from '../e2e/fixtures/content';
 import { activeCategoryNames, branchDescription, homeDescription } from '../src/content/serviceSeo';
@@ -32,6 +32,8 @@ const RESOLVED_STATUS_ID = `\0${STATUS_ID}`;
 const IMAGE_KEYS = new Set(['photo', 'image', 'logo', 'mobileImage', 'src']);
 const OG_IMAGE = '/images/og/og-cutless.jpg';
 const BRANCH_ROUTE = /^\/cabang\/([a-z0-9-]+)\/?(?:index\.html)?(?:[?#].*)?$/;
+/** Build E2E: file uji (mis. PDF daftar menu) yang hanya disalin ke dist/ build E2E, tidak pernah ke public/ */
+const FIXTURE_PUBLIC = path.join('e2e', 'fixtures', 'public');
 
 /* ---------- Validasi ---------- */
 
@@ -115,6 +117,16 @@ export async function loadContent(root: string, { fixtures = false }: { fixtures
     if (!existsSync(file)) errors.push(`  • settings.json: preloaderVideo: file tidak ditemukan di public${video}`);
     else if ((await stat(file)).size > 500 * 1024) {
       errors.push(`  • settings.json: preloaderVideo: ${video} lebih dari 500 KB, kompres dulu (mis. 720p, tanpa suara, ±1,5 detik)`);
+    }
+  }
+
+  // PDF daftar menu Partner Cuci Sepatu: harus ada & ringan (Pages CMS tidak bisa membatasi ukuran upload)
+  const menuFile = (parsed.shoeCare as { menuFile?: string | null } | undefined)?.menuFile;
+  if (menuFile) {
+    const file = [publicDir, ...(fixtures ? [path.join(root, FIXTURE_PUBLIC)] : [])].map((dir) => path.join(dir, menuFile)).find((f) => existsSync(f));
+    if (!file) errors.push(`  • shoeCare.json: menuFile: file tidak ditemukan di public${menuFile}`);
+    else if ((await stat(file)).size > SHOE_CARE_MENU_FILE_MAX_BYTES) {
+      errors.push(`  • shoeCare.json: menuFile: ${menuFile} lebih dari 3 MB, kompres PDF dulu (mis. ekspor ulang dengan gambar beresolusi lebih rendah) lalu upload ulang`);
     }
   }
 
@@ -496,6 +508,7 @@ export function contentPlugin(): Plugin {
     /** Prerender halaman per cabang dari dist/cabang/index.html */
     async closeBundle() {
       if (!isBuild || !bundle) return;
+      if (fixtures && existsSync(path.join(root, FIXTURE_PUBLIC))) await cp(path.join(root, FIXTURE_PUBLIC), outDir, { recursive: true });
       // Staging: header X-Robots-Tag dari Worker (static assets membaca dist/_headers)
       const headersFile = path.join(outDir, '_headers');
       if (appEnv !== 'production' && existsSync(headersFile)) {

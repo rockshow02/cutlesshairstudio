@@ -32,8 +32,8 @@ export function SectionTitle({ heading, id, tone = 'dark', aside }: SectionTitle
 }
 
 /** Kicker berdiri sendiri (dipakai di luar SectionTitle) */
-export function Kicker({ children, tone = 'dark', center }: { children: ReactNode; tone?: 'dark' | 'light'; center?: boolean }) {
+export function Kicker({ children, tone = 'dark', center, className }: { children: ReactNode; tone?: 'dark' | 'light'; center?: boolean; className?: string }) {
   return (
-    <p className={[styles.kicker, tone === 'light' && styles.kickerLight, center && styles.center].filter(Boolean).join(' ')}>{children}</p>
+    <p className={[styles.kicker, tone === 'light' && styles.kickerLight, center && styles.center, className].filter(Boolean).join(' ')}>{children}</p>
   );
 }

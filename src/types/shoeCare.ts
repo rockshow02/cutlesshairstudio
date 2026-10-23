@@ -13,6 +13,12 @@ export interface ShoeCareCopy {
   orderLabel: string;
   mainLabel: string;
   menuLabel: string;
+  /** Teks kecil di kartu layanan tanpa harga (link ke daftar menu) */
+  priceMissing: string;
+  /** Label tersembunyi sebelum harga (screen reader) */
+  priceLabel: string;
+  /** Teks kecil di bawah grid layanan, sebelum tombol daftar menu */
+  moreInMenu: string;
   teaserCta: string;
   /** Pengisi {service} untuk tombol utama (tanpa layanan tertentu); {partner} = nama partner, {branch} = nama cabang */
   genericService: string;
@@ -41,6 +47,8 @@ export interface ShoeCareCopy {
 export interface ShoeCareService {
   name: string;
   description?: string;
+  /** Harga teks gaya Daftar Harga, mis. "45K" / "70–120K"; kosong = "Lihat di daftar menu" */
+  price?: string;
   estimate?: string;
   icon?: IconName;
   image?: ImageAsset;
@@ -69,7 +77,7 @@ export interface ShoeCareContent {
   services: ShoeCareService[];
   photos: ImageAsset[];
   notes: string[];
-  /** Daftar menu & harga partner (tab baru); kosong = tombol tidak tampil */
+  /** Daftar menu & harga partner (tab baru): file PDF → link → kosong (tombol tidak tampil). Path lokal belum diberi asset(). */
   menuUrl?: string;
   /** wa.me tombol utama (pesan umum) */
   mainHref: string;

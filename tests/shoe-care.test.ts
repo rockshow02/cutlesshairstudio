@@ -4,11 +4,12 @@ import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import { parse } from 'yaml';
-import { shoeCareSchema, type ShoeCareEntry } from '../src/content/schema';
+import { SHOE_CARE_PRICE_PATTERN, shoeCareSchema, type ShoeCareEntry } from '../src/content/schema';
 import { shoeCareCopy } from '../src/content/shoeCare';
 import { shoeCareDescription, shoeCareImage, shoeCareRedirects, shoeCareTitle, shoeCareVisible } from '../src/content/shoeCareSeo';
 import { site } from '../src/content/site';
-import { buildShoeCare, buildSite, shoeCarePlacement } from '../src/lib/contentTransforms';
+import { buildShoeCare, buildSite, shoeCareMenuUrl, shoeCarePlacement } from '../src/lib/contentTransforms';
+import { formatPriceText } from '../src/lib/format';
 import { templateLink } from '../src/lib/whatsapp';
 import { MenuButton, ShoeCarePageView } from '../src/components/pages/ShoeCarePage';
 import { ShoeCareTeaserView } from '../src/components/sections/ShoeCareTeaser';
@@ -64,13 +65,34 @@ describe('data halaman Cuci Sepatu', () => {
     expect(wa(templateLink('081234', 'Halo {service}  ,  {branch}', { service: 'A', branch: 'B' })).text).toBe('Halo A, B');
   });
 
-  it('layanan tanpa harga; ikon/foto opsional; estimasi', () => {
+  it('harga opsional (gaya "K"); ikon/foto opsional; estimasi', () => {
     const [deep, fast] = build()!.services;
-    expect(deep).toMatchObject({ icon: 'wash', estimate: '±2 hari' });
+    expect(deep).toMatchObject({ icon: 'wash', estimate: '±2 hari', price: undefined });
     expect(fast.icon).toBeUndefined();
-    for (const s of build()!.services) expect(Object.keys(s)).not.toContain('price');
-    expect(page()).not.toMatch(/Rp\s?\d|mulai/);
+    const priced = build(entry({ services: [{ name: 'A', price: '45K' }, { name: 'B', price: '70-120k' }, { name: 'C', price: '7,5K' }, { name: 'D', price: '' }] }))!;
+    expect(priced.services.map((s) => s.price)).toEqual(['45K', '70–120K', '7,5K', undefined]);
     expect(build(entry({ services: [{ name: 'Foto', image: '/uploads/shoe-care/a.webp', order: 0, isActive: true }] }))!.services[0].image?.src).toBe('/uploads/shoe-care/a.webp');
+  });
+
+  it('format harga: angka + K atau rentang dengan –/-; boleh kosong & 0K; selain itu ditolak', () => {
+    expect(formatPriceText('45k')).toBe('45K');
+    expect(formatPriceText('70 - 120K')).toBe('70–120K');
+    expect(formatPriceText('70–120K')).toBe('70–120K');
+    const ok = (price: string) => shoeCareSchema.safeParse({ ...entry(), services: [{ name: 'A', price }] }).success;
+    for (const v of ['45K', '100K', '7,5K', '70–120K', '70-120K', '70 – 120K', '0K', '30k', '', '1111–1111K']) expect(ok(v), v).toBe(true);
+    for (const v of ['45', 'Rp45.000', '45.000', '45 K', 'K', '45KK', '70–K', 'mulai 45K', '12345K', '1–2–3K']) expect(ok(v), v).toBe(false);
+  });
+
+  it('daftar menu: file PDF → Link Daftar Menu → tidak ada', () => {
+    const pdf = '/uploads/shoe-care/daftar-menu.pdf';
+    const link = 'https://drive.google.com/file/d/xyz/view';
+    expect(build(entry({ menuFile: pdf, menuUrl: link }))!.menuUrl).toBe(pdf);
+    expect(build(entry({ menuFile: '', menuUrl: link }))!.menuUrl).toBe(link);
+    expect(build(entry({ menuFile: null, menuUrl: '' }))!.menuUrl).toBeUndefined();
+    expect(shoeCareMenuUrl({ menuFile: undefined, menuUrl: undefined })).toBeUndefined();
+    // Hanya PDF di folder media Partner Cuci Sepatu
+    expect(shoeCareSchema.safeParse({ ...entry(), menuFile: '/uploads/shoe-care/menu.docx' }).success).toBe(false);
+    expect(shoeCareSchema.safeParse({ ...entry(), menuFile: '/uploads/gallery/menu.pdf' }).success).toBe(false);
   });
 
   it('foto hero: CMS → foto hasil pertama → foto CTA', () => {
@@ -98,6 +120,21 @@ describe('tampilan halaman', () => {
     expect(html).toContain('Jl. Uji No. 1');
     expect(html).not.toContain('id="galeri"');
     expect(page(entry({ photos: [{ image: '/uploads/shoe-care/h.webp', alt: 'Hasil satu' }] }))).toContain('Perbesar foto: Hasil satu');
+  });
+
+  it('kartu layanan: harga tampil; harga kosong → "Lihat di daftar menu" (link ke daftar menu, bila ada)', () => {
+    const pdf = '/uploads/shoe-care/daftar-menu.pdf';
+    const services = [{ name: 'Berharga', price: '45K' }, { name: 'Tanpa Harga' }];
+    const html = page(entry({ services, menuFile: pdf }));
+    expect(html).toMatch(/<span class="visually-hidden">Harga: <\/span><span[^>]*>45K<\/span>/);
+    expect(html.match(/Lihat di daftar menu/g)).toHaveLength(1);
+    expect(html).toMatch(/<a [^>]*href="\/uploads\/shoe-care\/daftar-menu\.pdf"[^>]*target="_blank"[^>]*>Lihat di daftar menu<\/a>/);
+    expect(html).toContain('Layanan lain (paket kombinasi, tas, topi, dompet) ada di daftar menu.');
+    // Tanpa daftar menu: tidak ada teks "Lihat di daftar menu" maupun ajakan layanan lain
+    const none = page(entry({ services }));
+    expect(none).toContain('45K');
+    expect(none).not.toContain('Lihat di daftar menu');
+    expect(none).not.toContain('Layanan lain');
   });
 
   it('tombol "Lihat Daftar Menu": tab baru (noopener noreferrer), tidak tampil bila link kosong', () => {
@@ -163,7 +200,7 @@ describe('CMS Partner Cuci Sepatu', () => {
   const raw = JSON.parse(readFileSync('src/content/shoeCare.json', 'utf8'));
   const f = (path: string) => path.split('.').reduce<CmsField | undefined>((acc, n) => (acc ? acc.fields : cms.fields)?.find((x) => x.name === n), undefined)!;
 
-  it('label & field baru, batas karakter, tanpa harga layanan', () => {
+  it('label & field baru, batas karakter, harga & PDF daftar menu', () => {
     expect(f('enabled')).toMatchObject({ label: 'Tampilkan halaman', default: false });
     expect(f('showTeaser')).toMatchObject({ label: 'Tampilkan teaser di beranda', type: 'boolean', default: true });
     expect(f('heroImage')).toMatchObject({ label: 'Foto hero', type: 'image' });
@@ -176,7 +213,29 @@ describe('CMS Partner Cuci Sepatu', () => {
     expect(f('menuUrl').label).toBe('Link Daftar Menu');
     expect(f('services.icon').type).toBe('select');
     expect(f('services.image').type).toBe('image');
-    expect(f('services').fields!.map((x) => x.name)).not.toContain('price');
+    expect(f('services.price')).toMatchObject({ label: 'Harga', type: 'string', options: { maxlength: 20 } });
+    expect(f('services.price').required).toBeFalsy();
+    // Pattern CMS = pattern Zod, dibungkus (...)? agar boleh kosong
+    expect((f('services.price').pattern as { regex: string }).regex).toBe(`^(${SHOE_CARE_PRICE_PATTERN.source.slice(1, -1)})?$`);
+    expect(f('menuFile')).toMatchObject({ label: 'File daftar menu (PDF)', type: 'file', options: { media: 'shoe-care-menu', extensions: ['pdf'] } });
+    expect(config.media.find((m) => m.name === 'shoe-care-menu')).toMatchObject({ input: 'public/uploads/shoe-care', output: '/uploads/shoe-care', extensions: ['pdf'] });
+  });
+
+  it('form CMS & Zod sepakat: harga dan file PDF (data uji)', () => {
+    setMedia(config.media);
+    // Data uji (bukan shoeCare.json, yang bisa berubah dari CMS kapan saja)
+    const base = { ...entry(), services: [{ name: 'A', isActive: true, order: 0 }] };
+    const both = (patch: Record<string, unknown>) => {
+      const content = { ...base, ...patch };
+      return { cms: validateCmsContent(cms, content).length === 0, zod: shoeCareSchema.safeParse(content).success };
+    };
+    const price = (p: string) => both({ services: [{ name: 'A', price: p, isActive: true, order: 0 }] });
+    for (const v of ['45K', '70–120K', '70-120k', '0K', '']) expect(price(v), v).toEqual({ cms: true, zod: true });
+    for (const v of ['45', 'Rp45.000', '45 K', '1111–1111K' + 'x'.repeat(10)]) expect(price(v), v).toEqual({ cms: false, zod: false });
+    expect(both({ menuFile: '/uploads/shoe-care/daftar-menu.pdf' })).toEqual({ cms: true, zod: true });
+    expect(both({ menuFile: '/uploads/shoe-care/foto.webp' })).toEqual({ cms: false, zod: false });
+    expect(both({ menuFile: '/uploads/gallery/daftar-menu.pdf' })).toEqual({ cms: false, zod: false });
+    expect(both({ menuFile: '' })).toEqual({ cms: true, zod: true });
   });
 
   it('isi saat ini lolos form & Zod; isian tidak valid ditolak', () => {

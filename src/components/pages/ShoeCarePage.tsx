@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type CSSProperties } from 'react';
 import { getShoeCare } from '@/lib/content';
 import { useContent } from '@/lib/useContent';
 import { useBranch } from '@/lib/BranchContext';
@@ -6,8 +6,9 @@ import { useFabZone } from '@/lib/fabZones';
 import { pageUrl } from '@/lib/navigation';
 import { formatTime } from '@/lib/format';
 import { fillTemplate } from '@/lib/whatsapp';
+import { asset } from '@/lib/asset';
 import { shoeCarePlacement } from '@/lib/contentTransforms';
-import type { Branch, ShoeCareContent } from '@/types';
+import type { Branch, ShoeCareContent, ShoeCareService } from '@/types';
 import { Section } from '@/components/ui/Section';
 import { SectionTitle, Kicker } from '@/components/ui/SectionTitle';
 import { Container } from '@/components/ui/Container';
@@ -17,12 +18,17 @@ import { Icon } from '@/components/ui/Icon';
 import { ResponsiveImage } from '@/components/ui/ResponsiveImage';
 import { DemoBadge } from '@/components/ui/DemoBadge';
 import { Lightbox } from '@/components/ui/Lightbox';
+// Ukuran hero, harga, jam buka, dan alamat memakai kelas yang sama dengan beranda (bukan salinan ukuran)
+import heroStyles from '@/components/sections/Hero.module.css';
+import pricingStyles from '@/components/sections/Pricing.module.css';
+import locationStyles from '@/components/sections/Location.module.css';
 import styles from './ShoeCarePage.module.css';
 
 /**
- * Halaman /cuci-sepatu/ (Pages CMS → Partner Cuci Sepatu): hero foto, About Us, layanan (tanpa harga), galeri +
- * lightbox, catatan & CTA WhatsApp, lokasi cabang. Semua tombol WhatsApp ke nomor partner (kosong → nomor cabang partner).
- * Halaman mati → di produksi /cuci-sepatu dialihkan ke beranda (301); di sini tampil pemberitahuan singkat.
+ * Halaman /cuci-sepatu/ (Pages CMS → Partner Cuci Sepatu): hero foto (ukuran = hero beranda, isi rata tengah),
+ * About Us, layanan + harga, galeri + lightbox, CTA WhatsApp, lokasi cabang + catatan. Semua tombol WhatsApp ke nomor
+ * partner (kosong → nomor cabang partner). Halaman mati → di produksi /cuci-sepatu dialihkan ke beranda (301); di sini
+ * tampil pemberitahuan singkat.
  */
 export function ShoeCarePage() {
   const state = useContent(getShoeCare);
@@ -52,16 +58,16 @@ export function ShoeCarePageView({ data, branch, otherBranch }: { data: ShoeCare
       <Services data={data} />
       {data.photos.length > 0 && <Gallery data={data} />}
       <Closing data={data} />
-      {branch && <Location data={data} branch={branch} />}
+      {(branch || data.notes.length > 0) && <Info data={data} branch={branch} />}
     </>
   );
 }
 
-/** Tombol "Lihat Daftar Menu": tab baru; tidak dirender bila link kosong */
+/** Tombol "Lihat Daftar Menu": PDF/link di tab baru; tidak dirender bila daftar menu tidak ada */
 export function MenuButton({ data, variant }: { data: ShoeCareContent; variant: 'ghost' | 'outline-dark' | 'light' }) {
   if (!data.menuUrl) return null;
   return (
-    <Button href={data.menuUrl} external variant={variant} icon="tag" size="lg">
+    <Button href={asset(data.menuUrl)} external variant={variant} icon="tag">
       {data.copy.menuLabel}
     </Button>
   );
@@ -71,17 +77,21 @@ function Hero({ data, otherBranch }: { data: ShoeCareContent; otherBranch: boole
   const { copy } = data;
   const zoneRef = useFabZone<HTMLElement>();
   return (
-    <section ref={zoneRef} id="top" className={styles.hero} aria-labelledby="cuci-sepatu-title" data-tone="dark">
-      <ResponsiveImage image={data.heroImage} className={styles.heroBg} alt="" priority />
+    <section ref={zoneRef} id="top" className={`${heroStyles.hero} ${styles.hero}`} aria-labelledby="cuci-sepatu-title" data-tone="dark">
+      <div className={styles.heroMedia}>
+        <ResponsiveImage image={data.heroImage} className={styles.heroBg} alt="" priority />
+      </div>
       <div className={styles.heroShade} aria-hidden="true" />
       <Container className={styles.heroInner}>
         {data.logo && <ResponsiveImage image={data.logo} className={styles.heroLogo} priority />}
-        <Kicker>{copy.kicker}</Kicker>
-        <h1 id="cuci-sepatu-title" className={styles.heroTitle}>
+        <Kicker center className={styles.heroKicker}>
+          {copy.kicker}
+        </Kicker>
+        <h1 id="cuci-sepatu-title" className={`${heroStyles.title} ${styles.heroTitle}`}>
           {data.name}
         </h1>
         {data.tagline && <p className={styles.heroTagline}>{data.tagline}</p>}
-        {data.description && <p className={styles.heroText}>{data.description}</p>}
+        {data.description && <p className={heroStyles.subtitle}>{data.description}</p>}
         <p className={styles.heroMeta}>
           <span className={styles.available}>
             <Icon name="pin" size={14} />
@@ -97,8 +107,9 @@ function Hero({ data, otherBranch }: { data: ShoeCareContent; otherBranch: boole
             </span>
           </p>
         )}
-        <div className={styles.heroActions}>
-          <Button href={data.mainHref} external variant="whatsapp" size="lg" icon="whatsapp">
+        {/* Sama dengan tombol hero beranda: utama terang + kedua outline; berdampingan di desktop, bertumpuk di HP */}
+        <div className={`${heroStyles.ctas} ${styles.heroActions}`}>
+          <Button href={data.mainHref} external variant="light" icon="whatsapp">
             {copy.mainLabel}
           </Button>
           <MenuButton data={data} variant="ghost" />
@@ -110,6 +121,8 @@ function Hero({ data, otherBranch }: { data: ShoeCareContent; otherBranch: boole
 
 function About({ data }: { data: ShoeCareContent }) {
   const { about } = data;
+  // Desktop: kolom keunggulan = jumlah keunggulan (2–4), agar baris ikon rata
+  const advCols = { '--adv-cols': Math.min(data.advantages.length, 4) } as CSSProperties;
   return (
     <Section id="tentang" tone="light" labelledBy="cuci-sepatu-about">
       <div className={`${styles.about} ${about.image ? styles.aboutWithImage : ''}`}>
@@ -120,21 +133,6 @@ function About({ data }: { data: ShoeCareContent }) {
               <p key={p}>{p}</p>
             ))}
           </div>
-          {data.advantages.length > 0 && (
-            <ul className={styles.advantages} role="list">
-              {data.advantages.map((a) => (
-                <li key={a.title} className={styles.advantage}>
-                  <span className={styles.advIcon}>
-                    <Icon name={a.icon} size={20} />
-                  </span>
-                  <span>
-                    <strong className={styles.advTitle}>{a.title}</strong>
-                    <span className={styles.advText}>{a.description}</span>
-                  </span>
-                </li>
-              ))}
-            </ul>
-          )}
         </div>
         {about.image && (
           <div className={styles.aboutMedia}>
@@ -142,7 +140,43 @@ function About({ data }: { data: ShoeCareContent }) {
           </div>
         )}
       </div>
+      {data.advantages.length > 0 && (
+        <ul className={styles.advantages} style={advCols} role="list">
+          {data.advantages.map((a) => (
+            <li key={a.title} className={styles.advantage}>
+              <span className={styles.advIcon}>
+                <Icon name={a.icon} size={20} />
+              </span>
+              <span>
+                <strong className={styles.advTitle}>{a.title}</strong>
+                <span className={styles.advText}>{a.description}</span>
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
     </Section>
+  );
+}
+
+/** Harga gaya Daftar Harga; kosong → teks kecil "Lihat di daftar menu" (hanya bila daftar menu ada) */
+export function ServicePrice({ service, data }: { service: ShoeCareService; data: ShoeCareContent }) {
+  const { copy } = data;
+  if (service.price) {
+    return (
+      <p className={styles.price}>
+        <span className="visually-hidden">{copy.priceLabel}: </span>
+        <span className={pricingStyles.itemPrice}>{service.price}</span>
+      </p>
+    );
+  }
+  if (!data.menuUrl) return null;
+  return (
+    <p className={styles.price}>
+      <a className={styles.priceMissing} href={asset(data.menuUrl)} target="_blank" rel="noopener noreferrer">
+        {copy.priceMissing}
+      </a>
+    </p>
   );
 }
 
@@ -158,17 +192,20 @@ function Services({ data }: { data: ShoeCareContent }) {
           {data.services.map((s) => (
             <li key={s.name}>
               <Card tone="dark" as="article" className={styles.service}>
-                {s.image ? (
-                  <ResponsiveImage image={s.image} className={styles.serviceImg} />
-                ) : (
-                  s.icon && (
-                    <span className={styles.serviceIcon}>
-                      <Icon name={s.icon} size={28} strokeWidth={1.4} />
-                    </span>
-                  )
-                )}
-                <h3 className={styles.serviceName}>{s.name}</h3>
-                {s.description && <p className={styles.serviceText}>{s.description}</p>}
+                <div className={styles.serviceBody}>
+                  {s.image ? (
+                    <ResponsiveImage image={s.image} className={styles.serviceImg} />
+                  ) : (
+                    s.icon && (
+                      <span className={styles.serviceIcon}>
+                        <Icon name={s.icon} size={28} strokeWidth={1.4} />
+                      </span>
+                    )
+                  )}
+                  <h3 className={styles.serviceName}>{s.name}</h3>
+                  {s.description && <p className={styles.serviceText}>{s.description}</p>}
+                </div>
+                <ServicePrice service={s} data={data} />
                 {s.estimate && (
                   <p className={styles.estimate}>
                     <Icon name="clock" size={14} />
@@ -187,7 +224,8 @@ function Services({ data }: { data: ShoeCareContent }) {
         </ul>
         {data.menuUrl && (
           <div className={styles.servicesMenu}>
-            <MenuButton data={data} variant="light" />
+            <p>{copy.moreInMenu}</p>
+            <MenuButton data={data} variant="ghost" />
           </div>
         )}
       </div>
@@ -220,63 +258,72 @@ function Closing({ data }: { data: ShoeCareContent }) {
   const zoneRef = useFabZone<HTMLDivElement>(0.1);
   return (
     <Section id="titip" tone="dark" labelledBy="cuci-sepatu-titip">
-      <div ref={zoneRef} className={styles.closing}>
-        {data.notes.length > 0 && (
-          <div className={styles.notes}>
-            <h2 className={styles.notesTitle}>{copy.notesTitle}</h2>
-            <ul>
-              {data.notes.map((n) => (
-                <li key={n}>{n}</li>
-              ))}
-            </ul>
-          </div>
-        )}
-        <div className={styles.cta}>
-          <Kicker center>{copy.closingKicker}</Kicker>
-          <h2 id="cuci-sepatu-titip" className={styles.ctaTitle}>
-            {copy.closingTitle}
-          </h2>
-          <p className={styles.ctaText}>{fillTemplate(copy.closingText, { branch: data.branch.name })}</p>
-          <div className={styles.ctaActions}>
-            <Button href={data.mainHref} external variant="whatsapp" size="lg" icon="whatsapp">
-              {copy.mainLabel}
-            </Button>
-          </div>
+      <div ref={zoneRef} className={styles.cta}>
+        <Kicker center className={styles.balancedKicker}>
+          {copy.closingKicker}
+        </Kicker>
+        <h2 id="cuci-sepatu-titip" className={styles.ctaTitle}>
+          {copy.closingTitle}
+        </h2>
+        <p className={styles.ctaText}>{fillTemplate(copy.closingText, { branch: data.branch.name })}</p>
+        <div className={styles.ctaActions}>
+          <Button href={data.mainHref} external variant="light" icon="whatsapp">
+            {copy.mainLabel}
+          </Button>
         </div>
       </div>
     </Section>
   );
 }
 
-function Location({ data, branch }: { data: ShoeCareContent; branch: Branch }) {
+/** Lokasi cabang + catatan/ketentuan dalam satu kontainer (dua kolom di tablet/desktop) */
+function Info({ data, branch }: { data: ShoeCareContent; branch?: Branch }) {
   const { copy } = data;
+  const heading = branch ? { kicker: copy.locationKicker, title: `Cutless ${branch.name}` } : { kicker: copy.locationKicker, title: copy.notesTitle };
   return (
     <Section id="lokasi" tone="light" labelledBy="cuci-sepatu-lokasi">
-      <SectionTitle heading={{ kicker: copy.locationKicker, title: `Cutless ${branch.name}` }} id="cuci-sepatu-lokasi" tone="light" />
-      <div className={styles.location}>
-        <div>
-          {branch.address && (
-            <p className={styles.address}>
-              <Icon name="pin" size={18} />
-              <span>{branch.address}</span>
-            </p>
-          )}
-          <Button href={branch.directionsUrl} external variant="outline-dark" icon="navigate">
-            {copy.directions}
-          </Button>
-        </div>
-        {branch.hours.length > 0 && (
-          <table className={styles.hours}>
-            <caption>{copy.hoursTitle}</caption>
-            <tbody>
-              {branch.hours.map((h) => (
-                <tr key={h.day}>
-                  <th scope="row">{h.label}</th>
-                  <td>{h.closed || !h.open || !h.close ? copy.closed : `${formatTime(h.open)} – ${formatTime(h.close)}`}</td>
-                </tr>
+      <SectionTitle heading={heading} id="cuci-sepatu-lokasi" tone="light" />
+      <div className={styles.info}>
+        {branch && (
+          <div>
+            {branch.address && (
+              <address className={locationStyles.lines}>
+                <p>
+                  <Icon name="pin" />
+                  <span>{branch.address}</span>
+                </p>
+              </address>
+            )}
+            {branch.hours.length > 0 && (
+              <table className={locationStyles.hours}>
+                <caption>{copy.hoursTitle}</caption>
+                <tbody>
+                  {branch.hours.map((h) => (
+                    <tr key={h.day}>
+                      <th scope="row">{h.label}</th>
+                      <td>{h.closed || !h.open || !h.close ? copy.closed : `${formatTime(h.open)} – ${formatTime(h.close)}`}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+            <Button href={branch.directionsUrl} external variant="outline-dark" icon="navigate">
+              {copy.directions}
+            </Button>
+          </div>
+        )}
+        {data.notes.length > 0 && (
+          <div className={styles.notes}>
+            {branch && <h3 className={styles.notesTitle}>{copy.notesTitle}</h3>}
+            <ul className={`${locationStyles.lines} ${styles.notesList}`} role="list">
+              {data.notes.map((n) => (
+                <li key={n}>
+                  <Icon name="info" />
+                  <span>{n}</span>
+                </li>
               ))}
-            </tbody>
-          </table>
+            </ul>
+          </div>
         )}
       </div>
     </Section>

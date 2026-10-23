@@ -415,6 +415,15 @@ export const serviceCardSchema = z.object({
 export const SHOE_CARE_ICONS = ['check', 'clock', 'star', 'tag', 'wash', 'spa', 'gift', 'pin', 'calendar', 'user', 'info', 'scissors'] as const satisfies readonly IconName[];
 /** Placeholder yang boleh dipakai di template pesan WhatsApp */
 export const SHOE_CARE_TEMPLATE_PATTERN = /^(?:[^{}]|\{(?:partner|service|branch)\})*$/;
+/**
+ * Harga layanan cuci sepatu (teks, format "K" seperti Daftar Harga): "45K", "7,5K", rentang "70–120K" (tanda – atau -).
+ * Sama persis dengan pattern di .pages.yml (di sana dibungkus (...)? agar boleh kosong). Batas bawah < atas tidak
+ * diperiksa: form CMS tidak bisa memeriksanya, jadi Save yang lolos form tidak boleh menggagalkan build.
+ */
+export const SHOE_CARE_PRICE_PATTERN = /^(\d{1,4}(,\d)?\s?[–-]\s?)?\d{1,4}(,\d)?[Kk]$/;
+/** File daftar menu: PDF di folder media Partner Cuci Sepatu. Ukuran (maks. 3 MB) diperiksa saat build. */
+export const SHOE_CARE_MENU_FILE_PATTERN = /^\/uploads\/shoe-care\/[\w./-]+\.pdf$/i;
+export const SHOE_CARE_MENU_FILE_MAX_BYTES = 3 * 1024 * 1024;
 
 /** Logo partner: PNG/WebP (hasil kompres) atau SVG */
 const shoeCareLogo = z.union([
@@ -447,7 +456,9 @@ export const shoeCareSchema = z
   aboutParagraphs: z.array(requiredText(400, 'paragraf About Us')).max(3, 'maksimal 3 paragraf').default([]),
   aboutImage: optionalImage,
   aboutImageAlt: optionalText(150),
-  /** Daftar menu & harga partner (mis. Google Drive), dibuka di tab baru; kosong = tombol tidak tampil */
+  /** Daftar menu lengkap (PDF di /uploads/shoe-care). Prioritas tombol "Lihat Daftar Menu": file PDF → menuUrl → tidak tampil */
+  menuFile: z.union([z.string().regex(SHOE_CARE_MENU_FILE_PATTERN, 'harus file PDF di /uploads/shoe-care/...'), z.literal('')]).nullish(),
+  /** Daftar menu & harga partner (mis. Google Drive), dibuka di tab baru; dipakai bila file PDF kosong */
   menuUrl: optionalHttpsUrl,
   advantages: z
     .array(
@@ -464,8 +475,12 @@ export const shoeCareSchema = z
       z.object({
         name: requiredText(40, 'nama layanan'),
         description: optionalText(120),
+        /** Opsional, mis. "45K" atau "70–120K"; kosong = "Lihat di daftar menu". Boleh "0K" (tidak ada aturan harga 0). */
+        price: z
+          .union([z.string().trim().max(20, 'maksimal 20 karakter').regex(SHOE_CARE_PRICE_PATTERN, 'format harga: angka + K, mis. 45K atau rentang 70–120K'), z.literal('')])
+          .nullish(),
         estimate: optionalText(30),
-        /** Opsional: ikon atau foto kecil di kartu (harga tidak ditampilkan; lihat Daftar Menu) */
+        /** Opsional: ikon atau foto kecil di kartu */
         icon: z.union([z.enum(SHOE_CARE_ICONS, { error: `ikon harus salah satu: ${SHOE_CARE_ICONS.join(', ')}` }), z.literal('')]).nullish(),
         image: optionalImage,
         isActive,
