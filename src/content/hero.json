@@ -1,17 +1,22 @@
 {
   "kicker": "Hair Studio · {cities}",
   "titleLines": [
-    "Good Style.",
-    "Good Mood."
+    "Cut Less.",
+    "Style More."
   ],
-  "subtitle": "Potongan on point, dikerjain hairstylist yang ngerti bentuk wajahmu. Fade, pompadour, sampai coloring, semuanya tanpa ribet.",
+  "subtitle": "Dari skin fade, two block, sampai cornrow dan dreadlock. Hairstylist kami ngobrol dulu soal bentuk wajah dan gaya hidupmu, baru eksekusi. Hasilnya rapi hari ini, tetap enak di-styling minggu depan.",
   "primaryCtaLabel": "Booking via WhatsApp",
   "secondaryCtaLabel": "Lihat Layanan",
   "image": "/uploads/hero/revisi-website-cutless-hair-studio.webp",
+  "mobileImage": "/uploads/hero/revisi-website-cutless-hair-studio.webp",
   "imageAlt": "Hairstylist merapikan pompadour pelanggan di kursi barber",
   "marquee": [
-    "On Point Always",
-    "We Got You",
-    "Goodstyle Goodmood"
+    "Good Style, Good Mood",
+    "On Point, Always",
+    "Fade · Crop · Perming",
+    "Cornrow · Braids · Dreadlock",
+    "Pria & Wanita Welcome",
+    "Konsultasi Dulu, Baru Eksekusi",
+    "We Got You"
   ]
 }
