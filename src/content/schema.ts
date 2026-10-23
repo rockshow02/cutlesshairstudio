@@ -12,6 +12,7 @@
 import { z } from 'zod';
 import { parseWIB } from '../lib/dates';
 import { PRICE_CATEGORIES } from './priceCategories';
+import { itemsAt } from './branchPricing';
 import type { IconName } from '../types/common';
 
 /* ---------- Helper ---------- */
@@ -158,11 +159,13 @@ export const pricingItemSchema = z.object({
   priceFrom: z.boolean().nullish(),
   description: optionalText(300),
   badge: z.union([z.enum(PRICE_BADGES), z.literal('')], { error: `badge harus kosong atau salah satu: ${PRICE_BADGES.join(', ')}` }).nullish(),
-  /** Harga khusus per cabang (opsional) */
+  /** Harga per cabang (opsional): menimpa harga utama untuk cabang itu */
   branchPrices: z
     .array(branchPriceSchema)
     .nullish()
     .refine((rows) => !rows || new Set(rows.map((r) => r.branchSlug)).size === rows.length, 'satu cabang hanya boleh punya satu harga khusus'),
+  /** Tersedia di cabang: kosong = semua cabang; diisi = item hanya tampil di cabang terpilih */
+  branchSlugs: branchSlugList,
   order,
   isActive,
 });
@@ -628,11 +631,14 @@ export function crossCheck(c: ContentBundle): { errors: ContentIssue[]; launch: 
   c.barbers.forEach((b, i) => {
     if (!known.has(b.branchSlug)) errors.push({ file: 'barbers.json', where: labelOf(b, i), message: unknown(b.branchSlug) });
   });
-  c.pricing.forEach((p, i) =>
+  c.pricing.forEach((p, i) => {
     (p.branchPrices ?? []).forEach((bp) => {
       if (!known.has(bp.branchSlug)) errors.push({ file: 'pricing.json', where: `${labelOf(p, i)} → harga cabang`, message: unknown(bp.branchSlug) });
-    }),
-  );
+    });
+    (p.branchSlugs ?? []).forEach((slug) => {
+      if (!known.has(slug)) errors.push({ file: 'pricing.json', where: `${labelOf(p, i)} → tersedia di cabang`, message: unknown(slug) });
+    });
+  });
   if (!known.has(c.shoeCare.branchSlug)) errors.push({ file: 'shoeCare.json', where: 'cabang', message: unknown(c.shoeCare.branchSlug) });
   (['promos', 'announcements'] as const).forEach((key) =>
     c[key].forEach((entry, i) =>
@@ -674,6 +680,11 @@ export function crossCheck(c: ContentBundle): { errors: ContentIssue[]; launch: 
     const openDays = b.openingHours.filter((h) => !h.isClosed && h.openTime && h.closeTime);
     if (openDays.length === 0) launch.push({ file: 'branches.json', where: labelOf(b, i), message: 'cabang Aktif wajib punya jam buka' });
     if (!b.address) launch.push({ file: 'branches.json', where: labelOf(b, i), message: 'cabang Aktif wajib punya alamat' });
+    // Harga sama di semua cabang tetap valid; yang ditolak hanya cabang yang kehilangan SEMUA layanan karena "Tersedia di cabang"
+    const pricing = shown(c.pricing);
+    if (pricing.length > 0 && itemsAt(pricing, b.slug).length === 0) {
+      launch.push({ file: 'pricing.json', where: labelOf(b, i), message: `cabang Aktif "${b.name}" tidak punya satu pun layanan di Daftar Harga (cek "Tersedia di cabang")` });
+    }
   });
 
   if (!c.branches.some((b) => b.status === 'Aktif')) {

@@ -10,7 +10,7 @@ import { matches, REDUCED_MOTION_QUERY, SMOOTH_SCROLL_QUERY } from '@/lib/useMed
  * - dengan Lenis → lenis/snap tipe "proximity" (CSS snap bentrok dengan smooth scroll)
  */
 
-type SnapInstance = { addElement: (el: HTMLElement, options?: { align?: string[] }) => () => void; destroy: () => void };
+type SnapInstance = { addElement: (el: HTMLElement, options?: { align?: string[] }) => () => void; destroy: () => void; start: () => void; stop: () => void };
 
 let snap: SnapInstance | null = null;
 /** Elemen snap yang terdaftar (ditambahkan ke lenis/snap begitu siap) */
@@ -30,7 +30,19 @@ export async function startSmoothScroll(): Promise<() => void> {
   snap = new Snap(lenis, { type: 'proximity', distanceThreshold: '30%', duration: 0.9, debounce: 400 }) as unknown as SnapInstance;
   for (const el of snapTargets.keys()) snapTargets.set(el, snap.addElement(el, { align: ['start'] }));
 
+  // Snap berjalan 400 ms setelah gulir roda terakhir, dari posisi saat itu. Klik link #section tepat setelah menggulir
+  // (mis. gulir ke atas agar navbar muncul) membuat snap membelokkan lompatan ke section lain. Snap dijeda saat link
+  // diklik dan aktif lagi pada gulir roda/trackpad pengunjung berikutnya.
+  const pauseSnap = (e: MouseEvent) => {
+    if (e.target instanceof Element && e.target.closest('a[href*="#"]')) snap?.stop();
+  };
+  const resumeSnap = () => snap?.start();
+  document.addEventListener('click', pauseSnap, true);
+  lenis.on('virtual-scroll', resumeSnap);
+
   return () => {
+    document.removeEventListener('click', pauseSnap, true);
+    lenis.off('virtual-scroll', resumeSnap);
     snap?.destroy();
     snap = null;
     for (const el of snapTargets.keys()) snapTargets.set(el, null);

@@ -34,6 +34,6 @@ test('Daftar Harga: 3 kategori, harga "K" tanpa Rp, "Start from", deskripsi di b
   }
   await expect(section.locator('ul').first()).not.toContainText('Rp');
   await expect(section).not.toContainText('Item Lama Uji');
-  expect(E2E_PRICING.filter((p) => !('isActive' in p)).length).toBe(5);
+  expect(E2E_PRICING.filter((p) => !('isActive' in p)).length).toBe(6);
   await expectNoHorizontalScroll(page);
 });

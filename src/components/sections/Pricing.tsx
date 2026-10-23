@@ -17,8 +17,8 @@ import { Button } from '@/components/ui/Button';
 import styles from './Pricing.module.css';
 
 export function Pricing() {
-  const { effective, pageBranch, copy, openPicker } = useBranch();
-  // Harga sesuai cabang (harga khusus dari branchPrices, atau harga dasar)
+  const { effective, pageBranch, copy, select } = useBranch();
+  // Harga cabang halaman/pilihan pengunjung (harga per cabang menimpa harga utama); belum memilih → cabang Aktif pertama
   const state = useContent(() => getPricing(effective?.slug), [effective?.slug]);
   const book = useBooking();
 
@@ -34,17 +34,28 @@ export function Pricing() {
           <>
             <SectionTitle heading={data.heading} id="harga-title" tone="light" />
 
-            {(data.branchName || data.hasBranchPrices) && (
-              <p className={styles.branchNote}>
-                <span>
-                  {data.branchName ? fillTemplate(copy.labels.priceFor, { branch: data.branchName }) : copy.labels.priceVaries}
-                </span>
-                {!pageBranch && (
-                  <button type="button" className={styles.branchBtn} onClick={() => openPicker()}>
-                    {data.branchName ? copy.labels.changeBranch : copy.labels.pickBranch}
-                  </button>
+            {data.branchName && (
+              <div className={styles.branchBar}>
+                {/* Pemilih cabang (sinkron dengan cabang di navbar): hanya di beranda & bila harga/daftar berbeda antar cabang */}
+                {!pageBranch && !data.uniform && data.branchOptions.length > 1 && (
+                  <div className={styles.branchTabs} role="group" aria-label={copy.labels.pricePicker}>
+                    {data.branchOptions.map((b) => (
+                      <button
+                        key={b.slug}
+                        type="button"
+                        className={styles.branchTab}
+                        aria-pressed={b.slug === data.branchSlug}
+                        onClick={() => select(b.slug)}
+                      >
+                        {b.name}
+                      </button>
+                    ))}
+                  </div>
                 )}
-              </p>
+                <p className={styles.branchNote}>
+                  {data.uniform && !pageBranch ? copy.labels.priceAllBranches : fillTemplate(copy.labels.priceFor, { branch: data.branchName })}
+                </p>
+              </div>
             )}
 
             <PriceCategories categories={data.categories.filter((c) => c.items.length > 0)} priceFromLabel={data.priceFromLabel} />

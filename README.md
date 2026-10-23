@@ -118,7 +118,7 @@ Pages CMS belum bisa membuat dropdown dari isi file lain, jadi daftar cabang dis
 - **Cabang pilihan pengunjung** disimpan di `localStorage` (`cutless:branch`). Bila penyimpanan diblokir, situs tetap jalan dan pengunjung cukup memilih ulang.
 - **Pemilih cabang** (kota → cabang) ada di navbar, hero, section Lokasi, dan muncul otomatis saat tombol booking diklik sebelum cabang dipilih. Tombol **Cabang terdekat** memakai Geolocation hanya setelah pengunjung memberi izin. Posisi tidak dikirim ke mana pun; jarak dihitung di browser. Tombol ini muncul bila ada ≥2 cabang yang punya latitude/longitude.
 - **Pesan booking:** `Halo Cutless Hair Studio cabang [nama], saya mau booking [layanan] untuk [hari/jam].` dikirim ke WA cabang (atau WA barber bila diisi).
-- **Harga:** harga dasar berlaku di semua cabang, kecuali ada **Harga khusus cabang**. Sebelum cabang dipilih, harga yang berbeda antarcabang tampil sebagai "mulai" harga terendah. Daftar Harga: 3 kategori aktif (Haircut, Special Treatment, Woman Haircut & Treatment), harga tampil format "K" (100000 → 100K, `formatThousandsK`) + label "Start from". Kartu Layanan (`src/content/services.json`, Pages CMS → **Kartu Layanan**) deskriptif tanpa harga; kategori harga opsional hanya untuk tautan "Lihat harga". Meta description beranda & halaman cabang dibangun dari kategori Daftar Harga yang aktif (`src/content/serviceSeo.ts`, maks. 160 karakter).
+- **Harga:** harga utama berlaku di semua cabang, kecuali ada **Harga per cabang** (`branchPrices`); **Tersedia di cabang** (`branchSlugs`, kosong = semua) menyembunyikan item di cabang lain (`src/content/branchPricing.ts`). Pemilih cabang di Daftar Harga hanya tampil bila daftar/harga cabang Aktif berbeda (selain itu "Berlaku di semua cabang"); belum memilih → cabang Aktif pertama. `/cabang/<slug>/`: harga cabang itu (juga prerender + JSON-LD `priceRange`). Daftar Harga: 3 kategori aktif (Haircut, Special Treatment, Woman Haircut & Treatment), harga tampil format "K" (100000 → 100K, `formatThousandsK`) + label "Start from". Kartu Layanan (`src/content/services.json`, Pages CMS → **Kartu Layanan**) deskriptif tanpa harga; kategori harga opsional hanya untuk tautan "Lihat harga". Meta description beranda & halaman cabang dibangun dari kategori Daftar Harga yang aktif (`src/content/serviceSeo.ts`, maks. 160 karakter).
 - **Statistik:** jumlah cabang & hairstylist dihitung otomatis; angka lain dari Pengaturan Situs, masing-masing dengan toggle.
 
 ## 4. Gambar
@@ -299,7 +299,7 @@ Harga efektif satu layanan di satu cabang: `COALESCE(bp.price, pi.price)` dari `
 - [ ] Latitude/longitude kedua cabang (untuk tombol "Cabang terdekat" dan peta yang lebih tepat): Google Maps → klik kanan titik lokasi → klik angka koordinat untuk menyalin
 - [ ] Link Google Maps & foto cabang Cibubur
 - [ ] Tiap barber: cabang yang benar, foto asli; barber yang tidak bekerja lagi dinonaktifkan
-- [ ] Daftar Harga: cek harga dasar; isi **Harga khusus cabang** bila Cibubur berbeda
+- [ ] Daftar Harga: cek harga utama; isi **Harga per cabang** bila Cibubur berbeda
 - [ ] **Alamat website** sudah domain final (bila memakai domain sendiri)
 - [ ] Statistik: isi angka asli lalu nyalakan toggle yang ingin ditampilkan (rating/ulasan sesuai Google)
 - [ ] Testimoni asli (minimal 3) → nyalakan **Tampilkan section Testimoni**

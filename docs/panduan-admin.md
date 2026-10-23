@@ -98,7 +98,7 @@ Cabang baru muncul sebagai pilihan di menu Barber, Harga, Promo, dan Pengumuman 
 Daftar Harga tampil dalam **3 kategori** (urutan ini): **Haircut**, **Special Treatment**, **Woman Haircut & Treatment**. Harga ditulis singkat dengan akhiran **K** tanpa "Rp": `100000` tampil **100K**, `1500000` tampil **1500K**.
 
 1. Klik **Daftar Harga** → buka layanan yang mau diubah, misalnya *White Grooming*.
-2. Ubah **Harga (Rupiah)**: tulis **angka saja, tanpa titik dan tanpa "Rp"**. Contoh: `100000` (tampil *100K*).
+2. Ubah **Harga utama (Rupiah)**: tulis **angka saja, tanpa titik dan tanpa "Rp"**. Contoh: `100000` (tampil *100K*). Harga utama berlaku di **semua cabang**, kecuali cabang yang diisi di **Harga per cabang** (lihat di bawah).
 3. Klik **Save**.
 
 Lainnya:
@@ -117,7 +117,22 @@ Lainnya:
   ```
   Paket berlabel *Best Seller* tampil sebagai kartu yang menonjol.
 
-**Harga berbeda per cabang:** **Harga (Rupiah)** adalah harga dasar untuk semua cabang. Bila satu cabang berbeda, buka **Harga khusus cabang** → **Add an entry** → pilih **Cabang** → isi **Harga di cabang ini** → **Save**. Pengunjung yang sudah memilih cabang melihat harga cabangnya; yang belum memilih melihat *Start from* harga terendah.
+### Harga per cabang & "Tersedia di cabang"
+
+Saat ini semua cabang memakai **Harga utama**. Harga per cabang diisi hanya bila harga di suatu cabang **berbeda**:
+
+1. **Daftar Harga** → buka layanannya, mis. *Black Grooming*.
+2. **Harga per cabang** → **Add an entry** → pilih **Cabang** (mis. *Cibubur*) → isi **Harga di cabang ini** dengan angka saja tanpa titik, mis. `185000` → **Save**.
+3. Harga itu **menimpa Harga utama untuk cabang tersebut saja**; cabang lain tetap memakai Harga utama. Ulangi untuk cabang lain bila perlu (satu baris per cabang). Label **Start from** (kolom *Harga mulai*) dan format *K* berlaku juga untuk harga per cabang.
+4. Kembali ke harga utama: hapus baris cabang itu dari **Harga per cabang** → **Save**.
+
+**Tersedia di cabang** (pilihan ganda): kosongkan bila layanan ada di **semua cabang** (bawaan). Pilih satu atau beberapa cabang bila layanan **hanya ada di cabang tertentu**; di cabang lain layanan itu disembunyikan dari Daftar Harga dan dari halaman cabangnya. Jangan sampai satu cabang Aktif tidak punya layanan sama sekali: website **tidak akan diperbarui** di produksi sampai diperbaiki (lihat *Jika Save ditolak*).
+
+**Kapan pemilih cabang muncul di Daftar Harga (beranda)?**
+- Selama **semua cabang Aktif** punya layanan dan harga yang **sama persis**, pemilih cabang **tidak tampil** dan labelnya *Berlaku di semua cabang*.
+- Begitu **satu** harga cabang berbeda, atau **satu** layanan tidak tersedia di suatu cabang, pemilih cabang (mis. *Bogor Bantarjati | Cibubur*) **otomatis tampil** di atas daftar, dengan label *Harga cabang [nama]*. Pemilih ini sama dengan pilihan cabang di navbar: mengganti salah satunya ikut mengganti yang lain. Pengunjung yang belum memilih cabang melihat harga cabang Aktif pertama.
+- Halaman cabang (`/cabang/<nama-cabang>/`) selalu menampilkan harga cabang itu saja, tanpa pemilih. Harga ini juga dipakai Google (rentang harga cabang).
+- Kartu Layanan tetap tanpa harga.
 
 ---
 
@@ -489,6 +504,7 @@ Pesan muncul di pojok layar Pages CMS atau di bawah kolom (merah). Isian Anda **
 | *This field is required* / *Field requires at least one item* | Kolom wajib (bertanda *Required*) kosong / daftar wajib belum punya isian | Isi kolomnya, atau klik **Add an entry** |
 | *Maximum length is N characters* | Teks terlalu panjang | Persingkat sampai di bawah N (emoji dihitung 2 karakter) |
 | *Format harus 628xxxxxxxxxx* | Nomor WhatsApp salah format | Hanya angka, diawali `62`, tanpa `+`/spasi/strip |
+| Save berhasil, tetapi website tidak berubah; pemeriksaan menyebut *cabang Aktif "…" tidak punya satu pun layanan di Daftar Harga* | Semua layanan diberi **Tersedia di cabang** yang tidak memuat cabang itu | Daftar Harga → kosongkan **Tersedia di cabang** (atau tambahkan cabang itu) pada minimal satu layanan aktif → Save |
 | *Format harga: angka + K, mis. 45K atau 70–120K* | Harga layanan Cuci Sepatu ditulis dengan `Rp`, titik, atau spasi sebelum K | Tulis seperti `45K`, `100K`, `70–120K`; atau kosongkan |
 | Save berhasil, tetapi website tidak berubah dan PDF daftar menu baru tidak tampil | PDF lebih dari ±3 MB (pembaruan website dibatalkan, versi lama tetap tayang) | Kompres PDF di bawah 3 MB, upload ulang, pilih file itu, Save |
 | *Harus diawali https://* | Link tidak lengkap | Salin link lengkap dari browser (diawali `https://`) |

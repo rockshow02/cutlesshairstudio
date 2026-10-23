@@ -13,7 +13,9 @@
     "types": ["node"],
     "strict": true,
     "noUnusedLocals": true,
-    "noUnusedParameters": true
+    "noUnusedParameters": true,
+    "baseUrl": ".",
+    "paths": { "@/*": ["src/*"] }
   },
   "include": ["vite.config.ts", "scripts/vite-content-plugin.ts", "src/content/schema.ts", "src/lib/dates.ts", "worker/index.ts", "e2e/fixtures/content.ts"]
 }

@@ -84,8 +84,12 @@ export interface BranchCopy {
     /** {branch} */
     yourBranch: string;
     /** {branch} */
+    /** "Harga cabang {branch}" */
     priceFor: string;
-    priceVaries: string;
+    /** Label bila harga sama di semua cabang Aktif */
+    priceAllBranches: string;
+    /** aria-label grup pemilih cabang di Daftar Harga */
+    pricePicker: string;
     /** {branch} */
     barbersFor: string;
     noBarbers: string;

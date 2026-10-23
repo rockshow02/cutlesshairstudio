@@ -136,10 +136,18 @@ function shoeCareFixture(): Json {
   };
 }
 
-/** Daftar Harga uji: 3 kategori aktif (urutan tampil), item lama nonaktif */
+/**
+ * Daftar Harga uji: 3 kategori aktif (urutan tampil), item lama nonaktif. Harga per cabang (build E2E bawaan):
+ * Black Grooming Uji berharga lain di Cibubur, Hanya Bogor Uji hanya tersedia di Bogor → pemilih cabang tampil.
+ * Varian "uniform" (E2E_VARIANT=uniform, .env.e2e-uniform): daftar yang sama tanpa harga per cabang & "Tersedia di
+ * cabang" → semua cabang sama, pemilih tersembunyi.
+ */
+export const E2E_CIBUBUR_PRICE = { name: 'Black Grooming Uji', price: 185000, shown: '185K', base: '175K' } as const;
+export const E2E_BOGOR_ONLY = 'Hanya Bogor Uji';
 export const E2E_PRICING = [
   { name: 'White Grooming Uji', category: 'Haircut', description: 'Haircut + Hair Wash', price: 100000, priceFrom: false },
-  { name: 'Black Grooming Uji', category: 'Haircut', price: 175000, priceFrom: false },
+  { name: 'Black Grooming Uji', category: 'Haircut', price: 175000, priceFrom: false, branchPrices: [{ branchSlug: 'cibubur', price: E2E_CIBUBUR_PRICE.price }] },
+  { name: E2E_BOGOR_ONLY, category: 'Haircut', price: 120000, priceFrom: false, branchSlugs: ['bogor-bantarjati'] },
   { name: 'Coloring Fashion Uji', category: 'Special Treatment', description: 'Fashion / trend hair coloring', price: 400000, priceFrom: true },
   { name: 'Dreadlock Uji', category: 'Special Treatment', price: 1500000, priceFrom: true },
   { name: 'Woman Haircut Uji', category: 'Woman Haircut & Treatment', description: 'Haircut + Hair Wash', price: 150000, priceFrom: false },
@@ -158,12 +166,15 @@ function fixtureBranches(real: unknown): Json[] {
   return merged;
 }
 
-/** Terapkan data uji pada isi satu file src/content/<file> */
-export function applyE2EFixtures(file: string, data: unknown): unknown {
+/** Daftar Harga tanpa harga per cabang & "Tersedia di cabang" (varian uniform) */
+const uniformPricing = () => E2E_PRICING.map(({ branchPrices: _bp, branchSlugs: _bs, ...p }: Json) => p);
+
+/** Terapkan data uji pada isi satu file src/content/<file>. variant "uniform" = Daftar Harga sama di semua cabang */
+export function applyE2EFixtures(file: string, data: unknown, variant?: string): unknown {
   if (file === 'branches.json') return fixtureBranches(data);
   if (file === 'barbers.json') return E2E_BARBERS.map((b) => ({ ...b, photo: existingPhoto() }));
   if (file === 'shoeCare.json') return shoeCareFixture();
-  if (file === 'pricing.json') return E2E_PRICING.map((p, i) => ({ isActive: true, ...p, order: (i + 1) * 10 }));
+  if (file === 'pricing.json') return (variant === 'uniform' ? uniformPricing() : [...E2E_PRICING]).map((p, i) => ({ isActive: true, ...p, order: (i + 1) * 10 }));
   if (file === 'partners.json') {
     return {
       enabled: true,
