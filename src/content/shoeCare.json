@@ -27,32 +27,39 @@
   ],
   "services": [
     {
-      "name": "Fast Clean",
-      "description": "Pembersihan bagian luar dan sol.",
-      "estimate": "±1 hari",
+      "name": "Deep Cleaning",
+      "description": "Membersihkan seluruh bagian sepatu, dari upper, midsole, sampai outsole.",
+      "price": "45K",
       "isActive": true,
       "order": 10
     },
     {
-      "name": "Deep Clean",
-      "description": "Pembersihan menyeluruh bagian luar, dalam, sol, dan tali.",
-      "estimate": "±2–3 hari",
+      "name": "Unyellowing",
+      "description": "Menghilangkan warna kuning pada midsole sepatu.",
+      "price": "50K",
       "isActive": true,
       "order": 20
     },
     {
-      "name": "Unyellowing",
-      "description": "Mengurangi warna kuning pada sol karet.",
-      "estimate": "±3 hari",
+      "name": "Suede Renew",
+      "description": "Menghidupkan kembali bahan suede yang kusam agar terlihat seperti baru.",
+      "price": "50K",
       "isActive": true,
       "order": 30
     },
     {
-      "name": "Repaint",
-      "description": "Mewarnai ulang bagian yang pudar.",
-      "estimate": "±5 hari",
+      "name": "Kids Shoes",
+      "description": "Cuci sepatu anak dengan perawatan sesuai bahan.",
+      "price": "30K",
       "isActive": true,
       "order": 40
+    },
+    {
+      "name": "Sepatu Gunung",
+      "description": "Pembersihan sepatu gunung dan outdoor, harga menyesuaikan ukuran.",
+      "price": "70–120K",
+      "isActive": true,
+      "order": 50
     }
   ],
   "photos": [

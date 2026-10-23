@@ -75,7 +75,7 @@ import type {
 } from '@/content/schema';
 import { srcSetOf } from './responsiveImage';
 import { PRICE_CATEGORIES, priceCategoryAnchor } from '@/content/priceCategories';
-import { formatNumber } from './format';
+import { formatNumber, formatPriceText } from './format';
 import { isActiveNow, parseWIB, toIsoWIB } from './dates';
 import { fillTemplate, templateLink } from './whatsapp';
 
@@ -190,6 +190,7 @@ export function buildShoeCare(p: ShoeCareEntry | null | undefined, branches: Bra
       return {
         name: s.name,
         description: text(s.description),
+        price: text(s.price) ? formatPriceText(text(s.price)!) : undefined,
         estimate: text(s.estimate),
         ...(icon ? { icon } : {}),
         ...(image ? { image: responsiveImage(image, s.name, '(min-width: 768px) 33vw, 100vw', { width: 1200, height: 900 }) } : {}),
@@ -198,10 +199,15 @@ export function buildShoeCare(p: ShoeCareEntry | null | undefined, branches: Bra
     }),
     photos,
     notes: (p.notes ?? []).map((n) => n.trim()).filter(Boolean),
-    menuUrl: text(p.menuUrl),
+    menuUrl: shoeCareMenuUrl(p),
     mainHref: link(copy.genericService),
     copy,
   };
+}
+
+/** Tombol "Lihat Daftar Menu": file PDF → Link Daftar Menu → tidak ada (tombol tidak tampil) */
+export function shoeCareMenuUrl(p: Pick<ShoeCareEntry, 'menuFile' | 'menuUrl'>): string | undefined {
+  return text(p.menuFile) ?? text(p.menuUrl);
 }
 
 /**

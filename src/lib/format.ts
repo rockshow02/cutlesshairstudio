@@ -26,6 +26,11 @@ export function formatThousandsK(value: number): string {
   return `${Number.isInteger(k) ? k : k.toFixed(1).replace('.', ',')}K`;
 }
 
+/** Harga teks Partner Cuci Sepatu (sudah lolos SHOE_CARE_PRICE_PATTERN) → gaya Daftar Harga: "45k" → "45K", "70 - 120K" → "70–120K" */
+export function formatPriceText(value: string): string {
+  return value.replace(/\s+/g, '').replace(/-/g, '–').toUpperCase();
+}
+
 /** 5000 -> "5.000" */
 export function formatNumber(value: number): string {
   return numberFormatter.format(value);

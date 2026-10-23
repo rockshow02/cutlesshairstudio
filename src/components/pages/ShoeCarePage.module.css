@@ -1,4 +1,8 @@
-/* Halaman /cuci-sepatu/: foto besar, judul tegas, jarak lega. Mobile-first (360 px), warna hanya dari token. */
+/*
+ * Halaman /cuci-sepatu/. Mobile-first (360 px), warna & jarak hanya dari token.
+ * Ukuran hero (tinggi, judul, subjudul, tombol), harga, jam buka, dan alamat memakai kelas beranda
+ * (Hero/Pricing/Location.module.css); file ini hanya mengatur tata letak halaman.
+ */
 
 .missing {
   padding-top: calc(var(--header-offset) + var(--nav-safe-top) + var(--space-8));
@@ -8,72 +12,100 @@
   font-size: var(--fs-h2);
 }
 
-/* ---------- Hero ---------- */
+/* ---------- Hero: grid & tinggi dari .hero beranda; isi rata tengah ---------- */
 .hero {
-  position: relative;
-  z-index: var(--z-content);
-  display: grid;
-  min-height: min(92svh, 56rem);
-  background: var(--c-ink);
   color: var(--c-bone);
-  overflow: hidden;
-  isolation: isolate;
 }
-.hero > * {
-  grid-area: 1 / 1;
-  min-width: 0;
+/* Seperti .media beranda: ukuran foto (mis. potret) tidak ikut menentukan tinggi hero */
+.heroMedia,
+.heroShade {
+  grid-column: 1;
+  grid-row: 1 / -1;
+}
+.heroMedia {
+  z-index: -2;
+  min-height: 0;
+  overflow: hidden;
+  contain: size;
+}
+.heroMedia picture {
+  display: contents;
 }
 .heroBg {
-  z-index: -2;
   width: 100%;
   height: 100%;
   object-fit: cover;
-  contain: size;
 }
+/*
+ * Overlay rata (bukan gradien kiri seperti beranda) karena teks di tengah. 0,75 di area teks: kontras tetap ≥ 4.5:1
+ * walau foto putih polos (bone 7,8:1 · subjudul 6,1:1 · kicker sand-light 5,0:1). Desktop: sisi kiri/kanan di luar
+ * kolom teks lebih terang agar foto terlihat; pita atas menjaga navbar tetap terbaca.
+ */
 .heroShade {
   z-index: -1;
-  background:
-    linear-gradient(180deg, rgba(12, 16, 20, 0.65) 0%, rgba(12, 16, 20, 0.1) 30%),
-    linear-gradient(0deg, rgba(12, 16, 20, 0.96) 0%, rgba(12, 16, 20, 0.82) 40%, rgba(12, 16, 20, 0.3) 100%);
+  background: rgba(12, 16, 20, 0.75);
 }
+@media (min-width: 1024px) {
+  .heroShade {
+    background:
+      linear-gradient(180deg, rgba(12, 16, 20, 0.6) 0%, rgba(12, 16, 20, 0) 22%),
+      linear-gradient(
+        90deg,
+        rgba(12, 16, 20, 0.4) 0%,
+        rgba(12, 16, 20, 0.75) calc(50% - 22rem),
+        rgba(12, 16, 20, 0.75) calc(50% + 22rem),
+        rgba(12, 16, 20, 0.4) 100%
+      );
+  }
+}
+/* Baris konten hero beranda (baris 2), di tengah vertikal; jarak atas/bawah sama agar tidak menempel di bawah layar */
 .heroInner {
-  align-self: end;
-  width: 100%;
-  padding-top: calc(var(--header-offset) + var(--nav-safe-top) + var(--space-8));
-  padding-bottom: var(--space-8);
+  grid-column: 1;
+  grid-row: 2;
+  align-self: center;
+  min-width: 0;
+  padding-block: var(--space-8);
+  text-align: center;
+}
+.heroInner > * {
+  max-width: 40rem;
+  margin-inline: auto;
 }
 .heroLogo {
+  display: block;
   width: auto;
-  height: 64px;
+  height: 56px;
   max-width: 160px;
   margin-bottom: var(--space-5);
   object-fit: contain;
 }
+/* Kicker di tengah: garis dekoratif di kedua sisi (warna seperti kicker hero beranda) */
+.heroKicker {
+  color: var(--c-sand-light);
+}
+.heroKicker::after,
+.balancedKicker::after {
+  content: '';
+  flex: none;
+  width: 28px;
+  height: 1px;
+  background: currentColor;
+}
 .heroTitle {
-  max-width: 18ch;
-  font-size: var(--fs-display);
-  line-height: 0.98;
-  letter-spacing: -0.03em;
-  text-transform: uppercase;
   overflow-wrap: anywhere;
 }
 .heroTagline {
-  max-width: 36rem;
-  margin-top: var(--space-4);
+  margin-bottom: var(--space-3);
   font-size: var(--fs-lg);
   font-weight: 600;
-}
-.heroText {
-  max-width: 36rem;
-  margin-top: var(--space-3);
-  color: var(--c-bone-dim);
 }
 .heroMeta {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
+  justify-content: center;
   gap: var(--space-3);
-  margin-top: var(--space-5);
+  margin-bottom: var(--space-6);
 }
 .available {
   display: inline-flex;
@@ -93,28 +125,20 @@
   display: flex;
   gap: var(--space-3);
   align-items: flex-start;
-  max-width: 36rem;
-  margin-top: var(--space-4);
+  margin-bottom: var(--space-6);
   padding: var(--space-3) var(--space-4);
   border-left: 2px solid var(--c-sand);
   background: var(--c-ink-2);
   font-size: var(--fs-sm);
+  text-align: left;
 }
 .notice svg {
   flex: none;
   color: var(--c-sand);
 }
+/* .ctas beranda (kolom di HP, baris ≥ 560 px) + rata tengah */
 .heroActions {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-  margin-top: var(--space-6);
-}
-@media (min-width: 600px) {
-  .heroActions {
-    flex-direction: row;
-    flex-wrap: wrap;
-  }
+  justify-content: center;
 }
 
 /* ---------- About ---------- */
@@ -124,7 +148,7 @@
 }
 @media (min-width: 900px) {
   .aboutWithImage {
-    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
     gap: var(--space-8);
     align-items: center;
   }
@@ -132,7 +156,7 @@
 .paragraphs {
   display: grid;
   gap: var(--space-4);
-  max-width: 40rem;
+  max-width: 65ch;
   margin-top: calc(var(--section-head-gap) * -0.4);
   color: var(--c-ink-dim);
 }
@@ -143,7 +167,7 @@
 .aboutMedia {
   overflow: hidden;
   border-radius: var(--radius-lg);
-  aspect-ratio: 4 / 5;
+  aspect-ratio: 4 / 3;
   background: var(--c-paper-2);
 }
 .aboutMedia picture {
@@ -156,9 +180,10 @@
 }
 .advantages {
   display: grid;
-  gap: var(--space-4);
+  gap: var(--space-5);
   margin: var(--space-7) 0 0;
-  padding: 0;
+  padding: var(--space-7) 0 0;
+  border-top: 1px solid var(--c-line-dark);
   list-style: none;
 }
 @media (min-width: 600px) {
@@ -166,15 +191,19 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
+@media (min-width: 1024px) {
+  .advantages {
+    grid-template-columns: repeat(var(--adv-cols, 3), minmax(0, 1fr));
+  }
+}
 .advantage {
-  display: flex;
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr);
   gap: var(--space-3);
-  align-items: flex-start;
-  min-width: 0;
+  align-items: start;
 }
 .advIcon {
   display: inline-grid;
-  flex: none;
   place-items: center;
   width: 44px;
   height: 44px;
@@ -184,7 +213,7 @@
 }
 .advTitle {
   display: block;
-  margin-bottom: var(--space-1);
+  margin-block: var(--space-1);
 }
 .advText {
   display: block;
@@ -192,7 +221,7 @@
   color: var(--c-ink-dim);
 }
 
-/* ---------- Layanan ---------- */
+/* ---------- Layanan: 1 / 2 / 3 kolom, kartu rata tinggi, baris terakhir di tengah ---------- */
 .services {
   display: grid;
   gap: var(--space-4);
@@ -200,18 +229,48 @@
   padding: 0;
   list-style: none;
 }
+.services > li {
+  display: grid;
+  min-width: 0;
+}
+/* Tablet: 2 kolom = 4 lajur × span 2 (semua baris setinggi kartu tertinggi), kartu terakhir sendirian → lajur 2–3 (tengah) */
 @media (min-width: 600px) {
   .services {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-auto-rows: 1fr;
+  }
+  .services > li {
+    grid-column: span 2;
+  }
+  .services > li:last-child:nth-child(2n + 1) {
+    grid-column: 2 / span 2;
   }
 }
+/* Desktop: 3 kolom = 6 lajur × span 2; sisa 2 kartu → lajur 2–5, sisa 1 kartu → lajur 3–4 */
 @media (min-width: 1024px) {
   .services {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(6, minmax(0, 1fr));
     gap: var(--space-5);
+  }
+  .services > li,
+  .services > li:last-child:nth-child(2n + 1) {
+    grid-column: span 2;
+  }
+  .services > li:nth-last-child(2):nth-child(3n + 1) {
+    grid-column: 2 / span 2;
+  }
+  .services > li:last-child:nth-child(3n + 1) {
+    grid-column: 3 / span 2;
   }
 }
 .service {
+  gap: var(--space-3);
+}
+/* Judul + deskripsi mengisi ruang: harga, estimasi, dan tombol sejajar di bawah semua kartu satu baris */
+.serviceBody {
+  display: grid;
+  flex: 1 0 auto;
+  align-content: start;
   gap: var(--space-3);
 }
 .serviceImg {
@@ -238,6 +297,18 @@
   font-size: var(--fs-sm);
   color: var(--c-bone-dim);
 }
+.price {
+  font-size: var(--fs-lg);
+}
+.priceMissing {
+  font-size: var(--fs-sm);
+  color: var(--c-bone-dim);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.priceMissing:hover {
+  color: var(--c-bone);
+}
 .estimate {
   display: inline-flex;
   align-items: center;
@@ -247,27 +318,43 @@
 }
 .servicesMenu {
   display: flex;
-  justify-content: center;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-4);
   margin-top: var(--space-7);
+  text-align: center;
+}
+.servicesMenu p {
+  max-width: 65ch;
+  font-size: var(--fs-sm);
+  color: var(--c-bone-dim);
 }
 
-/* ---------- Galeri ---------- */
+/* ---------- Galeri: rasio seragam; 1–2 foto di tengah dengan lebar kolom biasa (tidak meregang) ---------- */
 .gallery {
-  display: grid;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
   gap: var(--space-3);
   margin: 0;
   padding: 0;
   list-style: none;
 }
+.gallery > li {
+  flex: 0 1 100%;
+  min-width: 0;
+}
 @media (min-width: 600px) {
-  .gallery {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+  .gallery > li {
+    flex-basis: calc((100% - var(--space-3)) / 2);
   }
 }
 @media (min-width: 1024px) {
   .gallery {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: var(--space-4);
+  }
+  .gallery > li {
+    flex-basis: calc((100% - var(--space-4) * 2) / 3);
   }
 }
 .photo {
@@ -300,34 +387,7 @@
   }
 }
 
-/* ---------- Catatan & CTA ---------- */
-.closing {
-  display: grid;
-  gap: var(--space-8);
-}
-.notes {
-  max-width: 44rem;
-  padding: var(--space-5);
-  border: 1px solid var(--c-line-light);
-  border-radius: var(--radius);
-  font-size: var(--fs-sm);
-  color: var(--c-bone-dim);
-}
-.notesTitle {
-  margin-bottom: var(--space-3);
-  font-family: var(--f-body);
-  font-size: var(--fs-sm);
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--c-bone);
-}
-.notes ul {
-  display: grid;
-  gap: var(--space-2);
-  margin: 0;
-  padding-left: 1.1em;
-}
+/* ---------- CTA penutup ---------- */
 .cta {
   max-width: 44rem;
   margin-inline: auto;
@@ -335,13 +395,12 @@
 }
 .ctaTitle {
   margin-bottom: var(--space-4);
-  font-size: clamp(2rem, 1rem + 5vw, 4.5rem);
-  line-height: 0.98;
-  letter-spacing: -0.03em;
-  text-transform: uppercase;
+  font-size: var(--fs-h2);
+  line-height: 1.08;
+  letter-spacing: -0.025em;
 }
 .ctaText {
-  max-width: 32rem;
+  max-width: 65ch;
   margin: 0 auto var(--space-6);
   color: var(--c-bone-dim);
 }
@@ -350,51 +409,46 @@
   justify-content: center;
 }
 
-/* ---------- Lokasi ---------- */
-.location {
+/* ---------- Lokasi + catatan: satu kontainer, dua kolom ≥ 768 px ---------- */
+.info {
   display: grid;
-  gap: var(--space-6);
+  gap: var(--space-7);
+  /* HP & tablet: ruang di bawah agar tombol WhatsApp melayang tidak menutupi tombol terakhir (seperti Lokasi beranda) */
+  padding-bottom: var(--fab-safe);
 }
 @media (min-width: 768px) {
-  .location {
+  .info {
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: var(--space-8);
     align-items: start;
   }
 }
-.address {
-  display: flex;
-  gap: var(--space-3);
-  align-items: flex-start;
-  max-width: 30rem;
-  margin-bottom: var(--space-5);
+@media (min-width: 1024px) {
+  .info {
+    padding-bottom: 0;
+  }
 }
-.address svg {
-  flex: none;
-  margin-top: 3px;
+.notes {
+  min-width: 0;
+}
+.notesTitle {
+  margin-bottom: var(--space-3);
+  font-family: var(--f-body);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
   color: var(--c-taupe-dark);
 }
-.hours {
-  width: 100%;
-  max-width: 26rem;
-  border-collapse: collapse;
-  font-size: var(--fs-sm);
+/* Baris ikon + teks sama dengan alamat di Lokasi beranda (.lines p) */
+.notesList {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  color: var(--c-ink-dim);
 }
-.hours caption {
-  margin-bottom: var(--space-2);
-  text-align: left;
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  font-size: var(--fs-xs);
-}
-.hours th,
-.hours td {
-  padding: var(--space-2) 0;
-  border-bottom: 1px solid var(--c-line-dark);
-  text-align: left;
-  font-weight: 400;
-}
-.hours td {
-  text-align: right;
-  font-variant-numeric: tabular-nums;
+.notesList li {
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr);
+  gap: var(--space-3);
 }

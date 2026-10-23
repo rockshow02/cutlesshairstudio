@@ -8,7 +8,8 @@
  *
  * Barber diganti seluruhnya dengan dua barber uji di cabang Bogor (satu bernomor WhatsApp sendiri, satu memakai
  * nomor cabang). Fotonya meminjam gambar yang sudah ada di public/uploads (tidak ada file uji yang ikut ter-deploy).
- * Logo Partner diganti 5 partner uji (lihat E2E_PARTNERS). Partner Cuci Sepatu dinyalakan dengan data uji (E2E_SHOE_CARE).
+ * Logo Partner diganti 5 partner uji (lihat E2E_PARTNERS). Partner Cuci Sepatu dinyalakan dengan data uji (E2E_SHOE_CARE);
+ * satu-satunya file uji yang ikut build E2E adalah PDF daftar menu di e2e/fixtures/public (tidak pernah ke public/).
  * Daftar Harga diganti daftar uji 3 kategori (E2E_PRICING): format "K" & "Start from".
  */
 import { existsSync, readdirSync } from 'node:fs';
@@ -82,16 +83,23 @@ function existingLogo(): string {
   return `/uploads/site/${file}`;
 }
 
-/** Partner Cuci Sepatu uji (nama fiktif, tanpa harga) di cabang Bogor, nomor WhatsApp partner sendiri */
+/**
+ * Partner Cuci Sepatu uji (nama fiktif) di cabang Bogor, nomor WhatsApp partner sendiri. 5 layanan berharga (termasuk
+ * rentang yang ditulis "70-120k" → tampil "70–120K"). Daftar menu: PDF uji (e2e/fixtures/public, hanya disalin ke dist/
+ * build E2E) DAN link; PDF harus menang.
+ */
 export const E2E_SHOE_CARE = {
   name: 'Cuci Sepatu Uji',
   branchSlug: 'bogor-bantarjati',
   whatsappNumber: '6281100000505',
   services: [
-    { name: 'Deep Clean Uji', description: 'Pembersihan menyeluruh bagian luar dan dalam.', estimate: '±2 hari', icon: 'wash' },
-    { name: 'Fast Clean Uji', description: 'Pembersihan bagian luar.', estimate: '±30 menit', icon: 'clock' },
-    { name: 'Unyellowing Uji', description: 'Mengurangi warna kuning pada sol.', estimate: '' },
+    { name: 'Deep Clean Uji', description: 'Pembersihan menyeluruh bagian luar dan dalam.', price: '45K', shownPrice: '45K', estimate: '±2 hari', icon: 'wash' },
+    { name: 'Unyellowing Uji', description: 'Mengurangi warna kuning pada sol.', price: '50K', shownPrice: '50K', estimate: '' },
+    { name: 'Suede Uji', description: 'Perawatan bahan suede yang kusam agar terlihat seperti baru lagi.', price: '50K', shownPrice: '50K', estimate: '' },
+    { name: 'Kids Uji', description: 'Sepatu anak.', price: '30K', shownPrice: '30K', estimate: '' },
+    { name: 'Gunung Uji', description: 'Sepatu gunung, harga menyesuaikan ukuran.', price: '70-120k', shownPrice: '70–120K', estimate: '' },
   ],
+  menuFile: '/uploads/shoe-care/daftar-menu-uji.pdf',
   menuUrl: 'https://drive.google.com/file/d/uji-daftar-menu/view',
 } as const;
 
@@ -102,21 +110,22 @@ function shoeCareFixture(): Json {
     showTeaser: true,
     branchSlug: E2E_SHOE_CARE.branchSlug,
     name: E2E_SHOE_CARE.name,
-    logo: '',
+    logo: existingLogo(),
     tagline: 'Tagline uji cuci sepatu.',
     description: 'Deskripsi uji layanan cuci sepatu partner.',
     heroImage: '',
     aboutTitle: 'Tentang partner uji',
     aboutParagraphs: ['Paragraf About Us uji pertama.', 'Paragraf About Us uji kedua.'],
-    aboutImage: '',
-    aboutImageAlt: '',
+    aboutImage: photo,
+    aboutImageAlt: 'Foto About Us uji',
+    menuFile: E2E_SHOE_CARE.menuFile,
     menuUrl: E2E_SHOE_CARE.menuUrl,
     advantages: [
       { title: 'Keunggulan uji satu', description: 'Deskripsi keunggulan satu.', icon: 'check' },
       { title: 'Keunggulan uji dua', description: 'Deskripsi keunggulan dua.', icon: 'clock' },
       { title: 'Keunggulan uji tiga', description: 'Deskripsi keunggulan tiga.', icon: 'wash' },
     ],
-    services: E2E_SHOE_CARE.services.map((s, i) => ({ ...s, isActive: true, order: (i + 1) * 10 })),
+    services: E2E_SHOE_CARE.services.map(({ shownPrice: _shown, ...s }, i) => ({ ...s, isActive: true, order: (i + 1) * 10 })),
     photos: [
       { image: photo, alt: 'Foto hasil uji satu' },
       { image: photo, alt: 'Foto hasil uji dua' },

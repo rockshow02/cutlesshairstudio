@@ -17,6 +17,9 @@ export interface CmsMedia {
   name: string;
   input: string;
   output: string;
+  /** Ekstensi yang diizinkan folder ini (categories di .pages.yml diubah Pages CMS menjadi daftar ekstensi) */
+  extensions?: string[];
+  categories?: string[];
 }
 const IMAGE_EXT = ['jpg', 'jpeg', 'apng', 'png', 'gif', 'svg', 'ico', 'avif', 'bmp', 'tif', 'tiff', 'webp'];
 let mediaConfigs: CmsMedia[] = [];
@@ -31,7 +34,7 @@ export interface CmsField {
   required?: boolean;
   default?: unknown;
   list?: boolean | { min?: number; max?: number; default?: unknown };
-  options?: { maxlength?: number; minlength?: number; min?: number; max?: number; multiple?: boolean; media?: string | false; values?: (string | { name?: string; value?: string })[] };
+  options?: { maxlength?: number; minlength?: number; min?: number; max?: number; multiple?: boolean; media?: string | false; extensions?: string[]; values?: (string | { name?: string; value?: string })[] };
   pattern?: string | { regex: string; message?: string };
   fields?: CmsField[];
 }
@@ -116,8 +119,24 @@ function checkScalar(f: CmsField, v: unknown, at: string, out: string[]) {
       if (!IMAGE_EXT.includes(ext)) fail(`ekstensi .${ext} bukan gambar`);
       return;
     }
+    case 'file': {
+      // fields/core/file: path di folder media; ekstensi = options.extensions ∩ ekstensi media (kosong = semua)
+      if (v !== null && v !== undefined && typeof v !== 'string') return fail('harus path file');
+      if (!v) return f.required ? fail('wajib diisi') : undefined;
+      const media = f.options?.media === false ? undefined : mediaConfigs.find((m) => m.name === f.options?.media) ?? mediaConfigs[0];
+      let path = v as string;
+      if (media) {
+        if (path.startsWith(media.output)) path = `${media.input}/${path.slice(media.output.length).replace(/^\//, '')}`.replace(/^\//, '');
+        if (!path.startsWith(media.input)) return fail(`harus di folder media ${media.output}`);
+      }
+      const mediaExt = media?.extensions ?? (media?.categories?.includes('image') ? IMAGE_EXT : undefined);
+      const allowed = (f.options?.extensions ?? mediaExt ?? []).filter((e) => !mediaExt || mediaExt.includes(e));
+      const ext = (path.split('/').pop()!.split('.').pop() ?? '').toLowerCase();
+      if (allowed.length && !allowed.includes(ext)) fail(`ekstensi .${ext} tidak diizinkan (${allowed.join(', ')})`);
+      return;
+    }
     default:
-      // date, image, file, rich-text, code: teks
+      // date, rich-text, code: teks
       if (typeof v !== 'string') return fail('harus teks');
       if (f.required && v.length < 1) fail('wajib diisi');
   }

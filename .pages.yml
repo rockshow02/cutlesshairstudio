@@ -81,6 +81,13 @@ media:
     output: /uploads/shoe-care
     categories: [image]
     rename: safe
+  # Folder yang sama, khusus PDF (field "File daftar menu"). Field file hanya menerima ekstensi yang diizinkan media-nya.
+  - name: shoe-care-menu
+    label: Daftar Menu Cuci Sepatu (PDF)
+    input: public/uploads/shoe-care
+    output: /uploads/shoe-care
+    extensions: [pdf]
+    rename: safe
   - name: partner-logos
     label: Logo Partner
     input: public/uploads/partner-logos
@@ -456,10 +463,17 @@ content:
         description: "Wajib bila Foto About Us diisi. Maksimal 150 karakter."
         options:
           maxlength: 150
+      - name: menuFile
+        label: File daftar menu (PDF)
+        type: file
+        description: "Opsional: daftar menu lengkap partner dalam bentuk PDF, maksimal ±3 MB (lebih besar = website gagal diperbarui). Tombol Lihat Daftar Menu membuka file ini di tab baru. Bila diisi, Link Daftar Menu di bawah tidak dipakai."
+        options:
+          media: shoe-care-menu
+          extensions: [pdf]
       - name: menuUrl
         label: Link Daftar Menu
         type: string
-        description: "Opsional: daftar menu & harga partner (boleh link Google Drive), harus diawali https://. Tombol Lihat Daftar Menu dibuka di tab baru dan tidak tampil bila kosong."
+        description: "Opsional, dipakai bila File daftar menu (PDF) kosong: link daftar menu & harga partner (boleh Google Drive), harus diawali https://. Bila keduanya kosong, tombol Lihat Daftar Menu tidak tampil."
         pattern:
           regex: '^(https://\S+)?$'
           message: Harus diawali https://
@@ -500,7 +514,7 @@ content:
         list:
           min: 1
           max: 8
-        description: "1–8 layanan, tampil TANPA harga (harga ada di Daftar Menu). Tiap layanan punya tombol Pesan via WhatsApp yang menyebut nama layanannya."
+        description: "1–8 layanan. Tiap layanan punya tombol Pesan via WhatsApp yang menyebut nama layanannya. Harga opsional; layanan tanpa harga menampilkan Lihat di daftar menu."
         fields:
           - name: name
             label: Nama layanan
@@ -515,6 +529,15 @@ content:
             description: "Opsional. Maksimal 120 karakter."
             options:
               maxlength: 120
+          - name: price
+            label: Harga
+            type: string
+            description: "Opsional, format seperti Daftar Harga: angka + K, mis. 45K, 100K, atau rentang 70–120K. Kosong = tampil Lihat di daftar menu. Maksimal 20 karakter."
+            pattern:
+              regex: '^((\d{1,4}(,\d)?\s?[–-]\s?)?\d{1,4}(,\d)?[Kk])?$'
+              message: "Format harga: angka + K, mis. 45K atau 70–120K"
+            options:
+              maxlength: 20
           - name: estimate
             label: Estimasi waktu
             type: string
