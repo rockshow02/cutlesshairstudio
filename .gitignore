@@ -1,6 +1,7 @@
 # Dependencies & build output
 node_modules/
 dist/
+dist-e2e-uniform/
 
 # Env: .env.development/.env.staging/.env.production/.env.example DI-COMMIT (tanpa rahasia).
 # Override pribadi tidak di-commit.
