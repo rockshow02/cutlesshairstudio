@@ -4,9 +4,8 @@
   "isDemo": false,
   "branchSlug": "bogor-bantarjati",
   "name": "Fotless",
-  "aboutTitle": "Tentang Kami",
   "aboutParagraphs": [
-    "Titipkan sepatu saat berkunjung ke Cutless Bogor Bantarjati, dikerjakan oleh partner cuci sepatu kami."
+    "FOTLESS Shoe Lab adalah layanan perawatan dan restorasi sepatu profesional (premium sneaker care & treatment) yang dirancang fleksibel untuk berdiri sendiri maupun diintegrasikan ke dalam ekosistem lifestyle/groominghub by CUTLESS HAIR STUDIO."
   ],
   "advantages": [
     {
@@ -29,35 +28,30 @@
     {
       "name": "Deep Cleaning",
       "description": "Membersihkan seluruh bagian sepatu, dari upper, midsole, sampai outsole.",
-      "price": "45K",
       "isActive": true,
       "order": 10
     },
     {
       "name": "Unyellowing",
       "description": "Menghilangkan warna kuning pada midsole sepatu.",
-      "price": "50K",
       "isActive": true,
       "order": 20
     },
     {
       "name": "Suede Renew",
       "description": "Menghidupkan kembali bahan suede yang kusam agar terlihat seperti baru.",
-      "price": "50K",
       "isActive": true,
       "order": 30
     },
     {
       "name": "Kids Shoes",
       "description": "Cuci sepatu anak dengan perawatan sesuai bahan.",
-      "price": "30K",
       "isActive": true,
       "order": 40
     },
     {
       "name": "Sepatu Gunung",
       "description": "Pembersihan sepatu gunung dan outdoor, harga menyesuaikan ukuran.",
-      "price": "70–120K",
       "isActive": true,
       "order": 50
     }
