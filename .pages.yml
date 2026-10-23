@@ -260,10 +260,10 @@ content:
         options:
           values: [Haircut, Special Treatment, Woman Haircut & Treatment, Haircut & Grooming, Wanita, Treatment, Coloring, Perming, Braids & Dreadlock, Shaving, Kids, Paket]
       - name: price
-        label: Harga (Rupiah)
+        label: Harga utama (Rupiah)
         type: number
         required: true
-        description: "Angka saja, tanpa titik dan tanpa \"Rp\". Contoh: 75000"
+        description: "Berlaku di semua cabang, kecuali cabang yang diisi di Harga per cabang. Angka saja, tanpa titik dan tanpa \"Rp\". Contoh: 75000"
         options:
           min: 0
       - name: priceFrom
@@ -284,9 +284,9 @@ content:
         options:
           values: [Best Seller, Baru, Promo]
       - name: branchPrices
-        label: Harga khusus cabang
+        label: Harga per cabang
         type: object
-        description: "Opsional. Kosongkan bila harga sama di semua cabang. Isi hanya untuk cabang yang harganya berbeda."
+        description: "Opsional. Kosongkan bila harga sama di semua cabang (memakai Harga utama). Tambah satu baris untuk tiap cabang yang harganya BERBEDA: pilih cabang, lalu isi harga cabang itu (angka saja tanpa titik, mis. 120000). Harga per cabang menimpa Harga utama untuk cabang itu saja."
         list:
           collapsible:
             collapsed: true
@@ -308,8 +308,22 @@ content:
             label: Harga di cabang ini (Rupiah)
             type: number
             required: true
+            description: "Angka saja, tanpa titik dan tanpa \"Rp\". Contoh: 120000"
             options:
               min: 0
+      - name: branchSlugs
+        label: Tersedia di cabang
+        type: select
+        description: "Kosongkan = tersedia di SEMUA cabang. Pilih satu atau beberapa cabang bila layanan ini hanya ada di cabang tertentu (di cabang lain layanan disembunyikan)."
+        options:
+          multiple: true
+          # @branch-options-start (diisi otomatis dari branches.json oleh scripts/sync-pages-config.mjs)
+          values:
+            - name: "bogor-bantarjati"
+              label: "Bogor Bantarjati"
+            - name: "cibubur"
+              label: "Cibubur"
+          # @branch-options-end
       - name: order
         label: Urutan
         type: number

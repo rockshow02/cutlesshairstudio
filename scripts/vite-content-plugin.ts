@@ -24,6 +24,10 @@ import { srcSetOf, type ImageMeta } from '../src/lib/responsiveImage';
 import { applyE2EFixtures } from '../e2e/fixtures/content';
 import { activeCategoryNames, branchDescription, homeDescription } from '../src/content/serviceSeo';
 import { SHOE_CARE_PATH, shoeCareDescription, shoeCareImage, shoeCareRedirects, shoeCareTitle, shoeCareVisible } from '../src/content/shoeCareSeo';
+import { itemsAt, priceAt, priceRangeAt } from '../src/content/branchPricing';
+import { PRICE_CATEGORIES } from '../src/content/priceCategories';
+import { pricingCopy } from '../src/content/pricing';
+import { formatThousandsK } from '../src/lib/format';
 
 const VIRTUAL_ID = 'virtual:image-meta';
 const RESOLVED_ID = `\0${VIRTUAL_ID}`;
@@ -82,7 +86,7 @@ interface LoadResult {
  * `fixtures`: build E2E (mode e2e, E2E_FIXTURES=1 di .env.e2e) memakai data uji tetap dari e2e/fixtures/content.ts
  * agar tes tidak bergantung pada isi CMS (mis. status cabang).
  */
-export async function loadContent(root: string, { fixtures = false }: { fixtures?: boolean } = {}): Promise<LoadResult> {
+export async function loadContent(root: string, { fixtures = false, variant }: { fixtures?: boolean; variant?: string } = {}): Promise<LoadResult> {
   const contentDir = path.join(root, 'src', 'content');
   const publicDir = path.join(root, 'public');
   const errors: string[] = [];
@@ -92,7 +96,7 @@ export async function loadContent(root: string, { fixtures = false }: { fixtures
     let data: unknown;
     try {
       data = JSON.parse(await readFile(path.join(contentDir, file), 'utf8'));
-      if (fixtures) data = applyE2EFixtures(file, data);
+      if (fixtures) data = applyE2EFixtures(file, data, variant);
     } catch (error) {
       errors.push(`  • ${file}: file tidak bisa dibaca sebagai JSON (${(error as Error).message})`);
       continue;
@@ -218,8 +222,29 @@ function branchJsonLd(b: BranchEntry, bundle: ContentBundle) {
         }
       : {}),
     ...(b.googleMapsUrl ? { hasMap: b.googleMapsUrl } : {}),
+    ...(branchPriceRange(b, bundle) ? { priceRange: branchPriceRange(b, bundle) } : {}),
     parentOrganization: { '@type': 'Organization', name: siteName, url: `${siteUrl}/` },
   };
+}
+
+const rupiah = (n: number) => `Rp${new Intl.NumberFormat('id-ID').format(n)}`;
+
+/** JSON-LD priceRange dari harga cabang itu (harga per cabang menimpa harga utama), mis. "Rp60.000 - Rp450.000" */
+export function branchPriceRange(b: Pick<BranchEntry, 'slug'>, bundle: Pick<ContentBundle, 'pricing'>): string | undefined {
+  const range = priceRangeAt(bundle.pricing, b.slug);
+  if (!range) return undefined;
+  return range.min === range.max ? rupiah(range.min) : `${rupiah(range.min)} - ${rupiah(range.max)}`;
+}
+
+/** Daftar harga statis halaman cabang: hanya item yang tersedia di cabang itu, format "K" + "Start from" seperti di website */
+export function branchPriceList(b: Pick<BranchEntry, 'slug' | 'name'>, bundle: Pick<ContentBundle, 'pricing'>): string {
+  const items = itemsAt(bundle.pricing, b.slug).sort((x, y) => (x.order ?? 0) - (y.order ?? 0));
+  const groups = PRICE_CATEGORIES.filter((c) => c !== 'Paket')
+    .map((c) => ({ name: pricingCopy.categoryLabels[c], items: items.filter((i) => i.category === c) }))
+    .filter((g) => g.items.length > 0);
+  if (!groups.length) return '';
+  const row = (i: (typeof items)[number]) => `<li>${esc(i.name)}: ${i.priceFrom ? `${esc(pricingCopy.priceFromLabel)} ` : ''}${formatThousandsK(priceAt(i, b.slug))}</li>`;
+  return `<h2>Harga cabang ${esc(b.name)}</h2>${groups.map((g) => `<h3>${esc(g.name)}</h3><ul>${g.items.map(row).join('')}</ul>`).join('')}`;
 }
 
 const jsonLdTag = (data: unknown) => `<script type="application/ld+json">${JSON.stringify(data).replace(/</g, '\\u003c')}</script>`;
@@ -265,7 +290,7 @@ function branchHead(b: BranchEntry, bundle: ContentBundle): string {
   const description = clip(
     b.status === 'Segera Dibuka'
       ? `${siteName} segera hadir di ${b.city}. Cabang baru dengan hairstylist yang sama on point-nya.`
-      : branchDescription(siteName, b.name, activeCategoryNames(bundle.pricing), Boolean(shoeCareAt(b, bundle)))
+      : branchDescription(siteName, b.name, activeCategoryNames(itemsAt(bundle.pricing, b.slug)), Boolean(shoeCareAt(b, bundle)))
   );
   const image = b.photo ? imageUrl(siteUrl, b.photo) : `${siteUrl}${OG_IMAGE}`;
   return [
@@ -294,6 +319,7 @@ function branchBody(b: BranchEntry, bundle: ContentBundle): string {
     b.status !== 'Aktif' ? `<p>${esc(b.status)}</p>` : '',
     isWa(b.whatsappNumber) && b.status === 'Aktif' ? `<p>WhatsApp: <a href="https://wa.me/${b.whatsappNumber}">+${b.whatsappNumber}</a></p>` : '',
     hours ? `<h2>Jam operasional</h2><ul>${hours}</ul>` : '',
+    branchPriceList(b, bundle),
     shoeCareAt(b, bundle) ? `<p>Layanan cuci sepatu oleh ${esc(shoeCareAt(b, bundle)!)} tersedia di cabang ini.</p>` : '',
     '<p><a href="/cabang/">Semua cabang</a> · <a href="/">Beranda</a></p>',
     '</div>',
@@ -392,6 +418,8 @@ export function contentPlugin(): Plugin {
   let lenient = false;
   /** Build E2E: data uji tetap (e2e/fixtures/content.ts) untuk validasi, prerender, DAN bundle browser */
   let fixtures = false;
+  /** Varian data uji (E2E_VARIANT, mis. "uniform" = Daftar Harga sama di semua cabang) */
+  let variant: string | undefined;
   /** Masalah "siap tayang" terakhir (untuk badge DEV/STAGING) */
   let launchIssues: string[] = [];
   /** Pesan konten tidak valid terakhir di dev server (dikirim ulang ke browser yang baru terhubung) */
@@ -400,7 +428,7 @@ export function contentPlugin(): Plugin {
   let imageMeta: ImageMeta = {};
 
   const refresh = async () => {
-    const result = await loadContent(root, { fixtures });
+    const result = await loadContent(root, { fixtures, variant });
     imageMeta = await readImageMeta(root);
     if (result.bundle && siteUrlOverride) {
       result.bundle = { ...result.bundle, settings: { ...result.bundle.settings, siteUrl: siteUrlOverride } };
@@ -442,6 +470,7 @@ export function contentPlugin(): Plugin {
       analyticsToken = (env.VITE_CF_ANALYTICS_TOKEN ?? '').trim();
       lenient = (env.CONTENT_CHECK || (appEnv === 'production' ? 'strict' : 'warn')) === 'warn';
       fixtures = env.E2E_FIXTURES === '1';
+      variant = env.E2E_VARIANT || undefined;
       if (fixtures && appEnv === 'production') throw new Error('E2E_FIXTURES tidak boleh dipakai untuk build produksi');
       if (isBuild) console.log(`• Environment: ${appEnv} · siteUrl: ${siteUrlOverride || '(Pengaturan Situs)'} · cek siap tayang: ${lenient ? 'warn' : 'strict'}${fixtures ? ' · DATA UJI E2E' : ''}`);
     },
@@ -475,7 +504,7 @@ export function contentPlugin(): Plugin {
         const file = path.relative(path.join(root, 'src', 'content'), id.split('?')[0]);
         if (file.endsWith('.json') && !file.includes(path.sep) && !file.startsWith('..')) {
           const data = JSON.parse(await readFile(id.split('?')[0], 'utf8'));
-          return JSON.stringify(applyE2EFixtures(file, data));
+          return JSON.stringify(applyE2EFixtures(file, data, variant));
         }
       }
       if (id === RESOLVED_STATUS_ID) {

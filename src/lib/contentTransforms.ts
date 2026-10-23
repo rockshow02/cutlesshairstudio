@@ -75,6 +75,7 @@ import type {
 } from '@/content/schema';
 import { srcSetOf } from './responsiveImage';
 import { PRICE_CATEGORIES, priceCategoryAnchor } from '@/content/priceCategories';
+import { availableAt, priceAt, samePricesEverywhere } from '@/content/branchPricing';
 import { formatNumber, formatPriceText } from './format';
 import { isActiveNow, parseWIB, toIsoWIB } from './dates';
 import { fillTemplate, templateLink } from './whatsapp';
@@ -421,38 +422,29 @@ const CATEGORY_ORDER = PRICE_CATEGORIES.filter((c): c is Exclude<PriceCategoryKe
 const badgeOf = (b: PricingEntry['badge']): PriceBadge | undefined => (b ? b : undefined);
 
 /**
- * Harga efektif sebuah item:
- * - cabang dipilih → harga khusus cabang itu, atau harga dasar;
- * - belum memilih  → harga terendah dari harga dasar & semua harga cabang (varies = ada perbedaan).
+ * Daftar Harga satu cabang (harga per cabang menimpa harga utama; item yang tidak "Tersedia di cabang" itu tidak tampil).
+ * branchSlug kosong/tidak dikenal → cabang Aktif pertama. `uniform` = semua cabang Aktif berdaftar & berharga sama persis
+ * (pemilih cabang disembunyikan, label "Berlaku di semua cabang").
  */
-export function effectivePrice(item: PricingEntry, branchSlug?: string): { price: number; varies: boolean } {
-  const branchPrices = item.branchPrices ?? [];
-  if (branchSlug) return { price: branchPrices.find((p) => p.branchSlug === branchSlug)?.price ?? item.price, varies: false };
-  const all = [item.price, ...branchPrices.map((p) => p.price)];
-  return { price: Math.min(...all), varies: new Set(all).size > 1 };
-}
-
 export function buildPricing(entries: PricingEntry[], copy: PricingCopy, branches: Branch[], branchSlug?: string): PricingContent {
-  const items = activeSorted(entries);
-  const branch = branches.find((b) => b.slug === branchSlug);
+  const active = branches.filter((b) => b.status === 'Aktif');
+  const branch = branches.find((b) => b.slug === branchSlug) ?? active[0];
+  const items = branch ? activeSorted(entries).filter((i) => availableAt(i, branch.slug)) : activeSorted(entries);
+  const price = (i: PricingEntry) => (branch ? priceAt(i, branch.slug) : i.price);
 
   const categories: PriceCategory[] = CATEGORY_ORDER.map((key) => ({
     id: key,
     name: copy.categoryLabels[key],
     items: items
       .filter((i) => i.category === key)
-      .map((i, index) => {
-        const { price, varies } = effectivePrice(i, branch?.slug);
-        return {
-          id: makeId(i.name, index),
-          name: i.name,
-          description: text(i.description),
-          price,
-          priceFrom: Boolean(i.priceFrom) || varies,
-          varies,
-          badge: badgeOf(i.badge),
-        };
-      }),
+      .map((i, index) => ({
+        id: makeId(i.name, index),
+        name: i.name,
+        description: text(i.description),
+        price: price(i),
+        priceFrom: Boolean(i.priceFrom),
+        badge: badgeOf(i.badge),
+      })),
   })).filter((c) => c.items.length > 0);
 
   const packages: PricePackage[] = items
@@ -461,7 +453,7 @@ export function buildPricing(entries: PricingEntry[], copy: PricingCopy, branche
       id: makeId(i.name, index),
       name: i.name,
       tag: badgeOf(i.badge) ?? copy.packageDefaultTag,
-      price: effectivePrice(i, branch?.slug).price,
+      price: price(i),
       features: splitList(i.description, /\r?\n/),
       featured: i.badge === 'Best Seller',
       badge: badgeOf(i.badge),
@@ -472,7 +464,8 @@ export function buildPricing(entries: PricingEntry[], copy: PricingCopy, branche
     heading: copy.heading,
     branchSlug: branch?.slug,
     branchName: branch?.name,
-    hasBranchPrices: items.some((i) => (i.branchPrices ?? []).length > 0),
+    branchOptions: active.map((b) => ({ slug: b.slug, name: b.name })),
+    uniform: samePricesEverywhere(entries, active.map((b) => b.slug)),
     categories,
     priceFromLabel: copy.priceFromLabel,
     packagesTitle: copy.packagesTitle,
@@ -480,11 +473,15 @@ export function buildPricing(entries: PricingEntry[], copy: PricingCopy, branche
   };
 }
 
-/** Harga "mulai" per kategori: harga efektif terendah item aktif (untuk cabang, atau semua cabang) */
+/**
+ * Harga "mulai" per kategori: harga terendah item aktif yang tersedia di cabang (harga per cabang), atau tanpa cabang:
+ * terendah dari harga utama & semua harga per cabang.
+ */
 export function startingPrices(entries: PricingEntry[], branchSlug?: string): Partial<Record<PriceCategoryKey, number>> {
   const result: Partial<Record<PriceCategoryKey, number>> = {};
-  for (const item of activeSorted(entries)) {
-    const { price } = effectivePrice(item, branchSlug);
+  const items = activeSorted(entries).filter((i) => !branchSlug || availableAt(i, branchSlug));
+  for (const item of items) {
+    const price = branchSlug ? priceAt(item, branchSlug) : Math.min(item.price, ...(item.branchPrices ?? []).map((p) => p.price));
     const current = result[item.category];
     result[item.category] = current === undefined ? price : Math.min(current, price);
   }

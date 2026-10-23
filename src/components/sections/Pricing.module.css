@@ -1,30 +1,51 @@
-.branchNote {
+.branchBar {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: var(--space-3) var(--space-4);
   margin: 0 0 var(--space-7);
-  padding: var(--space-3) var(--space-4);
-  border-left: 3px solid var(--c-taupe-dark);
-  background: var(--c-paper-2);
-  font-size: var(--fs-sm);
 }
-.branchBtn {
-  min-height: 36px;
-  padding: 0 var(--space-3);
-  border: 1px solid var(--c-ink);
+/* Pemilih cabang: segmented control, gaya sama dengan tab kategori (pil, huruf biasa) */
+.branchTabs {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+  max-width: 100%;
+  padding: var(--space-1);
+  border: 1px solid var(--c-line-dark);
+  border-radius: var(--radius-lg);
+  background: var(--c-paper-2);
+}
+.branchTab {
+  min-height: 40px;
+  padding: 0 var(--space-4);
+  border: 0;
   border-radius: var(--radius);
   background: transparent;
   color: var(--c-ink);
-  font-size: var(--fs-xs);
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  font-size: var(--fs-sm);
+  font-weight: 600;
   cursor: pointer;
+  transition: background-color var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease);
 }
-.branchBtn:hover {
+.branchTab:hover {
+  background: var(--c-paper);
+}
+.branchTab[aria-pressed='true'] {
   background: var(--c-ink);
   color: var(--c-bone);
+}
+.branchTab:focus-visible {
+  outline: 2px solid var(--c-focus);
+  outline-offset: 2px;
+}
+/* Label kecil "Harga cabang …" / "Berlaku di semua cabang" */
+.branchNote {
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--c-taupe-dark);
 }
 
 .categories {
