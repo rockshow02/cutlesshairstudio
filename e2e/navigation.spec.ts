@@ -43,8 +43,9 @@ test('link navbar desktop mendarat di section yang benar (smooth scroll aktif)',
   // Semua section dirender (Deferred) & Lenis aktif
   await expect(page.locator('#kontak')).toBeAttached({ timeout: 20_000 });
   await expect.poll(() => page.evaluate(() => document.documentElement.classList.contains('lenis')), { timeout: 15_000 }).toBe(true);
-  // Animasi pembuka (maks. 1,5 detik) selesai
-  await page.waitForTimeout(2000);
+  // Animasi pembuka selesai (elemen preloader dilepas dari DOM; selama itu smooth scroll belum menerima klik)
+  await expect(page.locator('[class*="_preloader_"]')).toHaveCount(0, { timeout: 15_000 });
+  await page.waitForTimeout(500);
   const nav = page.locator('header').getByRole('navigation', { name: 'Menu utama' });
   for (const t of TARGETS) {
     const link = nav.getByRole('link', { name: t.label, exact: true });
