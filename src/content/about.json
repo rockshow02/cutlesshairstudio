@@ -1,9 +1,10 @@
 {
-  "kicker": "Tentang Kami",
+  "kicker": "About Us",
   "title": "Bukan sekadar potong rambut.",
   "paragraphs": [
-    "Cutless lahir dari satu hal sederhana: semua orang berhak keluar dari kursi barber dengan rasa percaya diri. Kami ngobrol dulu, baca bentuk wajah dan tekstur rambutmu, baru eksekusi.",
-    "Hasilnya potongan yang rapi hari ini dan tetap enak di-styling dua minggu lagi. Santai, tapi detailnya serius."
+    "Cutless lahir dari satu ide sederhana: potong rambut seharusnya bikin kamu lebih percaya diri, bukan bikin deg-degan. Makanya di sini kami ngobrol dulu, baca bentuk wajah, tekstur rambut, dan keseharianmu, baru mulai eksekusi.",
+    "Namanya juga Cutless: cut less, style more. Kami nggak sekadar memangkas, tapi membentuk gaya yang gampang kamu rawat sendiri, rapi hari ini dan tetap enak di-styling minggu depan.",
+    "Dari skin fade dan two block, coloring, perming, sampai cornrow, braids, dan dreadlock, semua dikerjakan hairstylist yang paham tren. Pria dan wanita, semua welcome di studio kami."
   ],
   "values": [
     {
@@ -19,21 +20,21 @@
       "description": "Booking jelas, nggak pakai antre lama."
     }
   ],
-  "caption": "Studio Cutless, Bogor",
+  "caption": "Cutless Hair Studio · Bogor & Cibubur",
   "images": [
     {
       "src": "/uploads/about/whatsapp-image-2026-10-19-at-40400-pm-1.webp",
-      "alt": "Hairstylist Cutless memotong rambut pelanggan di studio yang terang dan minimalis",
+      "alt": "Hairstylist Cutless merapikan skin fade pelanggan di cabang Bogor Bantarjati",
       "focalPoint": "tengah"
     },
     {
       "src": "/uploads/about/whatsapp-image-2026-10-19-at-40359-pm.webp",
-      "alt": "Hairstylist Cutless memotong rambut pelanggan di studio yang terang dan minimalis",
+      "alt": "Suasana studio Cutless Hair Studio dengan kursi barber dan cermin besar",
       "focalPoint": "tengah"
     },
     {
       "src": "/uploads/about/whatsapp-image-2026-10-19-at-40359-pm-1.webp",
-      "alt": "Hairstylist Cutless memotong rambut pelanggan di studio yang terang dan minimalis",
+      "alt": "Detail proses cornrow oleh hairstylist Cutless Hair Studio",
       "focalPoint": "tengah"
     }
   ],
