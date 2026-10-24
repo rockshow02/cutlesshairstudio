@@ -155,7 +155,7 @@ Dua Worker terpisah dari repo yang sama (`wrangler.jsonc` → environment `stagi
    - **Save and Deploy**. URL: `https://cutlesshairstudio-staging.<subdomain-workers>.workers.dev`. Bila subdomain akun berbeda dari `adi-yansyaaah`, sesuaikan `VITE_SITE_URL` di `.env.staging`.
 3. Setiap push/merge ke `main` → produksi, ke `staging` → staging (±1–2 menit). Build yang gagal tidak mengganti versi yang sedang tayang.
 
-**Domain produksi:** ubah **Pengaturan Situs → Alamat website**. Canonical, `og:url`, `og:image`, `twitter:image`, `sitemap.xml`, `robots.txt`, dan JSON-LD dibuat dari kolom ini saat build produksi (`.env.production` → `VITE_SITE_URL` kosong). Domain sendiri: Worker → **Settings → Domains & Routes → Add → Custom domain**.
+**Domain produksi:** `cutlesshairstudio.com` (dibeli di Rumahweb; DNS dipindah ke Cloudflare, email tetap di hosting Rumahweb: langkah di [`docs/migrasi-akun-klien.md`](docs/migrasi-akun-klien.md) → *Domain & DNS*). Saat launch ubah **Pengaturan Situs → Alamat website** menjadi `https://cutlesshairstudio.com`. Canonical, `og:url`, `og:image`, `twitter:image`, `sitemap.xml`, `robots.txt`, dan JSON-LD dibuat dari kolom ini saat build produksi (`.env.production` → `VITE_SITE_URL` kosong). Domain sendiri: Worker → **Settings → Domains & Routes → Add → Custom domain**.
 
 **Staging tidak terindeks:** `robots.txt` → `Disallow: /`, `<meta name="robots" content="noindex, nofollow">`, dan header `X-Robots-Tag: noindex, nofollow` dari Worker (`dist/_headers` versi staging). Judul tab diawali `[STAGING]`.
 
@@ -300,7 +300,7 @@ Harga efektif satu layanan di satu cabang: `COALESCE(bp.price, pi.price)` dari `
 - [ ] Link Google Maps & foto cabang Cibubur
 - [ ] Tiap barber: cabang yang benar, foto asli; barber yang tidak bekerja lagi dinonaktifkan
 - [ ] Daftar Harga: cek harga utama; isi **Harga per cabang** bila Cibubur berbeda
-- [ ] **Alamat website** sudah domain final (bila memakai domain sendiri)
+- [ ] **Alamat website** = `https://cutlesshairstudio.com` (setelah domain tersambung ke Worker produksi & SSL aktif)
 - [ ] Statistik: isi angka asli lalu nyalakan toggle yang ingin ditampilkan (rating/ulasan sesuai Google)
 - [ ] Testimoni asli (minimal 3) → nyalakan **Tampilkan section Testimoni**
 - [ ] Produk dengan harga & foto asli → nyalakan **Tampilkan Produk**

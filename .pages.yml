@@ -1409,7 +1409,7 @@ content:
         label: Alamat website (domain resmi)
         type: string
         required: true
-        description: "Mis. https://cutlesshairstudio.id (tanpa garis miring di akhir). Satu-satunya sumber domain untuk Google, sitemap, dan preview link."
+        description: "Mis. https://cutlesshairstudio.com (tanpa garis miring di akhir). Satu-satunya sumber domain untuk Google, sitemap, dan preview link."
         pattern:
           regex: "^https://[^\\s]+[^/]$"
           message: Diawali https:// dan tanpa garis miring di akhir
@@ -1456,7 +1456,7 @@ content:
         description: "Opsional, tampil di footer. Kosongkan untuk menyembunyikan baris email. Maksimal 100 karakter."
         pattern:
           regex: '^([^@\s]+@[^@\s]+\.[^@\s]+)?$'
-          message: Format email tidak valid, mis. halo@cutlesshairstudio.id
+          message: Format email tidak valid, mis. halo@cutlesshairstudio.com
         options:
           maxlength: 100
       - name: footerTagline

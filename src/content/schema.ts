@@ -264,7 +264,7 @@ export const settingsSchema = z.object({
   siteName: z.string().trim().min(1, 'nama usaha wajib diisi').max(80),
   /** Domain resmi, satu-satunya sumber canonical/og:url/sitemap. Tanpa garis miring di akhir. */
   siteUrl: z
-    .url({ message: 'siteUrl harus link lengkap, mis. https://cutlesshairstudio.id' })
+    .url({ message: 'siteUrl harus link lengkap, mis. https://cutlesshairstudio.com' })
     .regex(/^https:\/\//, 'siteUrl harus diawali https://')
     .transform((v) => v.replace(/\/+$/, '')),
   /** Nomor pusat untuk pertanyaan umum (bukan booking cabang) */
@@ -281,7 +281,7 @@ export const settingsSchema = z.object({
   instagramUrl: optionalUrl,
   tiktokUrl: optionalUrl,
   /** Opsional: kosong = baris email di footer tidak ditampilkan */
-  email: z.union([z.email({ message: 'format email tidak valid, mis. halo@cutlesshairstudio.id' }).max(100), z.literal('')]).nullish(),
+  email: z.union([z.email({ message: 'format email tidak valid, mis. halo@cutlesshairstudio.com' }).max(100), z.literal('')]).nullish(),
   /** Kalimat di bawah logo footer; {cities} diisi otomatis dari kota cabang aktif */
   footerTagline: optionalText(160),
   stats: z

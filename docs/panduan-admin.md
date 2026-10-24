@@ -390,7 +390,7 @@ Klik **Pengaturan Situs**. Menu ini hanya berisi data merek. Alamat dan jam buka
 | Kolom | Dipakai untuk | Batas |
 |---|---|---|
 | Nama usaha | Judul website, pesan WhatsApp | wajib, maks. 80 karakter |
-| Alamat website (domain resmi) | Link yang dibagikan di Google/WhatsApp/sosial media. Ganti **hanya** saat pindah domain, mis. `https://cutlesshairstudio.id` (tanpa `/` di akhir) | wajib |
+| Alamat website (domain resmi) | Link yang dibagikan di Google/WhatsApp/sosial media. Ganti **hanya** saat pindah domain. Domain resmi: `https://cutlesshairstudio.com` (tanpa `/` di akhir), diisi saat launch setelah domain tersambung (lihat `docs/migrasi-akun-klien.md` → DNS) | wajib |
 | Nomor WhatsApp pusat | Pertanyaan umum & kontak di footer. Booking memakai nomor cabang | wajib, format `628xxxxxxxxxx` |
 | Pesan booking default | Pesan otomatis tombol booking. `{brand}` = nama usaha, `{branch}` = nama cabang | maks. **500** karakter (emoji dihitung 2) |
 | Template pesan booking kapster | Pesan semua tombol **Booking [nama barber]**. Placeholder (huruf kecil): `{brand}` = nama usaha, `{branch}` = cabang barber, `{barber}` = nama barber yang diklik. Kosong = template bawaan (formulir reservasi). Tombol booking umum tetap memakai *Pesan booking default* | maks. **500** karakter (emoji dihitung 2); sisakan ruang untuk nama barber & cabang |
@@ -493,7 +493,7 @@ Form Pages CMS menolak isian yang melebihi batas, dan website memeriksa batas ya
 
 1. **Tunggu 3–5 menit.** Setiap Save memicu proses otomatis: foto baru dikompres, website dibangun ulang, lalu dipasang. Foto baru bisa butuh sedikit lebih lama (ada commit otomatis *"sinkron gambar"*; nama file foto bisa berubah menjadi `.webp`, itu normal).
 2. Buka **hanya** alamat ini:
-   - Website utama (branch `main`): **https://cutlesshairstudio.adi-yansyaaah.workers.dev** (atau domain resmi setelah launch).
+   - Website utama (branch `main`): **https://cutlesshairstudio.adi-yansyaaah.workers.dev**; setelah launch: **https://cutlesshairstudio.com**.
    - Staging (branch `staging`, untuk uji coba, berlabel *STAGING*): **https://cutlesshairstudio-staging.adi-yansyaaah.workers.dev**
 3. Tekan **Ctrl+F5** (Windows) / **Cmd+Shift+R** (Mac) agar browser tidak menampilkan versi lama. Di HP: tutup tab lalu buka lagi, atau pakai tab penyamaran.
 4. **Abaikan alamat berkode versi**, mis. `https://3f9c1a2b-cutlesshairstudio-staging.….workers.dev` (dari email/notifikasi Cloudflare). Itu salinan satu versi tertentu, sering bukan yang terbaru.
