@@ -101,6 +101,8 @@ export const E2E_SHOE_CARE = {
   ],
   menuFile: '/uploads/shoe-care/daftar-menu-uji.pdf',
   heroLogo: '/uploads/shoe-care/logo-hero-uji.svg',
+  heroKicker: 'Partner Cuci Sepatu Uji',
+  aboutLogo: '/uploads/shoe-care/logo-about-uji.svg',
   menuUrl: 'https://drive.google.com/file/d/uji-daftar-menu/view',
 } as const;
 
@@ -112,7 +114,10 @@ function shoeCareFixture(variant?: string): Json {
     showTeaser: true,
     branchSlug: E2E_SHOE_CARE.branchSlug,
     name: E2E_SHOE_CARE.name,
-    logo: existingLogo(),
+    // Teks kecil hero: kustom (bawaan) / dikosongkan (uniform → kicker tidak tampil)
+    heroKicker: variant === 'uniform' ? '' : E2E_SHOE_CARE.heroKicker,
+    // Logo kecil: folder media shoe-care (sama dengan form CMS) → logo uji SVG putih di e2e/fixtures/public
+    logo: E2E_SHOE_CARE.heroLogo,
     // Logo hero uji (SVG putih 1200 × 240) di e2e/fixtures/public: hanya disalin ke dist/ build E2E
     heroLogo: variant === 'uniform' ? '' : E2E_SHOE_CARE.heroLogo,
     tagline: 'Tagline uji cuci sepatu.',
@@ -120,8 +125,10 @@ function shoeCareFixture(variant?: string): Json {
     heroImage: '',
     aboutTitle: 'Tentang partner uji',
     aboutParagraphs: ['Paragraf About Us uji pertama.', 'Paragraf About Us uji kedua.'],
-    aboutImage: photo,
-    aboutImageAlt: 'Foto About Us uji',
+    // About Us: foto berbingkai (bawaan) / logo SVG transparan tanpa bingkai (uniform)
+    aboutImage: variant === 'uniform' ? E2E_SHOE_CARE.aboutLogo : photo,
+    aboutImageAlt: variant === 'uniform' ? 'Logo About Us uji' : 'Foto About Us uji',
+    aboutImagePlain: variant === 'uniform',
     menuFile: E2E_SHOE_CARE.menuFile,
     menuUrl: E2E_SHOE_CARE.menuUrl,
     advantages: [
@@ -144,7 +151,8 @@ function shoeCareFixture(variant?: string): Json {
  * Daftar Harga uji: 3 kategori aktif (urutan tampil), item lama nonaktif. Harga per cabang (build E2E bawaan):
  * Black Grooming Uji berharga lain di Cibubur, Hanya Bogor Uji hanya tersedia di Bogor → pemilih cabang tampil.
  * Varian "uniform" (E2E_VARIANT=uniform, .env.e2e-uniform): daftar yang sama tanpa harga per cabang & "Tersedia di
- * cabang" → semua cabang sama, pemilih tersembunyi. Varian ini juga tanpa Logo hero Cuci Sepatu (judul = teks).
+ * cabang" → semua cabang sama, pemilih tersembunyi. Varian ini juga: Cuci Sepatu tanpa Logo hero (judul = teks), teks
+ * kecil hero dikosongkan, dan About Us berisi logo SVG tanpa bingkai.
  */
 export const E2E_CIBUBUR_PRICE = { name: 'Black Grooming Uji', price: 185000, shown: '185K', base: '175K' } as const;
 export const E2E_BOGOR_ONLY = 'Hanya Bogor Uji';
