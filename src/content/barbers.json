@@ -5,7 +5,6 @@
     "photo": "/uploads/barbers/soemardi-erte.webp",
     "branchSlug": "bogor-bantarjati",
     "specialty": "Cornrow, Dreadlock, Coloring, Et.c",
-    "whatsappNumber": "6288211078730",
     "order": 30,
     "isActive": true
   },
@@ -15,7 +14,6 @@
     "photo": "/uploads/barbers/yasslaw.webp",
     "branchSlug": "bogor-bantarjati",
     "specialty": "Hair Perm, Design Perm, Coloring",
-    "whatsappNumber": "6285810904296",
     "order": 10,
     "isActive": true
   },
@@ -25,7 +23,6 @@
     "photo": "/uploads/barbers/agus.webp",
     "branchSlug": "bogor-bantarjati",
     "specialty": "Hair Perm, Design Perm, Coloring",
-    "whatsappNumber": "6285718056716",
     "order": 20,
     "isActive": true
   },
@@ -35,7 +32,6 @@
     "photo": "/uploads/barbers/29bfccb8-37cc-441f-92d0-1b7d53cf1c4b.webp",
     "branchSlug": "cibubur",
     "specialty": "Haircut, Permink, Coloring",
-    "whatsappNumber": "6285286118019",
     "order": 31,
     "isActive": true
   }
