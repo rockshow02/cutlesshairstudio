@@ -7,6 +7,11 @@
   font-family: 'Archivo Fallback';
   src: local('Arial Black'), local('ArialBlack'), local('Arial-Black');
   size-adjust: 118%;
+  /* Metrik vertikal = Archivo (ascent 0,878 em, descent 0,210 em, diukur di browser) ÷ size-adjust: posisi teks di dalam
+     baris tidak bergeser saat Archivo termuat (judul yang tampil tanpa animasi, mis. hero /cuci-sepatu/) */
+  ascent-override: 74.4%;
+  descent-override: 17.8%;
+  line-gap-override: 0%;
 }
 
 /* ==========================================================================
