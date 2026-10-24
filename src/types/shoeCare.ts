@@ -65,6 +65,8 @@ export interface ShoeCareContent {
   /** Kartu teaser di beranda & halaman cabang partner */
   showTeaser: boolean;
   name: string;
+  /** Teks kecil di atas judul hero (CMS, mis. "Cuci Sepatu"); kosong = tidak tampil di hero, teaser memakai copy.kicker */
+  heroKicker?: string;
   tagline?: string;
   description?: string;
   logo?: ImageAsset;
@@ -74,7 +76,8 @@ export interface ShoeCareContent {
   heroImage: ImageAsset;
   /** Satu-satunya cabang tempat layanan tersedia */
   branch: { slug: string; name: string; pageUrl: string };
-  about: { heading: SectionHeading; paragraphs: string[]; image?: ImageAsset };
+  /** imagePlain = gambar tanpa bingkai (logo transparan) */
+  about: { heading: SectionHeading; paragraphs: string[]; image?: ImageAsset; imagePlain: boolean };
   advantages: { title: string; description: string; icon: IconName }[];
   services: ShoeCareService[];
   photos: ImageAsset[];

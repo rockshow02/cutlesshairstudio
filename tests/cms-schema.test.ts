@@ -10,7 +10,7 @@ import { readFileSync } from 'node:fs';
 import { parse } from 'yaml';
 import type { z } from 'zod';
 import { describe, expect, it } from 'vitest';
-import { CONTENT_FILES } from '../src/content/schema';
+import { CONTENT_FILES, IMAGE_EXTENSIONS } from '../src/content/schema';
 import { setMedia, validateCmsContent, type CmsField as FormField, type CmsMedia } from './helpers/pagesCms';
 
 interface ZInfo {
@@ -210,5 +210,56 @@ describe('.pages.yml sejalan dengan skema Zod', () => {
       });
     config.content.forEach((c) => walk(c.name, c.fields));
     expect(missing).toEqual([]);
+  });
+
+  it('setiap field gambar/file: ekstensi yang bisa dipilih di form = ekstensi yang diterima Zod, dan disebut di deskripsi', () => {
+    type Field = CmsField & { description?: string; options?: { media?: string; extensions?: string[] } };
+    const config = parse(readFileSync('.pages.yml', 'utf8')) as { media: CmsMedia[]; content: { path: string; name: string; fields: Field[] }[] };
+    /** Skema Zod satu field (menembus optional/default/pipe/array/object) */
+    const zodAt = (schema: z.ZodType, names: string[]): z.ZodType => {
+      const def = defOf(schema);
+      if (['optional', 'nullable', 'default'].includes(def.type)) return zodAt(def.innerType!, names);
+      if (def.type === 'pipe') return zodAt(def.in!, names);
+      if (def.type === 'array') return zodAt(def.element!, names);
+      if (!names.length) return schema;
+      if (def.type === 'object') return zodAt(def.shape![names[0]], names.slice(1));
+      throw new Error(`tidak bisa menelusuri ${def.type}`);
+    };
+    const CANDIDATES = ['jpg', 'jpeg', 'png', 'webp', 'svg', 'gif', 'avif', 'bmp', 'tiff', 'ico', 'pdf', 'docx', 'mp4', 'webm', 'mov'];
+    const LABEL: Record<string, string> = { jpg: 'JPG', jpeg: 'JPG', png: 'PNG', webp: 'WebP', svg: 'SVG', pdf: 'PDF', mp4: 'MP4', webm: 'WebM' };
+    const problems: string[] = [];
+    let checked = 0;
+    for (const entry of config.content) {
+      const file = entry.path.replace('src/content/', '') as keyof typeof CONTENT_FILES;
+      const root = CONTENT_FILES[file] as unknown as z.ZodType;
+      if (!root) continue;
+      const walk = (names: string[], fields: Field[]) =>
+        fields.forEach((f) => {
+          const at = [...names, f.name];
+          if (f.fields) walk(at, f.fields as Field[]);
+          if (f.type !== 'image' && f.type !== 'file') return;
+          checked++;
+          const where = `${file} → ${at.join('.')}`;
+          const media = config.media.find((m) => m.name === f.options?.media) ?? config.media[0];
+          const cms = f.options?.extensions;
+          if (!cms?.length) return problems.push(`${where}: options.extensions belum diisi`);
+          const schema = zodAt(root, at);
+          const zod = CANDIDATES.filter((ext) => schema.safeParse(`${media.output}/uji-file.${ext}`).success);
+          if ([...cms].sort().join() !== [...zod].sort().join()) problems.push(`${where}: CMS [${cms}] ≠ Zod [${zod}]`);
+          // Huruf besar juga diterima Zod (Pages CMS menyimpan nama file apa adanya)
+          if (zod.length && !schema.safeParse(`${media.output}/UJI.${zod[0].toUpperCase()}`).success) problems.push(`${where}: ekstensi huruf besar ditolak Zod`);
+          const d = f.description ?? '';
+          for (const label of new Set(cms.map((e) => LABEL[e] ?? e.toUpperCase()))) if (!new RegExp(`Format:[^"]*\\b${label}\\b`).test(d)) problems.push(`${where}: deskripsi tidak menyebut format ${label}`);
+        });
+      walk([], entry.fields);
+    }
+    expect(checked).toBeGreaterThanOrEqual(20);
+    expect(problems).toEqual([]);
+  });
+
+  it('jenis field: foto biasa JPG/PNG/WebP; logo SVG/PNG/WebP; Foto About Us Cuci Sepatu & logo Logo Partner juga SVG', () => {
+    expect(IMAGE_EXTENSIONS.photo).toEqual(['jpg', 'jpeg', 'png', 'webp']);
+    expect(IMAGE_EXTENSIONS.logo).toEqual(['svg', 'png', 'webp']);
+    expect(IMAGE_EXTENSIONS.logoOrPhoto).toEqual(['jpg', 'jpeg', 'png', 'webp', 'svg']);
   });
 });

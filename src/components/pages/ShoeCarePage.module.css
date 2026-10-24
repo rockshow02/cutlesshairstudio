@@ -212,6 +212,29 @@
   height: 100%;
   object-fit: cover;
 }
+/* Tanpa bingkai (logo transparan): langsung di atas warna section, utuh & proporsional, rata tengah di kolomnya.
+   width/height asli di <img> (SVG dari viewBox) + height: auto → rasio diketahui sebelum dimuat, tanpa CLS. */
+.aboutMediaPlain {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.aboutMediaPlain picture {
+  display: contents;
+}
+.aboutImgPlain {
+  display: block;
+  width: auto;
+  max-width: 100%;
+  height: auto;
+  max-height: 200px;
+  object-fit: contain;
+}
+@media (min-width: 900px) {
+  .aboutImgPlain {
+    max-height: 320px;
+  }
+}
 .advantages {
   display: grid;
   gap: var(--space-5);

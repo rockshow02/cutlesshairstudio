@@ -145,6 +145,26 @@ export async function loadContent(root: string, { fixtures = false, variant }: {
 /* ---------- Ukuran gambar ---------- */
 
 /** Ukuran gambar di public/uploads (Pages CMS) dan public/images (aset bawaan, mis. foto hero awal) */
+/**
+ * Ukuran intrinsik SVG: atribut width/height (angka/px) pada <svg>, atau dari viewBox (rasio dijaga bila hanya satu
+ * atribut diisi). undefined = tidak bisa ditentukan (mis. width="100%" tanpa viewBox).
+ */
+export function svgSize(svg: string): { width: number; height: number } | undefined {
+  const tag = svg.match(/<svg\b[^>]*>/i)?.[0];
+  if (!tag) return undefined;
+  const attr = (name: string) => tag.match(new RegExp(`\\s${name}\\s*=\\s*["']([^"']+)["']`, 'i'))?.[1];
+  const num = (v?: string) => (v && /^\s*[\d.]+\s*(px)?\s*$/i.test(v) ? parseFloat(v) : undefined);
+  let width = num(attr('width'));
+  let height = num(attr('height'));
+  const box = attr('viewBox')?.trim().split(/[\s,]+/).map(Number);
+  if (box?.length === 4 && box[2] > 0 && box[3] > 0) {
+    if (!width && !height) [width, height] = [box[2], box[3]];
+    else if (width && !height) height = (width * box[3]) / box[2];
+    else if (height && !width) width = (height * box[2]) / box[3];
+  }
+  return width && height ? { width: Math.round(width), height: Math.round(height) } : undefined;
+}
+
 async function readImageMeta(root: string, fixtures = false): Promise<ImageMeta> {
   const meta: Record<string, { width: number; height: number }> = {};
   const walk = async (dir: string, base = path.join(root, 'public')): Promise<void> => {
@@ -154,8 +174,8 @@ async function readImageMeta(root: string, fixtures = false): Promise<ImageMeta>
       if (entry.isDirectory()) await walk(full, base);
       else if (/\.(webp|jpe?g|png|gif|avif|svg)$/i.test(entry.name)) {
         try {
-          const m = await sharp(await readFile(full)).metadata();
-          if (m.width && m.height) {
+          const m = /\.svg$/i.test(entry.name) ? svgSize(await readFile(full, 'utf8')) : await sharp(await readFile(full)).metadata();
+          if (m?.width && m?.height) {
             const url = '/' + path.relative(base, full).split(path.sep).join('/');
             meta[url] = { width: m.width, height: m.height };
           }

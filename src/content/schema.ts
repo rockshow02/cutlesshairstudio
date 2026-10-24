@@ -24,15 +24,40 @@ const optionalText = (max: number) => z.string().trim().max(max, `maksimal ${max
 const TODO_MARK = /^\s*TODO\b/i;
 const todoMarker = z.string().regex(TODO_MARK);
 
+/**
+ * Ekstensi file yang diterima per jenis field gambar. Form Pages CMS memakai daftar yang SAMA (options.extensions di
+ * .pages.yml, diperiksa tes cms-schema), agar file yang bisa dipilih di form tidak pernah ditolak build.
+ * - photo: foto biasa (JPG/PNG dikompres workflow menjadi WebP)
+ * - logo: logo berlatar transparan (SVG atau PNG/WebP)
+ * - logoOrPhoto: field yang wajar berisi foto ATAU logo (Foto About Us Cuci Sepatu, logo di Logo Partner)
+ */
+export const IMAGE_EXTENSIONS = {
+  photo: ['jpg', 'jpeg', 'png', 'webp'],
+  logo: ['svg', 'png', 'webp'],
+  logoOrPhoto: ['jpg', 'jpeg', 'png', 'webp', 'svg'],
+} as const;
+type ImageKind = keyof typeof IMAGE_EXTENSIONS;
+const FORMAT_LABEL: Record<string, string> = { jpg: 'JPG', png: 'PNG', webp: 'WebP', svg: 'SVG' };
+const formatList = (kind: ImageKind) => {
+  const names = [...new Set(IMAGE_EXTENSIONS[kind].map((e) => FORMAT_LABEL[e]).filter(Boolean))];
+  return `${names.slice(0, -1).join(', ')}, atau ${names[names.length - 1]}`;
+};
+/** Path gambar Pages CMS di prefix (mis. "/uploads/" atau "/uploads/shoe-care/") dengan ekstensi jenis field itu */
+const imageOf = (kind: ImageKind, prefix = '/uploads/', where = '/uploads/...') =>
+  z
+    .string()
+    .regex(
+      new RegExp(`^${prefix.replace(/[/|()]/g, (c) => (c === '/' ? '\\/' : c))}[\\w./-]+\\.(${IMAGE_EXTENSIONS[kind].join('|')})$`, 'i'),
+      `harus file ${formatList(kind)} di ${where}`,
+    );
+
 /** Path gambar yang ditulis Pages CMS, mis. "/uploads/barbers/raka.webp" */
-const imagePath = z
-  .string()
-  .regex(/^\/uploads\/[\w./-]+\.(webp|jpe?g|png|gif|avif)$/i, 'harus path gambar di /uploads/... (jpg, png, atau webp)');
+const imagePath = imageOf('photo');
 const optionalImage = z.union([imagePath, z.literal('')]).nullish();
+/** Foto atau logo (SVG diizinkan): Foto About Us Cuci Sepatu, logo Logo Partner */
+const optionalLogoOrPhoto = z.union([imageOf('logoOrPhoto'), z.literal('')]).nullish();
 /** Gambar section (hero, tentang, studio): upload Pages CMS (/uploads/...) atau aset bawaan situs (/images/...) */
-const sectionImage = z
-  .string()
-  .regex(/^\/(uploads|images)\/[\w./-]+\.(webp|jpe?g|png|gif|avif)$/i, 'harus path gambar di /uploads/... (jpg, png, atau webp)');
+const sectionImage = imageOf('photo', '/(uploads|images)/');
 const requiredText = (max: number, label: string) => z.string().trim().min(1, `${label} wajib diisi`).max(max, `maksimal ${max} karakter`);
 
 export const WA_REGEX = /^62\d{8,13}$/;
@@ -381,8 +406,8 @@ export const partnersSchema = z.object({
     .array(
       z.object({
         name: requiredText(60, 'nama partner'),
-        /** Kosong = nama partner tampil sebagai teks outline */
-        logo: optionalImage,
+        /** Kosong = nama partner tampil sebagai teks outline. SVG diizinkan. */
+        logo: optionalLogoOrPhoto,
         url: optionalHttpsUrl,
         isActive,
         order,
@@ -428,11 +453,8 @@ export const SHOE_CARE_PRICE_PATTERN = /^(\d{1,4}(,\d)?\s?[–-]\s?)?\d{1,4}(,\d
 export const SHOE_CARE_MENU_FILE_PATTERN = /^\/uploads\/shoe-care\/[\w./-]+\.pdf$/i;
 export const SHOE_CARE_MENU_FILE_MAX_BYTES = 3 * 1024 * 1024;
 
-/** Logo partner: PNG/WebP (hasil kompres) atau SVG */
-const shoeCareLogo = z.union([
-  z.string().regex(/^\/uploads\/[\w./-]+\.(webp|png|svg)$/i, 'logo harus PNG, WebP, atau SVG di /uploads/...'),
-  z.literal(''),
-]).nullish();
+/** Logo Partner Cuci Sepatu: SVG atau PNG/WebP transparan, hanya folder media shoe-care (sama dengan form CMS) */
+const shoeCareLogo = z.union([imageOf('logo', '/uploads/shoe-care/', '/uploads/shoe-care/...'), z.literal('')]).nullish();
 
 export const shoeCareSchema = z
   .object({
@@ -451,9 +473,10 @@ export const shoeCareSchema = z
   logo: shoeCareLogo,
   /** Logo/wordmark terang untuk hero (latar gelap): menggantikan nama partner sebagai judul hero; logo kecil disembunyikan.
    *  Hanya folder media shoe-care (sama dengan form CMS). WebP = PNG yang sudah dikompres workflow. */
-  heroLogo: z
-    .union([z.string().regex(/^\/uploads\/shoe-care\/[\w./-]+\.(webp|png|svg)$/i, 'logo hero harus SVG, PNG, atau WebP di /uploads/shoe-care/...'), z.literal('')])
-    .nullish(),
+  heroLogo: shoeCareLogo,
+  /** Teks kecil (kicker) di atas judul/logo hero; kosong = tidak tampil. Pages CMS menghapus isian kosong saat Save,
+   *  jadi "kosong" = kunci tidak ada; nilai awal "Cuci Sepatu" ditulis di shoeCare.json & menjadi default form CMS. */
+  heroKicker: optionalText(40),
   tagline: optionalText(120),
   description: optionalText(300),
   /** Foto latar hero; kosong → foto hasil pertama → foto CTA penutup */
@@ -462,8 +485,10 @@ export const shoeCareSchema = z
   /** 0–3 paragraf; kosong = Deskripsi singkat. Sengaja tidak wajib: field list wajib yang baru ditambahkan membuat Save
    *  ditolak ("Required at …") dari editor Pages CMS yang masih memuat konfigurasi lama. */
   aboutParagraphs: z.array(requiredText(400, 'paragraf About Us')).max(3, 'maksimal 3 paragraf').default([]),
-  aboutImage: optionalImage,
+  aboutImage: optionalLogoOrPhoto,
   aboutImageAlt: optionalText(150),
+  /** true = gambar About Us tanpa bingkai/latar (logo transparan), proporsional & rata tengah */
+  aboutImagePlain: z.boolean().default(false),
   /** Daftar menu lengkap (PDF di /uploads/shoe-care). Prioritas tombol "Lihat Daftar Menu": file PDF → menuUrl → tidak tampil */
   menuFile: z.union([z.string().regex(SHOE_CARE_MENU_FILE_PATTERN, 'harus file PDF di /uploads/shoe-care/...'), z.literal('')]).nullish(),
   /** Daftar menu & harga partner (mis. Google Drive), dibuka di tab baru; dipakai bila file PDF kosong */

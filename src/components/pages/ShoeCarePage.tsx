@@ -85,9 +85,12 @@ function Hero({ data, otherBranch }: { data: ShoeCareContent; otherBranch: boole
       <Container className={styles.heroInner}>
         {/* Logo kecil hanya bila tidak ada Logo hero (tidak dobel) */}
         {data.logo && !data.heroLogo && <ResponsiveImage image={data.logo} className={styles.heroLogo} priority />}
-        <Kicker center className={styles.heroKicker}>
-          {copy.kicker}
-        </Kicker>
+        {/* Teks kecil dari CMS (kosong = tidak tampil; judul/logo langsung jadi baris pertama) */}
+        {data.heroKicker && (
+          <Kicker center className={styles.heroKicker}>
+            {data.heroKicker}
+          </Kicker>
+        )}
         {/* H1 selalu berisi nama partner. Dengan Logo hero: nama untuk pembaca layar & mesin pencari, logo (alt = nama)
             tampil setinggi huruf kapital judul beranda; pembungkusnya aria-hidden agar nama tidak dibacakan dua kali. */}
         <h1 id="cuci-sepatu-title" className={`${heroStyles.title} ${styles.heroTitle} ${data.heroLogo ? styles.heroLogoTitle : ''}`}>
@@ -147,8 +150,8 @@ function About({ data }: { data: ShoeCareContent }) {
           </div>
         </div>
         {about.image && (
-          <div className={styles.aboutMedia}>
-            <ResponsiveImage image={about.image} className={styles.aboutImg} />
+          <div className={about.imagePlain ? styles.aboutMediaPlain : styles.aboutMedia}>
+            <ResponsiveImage image={about.image} className={about.imagePlain ? styles.aboutImgPlain : styles.aboutImg} />
           </div>
         )}
       </div>

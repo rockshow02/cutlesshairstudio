@@ -38,7 +38,7 @@ export function ShoeCareTeaserView({ data, href }: { data: ShoeCareContent; href
         {data.logo && <ResponsiveImage image={data.logo} className={styles.logo} />}
         <div className={styles.text}>
           <p className={styles.kicker}>
-            {copy.kicker}
+            {data.heroKicker ?? copy.kicker}
             <DemoBadge show={data.isDemo} />
           </p>
           <h2 id="cuci-sepatu-teaser-title" className={styles.name}>
