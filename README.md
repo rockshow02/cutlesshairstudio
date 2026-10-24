@@ -24,7 +24,7 @@ Alur kerja **feature → staging → main**, sinkron konten main → staging, da
 
 ## 1. Menjalankan lokal
 
-Kebutuhan: Node.js 20.19+ (Cloudflare & CI memakai 22, lihat `.node-version`). Variabel environment sudah ada di `.env.development` / `.env.staging` / `.env.production` (tanpa rahasia, lihat `.env.example`).
+Kebutuhan: **Node.js 24 (LTS)** dengan npm bawaannya (11.x); laptop, GitHub Actions, dan Cloudflare Workers Builds sama-sama membaca `.node-version` (`engines` di `package.json`: `>=24 <25`). Variabel environment sudah ada di `.env.development` / `.env.staging` / `.env.production` (tanpa rahasia, lihat `.env.example`).
 
 ```bash
 npm install
