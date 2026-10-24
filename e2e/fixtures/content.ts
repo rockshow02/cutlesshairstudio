@@ -9,7 +9,7 @@
  * Barber diganti seluruhnya dengan dua barber uji di cabang Bogor (satu bernomor WhatsApp sendiri, satu memakai
  * nomor cabang). Fotonya meminjam gambar yang sudah ada di public/uploads (tidak ada file uji yang ikut ter-deploy).
  * Logo Partner diganti 5 partner uji (lihat E2E_PARTNERS). Partner Cuci Sepatu dinyalakan dengan data uji (E2E_SHOE_CARE);
- * satu-satunya file uji yang ikut build E2E adalah PDF daftar menu di e2e/fixtures/public (tidak pernah ke public/).
+ * file uji yang ikut build E2E (PDF daftar menu, logo hero) ada di e2e/fixtures/public (tidak pernah ke public/).
  * Daftar Harga diganti daftar uji 3 kategori (E2E_PRICING): format "K" & "Start from".
  */
 import { existsSync, readdirSync } from 'node:fs';
@@ -100,10 +100,12 @@ export const E2E_SHOE_CARE = {
     { name: 'Gunung Uji', description: 'Sepatu gunung, harga menyesuaikan ukuran.', price: '70-120k', shownPrice: '70–120K', estimate: '' },
   ],
   menuFile: '/uploads/shoe-care/daftar-menu-uji.pdf',
+  heroLogo: '/uploads/shoe-care/logo-hero-uji.svg',
   menuUrl: 'https://drive.google.com/file/d/uji-daftar-menu/view',
 } as const;
 
-function shoeCareFixture(): Json {
+/** Cuci Sepatu uji. variant "uniform": tanpa Logo hero (judul hero = nama partner sebagai teks) */
+function shoeCareFixture(variant?: string): Json {
   const photo = existingPhoto();
   return {
     enabled: true,
@@ -111,6 +113,8 @@ function shoeCareFixture(): Json {
     branchSlug: E2E_SHOE_CARE.branchSlug,
     name: E2E_SHOE_CARE.name,
     logo: existingLogo(),
+    // Logo hero uji (SVG putih 1200 × 240) di e2e/fixtures/public: hanya disalin ke dist/ build E2E
+    heroLogo: variant === 'uniform' ? '' : E2E_SHOE_CARE.heroLogo,
     tagline: 'Tagline uji cuci sepatu.',
     description: 'Deskripsi uji layanan cuci sepatu partner.',
     heroImage: '',
@@ -140,7 +144,7 @@ function shoeCareFixture(): Json {
  * Daftar Harga uji: 3 kategori aktif (urutan tampil), item lama nonaktif. Harga per cabang (build E2E bawaan):
  * Black Grooming Uji berharga lain di Cibubur, Hanya Bogor Uji hanya tersedia di Bogor → pemilih cabang tampil.
  * Varian "uniform" (E2E_VARIANT=uniform, .env.e2e-uniform): daftar yang sama tanpa harga per cabang & "Tersedia di
- * cabang" → semua cabang sama, pemilih tersembunyi.
+ * cabang" → semua cabang sama, pemilih tersembunyi. Varian ini juga tanpa Logo hero Cuci Sepatu (judul = teks).
  */
 export const E2E_CIBUBUR_PRICE = { name: 'Black Grooming Uji', price: 185000, shown: '185K', base: '175K' } as const;
 export const E2E_BOGOR_ONLY = 'Hanya Bogor Uji';
@@ -173,7 +177,7 @@ const uniformPricing = () => E2E_PRICING.map(({ branchPrices: _bp, branchSlugs: 
 export function applyE2EFixtures(file: string, data: unknown, variant?: string): unknown {
   if (file === 'branches.json') return fixtureBranches(data);
   if (file === 'barbers.json') return E2E_BARBERS.map((b) => ({ ...b, photo: existingPhoto() }));
-  if (file === 'shoeCare.json') return shoeCareFixture();
+  if (file === 'shoeCare.json') return shoeCareFixture(variant);
   if (file === 'pricing.json') return (variant === 'uniform' ? uniformPricing() : [...E2E_PRICING]).map((p, i) => ({ isActive: true, ...p, order: (i + 1) * 10 }));
   if (file === 'partners.json') {
     return {
