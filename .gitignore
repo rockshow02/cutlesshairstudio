@@ -1,11 +1,18 @@
 # Dependencies & build output
 node_modules/
 dist/
+dist-e2e-uniform/
 
-# Env lokal (tidak ada env yang wajib)
+# Env: .env.development/.env.staging/.env.production/.env.example DI-COMMIT (tanpa rahasia).
+# Override pribadi tidak di-commit.
 .env
-.env.*
+.env.local
+.env.*.local
 *.local
+
+# Wrangler (wrangler dev)
+.wrangler/
+.dev.vars*
 
 # File sementara optimasi gambar
 *.tmp.webp
@@ -17,3 +24,10 @@ cutless-react/
 *.log
 .DS_Store
 Thumbs.db
+
+# SQL seed hasil generate (npm run db:seed:*)
+seed/
+
+# Playwright
+playwright-report/
+test-results/

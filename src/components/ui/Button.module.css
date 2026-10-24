@@ -16,7 +16,33 @@
   border: 1px solid transparent;
   border-radius: var(--radius);
   cursor: pointer;
-  transition: background-color var(--dur) var(--ease), color var(--dur) var(--ease), border-color var(--dur) var(--ease);
+  /* Efek isi warna saat hover: lapisan ::before naik dari bawah (transform saja) */
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  transition: color var(--dur) var(--ease), border-color var(--dur) var(--ease), transform 0.15s var(--ease);
+}
+.btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: var(--fill, transparent);
+  transform: translate3d(0, 101%, 0);
+  transition: transform var(--dur) var(--ease);
+}
+@media (hover: hover) {
+  .btn:hover {
+    color: var(--fill-ink, inherit);
+    border-color: var(--fill-border, var(--fill, transparent));
+  }
+  .btn:hover::before {
+    transform: none;
+  }
+}
+/* Sedikit mengecil saat ditekan */
+.btn:active {
+  transform: scale(0.97);
 }
 
 /* Label boleh turun baris di layar sempit, jadi tidak pernah meluber keluar kontainer */
@@ -36,17 +62,55 @@
 .lg { min-height: 58px; padding-inline: var(--space-6); font-size: var(--fs-sm); }
 .block { display: flex; width: 100%; }
 
-.light { background: var(--c-bone); color: var(--c-ink); }
-.light:hover { background: var(--c-sand-light); }
+.light { background: var(--c-bone); color: var(--c-ink); --fill: var(--c-sand-light); --fill-ink: var(--c-ink); }
 
-.ghost { border-color: rgba(242, 239, 234, 0.45); color: var(--c-bone); }
-.ghost:hover { background: var(--c-bone); border-color: var(--c-bone); color: var(--c-ink); }
+.ghost { border-color: rgba(242, 239, 234, 0.45); color: var(--c-bone); --fill: var(--c-bone); --fill-ink: var(--c-ink); }
 
-.dark { background: var(--c-ink); color: var(--c-bone); }
-.dark:hover { background: var(--c-taupe-dark); }
+.dark { background: var(--c-ink); color: var(--c-bone); --fill: var(--c-taupe-dark); --fill-ink: var(--c-bone); }
 
-.outline-dark { border-color: var(--c-ink); color: var(--c-ink); }
-.outline-dark:hover { background: var(--c-ink); color: var(--c-bone); }
+.outline-dark { border-color: var(--c-ink); color: var(--c-ink); --fill: var(--c-ink); --fill-ink: var(--c-bone); }
 
-.whatsapp { background: var(--c-wa); color: var(--c-wa-ink); }
-.whatsapp:hover { background: #3be07a; }
+.whatsapp { background: var(--c-wa); color: var(--c-wa-ink); --fill: #3be07a; --fill-ink: var(--c-wa-ink); }
+
+/* ---------- Aplikasi booking & admin (tambahan; varian landing di atas tidak berubah) ---------- */
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.btn:disabled::before { display: none; }
+.btn:disabled:active { transform: none; }
+
+/* Tersier: teks bergaris bawah, tanpa bingkai */
+.text {
+  min-height: var(--touch);
+  padding-inline: var(--space-2);
+  background: none;
+  color: var(--c-ink);
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  --fill: transparent;
+  --fill-ink: var(--c-taupe-dark);
+}
+.danger { background: var(--c-danger); color: var(--c-bone); --fill: var(--c-danger-line); --fill-ink: var(--c-bone); }
+.outline-danger { border-color: var(--c-danger-line); color: var(--c-danger); --fill: var(--c-danger-bg); --fill-ink: var(--c-danger); --fill-border: var(--c-danger-line); }
+.text.danger { background: none; color: var(--c-danger); --fill: transparent; --fill-ink: var(--c-danger); }
+
+/* Huruf biasa & padat (admin): target sentuh tetap 44 px, transisi 150–200 ms */
+.normal {
+  min-height: var(--touch);
+  gap: var(--space-2);
+  padding-inline: var(--space-4);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
+  transition-duration: var(--dur-ui);
+}
+.normal::before { transition-duration: var(--dur-ui); }
+.normal.sm { min-height: 36px; padding-inline: var(--space-3); font-size: 0.8125rem; }
+.normal.lg { min-height: 52px; font-size: var(--fs-md); }
+.normal.text { padding-inline: var(--space-2); }
+@media (max-width: 767px) {
+  .normal.sm { min-height: var(--touch); }
+}

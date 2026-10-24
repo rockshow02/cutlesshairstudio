@@ -1,0 +1,135 @@
+/* Pita logo partner: ukuran, warna, garis, dan pemisah sama dengan pita teks hero (Hero.module.css → .marquee). */
+
+.section {
+  position: relative;
+  z-index: var(--z-content);
+  background: var(--c-ink);
+  color: var(--c-bone);
+}
+
+.label {
+  padding: var(--space-6) var(--gutter) var(--space-4);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  text-align: center;
+  color: var(--c-sand);
+}
+
+/* Pita: tinggi & garis = pita hero; ukuran huruf menentukan tinggi logo (1em) */
+.band {
+  padding-block: var(--space-4);
+  border-block: 1px solid var(--c-line-light);
+  background: var(--c-ink);
+  font-family: var(--f-display);
+  font-stretch: 125%;
+  font-weight: 800;
+  font-size: clamp(1.4rem, 1rem + 2.4vw, 3.2rem);
+  line-height: 1;
+}
+
+.set {
+  display: flex;
+  align-items: center;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.cell {
+  display: flex;
+  flex: none;
+  align-items: center;
+}
+/* Pemisah belah ketupat = pita hero */
+.cell::after {
+  content: '';
+  flex: none;
+  width: 0.32em;
+  height: 0.32em;
+  margin-inline: 0.9em;
+  background: var(--c-taupe);
+  transform: rotate(45deg);
+}
+
+/* 1–2 logo / "kurangi gerakan": deret statis di tengah, bisa digeser bila tidak muat */
+.static {
+  display: flex;
+  justify-content: safe center;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: thin;
+  padding-inline: var(--gutter);
+}
+.static .cell:last-child::after {
+  display: none;
+}
+
+.item {
+  display: inline-flex;
+  align-items: center;
+  color: inherit;
+  text-decoration: none;
+  white-space: nowrap;
+  border-radius: var(--radius);
+}
+a.item:focus-visible {
+  outline: 2px solid var(--c-sand);
+  outline-offset: 4px;
+}
+
+/* Tanpa logo: nama partner sebagai teks outline (= pita hero) */
+.name {
+  text-transform: uppercase;
+  color: transparent;
+  -webkit-text-stroke: 1px var(--c-sand);
+  transition: -webkit-text-stroke-color var(--dur) var(--ease);
+}
+@media (hover: hover) {
+  a.item:hover .name {
+    -webkit-text-stroke-color: var(--c-bone);
+  }
+}
+
+/* Logo: setinggi huruf pita. Satu warna (sand) lewat mask; warna asli saat hover di desktop */
+.logo {
+  position: relative;
+  display: inline-flex;
+  height: 0.85em;
+}
+.logo img {
+  display: block;
+  width: auto;
+  height: 100%;
+  max-width: 4.5em;
+  object-fit: contain;
+  opacity: 0;
+  transition: opacity var(--dur) var(--ease);
+}
+.logo::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--c-sand);
+  -webkit-mask: var(--logo) center / contain no-repeat;
+  mask: var(--logo) center / contain no-repeat;
+  opacity: 0;
+  transition: opacity var(--dur) var(--ease);
+  pointer-events: none;
+}
+.logo[data-ready]::after {
+  opacity: 1;
+}
+@media (hover: hover) {
+  .item:hover .logo img {
+    opacity: 1;
+  }
+  .item:hover .logo::after {
+    opacity: 0;
+  }
+}
+
+/* Badge DEMO (staging/dev) di samping nama/logo, tidak memengaruhi tinggi pita */
+.demo {
+  margin-left: 0.6rem;
+}

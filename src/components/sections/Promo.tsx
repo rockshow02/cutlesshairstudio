@@ -10,7 +10,6 @@ import { Section } from '@/components/ui/Section';
 import { SectionTitle } from '@/components/ui/SectionTitle';
 import { Button } from '@/components/ui/Button';
 import { Icon } from '@/components/ui/Icon';
-import { Reveal } from '@/components/ui/Reveal';
 import { ResponsiveImage } from '@/components/ui/ResponsiveImage';
 import styles from './Promo.module.css';
 
@@ -29,10 +28,10 @@ export function Promo() {
     <Section id="promo" tone="dark" labelledBy="promo-title" className={styles.section}>
       <SectionTitle heading={data.heading} id="promo-title" />
       <ul className={styles.list} data-count={Math.min(data.items.length, 2)}>
-        {data.items.map((item, i) => (
-          <Reveal as="li" key={item.id} delay={i * 0.06}>
+        {data.items.map((item) => (
+          <li key={item.id}>
             <PromoCard item={item} labels={data.labels} />
-          </Reveal>
+          </li>
         ))}
       </ul>
     </Section>

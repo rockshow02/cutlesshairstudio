@@ -30,17 +30,19 @@
   margin-bottom: var(--space-6);
 }
 .icon {
+  transform-origin: left bottom;
   color: var(--c-sand);
   transition: transform var(--dur) var(--ease);
 }
 .card:hover .icon {
-  transform: translateY(-4px);
+  transform: translate3d(0, -4px, 0) scale(1.12);
 }
 .no {
   font-size: var(--fs-xs);
   font-weight: 600;
   letter-spacing: 0.1em;
-  color: var(--c-concrete);
+  /* Sedikit lebih terang dari --c-concrete agar kontras ≥ 4.5:1 di atas kartu gelap */
+  color: #858489;
 }
 
 .name {
@@ -63,10 +65,19 @@
   border-top: 1px solid var(--c-line-light);
   padding-top: var(--space-4);
 }
-.price {
+/* Tautan ke kategori di Daftar Harga (kartu tidak menampilkan harga) */
+.priceLink {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--touch);
   font-size: var(--fs-sm);
   font-weight: 600;
   color: var(--c-sand-light);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.priceLink:hover {
+  color: var(--c-bone);
 }
 .link {
   display: inline-flex;

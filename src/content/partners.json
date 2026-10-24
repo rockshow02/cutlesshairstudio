@@ -1,0 +1,32 @@
+{
+  "enabled": true,
+  "label": "Partner & Kolaborasi",
+  "logos": [
+    {
+      "name": "FOTLESS",
+      "logo": "/uploads/partner-logos/logo-fotless-white.webp",
+      "url": "https://cutlesshairstudio.com/cuci-sepatu/",
+      "isActive": true,
+      "order": 10,
+      "isDemo": false
+    },
+    {
+      "name": "Partner Demo B",
+      "isActive": false,
+      "order": 20,
+      "isDemo": false
+    },
+    {
+      "name": "Partner Demo C",
+      "isActive": false,
+      "order": 30,
+      "isDemo": false
+    },
+    {
+      "name": "Partner Demo D",
+      "isActive": false,
+      "order": 40,
+      "isDemo": false
+    }
+  ]
+}

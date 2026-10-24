@@ -1,14 +1,41 @@
-// Cloudflare Workers (static assets, gratis). Dipakai oleh Workers Builds saat deploy.
+// Cloudflare Workers: situs statis (dist/) lewat binding ASSETS. Dipakai oleh Workers Builds saat deploy.
+//   Produksi: npm run build         && npx wrangler deploy               → Worker "cutlesshairstudio"
+//   Staging : npm run build:staging && npx wrangler deploy --env staging → Worker "cutlesshairstudio-staging"
 // "name" harus sama dengan nama Worker di dashboard Cloudflare (subdomain *.workers.dev).
+// Uji lokal: npm run dev:worker (build staging + wrangler dev di http://localhost:8787)
+//
+// Situs statis (booking lewat WhatsApp). Tanpa D1: fitur booking online yang memakai database diarsipkan di
+// branch archive/booking-online-dan-toko. Tanpa vars/secrets: daftar vars dan secrets fitur itu ada di README branch arsip.
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "cutlesshairstudio",
-  "compatibility_date": "2026-09-01",
+  "main": "worker/index.ts",
+  "compatibility_date": "2026-05-01",
   "assets": {
     "directory": "./dist",
+    "binding": "ASSETS",
     // /cabang/cibubur → /cabang/cibubur/ → dist/cabang/cibubur/index.html (hasil prerender)
     "html_handling": "auto-trailing-slash",
     // URL tak dikenal → dist/404.html (bukan beranda), agar mesin pencari tidak mengindeks halaman palsu
-    "not_found_handling": "404-page"
+    "not_found_handling": "404-page",
+    // Hanya rute ini yang menjalankan Worker; file statis lain langsung dari CDN (tidak memakai kuota request)
+    "run_worker_first": ["/api/*", "/masuk*", "/profil*", "/booking*", "/admin*", "/kebijakan-privasi*"]
+  },
+  "env": {
+    // Worker terpisah: URL, versi, database, dan pengaturan (mis. Cloudflare Access) tidak tercampur dengan produksi.
+    // dist/ hasil build staging sudah berisi robots.txt "Disallow: /" dan header X-Robots-Tag: noindex (dist/_headers).
+    "staging": {
+      // Situs statis saja (booking lewat WhatsApp; fitur booking online, akun, & toko diarsipkan di branch
+      // archive/booking-online-dan-toko). Tanpa vars/secrets, tanpa Cron Trigger.
+      "name": "cutlesshairstudio-staging",
+      "assets": {
+        "directory": "./dist",
+        "binding": "ASSETS",
+        "html_handling": "auto-trailing-slash",
+        "not_found_handling": "404-page"
+      },
+      // crons kosong = Cron Trigger lama (booking & loyalitas) dihapus saat deploy berikutnya
+      "triggers": { "crons": [] }
+    }
   }
 }

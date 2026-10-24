@@ -28,6 +28,13 @@
   contain: size;
   overflow: hidden;
 }
+.mediaMove,
+.mediaZoom {
+  height: 100%;
+}
+.mediaZoom {
+  will-change: transform;
+}
 .media picture {
   display: contents;
 }
@@ -138,12 +145,30 @@
   color: var(--c-ink);
 }
 
-/* Entrance setelah preloader selesai (html[data-ready]) */
-.anim {
-  opacity: 0;
+/* Indikator scroll (desktop): garis kecil turun pelan berulang */
+.scrollHint {
+  display: none !important;
 }
-:global(html[data-ready]) .anim {
-  animation: fadeUp 0.9s var(--ease) var(--d, 0s) both;
+.scrollLine {
+  position: relative;
+  display: block;
+  width: 1px;
+  height: 36px;
+  overflow: hidden;
+  background: var(--c-line-light);
+}
+.scrollLine::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--c-sand);
+  transform: translateY(-100%);
+  animation: scrollCue 2.2s var(--ease) 1.2s infinite;
+}
+@keyframes scrollCue {
+  0% { transform: translateY(-100%); }
+  55% { transform: translateY(0); }
+  100% { transform: translateY(100%); }
 }
 
 @media (min-width: 560px) {
@@ -154,6 +179,16 @@
 }
 
 @media (min-width: 768px) {
+  .scrollHint {
+    display: inline-flex !important;
+    flex-direction: column;
+    gap: var(--space-2) !important;
+    margin-left: auto;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+  }
   .mediaEl {
     object-position: 75% 30%;
   }
@@ -213,9 +248,8 @@
   transform: rotate(45deg);
 }
 
-@keyframes fadeUp {
-  from { opacity: 0; transform: translate3d(0, 20px, 0); }
-  to { opacity: 1; transform: none; }
+.marquee[data-offscreen] .track {
+  animation-play-state: paused;
 }
 
 @keyframes marquee {
@@ -223,6 +257,6 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .track { animation: none; }
-  .anim { opacity: 1; }
+  .track { animation: none; animation-play-state: paused; }
+  .scrollLine::after { animation: none; transform: none; }
 }

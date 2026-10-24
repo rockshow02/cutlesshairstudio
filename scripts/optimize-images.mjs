@@ -6,6 +6,13 @@
  *   - barbers/, site/ : lebar maks. 800 px
  *   - products/       : lebar maks. 1000 px
  *   - gallery/, promos/ (dan folder lain): lebar maks. 1600 px
+ *   - about/ (slideshow Tentang Kami): lebar maks. 1200 px + versi 600 px (nama-600.webp) untuk HP
+ *   - hero/                         : lebar maks. 1920 px + versi 1280 px (nama-1280.webp)
+ *   - gallery/ (juga)               : + versi 600 px untuk kartu kolom foto berjalan (section Lokasi)
+ *   - cta/ (foto latar CTA penutup)  : lebar maks. 1920 px + versi 1280 px
+ *   - partner-logos/ (pita Logo Partner): lebar maks. 400 px (latar transparan tetap)
+ *   - shoe-care/ (Partner Cuci Sepatu)  : lebar maks. 1920 px (foto hero) + versi 1280 & 600 px (SVG logo tidak diubah)
+ * Versi kecil dipakai otomatis sebagai srcset (src/lib/contentTransforms.ts → responsiveImage).
  * Lalu memperbarui path gambar di src/content/*.json (mis. foto.jpg → foto.webp).
  *
  * Aman dijalankan berulang: file .webp yang sudah tidak melebihi lebar maks. dilewati.
@@ -23,15 +30,33 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const UPLOADS = path.join(ROOT, 'public', 'uploads');
 const CONTENT = path.join(ROOT, 'src', 'content');
 
-const MAX_WIDTH = { barbers: 800, site: 800, products: 1000, gallery: 1600, promos: 1600 };
+const MAX_WIDTH = { barbers: 800, site: 800, products: 1000, gallery: 1600, promos: 1600, about: 1200, hero: 1920, cta: 1920, 'partner-logos': 400, 'shoe-care': 1920 };
+/** Versi lebih kecil per folder: <nama>-<lebar>.webp (hanya bila foto aslinya lebih lebar) */
+const VARIANTS = { about: [600], hero: [1280], gallery: [600], cta: [1280], 'shoe-care': [600, 1280] };
+const variantPattern = (folder) => (VARIANTS[folder] ? new RegExp(`-(${VARIANTS[folder].join('|')})\\.webp$`) : null);
 const DEFAULT_MAX_WIDTH = 1600;
 const QUALITY = 78;
 const CONVERTIBLE = /\.(jpe?g|png|gif|tiff?|avif|webp)$/i;
 
+/**
+ * Satu-satunya jalur konversi ke WebP (foto asli & versi kecil). Transparansi (alpha) PNG/WebP dipertahankan apa
+ * adanya: tidak ada flatten/background, dan alpha disimpan kualitas penuh (logo transparan tidak mendapat latar
+ * putih atau tepi kotor). Diuji di tests/optimize-images.test.ts.
+ * @param {Buffer} input
+ * @param {{ maxWidth?: number, width?: number, rotate?: boolean }} options
+ */
+export function toWebp(input, { maxWidth, width, rotate = false } = {}) {
+  let pipeline = sharp(input);
+  if (rotate) pipeline = pipeline.rotate(); // ikuti orientasi EXIF foto HP
+  if (width) pipeline = pipeline.resize({ width });
+  else if (maxWidth) pipeline = pipeline.resize({ width: maxWidth, withoutEnlargement: true });
+  return pipeline.webp({ quality: QUALITY, alphaQuality: 100, effort: 5 });
+}
+
 const toPublicUrl = (abs) => '/' + path.relative(path.join(ROOT, 'public'), abs).split(path.sep).join('/');
 
 async function walk(dir) {
-  let entries = [];
+  let entries;
   try {
     entries = await readdir(dir, { withFileTypes: true });
   } catch {
@@ -55,8 +80,28 @@ async function uniqueTarget(file) {
   }
 }
 
+const folderOf = (file) => path.relative(UPLOADS, file).split(path.sep)[0];
+/** File versi kecil buatan skrip ini (jangan diproses sebagai foto asli) */
+const isVariant = (file) => Boolean(variantPattern(folderOf(file))?.test(file));
+
+/** Buat versi kecil yang belum ada untuk foto .webp final */
+async function ensureVariants(file) {
+  const widths = VARIANTS[folderOf(file)];
+  if (!widths || !/\.webp$/i.test(file)) return [];
+  const input = await readFile(file);
+  const { width = 0 } = await sharp(input).metadata();
+  const made = [];
+  for (const w of widths) {
+    const target = file.replace(/\.webp$/i, `-${w}.webp`);
+    if (width <= w || existsSync(target)) continue;
+    await toWebp(input, { width: w }).toFile(target);
+    made.push({ to: toPublicUrl(target), size: (await stat(target)).size });
+  }
+  return made;
+}
+
 async function optimize(file) {
-  const folder = path.relative(UPLOADS, file).split(path.sep)[0];
+  const folder = folderOf(file);
   const maxWidth = MAX_WIDTH[folder] ?? DEFAULT_MAX_WIDTH;
   const isWebp = /\.webp$/i.test(file);
   // Baca ke memori dulu: di Windows, sharp yang membuka file langsung akan menguncinya (tidak bisa dihapus)
@@ -68,11 +113,7 @@ async function optimize(file) {
 
   const before = input.length;
   const tmp = `${file}.tmp.webp`;
-  await sharp(input)
-    .rotate() // ikuti orientasi EXIF foto HP
-    .resize({ width: maxWidth, withoutEnlargement: true })
-    .webp({ quality: QUALITY, effort: 5 })
-    .toFile(tmp);
+  await toWebp(input, { maxWidth, rotate: true }).toFile(tmp);
 
   const target = isWebp ? file : await uniqueTarget(file.replace(CONVERTIBLE, '.webp'));
   if (isWebp) await rm(file);
@@ -130,7 +171,7 @@ async function repairContentReferences() {
 const kb = (n) => `${Math.round(n / 1024)} KB`;
 
 async function main() {
-  const files = (await walk(UPLOADS)).filter((f) => CONVERTIBLE.test(f) && !f.endsWith('.tmp.webp'));
+  const files = (await walk(UPLOADS)).filter((f) => CONVERTIBLE.test(f) && !f.endsWith('.tmp.webp') && !isVariant(f));
   const changes = [];
   for (const file of files) {
     try {
@@ -144,9 +185,19 @@ async function main() {
       process.exitCode = 1;
     }
   }
+  // Versi kecil (srcset) untuk semua foto final di folder yang memerlukannya
+  for (const file of (await walk(UPLOADS)).filter((f) => /\.webp$/i.test(f) && !f.endsWith('.tmp.webp') && !isVariant(f))) {
+    try {
+      for (const v of await ensureVariants(file)) console.log(`✓ ${toPublicUrl(file)} → ${v.to}  (${kb(v.size)})`);
+    } catch (error) {
+      console.error(`✗ Gagal membuat versi kecil ${toPublicUrl(file)}: ${error.message}`);
+      process.exitCode = 1;
+    }
+  }
   const touched = new Set([...(await updateContentReferences(changes)), ...(await repairContentReferences())]);
   if (touched.size) console.log(`Path gambar diperbarui di: ${[...touched].join(', ')}`);
   console.log(changes.length ? `Selesai: ${changes.length} gambar dioptimasi.` : 'Tidak ada gambar baru untuk dioptimasi.');
 }
 
-main();
+// Dijalankan sebagai skrip (npm run optimize-images / prebuild); saat di-import (tes) hanya mengekspor toWebp
+if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) main();

@@ -40,5 +40,7 @@ export interface Cta {
 export type IconName =
   | 'whatsapp' | 'instagram' | 'tiktok' | 'google' | 'star' | 'arrow' | 'pin' | 'clock'
   | 'navigate' | 'mail' | 'check' | 'menu' | 'close' | 'chevron-left' | 'chevron-right'
-  | 'info' | 'alert' | 'tag'
-  | 'scissors' | 'wash' | 'kids' | 'shave' | 'color' | 'perm' | 'spa' | 'tattoo';
+  | 'info' | 'alert' | 'tag' | 'play' | 'pause'
+  | 'scissors' | 'wash' | 'kids' | 'shave' | 'color' | 'perm' | 'spa' | 'tattoo'
+  // Aplikasi booking & admin (tidak dipakai di CMS)
+  | 'calendar' | 'user' | 'filter' | 'logout' | 'search' | 'plus' | 'gift';

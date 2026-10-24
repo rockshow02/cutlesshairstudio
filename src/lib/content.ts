@@ -3,11 +3,13 @@
  *
  * Sumber konten (tanpa server, tanpa API, biaya Rp0):
  *   - src/content/*.json : dikelola admin lewat Pages CMS (cabang, harga, barber, galeri, promo,
- *                          pengumuman, testimoni, produk, pengaturan situs). Divalidasi Zod saat build.
- *   - src/content/*.ts   : teks statis (hero, about, layanan, label UI, dll.).
+ *                          pengumuman, testimoni, produk, pengaturan situs, hero, tentang kami, kartu studio,
+ *                          CTA penutup, logo partner, partner cuci sepatu).
+ *                          Divalidasi Zod saat build.
+ *   - src/content/*.ts   : teks statis (layanan, label UI, dll.).
  *
- * Fungsi menerima `branchSlug` opsional untuk data per cabang. Tahap booking: cukup ganti isi fungsi
- * ini dengan pemanggilan API/database (struktur branches/barbers/pricing sudah 1:1 dengan tabel).
+ * Fungsi menerima `branchSlug` opsional untuk data per cabang.
+ *
  * Filter tanggal promo/pengumuman dievaluasi di browser saat dipanggil (WIB), tanpa build ulang.
  */
 import * as local from '@/content';
@@ -20,25 +22,42 @@ import announcementsJson from '@/content/announcements.json';
 import testimonialsJson from '@/content/testimonials.json';
 import settingsJson from '@/content/settings.json';
 import productsJson from '@/content/products.json';
+import heroJson from '@/content/hero.json';
+import aboutJson from '@/content/about.json';
+import studioJson from '@/content/studio.json';
+import ctaJson from '@/content/cta.json';
+import partnersJson from '@/content/partners.json';
+import shoeCareJson from '@/content/shoeCare.json';
+import servicesJson from '@/content/services.json';
 import type {
+  AboutEntry,
   AnnouncementEntry,
   BarberEntry,
   BranchEntry,
+  CtaEntry,
   GalleryEntry,
+  HeroEntry,
+  PartnersEntry,
+  ShoeCareEntry,
+  ServiceCardEntry,
   PricingEntry,
   ProductEntry,
   PromoEntry,
   SettingsEntry,
+  StudioEntry,
   TestimonialEntry,
 } from '@/content/schema';
 import type {
   AboutContent,
+  ShowcaseContent,
   Announcement,
   BarbersContent,
   Branch,
   BranchCopy,
   CtaBannerContent,
   GalleryContent,
+  PartnerLogosContent,
+  ShoeCareContent,
   HeroContent,
   LocationsContent,
   PricingContent,
@@ -51,11 +70,16 @@ import type {
 } from '@/types';
 import {
   buildAbout,
+  buildCtaBanner,
+  buildHero,
+  buildShowcase,
   buildAnnouncements,
   buildBarbers,
   buildBranches,
   buildGallery,
   buildLocations,
+  buildPartnerLogos,
+  buildShoeCare,
   buildPricing,
   buildProducts,
   buildPromos,
@@ -84,13 +108,26 @@ const data = {
   testimonials: testimonialsJson as unknown as TestimonialEntry[],
   settings: normalizeSettings(settingsJson as unknown as SettingsEntry),
   products: productsJson as unknown as ProductEntry[],
+  hero: heroJson as unknown as HeroEntry,
+  about: normalizeAbout(aboutJson as unknown as AboutEntry),
+  studio: studioJson as unknown as StudioEntry,
+  cta: ctaJson as unknown as CtaEntry,
+  partners: partnersJson as unknown as PartnersEntry,
+  shoeCare: shoeCareJson as unknown as ShoeCareEntry,
+  services: servicesJson as unknown as ServiceCardEntry[],
 };
+
+/** Default Zod (jeda 5 detik, crossfade) juga diterapkan di browser karena Pages CMS bisa tidak menulis field kosong */
+function normalizeAbout(a: AboutEntry): AboutEntry {
+  return { ...a, slideInterval: a.slideInterval || 5, transition: a.transition || 'crossfade' };
+}
 
 /** Nilai default yang diisi Zod saat validasi build (Pages CMS bisa tidak menulis field kosong) */
 function normalizeSettings(s: SettingsEntry): SettingsEntry {
   return {
     ...s,
-    siteUrl: (s.siteUrl ?? '').replace(/\/+$/, ''),
+    // Per environment (.env.<mode> → VITE_SITE_URL); produksi: kosong → Pengaturan Situs
+    siteUrl: (import.meta.env.VITE_SITE_URL || s.siteUrl || '').replace(/\/+$/, ''),
     stats: {
       ...s.stats,
       rating: s.stats?.rating === undefined || s.stats?.rating === null || (s.stats.rating as unknown) === ''
@@ -104,13 +141,14 @@ function normalizeSettings(s: SettingsEntry): SettingsEntry {
     showTestimonials: Boolean(s.showTestimonials),
     showProducts: Boolean(s.showProducts),
     showBeforeAfter: Boolean(s.showBeforeAfter),
+    enablePreloader: s.enablePreloader !== false,
   };
 }
 
 /** Simulasi latensi untuk menguji state loading: VITE_CONTENT_DELAY=1200 npm run dev */
 const SIMULATED_DELAY = Number(import.meta.env.VITE_CONTENT_DELAY ?? 0);
 
-/** Kembalikan salinan (komponen tidak bisa mengubah sumber), tetap async agar mudah diganti API. */
+/** Kembalikan salinan (komponen tidak bisa mengubah sumber). */
 async function resolve<T>(build: () => T): Promise<T> {
   if (SIMULATED_DELAY > 0) await new Promise((r) => setTimeout(r, SIMULATED_DELAY));
   return structuredClone(build());
@@ -130,7 +168,10 @@ export const getCitiesLabel = (): Promise<string> => resolve(() => joinIndonesia
 
 /* ---------- Data merek ---------- */
 
-export const getSite = (): Promise<SiteContent> => resolve(() => buildSite(data.settings, local.site, branchList()));
+const shoeCare = () =>
+  buildShoeCare(data.shoeCare, branchList(), local.shoeCareCopy, buildCtaBanner(data.cta, local.ctaBannerCopy).backgroundImage);
+export const getSite = (): Promise<SiteContent> =>
+  resolve(() => buildSite(data.settings, local.site, branchList(), { shoeCare: shoeCare() !== null }));
 export const getSocials = (): Promise<SocialLink[]> => resolve(() => buildSocials(data.settings, local.socials));
 
 /* ---------- Per cabang (branchSlug opsional) ---------- */
@@ -138,7 +179,7 @@ export const getSocials = (): Promise<SocialLink[]> => resolve(() => buildSocial
 export const getPricing = (branchSlug?: string): Promise<PricingContent> =>
   resolve(() => buildPricing(data.pricing, local.pricingCopy, branchList(), branchSlug));
 export const getServices = (branchSlug?: string): Promise<ServicesContent> =>
-  resolve(() => buildServices(local.services, data.pricing, branchSlug));
+  resolve(() => buildServices(data.services, local.servicesCopy, data.pricing, branchSlug));
 export const getBarbers = (branchSlug?: string): Promise<BarbersContent> =>
   resolve(() => buildBarbers(data.barbers, local.barbersCopy, branchList(), branchSlug));
 /** Promo aktif (tanggal dievaluasi saat dipanggil). branchSlug → hanya promo yang berlaku di cabang itu. */
@@ -150,11 +191,19 @@ export const getAnnouncements = (branchSlug?: string): Promise<Announcement[]> =
 /* ---------- Lainnya ---------- */
 
 export const getAbout = (): Promise<AboutContent> =>
-  resolve(() => buildAbout(local.aboutCopy, data.settings, branchList(), data.barbers));
+  resolve(() => buildAbout(data.about, local.aboutCopy, data.settings, branchList(), data.barbers));
 export const getGallery = (): Promise<GalleryContent> =>
   resolve(() => buildGallery(data.gallery, local.galleryCopy, data.settings.showBeforeAfter));
 export const getTestimonials = (): Promise<TestimonialsContent> =>
   resolve(() => buildTestimonials(data.testimonials, local.testimonialsCopy, data.settings));
 export const getProducts = (): Promise<ProductsContent> => resolve(() => buildProducts(data.products, local.productsCopy));
-export const getHero = (): Promise<HeroContent> => resolve(() => local.hero);
-export const getCtaBanner = (): Promise<CtaBannerContent> => resolve(() => local.ctaBanner);
+export const getHero = (): Promise<HeroContent> => resolve(() => buildHero(data.hero, local.heroExtras));
+export const getCtaBanner = (): Promise<CtaBannerContent> => resolve(() => buildCtaBanner(data.cta, local.ctaBannerCopy));
+/** Foto studio dari Pages CMS (Kartu Studio); kosong → foto cabang pertama; cadangan showcaseCopy */
+export const getShowcase = (): Promise<ShowcaseContent> =>
+  resolve(() => buildShowcase(data.studio, local.showcaseCopy, branchList().find((b) => b.photo)?.photo));
+/** Pita logo partner di beranda (Pages CMS → Logo Partner). null = dimatikan / belum ada logo aktif → tidak dirender */
+export const getPartnerLogos = (): Promise<PartnerLogosContent | null> =>
+  resolve(() => buildPartnerLogos(data.partners, data.settings.siteName));
+/** Section Cuci Sepatu (Pages CMS → Partner Cuci Sepatu). null = dimatikan / belum ada layanan → tidak dirender */
+export const getShoeCare = (): Promise<ShoeCareContent | null> => resolve(shoeCare);

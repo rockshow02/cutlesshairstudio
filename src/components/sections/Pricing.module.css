@@ -1,36 +1,105 @@
-.branchNote {
+.branchBar {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: var(--space-3) var(--space-4);
   margin: 0 0 var(--space-7);
-  padding: var(--space-3) var(--space-4);
-  border-left: 3px solid var(--c-taupe-dark);
-  background: var(--c-paper-2);
-  font-size: var(--fs-sm);
 }
-.branchBtn {
-  min-height: 36px;
-  padding: 0 var(--space-3);
-  border: 1px solid var(--c-ink);
+/* Pemilih cabang: segmented control, gaya sama dengan tab kategori (pil, huruf biasa) */
+.branchTabs {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+  max-width: 100%;
+  padding: var(--space-1);
+  border: 1px solid var(--c-line-dark);
+  border-radius: var(--radius-lg);
+  background: var(--c-paper-2);
+}
+.branchTab {
+  min-height: 40px;
+  padding: 0 var(--space-4);
+  border: 0;
   border-radius: var(--radius);
   background: transparent;
   color: var(--c-ink);
-  font-size: var(--fs-xs);
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  font-size: var(--fs-sm);
+  font-weight: 600;
   cursor: pointer;
+  transition: background-color var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease);
 }
-.branchBtn:hover {
+.branchTab:hover {
+  background: var(--c-paper);
+}
+.branchTab[aria-pressed='true'] {
   background: var(--c-ink);
   color: var(--c-bone);
+}
+.branchTab:focus-visible {
+  outline: 2px solid var(--c-focus);
+  outline-offset: 2px;
+}
+/* Label kecil "Harga cabang …" / "Berlaku di semua cabang" */
+.branchNote {
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--c-taupe-dark);
 }
 
 .categories {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   gap: var(--space-7) var(--space-8);
+}
+
+/* ---------- HP: tab per kategori (geser horizontal di dalam barisnya sendiri) ---------- */
+.tabbed {
+  min-width: 0;
+}
+.tabs {
+  display: flex;
+  gap: var(--space-2);
+  margin: 0 calc(var(--gutter) * -1) var(--space-4);
+  padding: 0 var(--gutter) var(--space-2);
+  overflow-x: auto;
+  scrollbar-width: none;
+  scroll-padding-inline: var(--gutter);
+}
+.tabs::-webkit-scrollbar {
+  display: none;
+}
+.tab {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 40px;
+  padding: 0 var(--space-4);
+  border: 1px solid var(--c-line-dark);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--c-ink);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.tab[aria-selected='true'] {
+  background: var(--c-ink);
+  border-color: var(--c-ink);
+  color: var(--c-bone);
+}
+.tab:focus-visible {
+  outline: 2px solid var(--c-focus);
+  outline-offset: 2px;
+}
+.tabCount {
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  opacity: 0.6;
+  font-variant-numeric: tabular-nums;
 }
 
 .categoryName {
@@ -79,6 +148,14 @@
   text-align: right;
   white-space: nowrap;
   font-variant-numeric: tabular-nums;
+}
+/* "Start from" kecil sebelum harga item "mulai" */
+.priceFrom {
+  display: block;
+  font-size: var(--fs-xs);
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  color: var(--c-ink-dim);
 }
 
 .packagesTitle {
@@ -154,9 +231,16 @@
   background: var(--c-sand);
 }
 
+/* Tablet/desktop: 2 kolom seimbang (kategori pendek & panjang tidak meninggalkan celah); urutan dibaca per kolom */
 @media (min-width: 768px) {
   .categories {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    display: block;
+    columns: 2;
+    column-gap: var(--space-8);
+  }
+  .categories > .category {
+    break-inside: avoid;
+    margin-bottom: var(--space-7);
   }
 }
 
@@ -166,4 +250,14 @@
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: var(--space-5);
   }
+}
+
+/* Target anchor kategori di HP (tab): tanpa ukuran, menghormati offset navbar */
+.anchor {
+  display: block;
+  height: 0;
+  scroll-margin-top: calc(var(--header-offset) + var(--space-4));
+}
+.category {
+  scroll-margin-top: calc(var(--header-offset) + var(--space-4));
 }

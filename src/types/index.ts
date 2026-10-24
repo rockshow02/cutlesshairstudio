@@ -14,3 +14,6 @@ export * from './promo';
 export * from './announcement';
 export * from './products';
 export * from './branches';
+export * from './showcase';
+export * from './partner';
+export * from './shoeCare';

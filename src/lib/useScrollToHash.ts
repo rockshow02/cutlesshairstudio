@@ -32,16 +32,18 @@ export function useScrollToHash(enabled: boolean) {
       timers.push(window.setTimeout(() => observer?.disconnect(), 5000));
     }
 
-    // Pengunjung menggulir sendiri → hentikan koreksi otomatis
-    const stop = () => timers.forEach((t) => window.clearTimeout(t));
-    window.addEventListener('wheel', stop, { once: true, passive: true });
-    window.addEventListener('touchstart', stop, { once: true, passive: true });
+    // Pengunjung menggulir sendiri atau pindah ke hash lain (klik link, ketik URL) → hentikan koreksi otomatis,
+    // agar halaman tidak ditarik kembali ke tujuan awal. Lompatan ke hash baru ditangani browser/Lenis.
+    const stop = () => {
+      observer?.disconnect();
+      timers.forEach((t) => window.clearTimeout(t));
+    };
+    const events = ['wheel', 'touchstart', 'hashchange'] as const;
+    events.forEach((e) => window.addEventListener(e, stop, { once: true, passive: true }));
 
     return () => {
-      observer?.disconnect();
       stop();
-      window.removeEventListener('wheel', stop);
-      window.removeEventListener('touchstart', stop);
+      events.forEach((e) => window.removeEventListener(e, stop));
     };
   }, [enabled]);
 }

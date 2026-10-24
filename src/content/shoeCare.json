@@ -1,0 +1,91 @@
+{
+  "enabled": true,
+  "showTeaser": true,
+  "isDemo": false,
+  "branchSlug": "bogor-bantarjati",
+  "name": "Fotless",
+  "heroKicker": "shoe lab",
+  "heroLogo": "/uploads/shoe-care/fotless-wordmark-white.svg",
+  "tagline": "Shoe Lab",
+  "heroImage": "/uploads/shoe-care/img9775jpg.webp",
+  "aboutParagraphs": [
+    "FOTLESS Shoe Lab adalah layanan perawatan dan restorasi sepatu profesional (premium sneaker care & treatment) yang dirancang fleksibel untuk berdiri sendiri maupun diintegrasikan ke dalam ekosistem lifestyle/groominghub by CUTLESS HAIR STUDIO."
+  ],
+  "aboutImage": "/uploads/shoe-care/icon-fotless-black-1.webp",
+  "aboutImageAlt": "About us",
+  "aboutImagePlain": true,
+  "menuUrl": "https://drive.google.com/file/d/19L1osGwbbpz9UpwbgpQKhEOFA632UHjf/view?usp=sharing",
+  "advantages": [
+    {
+      "title": "Titip saat potong rambut",
+      "description": "Bawa sepatu saat datang ke studio, ambil kembali sesuai estimasi waktu.",
+      "icon": "scissors"
+    },
+    {
+      "title": "Perawatan sesuai bahan",
+      "description": "Kanvas, kulit, suede, dan mesh dibersihkan dengan cara yang berbeda.",
+      "icon": "wash"
+    },
+    {
+      "title": "Pesan lewat WhatsApp",
+      "description": "Tanyakan layanan dan jadwal ambil langsung lewat chat.",
+      "icon": "check"
+    }
+  ],
+  "services": [
+    {
+      "name": "Deep Cleaning",
+      "description": "Membersihkan seluruh bagian sepatu, dari upper, midsole, sampai outsole.",
+      "isActive": true,
+      "order": 10
+    },
+    {
+      "name": "Unyellowing",
+      "description": "Menghilangkan warna kuning pada midsole sepatu.",
+      "isActive": true,
+      "order": 20
+    },
+    {
+      "name": "Suede Renew",
+      "description": "Menghidupkan kembali bahan suede yang kusam agar terlihat seperti baru.",
+      "isActive": true,
+      "order": 30
+    },
+    {
+      "name": "Kids Shoes",
+      "description": "Cuci sepatu anak dengan perawatan sesuai bahan.",
+      "isActive": true,
+      "order": 40
+    },
+    {
+      "name": "Sepatu Gunung",
+      "description": "Pembersihan sepatu gunung dan outdoor, harga menyesuaikan ukuran.",
+      "isActive": true,
+      "order": 50
+    }
+  ],
+  "photos": [
+    {
+      "image": "/uploads/shoe-care/whatsapp-image-2026-10-23-at-205524.webp",
+      "alt": "Sepatu vans yang kotor banget bisa bersih"
+    },
+    {
+      "image": "/uploads/shoe-care/whatsapp-image-2026-10-23-at-205525-1.webp",
+      "alt": "putih jadi makin putih"
+    },
+    {
+      "image": "/uploads/shoe-care/whatsapp-image-2026-10-23-at-205525-2.webp",
+      "alt": "perbadingan before dan after"
+    },
+    {
+      "image": "/uploads/shoe-care/whatsapp-image-2026-10-23-at-205525.webp",
+      "alt": "detailing sepatunya bisa diliahat"
+    }
+  ],
+  "notes": [
+    "Estimasi waktu dapat berubah tergantung kondisi sepatu dan antrean.",
+    "Sepatu yang tidak diambil lebih dari 30 hari setelah selesai di luar tanggung jawab partner.",
+    "Hasil pada bahan tertentu (mis. suede tua) bisa berbeda; tanyakan lewat WhatsApp sebelum menitipkan."
+  ],
+  "messageTemplate": "Halo {partner}, saya mau pesan {service} di Cutless Hair Studio cabang {branch}. (via website Cutless)"
+}

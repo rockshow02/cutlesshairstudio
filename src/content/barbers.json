@@ -1,48 +1,38 @@
 [
   {
-    "name": "James",
-    "role": "Head Hairstylist",
-    "photo": "/uploads/barbers/raka.webp",
+    "name": "Soemardi(erte)",
+    "role": "Professional Hair Artist",
+    "photo": "/uploads/barbers/soemardi-erte.webp",
     "branchSlug": "bogor-bantarjati",
-    "specialty": "Skin fade, Pompadour",
-    "order": 10,
-    "isActive": false
-  },
-  {
-    "name": "Dimas",
-    "role": "Senior Hairstylist",
-    "photo": "/uploads/barbers/dimas.webp",
-    "branchSlug": "bogor-bantarjati",
-    "specialty": "Beard, Classic cut",
-    "order": 20,
-    "isActive": true
-  },
-  {
-    "name": "Bayu",
-    "role": "Color Specialist",
-    "photo": "/uploads/barbers/bayu.webp",
-    "branchSlug": "bogor-bantarjati",
-    "specialty": "Coloring, Perming",
+    "specialty": "Cornrow, Dreadlock, Coloring, Et.c",
     "order": 30,
     "isActive": true
   },
   {
-    "name": "Fajar",
-    "role": "Hairstylist",
-    "photo": "/uploads/barbers/fajar.webp",
+    "name": "Yasslaw",
+    "role": "Professional Hair Stylist",
+    "photo": "/uploads/barbers/yasslaw.webp",
     "branchSlug": "bogor-bantarjati",
-    "specialty": "Hair tattoo, Textured crop",
-    "order": 40,
+    "specialty": "Hair Perm, Design Perm, Coloring",
+    "order": 10,
     "isActive": true
   },
   {
-    "name": "Rockshow",
-    "role": "Barbership",
-    "photo": "/uploads/barbers/whatsapp-image-2026-08-30-at-082452.webp",
+    "name": "Agus",
+    "role": "Professional Hair Stylist",
+    "photo": "/uploads/barbers/agus.webp",
     "branchSlug": "bogor-bantarjati",
-    "specialty": "Spesial sasak ",
-    "whatsappNumber": "628988918236",
-    "order": 1,
+    "specialty": "Hair Perm, Design Perm, Coloring",
+    "order": 20,
+    "isActive": true
+  },
+  {
+    "name": "Nauval",
+    "role": "Hairstylist",
+    "photo": "/uploads/barbers/29bfccb8-37cc-441f-92d0-1b7d53cf1c4b.webp",
+    "branchSlug": "cibubur",
+    "specialty": "Haircut, Permink, Coloring",
+    "order": 31,
     "isActive": true
   }
 ]

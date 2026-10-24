@@ -4,13 +4,13 @@ import type { SiteContent } from '@/types';
  * Konfigurasi & teks statis situs.
  * Nilai berikut DITIMPA oleh Pengaturan Situs di Pages CMS (src/content/settings.json):
  *   brandName, logo.stacked (logo footer), whatsapp.number, whatsapp.displayNumber,
- *   whatsapp.templates.general, siteUrl, features, footer.description.
+ *   whatsapp.templates.general, email, siteUrl, features, footer.description (tagline footer).
+ * Kota TIDAK ditulis di sini: {cities} diisi otomatis dari kota cabang aktif (branches.json).
  * Alamat & jam buka kini per cabang (src/content/branches.json).
  * Ubah nilai-nilai itu lewat Pages CMS, bukan di file ini.
  */
 export const site: SiteContent = {
   brandName: 'Cutless Hair Studio',
-  city: 'Kota Bogor',
   logo: {
     horizontal: { src: '/images/brand/cutless-logo-horizontal-white.png', alt: 'Cutless Hair Studio', width: 432, height: 120 },
     stacked: { src: '/images/brand/cutless-logo-white.png', alt: 'Cutless Hair Studio', width: 404, height: 360 },
@@ -19,6 +19,8 @@ export const site: SiteContent = {
   nav: [
     { label: 'Layanan', sectionId: 'layanan' },
     { label: 'Harga', sectionId: 'harga' },
+    // Halaman /cuci-sepatu/: hanya menu HP & footer (navbar desktop sudah penuh), dan hanya saat halaman aktif (buildSite)
+    { label: 'Cuci Sepatu', href: '/cuci-sepatu/', desktop: false },
     { label: 'Hairstylist', sectionId: 'hairstylist' },
     { label: 'Galeri', sectionId: 'galeri' },
     { label: 'Produk', href: '/produk/' },
@@ -33,21 +35,23 @@ export const site: SiteContent = {
       // Template booking menyebut cabang. general ditimpa "Pesan booking default" di Pengaturan Situs.
       general: 'Halo {brand} cabang {branch}, saya mau booking haircut untuk [hari/jam].',
       service: 'Halo {brand} cabang {branch}, saya mau booking {service} untuk [hari/jam].',
-      barber: 'Halo {brand} cabang {branch}, saya mau booking haircut dengan {barber} untuk [hari/jam].',
+      // Tombol "Booking [nama barber]"; ditimpa "Template pesan booking kapster" di Pengaturan Situs
+      barber: "Halo Kak! Untuk reservasi di {brand} cabang {branch}, mohon isi formulir berikut ya:\nNama Lengkap:\nNomor HP / WA:\nHari & Tanggal:\nJam Kedatangan:\nPilihan Layanan: (mis. Haircut / Treatment / Coloring)\nKapster Pilihan: {barber}\nKirim kembali format ini jika sudah diisi, kami akan segera mengonfirmasi jadwalnya. 😊\nCatatan: Toleransi keterlambatan maks. 15 menit. Lewat dari itu, slot dialihkan ke antrean berikutnya. Terima kasih telah memilih {brand}!",
       branch: 'Halo {brand} cabang {branch}, saya mau booking haircut untuk [hari/jam].',
       package: 'Halo {brand} cabang {branch}, saya mau ambil paket {package}. Bisa dibantu?',
       // Ke nomor pusat (bukan cabang)
       question: 'Halo {brand}, saya mau tanya-tanya dulu.',
       priceQuestion: 'Halo {brand} cabang {branch}, saya mau tanya harga {service}.',
-      product: 'Halo {brand} cabang {branch}, saya mau pesan {product}. Masih ada stoknya?',
+      product: 'Halo {brand} cabang {branch}, saya mau pesan {product} untuk diambil di studio. Masih ada stoknya?',
       productRestock: 'Halo {brand} cabang {branch}, kapan {product} ready lagi? Saya mau pesan.',
     },
   },
-  // TODO: ganti email bisnis
-  email: 'halo@cutlesshairstudio.id',
+  // Diisi dari Pengaturan Situs → Email (kosong = tidak ditampilkan)
+  email: '',
   // Diisi dari Pengaturan Situs (siteUrl & toggle section)
   siteUrl: '',
-  features: { testimonials: false, products: false, beforeAfter: false },
+  features: { testimonials: false, products: false, beforeAfter: false, shoeCare: false },
+  intro: { enabled: true },
   // TODO: sesuaikan dengan rentang harga asli
   priceRange: 'Rp60.000 - Rp450.000',
   seo: {
@@ -75,6 +79,7 @@ export const site: SiteContent = {
     empty: 'Konten belum tersedia. Hubungi kami via WhatsApp untuk info terbaru.',
     error: 'Konten gagal dimuat. Coba muat ulang halaman.',
     askPrice: 'Tanya harga',
+    viewPrice: 'Lihat harga',
     priceFrom: 'mulai',
     previous: 'Sebelumnya',
     next: 'Berikutnya',
@@ -88,7 +93,8 @@ export const site: SiteContent = {
     announcementRegion: 'Pengumuman',
   },
   footer: {
-    description: 'Hair studio di Kota Bogor. Goodstyle, goodmood.',
+    // Bawaan bila Pengaturan Situs → Tagline footer kosong; {cities} = kota cabang aktif
+    description: 'Hair studio di {cities}. Goodstyle, goodmood.',
     contactTitle: 'Kontak',
     exploreTitle: 'Jelajahi',
     branchesTitle: 'Cabang',

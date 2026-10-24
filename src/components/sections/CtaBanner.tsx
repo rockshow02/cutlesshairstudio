@@ -5,7 +5,6 @@ import { useCtaTarget } from '@/lib/useBooking';
 import { Button } from '@/components/ui/Button';
 import { Container } from '@/components/ui/Container';
 import { Kicker } from '@/components/ui/SectionTitle';
-import { Reveal } from '@/components/ui/Reveal';
 import { ResponsiveImage } from '@/components/ui/ResponsiveImage';
 import styles from './CtaBanner.module.css';
 
@@ -26,7 +25,7 @@ export function CtaBanner() {
       <ResponsiveImage image={data.backgroundImage} className={styles.bg} />
       <div className={styles.shade} aria-hidden="true" />
       <Container className={styles.inner}>
-        <Reveal>
+        <div>
           <Kicker center>{data.kicker}</Kicker>
           <h2 id="booking-title" className={styles.title}>
             {data.title}
@@ -35,7 +34,7 @@ export function CtaBanner() {
           <Button href={cta.href} external={cta.external} onClick={cta.onClick} size="lg" variant="light" icon="whatsapp">
             {data.cta.label}
           </Button>
-        </Reveal>
+        </div>
       </Container>
     </section>
   );

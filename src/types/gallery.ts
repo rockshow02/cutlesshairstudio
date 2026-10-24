@@ -15,6 +15,12 @@ export interface GalleryItem {
   caption?: string;
   layout: GalleryLayout;
   styleCategory?: GalleryStyle;
+  /** Versi kecil (srcset) untuk kartu kolom foto berjalan di section Lokasi */
+  thumb: ImageAsset;
+  /** object-position vertikal di kartu */
+  focus: 'top' | 'center' | 'bottom';
+  /** Ikut di kolom foto berjalan (section Lokasi) */
+  showInMarquee: boolean;
 }
 
 export interface BeforeAfter {

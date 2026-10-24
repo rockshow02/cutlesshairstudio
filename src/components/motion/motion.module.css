@@ -1,0 +1,281 @@
+/* Gaya bersama komponen animasi. Semua gerak memakai transform & opacity saja. */
+
+/* ---------- Reveal: muncul saat masuk viewport (satu IntersectionObserver bersama) ---------- */
+.reveal {
+  transition:
+    opacity var(--reveal-dur, 0.8s) cubic-bezier(0.22, 0.61, 0.36, 1) var(--reveal-delay, 0s),
+    transform var(--reveal-dur, 0.8s) cubic-bezier(0.22, 0.61, 0.36, 1) var(--reveal-delay, 0s);
+}
+/* Disembunyikan hanya setelah observer aktif (bila skrip gagal, isi tetap terlihat) */
+:global(html[data-reveal-ready]) .reveal[data-reveal='out'] {
+  opacity: 0;
+  transform: translate3d(0, var(--reveal-y, 24px), 0);
+}
+/* Sudah terlewati / mendarat lewat anchor: tampil langsung tanpa animasi */
+.reveal[data-reveal-instant] {
+  transition: none !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  :global(html[data-reveal-ready]) .reveal[data-reveal='out'] {
+    transform: none;
+  }
+  .reveal {
+    /* Tetap fade sederhana (aturan global "kurangi gerakan" mematikan transisi lain) */
+    transition: opacity 0.4s linear !important;
+  }
+}
+
+/* ---------- TextReveal: baris teks naik dari balik garis ---------- */
+.lineMask {
+  display: block;
+  overflow: hidden;
+  /* Ruang untuk huruf berekor (g, y, p) tanpa mengubah tinggi baris */
+  padding-bottom: 0.08em;
+  margin-bottom: -0.08em;
+}
+.lineInner {
+  display: block;
+  will-change: transform;
+}
+
+/* ---------- CountUp ---------- */
+.countValue::before {
+  content: attr(data-value);
+}
+
+/* ---------- Marquee (CSS transform, tanpa JS per frame) ---------- */
+.marquee {
+  overflow: hidden;
+}
+.marqueeTrack {
+  display: flex;
+  width: max-content;
+  animation: marqueeX var(--marquee-duration, 30s) linear infinite;
+  will-change: transform;
+}
+.marqueeGroup {
+  display: flex;
+  flex: none;
+}
+.marquee[data-axis='y'] .marqueeTrack {
+  flex-direction: column;
+  width: auto;
+  animation-name: marqueeY;
+}
+.marquee[data-axis='y'] .marqueeGroup {
+  flex-direction: column;
+}
+.marquee[data-reverse] .marqueeTrack {
+  animation-direction: reverse;
+}
+.marquee:hover .marqueeTrack,
+.marquee:focus-within .marqueeTrack,
+.marquee[data-paused] .marqueeTrack,
+.marquee[data-offscreen] .marqueeTrack {
+  animation-play-state: paused;
+}
+@keyframes marqueeX {
+  to { transform: translate3d(-50%, 0, 0); }
+}
+@keyframes marqueeY {
+  to { transform: translate3d(0, -50%, 0); }
+}
+
+/* ---------- ToneShift: perpindahan warna latar antar-section (CSS scroll-driven, tanpa JS) ---------- */
+.toneShift {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  opacity: 0;
+  pointer-events: none;
+}
+/* Warna lapisan = warna section sebelumnya */
+:global([data-tone='dark']) + :global([data-tone='light']) > .toneShift { --tone-from: var(--c-ink); }
+:global([data-tone='light']) + :global([data-tone='dark']) > .toneShift { --tone-from: var(--c-paper); }
+:global([data-surface='warm']) + :global([data-tone='dark']) > .toneShift,
+:global([data-tone='light']) + :global([data-tone='light']) + :global([data-tone='dark']) > .toneShift { --tone-from: var(--c-paper-3); }
+
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    :global([data-tone='dark']) + :global([data-tone='light']) > .toneShift,
+    :global([data-tone='light']) + :global([data-tone='dark']) > .toneShift {
+      background: var(--tone-from);
+      /* Hanya selama section masuk: tepi atas dari bawah layar → 35% dari atas. Di luar rentang: opacity 0 */
+      animation: toneFade linear forwards;
+      animation-timeline: view();
+      animation-range: entry 0% entry 65%;
+    }
+  }
+}
+@keyframes toneFade {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+/* ---------- ExpandingCard ---------- */
+.expand {
+  position: relative;
+  z-index: var(--z-content);
+  height: 220vh;
+  background: var(--c-ink);
+  isolation: isolate;
+}
+.expandSticky {
+  position: sticky;
+  top: 0;
+  display: grid;
+  place-items: center;
+  height: 100vh;
+  height: 100svh;
+  overflow: hidden;
+}
+.expandCard {
+  position: relative;
+  display: grid;
+  /* Satu sel setinggi kartu: ukuran asli foto tidak boleh memanjangkan baris */
+  grid-template: minmax(0, 1fr) / minmax(0, 1fr);
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  will-change: transform;
+}
+.expandImg,
+.expandShade,
+.expandCorners,
+.taglines {
+  grid-area: 1 / 1;
+}
+.expandCard picture {
+  display: contents;
+}
+.expandImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.expandShade {
+  background: linear-gradient(180deg, rgba(12, 16, 20, 0.15) 0%, rgba(12, 16, 20, 0.55) 55%, rgba(12, 16, 20, 0.85) 100%);
+}
+/* Sudut bulat = bingkai sewarna latar (box-shadow ke luar radius), memudar → radius 0 */
+.expandCorners {
+  border-radius: 28px;
+  box-shadow: 0 0 0 60px var(--c-ink);
+  pointer-events: none;
+}
+.taglines {
+  position: relative;
+  display: grid;
+  align-self: end;
+  padding: 0 var(--gutter) clamp(3rem, 10vh, 6rem);
+}
+.tagline,
+.taglinesStatic li {
+  grid-area: 1 / 1;
+  font-family: var(--f-display);
+  font-stretch: 125%;
+  font-weight: 800;
+  font-size: clamp(1.75rem, 1rem + 4.2vw, 4.5rem);
+  line-height: 1.02;
+  letter-spacing: -0.02em;
+  text-transform: uppercase;
+  color: var(--c-bone);
+  text-shadow: 0 2px 24px rgba(0, 0, 0, 0.35);
+}
+/* "Kurangi gerakan": kartu statis, semua tagline tampil berurutan */
+.expandStatic {
+  height: auto;
+}
+.expandStatic .expandCard {
+  height: 85vh;
+  min-height: 420px;
+}
+.taglinesStatic {
+  position: relative;
+  grid-area: 1 / 1;
+  align-self: end;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: 0 var(--gutter) var(--space-7);
+}
+.taglinesStatic li {
+  grid-area: auto;
+  font-size: clamp(1.4rem, 1rem + 2.5vw, 3rem);
+}
+@media (max-width: 767px) {
+  .expand { height: 180vh; }
+  .expandCorners { border-radius: 18px; }
+}
+
+/* ---------- Preloader ---------- */
+.preloader {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-preloader);
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+}
+.preloaderPanel {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 50.5%;
+  background: var(--c-ink);
+  will-change: transform;
+}
+.preloaderTop { top: 0; }
+.preloaderBottom { bottom: 0; }
+.preloaderInner {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-4);
+}
+.preloaderMark {
+  display: block;
+  width: 72px;
+  height: auto;
+}
+.preloaderVideo {
+  width: min(60vw, 320px);
+  height: auto;
+}
+.preloaderBar {
+  display: block;
+  width: 96px;
+  height: 2px;
+  overflow: hidden;
+  background: var(--c-line-light);
+}
+.preloaderBarFill {
+  display: block;
+  height: 100%;
+  background: var(--c-sand);
+  transform: scaleX(0);
+  transform-origin: left;
+}
+.preloaderCount {
+  font-family: var(--f-display);
+  font-stretch: 125%;
+  font-weight: 700;
+  font-size: var(--fs-xs);
+  letter-spacing: 0.2em;
+  color: var(--c-bone-dim);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- PageTransition ---------- */
+.curtain {
+  position: fixed;
+  inset: 0;
+  z-index: calc(var(--z-preloader) + 1);
+  background: var(--c-ink);
+  pointer-events: none;
+  will-change: transform;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .marqueeTrack { animation: none; animation-play-state: paused; }
+}

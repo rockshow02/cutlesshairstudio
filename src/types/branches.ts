@@ -84,11 +84,22 @@ export interface BranchCopy {
     /** {branch} */
     yourBranch: string;
     /** {branch} */
+    /** "Harga cabang {branch}" */
     priceFor: string;
-    priceVaries: string;
+    /** Label bila harga sama di semua cabang Aktif */
+    priceAllBranches: string;
+    /** aria-label grup pemilih cabang di Daftar Harga */
+    pricePicker: string;
     /** {branch} */
     barbersFor: string;
     noBarbers: string;
+    /** Judul daftar layanan di panel cabang */
+    servicesTitle: string;
+    /** {branch}: label kolom foto hairstylist berjalan */
+    /** Label kolom foto berjalan (foto Galeri) di section Lokasi */
+    galleryMarquee: string;
+    pauseMotion: string;
+    playMotion: string;
     /** {branches} */
     promoFor: string;
     notFoundTitle: string;

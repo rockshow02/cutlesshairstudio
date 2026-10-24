@@ -36,7 +36,7 @@ export interface BookingTarget {
 }
 
 /**
- * Semua tombol booking lewat sini, agar selalu ke WhatsApp CABANG dengan pesan yang menyebut cabang:
+ * Semua tombol booking & pesan lewat sini → WhatsApp CABANG dengan pesan yang menyebut cabang:
  * "Halo Cutless Hair Studio cabang Cibubur, saya mau booking ...".
  * Belum memilih cabang → pemilih cabang terbuka dulu, lalu WhatsApp dibuka dari klik yang sama.
  */

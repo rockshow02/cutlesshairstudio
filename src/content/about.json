@@ -1,0 +1,43 @@
+{
+  "kicker": "About Us",
+  "title": "Bukan sekadar potong rambut.",
+  "paragraphs": [
+    "Cutless lahir dari satu ide sederhana: potong rambut seharusnya bikin kamu lebih percaya diri, bukan bikin deg-degan. Makanya di sini kami ngobrol dulu, baca bentuk wajah, tekstur rambut, dan keseharianmu, baru mulai eksekusi.",
+    "Namanya juga Cutless: cut less, style more. Kami nggak sekadar memangkas, tapi membentuk gaya yang gampang kamu rawat sendiri, rapi hari ini dan tetap enak di-styling minggu depan.",
+    "Dari skin fade dan two block, coloring, perming, sampai cornrow, braids, dan dreadlock, semua dikerjakan hairstylist yang paham tren. Pria dan wanita, semua welcome di studio kami."
+  ],
+  "values": [
+    {
+      "title": "Konsultasi dulu",
+      "description": "Gaya ditentukan bareng, bukan ditebak."
+    },
+    {
+      "title": "Detail sampai rapi",
+      "description": "Fade halus, garis tegas, finishing bersih."
+    },
+    {
+      "title": "Nyaman & on time",
+      "description": "Booking jelas, nggak pakai antre lama."
+    }
+  ],
+  "caption": "Cutless Hair Studio · Bogor & Cibubur",
+  "images": [
+    {
+      "src": "/uploads/about/whatsapp-image-2026-10-19-at-40400-pm-1.webp",
+      "alt": "Hairstylist Cutless merapikan skin fade pelanggan di cabang Bogor Bantarjati",
+      "focalPoint": "tengah"
+    },
+    {
+      "src": "/uploads/about/whatsapp-image-2026-10-19-at-40359-pm.webp",
+      "alt": "Suasana studio Cutless Hair Studio dengan kursi barber dan cermin besar",
+      "focalPoint": "tengah"
+    },
+    {
+      "src": "/uploads/about/whatsapp-image-2026-10-19-at-40359-pm-1.webp",
+      "alt": "Detail proses cornrow oleh hairstylist Cutless Hair Studio",
+      "focalPoint": "tengah"
+    }
+  ],
+  "slideInterval": 5,
+  "transition": "crossfade"
+}

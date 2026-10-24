@@ -1,0 +1,111 @@
+# CI untuk setiap Pull Request (gratis di repo publik).
+# Job "verify" dan "e2e" adalah status check WAJIB untuk merge ke main (lihat CONTRIBUTING.md → Branch protection).
+#   PR ke main    : hanya dari branch staging; konten harus SIAP TAYANG (CONTENT_CHECK=strict) + build produksi
+#   PR ke staging : konten boleh belum lengkap (peringatan saja) + build staging
+name: CI
+
+on:
+  pull_request:
+    branches: [main, staging]
+  push:
+    branches: [staging]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      # Ketat hanya untuk PR yang menuju produksi
+      TARGET: ${{ github.event_name == 'pull_request' && github.base_ref || github.ref_name }}
+    steps:
+      - name: Asal PR ke main harus staging
+        if: github.event_name == 'pull_request' && github.base_ref == 'main'
+        env:
+          HEAD_REF: ${{ github.head_ref }}
+        run: |
+          if [ "$HEAD_REF" != "staging" ]; then
+            echo "::error::PR ke main hanya boleh dari branch staging (PR ini dari \"$HEAD_REF\"). Merge dulu ke staging, uji di URL staging, lalu buat PR staging → main."
+            exit 1
+          fi
+
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .node-version
+          cache: npm
+
+      - name: Install dependensi
+        run: npm ci --no-audit --no-fund
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Tes unit (skema konten, srcset, pesan WhatsApp)
+        run: npm test
+
+      - name: Validasi konten (Zod + relasi cabang + aturan pra-launch)
+        run: npm run check:content
+        env:
+          CONTENT_CHECK: ${{ env.TARGET == 'main' && 'strict' || 'warn' }}
+
+      - name: Build produksi
+        if: env.TARGET == 'main'
+        run: npm run build
+
+      - name: Build staging
+        if: env.TARGET != 'main'
+        run: npm run build:staging
+
+  # E2E Playwright (360 px & desktop) terhadap Worker statis lokal (wrangler dev, tanpa akun Cloudflare).
+  # Memakai build E2E dengan data uji tetap (e2e/fixtures/content.ts), jadi perubahan isi CMS
+  # (mis. status cabang) tidak membuat job ini gagal. Gratis di repo publik.
+  e2e:
+    name: e2e
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .node-version
+          cache: npm
+
+      - name: Install dependensi
+        run: npm ci --no-audit --no-fund
+
+      - name: Cache browser Playwright
+        uses: actions/cache@v6
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: E2E 360 px & desktop (build E2E + wrangler dev otomatis)
+        run: npm run e2e
+        env:
+          CI: 'true'
+          WRANGLER_SEND_METRICS: 'false'
+
+      - name: Simpan trace bila gagal
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: playwright-trace
+          path: test-results/
+          retention-days: 7

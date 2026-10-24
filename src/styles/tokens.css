@@ -1,3 +1,19 @@
+/*
+ * Font cadangan selama Archivo (Google Fonts) belum termuat: Arial Black diperlebar 118% (rasio lebar Archivo wdth 125
+ * terhadap Arial Black, diukur di judul situs) agar judul membungkus di baris yang sama → tanpa pergeseran layout (CLS)
+ * saat font asli masuk. Setelah Archivo termuat, tampilan tidak berubah.
+ */
+@font-face {
+  font-family: 'Archivo Fallback';
+  src: local('Arial Black'), local('ArialBlack'), local('Arial-Black');
+  size-adjust: 118%;
+  /* Metrik vertikal = Archivo (ascent 0,878 em, descent 0,210 em, diukur di browser) ÷ size-adjust: posisi teks di dalam
+     baris tidak bergeser saat Archivo termuat (judul yang tampil tanpa animasi, mis. hero /cuci-sepatu/) */
+  ascent-override: 74.4%;
+  descent-override: 17.8%;
+  line-gap-override: 0%;
+}
+
 /* ==========================================================================
    Design tokens Cutless Hair Studio
    Palet diambil dari feed Instagram Cutless (disetujui di eksekusi pertama).
@@ -17,6 +33,7 @@
   --c-concrete: #7e7d82;
   --c-paper: #efebe5;        /* latar section terang */
   --c-paper-2: #f7f5f1;      /* kartu di section terang */
+  --c-paper-3: #e8e1d6;      /* latar terang hangat (section partner), paper dicampur sand-light */
   --c-bone: #f2efea;         /* teks utama di latar gelap */
   --c-bone-dim: rgba(242, 239, 234, 0.7);
   --c-ink-dim: rgba(12, 16, 20, 0.72);
@@ -28,8 +45,22 @@
   --c-skeleton-dark: rgba(242, 239, 234, 0.08);
   --c-skeleton-light: rgba(12, 16, 20, 0.07);
 
+  /* ---- Aplikasi (booking & admin): permukaan, fokus, status ----
+     Nada diredam agar serasi dengan palet. Kontras (WCAG):
+     teks status di latar status ≥ 6.5:1, teks status di --c-surface ≥ 7.7:1,
+     garis status di --c-surface ≥ 3.4:1, --c-bone di --c-danger 7.2:1, fokus di paper 6.6:1. */
+  --c-surface: #fdfcfa;          /* input, kartu jadwal, tabel (pengganti putih murni) */
+  --c-focus: var(--c-taupe-dark);
+  --c-backdrop: rgba(12, 16, 20, 0.55);
+  --shadow-overlay: 0 24px 64px rgba(12, 16, 20, 0.28); /* hanya untuk sheet/dialog/toast */
+  --c-success: #2d5a3d;      --c-success-bg: #e4ece3;  --c-success-line: #4d7a5b;
+  --c-warning: #6b4a12;      --c-warning-bg: #f3e7cf;  --c-warning-line: #a8823d;
+  --c-danger: #8c2f24;       --c-danger-bg: #f5e3df;   --c-danger-line: #a64a3c;
+  --c-info: #2f4a62;         --c-info-bg: #e2e8ec;     --c-info-line: #5a7690;
+  --c-neutral: #4a4844;      --c-neutral-bg: #e7e3dd;  --c-neutral-line: var(--c-concrete);
+
   /* ---- Tipografi ---- */
-  --f-display: 'Archivo', 'Arial Black', 'Helvetica Neue', Arial, sans-serif;
+  --f-display: 'Archivo', 'Archivo Fallback', 'Arial Black', 'Helvetica Neue', Arial, sans-serif;
   --f-body: 'Plus Jakarta Sans', system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
   --fs-xs: 0.75rem;   /* 12 */
   --fs-sm: 0.875rem;  /* 14 */
@@ -76,11 +107,15 @@
   --z-nav: 50;          /* navbar + bar pengumuman */
   --z-fab: 60;
   --z-menu: 70;
+  --z-sheet: 80;        /* bottom sheet / side panel / dialog (aplikasi) */
+  --z-toast: 85;
+  --z-env: 90;         /* badge DEV/STAGING (tidak ada di produksi) */
   --z-preloader: 100;
 
   /* ---- Motion ---- */
   --ease: cubic-bezier(0.22, 0.61, 0.36, 1);
   --dur-fast: 0.2s;
+  --dur-ui: 0.16s;      /* transisi kontrol aplikasi (150–200 ms) */
   --dur: 0.35s;
   --dur-slow: 0.8s;
 }

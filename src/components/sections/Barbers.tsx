@@ -10,7 +10,6 @@ import { SectionState } from '@/components/ui/SectionState';
 import { SectionTitle } from '@/components/ui/SectionTitle';
 import { Card, CardFooter } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
-import { Reveal } from '@/components/ui/Reveal';
 import { ResponsiveImage } from '@/components/ui/ResponsiveImage';
 import styles from './Barbers.module.css';
 
@@ -32,10 +31,10 @@ export function Barbers() {
                 <p className={styles.empty}>{copy.labels.noBarbers}</p>
               ) : (
                 <ul className={styles.track} tabIndex={0} aria-label={`${data.heading.kicker}. ${site.ui.scrollHint}`}>
-                  {data.items.map((barber, i) => (
-                    <Reveal as="li" key={barber.id} className={styles.item} delay={(i % 4) * 0.06}>
+                  {data.items.map((barber) => (
+                    <li key={barber.id} className={styles.item}>
                       <BarberCard barber={barber} showBranch={!effective} />
-                    </Reveal>
+                    </li>
                   ))}
                 </ul>
               )}

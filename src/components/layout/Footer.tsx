@@ -50,10 +50,12 @@ export function Footer() {
                   {site.whatsapp.displayNumber}
                 </a>
               </li>
-              <li>
-                <Icon name="mail" />
-                <a href={`mailto:${site.email}`}>{site.email}</a>
-              </li>
+              {site.email && (
+                <li>
+                  <Icon name="mail" />
+                  <a href={`mailto:${site.email}`}>{site.email}</a>
+                </li>
+              )}
             </ul>
           </div>
 

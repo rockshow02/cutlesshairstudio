@@ -7,6 +7,7 @@ import imageMeta from 'virtual:image-meta';
 import type {
   AboutContent,
   AboutCopy,
+  AboutSlide,
   AboutStat,
   Announcement,
   Barber,
@@ -14,12 +15,18 @@ import type {
   BarbersCopy,
   Branch,
   BranchCopy,
+  CtaBannerContent,
+  CtaBannerCopy,
   GalleryContent,
   GalleryCopy,
+  GalleryItem,
   GalleryLayout,
+  HeroContent,
+  HeroExtras,
   ImageAsset,
   LocationsContent,
   OpeningHour,
+  PartnerLogosContent,
   PriceBadge,
   PriceCategory,
   PriceCategoryKey,
@@ -33,7 +40,14 @@ import type {
   PromoContent,
   PromoCopy,
   Rating,
+  Service,
   ServicesContent,
+  ServicesCopy,
+  IconName,
+  ShowcaseContent,
+  ShowcaseCopy,
+  ShoeCareContent,
+  ShoeCareCopy,
   SiteContent,
   SocialLink,
   Testimonial,
@@ -41,20 +55,30 @@ import type {
   TestimonialsCopy,
 } from '@/types';
 import type {
+  AboutEntry,
   AnnouncementEntry,
   BarberEntry,
   BranchEntry,
+  CtaEntry,
   GalleryEntry,
+  HeroEntry,
   OpeningHourEntry,
+  PartnersEntry,
   PricingEntry,
   ProductEntry,
   PromoEntry,
+  ServiceCardEntry,
   SettingsEntry,
+  ShoeCareEntry,
+  StudioEntry,
   TestimonialEntry,
 } from '@/content/schema';
-import { formatNumber } from './format';
+import { srcSetOf } from './responsiveImage';
+import { PRICE_CATEGORIES, priceCategoryAnchor } from '@/content/priceCategories';
+import { availableAt, priceAt, samePricesEverywhere } from '@/content/branchPricing';
+import { formatNumber, formatPriceText } from './format';
 import { isActiveNow, parseWIB, toIsoWIB } from './dates';
-import { fillTemplate } from './whatsapp';
+import { fillTemplate, templateLink } from './whatsapp';
 
 /* ---------- Helper umum ---------- */
 
@@ -80,6 +104,170 @@ export function toImage(src: string, alt: string, fallback = { width: 800, heigh
   const resolved = imageMeta[src] ? src : imageMeta[webp] ? webp : src;
   const size = imageMeta[resolved] ?? fallback;
   return { src: resolved, alt, width: size.width, height: size.height };
+}
+
+/** Seperti toImage + srcset otomatis dari versi kecil (mis. foto-600.webp) bila ada */
+export function responsiveImage(src: string, alt: string, sizes: string, fallback?: { width: number; height: number }): ImageAsset {
+  const image = toImage(src, alt, fallback);
+  const srcSet = srcSetOf(image.src, imageMeta);
+  return srcSet ? { ...image, srcSet, sizes } : image;
+}
+
+/* ---------- Logo Partner (Pages CMS → Logo Partner) ---------- */
+
+/** Logo aktif ≤ ini: deret statis di tengah, tanpa animasi */
+export const PARTNER_STATIC_MAX = 2;
+
+/** Pita logo di beranda. null = dimatikan atau belum ada logo aktif → pita tidak dirender (tanpa ruang kosong). */
+export function buildPartnerLogos(p: PartnersEntry | null | undefined, brandName: string): PartnerLogosContent | null {
+  if (!p || p.enabled === false) return null;
+  const items = activeSorted(p.logos ?? []).map((l) => {
+    const logo = text(l.logo);
+    return {
+      name: l.name,
+      // Lebar/tinggi asli dari file (cegah layout shift); tinggi tampil diatur CSS
+      logo: logo ? toImage(logo, l.name, { width: 400, height: 200 }) : null,
+      url: text(l.url) ?? null,
+      isDemo: l.isDemo === true,
+    };
+  });
+  if (items.length === 0) return null;
+  return {
+    label: text(p.label) ?? null,
+    ariaLabel: `Partner ${brandName}`,
+    items,
+    animated: items.length > PARTNER_STATIC_MAX,
+  };
+}
+
+/* ---------- Partner Cuci Sepatu (Pages CMS → Partner Cuci Sepatu) ---------- */
+
+export const SHOE_CARE_PAGE = '/cuci-sepatu/';
+
+/**
+ * Halaman /cuci-sepatu/ & teaser. null = "Tampilkan halaman" mati, cabangnya tidak ada, atau belum ada layanan tampil.
+ * Semua tombol WhatsApp ke nomor partner; kosong → nomor WhatsApp cabang partner (bukan cabang pilihan pengunjung).
+ * Foto hero: CMS → foto hasil pertama → `fallbackImage` (foto CTA penutup).
+ */
+export function buildShoeCare(p: ShoeCareEntry | null | undefined, branches: Branch[], copy: ShoeCareCopy, fallbackImage?: ImageAsset): ShoeCareContent | null {
+  if (!p || p.enabled !== true) return null;
+  const branch = branches.find((b) => b.slug === p.branchSlug);
+  const services = activeSorted(p.services ?? []);
+  if (!branch || services.length === 0) return null;
+  const number = text(p.whatsappNumber) ?? branch.whatsappNumber;
+  const template = text(p.messageTemplate) ?? copy.defaultTemplate;
+  const link = (service: string) => templateLink(number, template, { partner: p.name, service, branch: branch.name });
+  const logo = text(p.logo);
+  const heroLogo = text(p.heroLogo);
+  const photos = (p.photos ?? []).map((ph) => responsiveImage(ph.image, ph.alt, '(min-width: 1024px) 33vw, (min-width: 600px) 50vw, 100vw', { width: 1200, height: 900 }));
+  const hero = text(p.heroImage);
+  const aboutImage = text(p.aboutImage);
+  const placeholder: ImageAsset = { src: '/images/cta/studio.jpg', alt: p.name, width: 750, height: 423 };
+  return {
+    pageUrl: SHOE_CARE_PAGE,
+    isDemo: p.isDemo === true,
+    showTeaser: p.showTeaser !== false,
+    name: p.name,
+    heroKicker: text(p.heroKicker),
+    tagline: text(p.tagline),
+    description: text(p.description),
+    logo: logo ? toImage(logo, p.name, { width: 240, height: 240 }) : undefined,
+    // Ukuran asli dari file (SVG/PNG/WebP) → width/height di <img> → tanpa CLS
+    heroLogo: heroLogo ? toImage(heroLogo, p.name, { width: 1200, height: 300 }) : undefined,
+    heroImage: hero
+      ? responsiveImage(hero, `${p.name}, ${copy.kicker.toLowerCase()}`, '100vw', { width: 1920, height: 1080 })
+      : (photos[0] ?? fallbackImage ?? placeholder),
+    branch: { slug: branch.slug, name: branch.name, pageUrl: branch.pageUrl },
+    about: {
+      heading: { kicker: copy.aboutKicker, title: text(p.aboutTitle) ?? fillTemplate(copy.aboutTitleFallback, { partner: p.name }) },
+      // Kosong → Deskripsi singkat
+      paragraphs: (() => {
+        const list = (p.aboutParagraphs ?? []).map((t) => t.trim()).filter(Boolean);
+        const fallback = text(p.description);
+        return list.length ? list : fallback ? [fallback] : [];
+      })(),
+      image: aboutImage ? responsiveImage(aboutImage, text(p.aboutImageAlt) ?? p.name, '(min-width: 900px) 40vw, 100vw', { width: 1200, height: 900 }) : undefined,
+      imagePlain: Boolean(aboutImage) && p.aboutImagePlain === true,
+    },
+    advantages: (p.advantages ?? []).map((a) => ({ title: a.title, description: a.description, icon: a.icon ?? 'check' })),
+    services: services.map((s) => {
+      const image = text(s.image);
+      const icon = text(s.icon) as IconName | undefined;
+      return {
+        name: s.name,
+        description: text(s.description),
+        price: text(s.price) ? formatPriceText(text(s.price)!) : undefined,
+        estimate: text(s.estimate),
+        ...(icon ? { icon } : {}),
+        ...(image ? { image: responsiveImage(image, s.name, '(min-width: 768px) 33vw, 100vw', { width: 1200, height: 900 }) } : {}),
+        href: link(s.name),
+      };
+    }),
+    photos,
+    notes: (p.notes ?? []).map((n) => n.trim()).filter(Boolean),
+    menuUrl: shoeCareMenuUrl(p),
+    mainHref: link(copy.genericService),
+    copy,
+  };
+}
+
+/** Tombol "Lihat Daftar Menu": file PDF → Link Daftar Menu → tidak ada (tombol tidak tampil) */
+export function shoeCareMenuUrl(p: Pick<ShoeCareEntry, 'menuFile' | 'menuUrl'>): string | undefined {
+  return text(p.menuFile) ?? text(p.menuUrl);
+}
+
+/**
+ * Tempat section Cuci Sepatu: halaman cabang lain → tidak tampil; beranda dengan cabang pilihan lain → tampil
+ * dengan catatan "hanya tersedia di cabang …"; selain itu tampil biasa.
+ */
+export function shoeCarePlacement(partnerSlug: string, ctx: { pageSlug?: string; selectedSlug?: string }): 'hidden' | 'available' | 'other-branch' {
+  if (ctx.pageSlug) return ctx.pageSlug === partnerSlug ? 'available' : 'hidden';
+  return ctx.selectedSlug && ctx.selectedSlug !== partnerSlug ? 'other-branch' : 'available';
+}
+
+/* ---------- Hero (Pages CMS → Hero) ---------- */
+
+export function buildHero(h: HeroEntry, extras: HeroExtras): HeroContent {
+  const image = responsiveImage(h.image, h.imageAlt, '100vw', { width: 1920, height: 1000 });
+  const mobile = text(h.mobileImage);
+  return {
+    kicker: h.kicker,
+    titleLines: h.titleLines,
+    subtitle: h.subtitle,
+    image: mobile ? { ...image, mobileSrc: toImage(mobile, h.imageAlt).src } : image,
+    video: extras.video,
+    // Tombol utama selalu WhatsApp cabang terpilih (label dari CMS, mis. "Booking via WhatsApp")
+    primaryCta: { label: h.primaryCtaLabel, action: { type: 'whatsapp' } },
+    secondaryCta: { label: h.secondaryCtaLabel, action: { type: 'link', href: extras.secondaryHref } },
+    marquee: h.marquee,
+    scrollHint: extras.scrollHint,
+  };
+}
+
+/* ---------- CTA penutup (Pages CMS → CTA Penutup) ---------- */
+
+/** Foto latar dari CMS (srcset 1280/1920 bila ada); kosong → foto cadangan. Tombol selalu WhatsApp cabang terpilih. */
+export function buildCtaBanner(c: CtaEntry, copy: CtaBannerCopy): CtaBannerContent {
+  const image = text(c.image);
+  return {
+    kicker: c.kicker,
+    title: c.title,
+    description: c.description,
+    cta: { label: c.ctaLabel, action: { type: 'whatsapp' } },
+    backgroundImage: image ? responsiveImage(image, text(c.imageAlt) ?? c.title, '100vw', { width: 1920, height: 1080 }) : copy.fallbackImage,
+  };
+}
+
+/* ---------- Kartu studio (Pages CMS → Kartu Studio) ---------- */
+
+/** Foto dari CMS; kosong → foto cabang pertama; belum ada → fallbackImage */
+export function buildShowcase(s: StudioEntry, copy: ShowcaseCopy, branchPhoto: ImageAsset | undefined): ShowcaseContent {
+  const image = text(s.image);
+  return {
+    heading: copy.heading,
+    taglines: s.taglines,
+    image: image ? toImage(image, text(s.imageAlt) ?? copy.heading, { width: 1200, height: 800 }) : (branchPhoto ?? copy.fallbackImage),
+  };
 }
 
 /** Stabil & unik untuk key React: slug + index */
@@ -175,23 +363,30 @@ export function buildLocations(branches: Branch[], copy: BranchCopy): LocationsC
 
 /* ---------- Pengaturan situs ---------- */
 
-export function buildSite(s: SettingsEntry, base: SiteContent, branches: Branch[]): SiteContent {
+export function buildSite(s: SettingsEntry, base: SiteContent, branches: Branch[], extra: { shoeCare?: boolean } = {}): SiteContent {
   const logo = text(s.logo);
   const vars = { brand: s.siteName, cities: joinIndonesian(operatingCities(branches)) };
-  const features = { testimonials: s.showTestimonials, products: s.showProducts, beforeAfter: s.showBeforeAfter };
+  const features = { testimonials: s.showTestimonials, products: s.showProducts, beforeAfter: s.showBeforeAfter, shoeCare: Boolean(extra.shoeCare) };
   return {
     ...base,
     brandName: s.siteName,
     siteUrl: s.siteUrl,
     features,
+    intro: { enabled: s.enablePreloader !== false, video: text(s.preloaderVideo) },
     // Link menu ikut hilang bila section-nya dimatikan
-    nav: base.nav.filter((item) => !(item.href?.startsWith('/produk') && !features.products)),
+    nav: base.nav.filter(
+      (item) => !(item.href?.startsWith('/produk') && !features.products) && !(item.href === SHOE_CARE_PAGE && !features.shoeCare),
+    ),
     logo: logo ? { ...base.logo, stacked: toImage(logo, s.siteName, base.logo.stacked) } : base.logo,
     whatsapp: {
       ...base.whatsapp,
       number: s.mainWhatsappNumber,
       displayNumber: formatPhoneDisplay(s.mainWhatsappNumber),
-      templates: { ...base.whatsapp.templates, general: text(s.defaultWaMessage) ?? base.whatsapp.templates.general },
+      templates: {
+        ...base.whatsapp.templates,
+        general: text(s.defaultWaMessage) ?? base.whatsapp.templates.general,
+        barber: text(s.barberWaMessage) ?? base.whatsapp.templates.barber,
+      },
     },
     seo: {
       ...base.seo,
@@ -199,7 +394,8 @@ export function buildSite(s: SettingsEntry, base: SiteContent, branches: Branch[
       description: fillTemplate(base.seo.description, vars),
       url: `${s.siteUrl}/`,
     },
-    footer: { ...base.footer, description: text(s.footerText) ?? base.footer.description },
+    email: text(s.email) ?? '',
+    footer: { ...base.footer, description: fillTemplate(text(s.footerTagline) ?? base.footer.description, vars) },
   };
 }
 
@@ -226,42 +422,34 @@ export function buildSocials(s: SettingsEntry, base: SocialLink[]): SocialLink[]
 
 /* ---------- Harga (dengan harga khusus cabang) ---------- */
 
-const CATEGORY_ORDER: Exclude<PriceCategoryKey, 'Paket'>[] = ['Haircut', 'Kids', 'Shaving', 'Coloring', 'Treatment'];
+/** Urutan kategori di Daftar Harga = urutan enum (Paket tampil terpisah sebagai kartu) */
+const CATEGORY_ORDER = PRICE_CATEGORIES.filter((c): c is Exclude<PriceCategoryKey, 'Paket'> => c !== 'Paket');
 const badgeOf = (b: PricingEntry['badge']): PriceBadge | undefined => (b ? b : undefined);
 
 /**
- * Harga efektif sebuah item:
- * - cabang dipilih → harga khusus cabang itu, atau harga dasar;
- * - belum memilih  → harga terendah dari harga dasar & semua harga cabang (varies = ada perbedaan).
+ * Daftar Harga satu cabang (harga per cabang menimpa harga utama; item yang tidak "Tersedia di cabang" itu tidak tampil).
+ * branchSlug kosong/tidak dikenal → cabang Aktif pertama. `uniform` = semua cabang Aktif berdaftar & berharga sama persis
+ * (pemilih cabang disembunyikan, label "Berlaku di semua cabang").
  */
-export function effectivePrice(item: PricingEntry, branchSlug?: string): { price: number; varies: boolean } {
-  const branchPrices = item.branchPrices ?? [];
-  if (branchSlug) return { price: branchPrices.find((p) => p.branchSlug === branchSlug)?.price ?? item.price, varies: false };
-  const all = [item.price, ...branchPrices.map((p) => p.price)];
-  return { price: Math.min(...all), varies: new Set(all).size > 1 };
-}
-
 export function buildPricing(entries: PricingEntry[], copy: PricingCopy, branches: Branch[], branchSlug?: string): PricingContent {
-  const items = activeSorted(entries);
-  const branch = branches.find((b) => b.slug === branchSlug);
+  const active = branches.filter((b) => b.status === 'Aktif');
+  const branch = branches.find((b) => b.slug === branchSlug) ?? active[0];
+  const items = branch ? activeSorted(entries).filter((i) => availableAt(i, branch.slug)) : activeSorted(entries);
+  const price = (i: PricingEntry) => (branch ? priceAt(i, branch.slug) : i.price);
 
   const categories: PriceCategory[] = CATEGORY_ORDER.map((key) => ({
     id: key,
     name: copy.categoryLabels[key],
     items: items
       .filter((i) => i.category === key)
-      .map((i, index) => {
-        const { price, varies } = effectivePrice(i, branch?.slug);
-        return {
-          id: makeId(i.name, index),
-          name: i.name,
-          description: text(i.description),
-          price,
-          priceFrom: Boolean(i.priceFrom) || varies,
-          varies,
-          badge: badgeOf(i.badge),
-        };
-      }),
+      .map((i, index) => ({
+        id: makeId(i.name, index),
+        name: i.name,
+        description: text(i.description),
+        price: price(i),
+        priceFrom: Boolean(i.priceFrom),
+        badge: badgeOf(i.badge),
+      })),
   })).filter((c) => c.items.length > 0);
 
   const packages: PricePackage[] = items
@@ -270,7 +458,7 @@ export function buildPricing(entries: PricingEntry[], copy: PricingCopy, branche
       id: makeId(i.name, index),
       name: i.name,
       tag: badgeOf(i.badge) ?? copy.packageDefaultTag,
-      price: effectivePrice(i, branch?.slug).price,
+      price: price(i),
       features: splitList(i.description, /\r?\n/),
       featured: i.badge === 'Best Seller',
       badge: badgeOf(i.badge),
@@ -281,30 +469,48 @@ export function buildPricing(entries: PricingEntry[], copy: PricingCopy, branche
     heading: copy.heading,
     branchSlug: branch?.slug,
     branchName: branch?.name,
-    hasBranchPrices: items.some((i) => (i.branchPrices ?? []).length > 0),
+    branchOptions: active.map((b) => ({ slug: b.slug, name: b.name })),
+    uniform: samePricesEverywhere(entries, active.map((b) => b.slug)),
     categories,
+    priceFromLabel: copy.priceFromLabel,
     packagesTitle: copy.packagesTitle,
     packages,
   };
 }
 
-/** Harga "mulai" per kategori: harga efektif terendah item aktif (untuk cabang, atau semua cabang) */
+/**
+ * Harga "mulai" per kategori: harga terendah item aktif yang tersedia di cabang (harga per cabang), atau tanpa cabang:
+ * terendah dari harga utama & semua harga per cabang.
+ */
 export function startingPrices(entries: PricingEntry[], branchSlug?: string): Partial<Record<PriceCategoryKey, number>> {
   const result: Partial<Record<PriceCategoryKey, number>> = {};
-  for (const item of activeSorted(entries)) {
-    const { price } = effectivePrice(item, branchSlug);
+  const items = activeSorted(entries).filter((i) => !branchSlug || availableAt(i, branchSlug));
+  for (const item of items) {
+    const price = branchSlug ? priceAt(item, branchSlug) : Math.min(item.price, ...(item.branchPrices ?? []).map((p) => p.price));
     const current = result[item.category];
     result[item.category] = current === undefined ? price : Math.min(current, price);
   }
   return result;
 }
 
-export function buildServices(base: ServicesContent, pricing: PricingEntry[], branchSlug?: string): ServicesContent {
-  const prices = startingPrices(pricing, branchSlug);
-  return {
-    ...base,
-    items: base.items.map((s) => ({ ...s, startingPrice: s.pricingCategory ? prices[s.pricingCategory] : undefined })),
-  };
+/**
+ * Kartu Layanan (Pages CMS → Kartu Layanan): kartu deskriptif tanpa harga. Kategori harga (opsional) hanya untuk tautan
+ * "Lihat harga" ke kategori itu di Daftar Harga, dan hanya bila kategori punya item aktif (untuk cabang ini).
+ */
+export function buildServices(entries: ServiceCardEntry[], copy: ServicesCopy, pricing: PricingEntry[], branchSlug?: string): ServicesContent {
+  const priced = startingPrices(pricing, branchSlug);
+  const items: Service[] = activeSorted(entries).map((s, index) => {
+    const category = text(s.pricingCategory) as Service['pricingCategory'] | undefined;
+    const linked = category && priced[category] !== undefined ? category : undefined;
+    return {
+      id: makeId(s.name, index),
+      name: s.name,
+      description: s.description,
+      icon: (s.icon ?? 'scissors') as IconName,
+      ...(linked ? { pricingCategory: linked, priceHref: `#${priceCategoryAnchor(linked)}` } : {}),
+    };
+  });
+  return { heading: copy.heading, items };
 }
 
 /* ---------- Barber ---------- */
@@ -340,6 +546,8 @@ function layoutFromRatio(width: number, height: number): GalleryLayout {
   return 'square';
 }
 
+const GALLERY_FOCUS: Record<string, GalleryItem['focus']> = { atas: 'top', tengah: 'center', bawah: 'bottom' };
+
 export function buildGallery(entries: GalleryEntry[], copy: GalleryCopy, showBeforeAfter: boolean): GalleryContent {
   const items = activeSorted(entries).map((g, index) => {
     const image = toImage(g.image, g.altText);
@@ -349,6 +557,10 @@ export function buildGallery(entries: GalleryEntry[], copy: GalleryCopy, showBef
       caption: text(g.caption),
       layout: layoutFromRatio(image.width, image.height),
       styleCategory: g.styleCategory,
+      // Kartu kolom foto berjalan: ±150–240 px, pakai versi 600 px bila ada
+      thumb: responsiveImage(g.image, g.altText, '(min-width: 768px) 240px, 150px'),
+      focus: GALLERY_FOCUS[g.focalPoint ?? 'atas'] ?? 'top',
+      showInMarquee: g.showInMarquee !== false,
     };
   });
   return { ...copy, beforeAfter: showBeforeAfter ? copy.beforeAfter : [], items };
@@ -444,7 +656,11 @@ export function buildTestimonials(entries: TestimonialEntry[], copy: Testimonial
 
 /* ---------- Tentang: angka statistik ---------- */
 
-export function buildAbout(copy: AboutCopy, s: SettingsEntry, branches: Branch[], barbers: BarberEntry[]): AboutContent {
+const FOCUS: Record<string, AboutSlide['focus']> = { atas: 'top', tengah: 'center', bawah: 'bottom' };
+/** Bingkai foto Tentang: lebar penuh di HP, ±7/12 kolom di tablet/desktop */
+const ABOUT_SIZES = '(min-width: 1280px) 700px, (min-width: 768px) 58vw, 100vw';
+
+export function buildAbout(a: AboutEntry, copy: AboutCopy, s: SettingsEntry, branches: Branch[], barbers: BarberEntry[]): AboutContent {
   const stats = s.stats;
   const activeBranches = branches.filter((b) => b.status === 'Aktif');
   const activeSlugs = new Set(activeBranches.map((b) => b.slug));
@@ -457,11 +673,24 @@ export function buildAbout(copy: AboutCopy, s: SettingsEntry, branches: Branch[]
   if (stats.showCustomers && stats.customers) list.push({ value: stats.customers, suffix: '+', animate: true, label: L.customers });
   if (stats.showFoundedYear && stats.foundedYear) list.push({ value: stats.foundedYear, display: String(stats.foundedYear), label: L.foundedYear });
   if (stats.showRating && stats.rating)
-    list.push({ value: stats.rating, display: stats.rating.toLocaleString('id-ID', { maximumFractionDigits: 1 }), label: L.rating });
+    list.push({ value: stats.rating, display: stats.rating.toLocaleString('id-ID', { maximumFractionDigits: 1 }), animate: true, label: L.rating });
   if (stats.showReviewCount && stats.reviewCount) list.push({ value: stats.reviewCount, suffix: '+', animate: true, label: L.reviewCount });
 
-  const { statLabels: _labels, ...rest } = copy;
-  return { ...rest, stats: list };
+  const [lead, ...body] = a.paragraphs;
+  return {
+    heading: { kicker: a.kicker, title: a.title },
+    lead,
+    body,
+    slides: a.images.map((img) => ({
+      image: responsiveImage(img.src, img.alt, ABOUT_SIZES, { width: 960, height: 1200 }),
+      focus: FOCUS[img.focalPoint ?? 'tengah'] ?? 'center',
+    })),
+    slideInterval: a.slideInterval,
+    transition: a.transition,
+    imageCaption: text(a.caption) ?? '',
+    values: a.values,
+    stats: list,
+  };
 }
 
 /* ---------- Produk ---------- */
@@ -488,6 +717,8 @@ export function buildProducts(entries: ProductEntry[], copy: ProductsCopy): Prod
       tokopediaUrl: text(p.tokopediaUrl),
     };
   });
-  const categories = PRODUCT_CATEGORY_ORDER.filter((c) => items.some((i) => i.category === c));
+  // Kategori di luar daftar baku tetap bisa difilter (di akhir)
+  const extra = [...new Set(items.map((i) => i.category))].filter((c) => !PRODUCT_CATEGORY_ORDER.includes(c));
+  const categories = [...PRODUCT_CATEGORY_ORDER.filter((c) => items.some((i) => i.category === c)), ...extra];
   return { ...copy, categories, items };
 }

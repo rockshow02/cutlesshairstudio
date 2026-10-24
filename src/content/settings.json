@@ -1,17 +1,19 @@
 {
   "logo": "/uploads/site/cutless-logo-putih.webp",
   "siteName": "Cutless Hair Studio",
-  "siteUrl": "https://cutlesshairstudio.adi-yansyaaah.workers.dev",
-  "mainWhatsappNumber": "6289889818236",
-  "defaultWaMessage": "Halo {brand} cabang {branch}, saya mau booking haircut untuk [hari/jam].",
+  "siteUrl": "https://cutlesshairstudio.com",
+  "mainWhatsappNumber": "628132220932",
+  "defaultWaMessage": "Halo Kak! Untuk reservasi di {brand} cabang {branch}, mohon isi formulir berikut ya:\nNama Lengkap:\nNomor HP / WA:\nHari & Tanggal:\nJam Kedatangan:\nPilihan Layanan: (mis. Haircut Classic / Hair Treatment / Hair Color)\nKapster Pilihan: (Opsional)\nKirim kembali format ini jika sudah diisi. Kami akan segera mengecek dan mengonfirmasi ketersediaan jadwal. 💈\n📌 Catatan: Toleransi keterlambatan maks. 15 menit. Jika melebihi batas waktu, slot akan dialihkan ke antrean berikutnya demi kenyamanan bersama.",
+  "barberWaMessage": "Halo Kak! Untuk reservasi di {brand} cabang {branch}, mohon isi formulir berikut ya:\nNama Lengkap:\nNomor HP / WA:\nHari & Tanggal:\nJam Kedatangan:\nPilihan Layanan: (mis. Haircut / Treatment / Coloring)\nKapster Pilihan: {barber}\nKirim kembali format ini jika sudah diisi, kami akan segera mengonfirmasi jadwalnya. 😊\nCatatan: Toleransi keterlambatan maks. 15 menit. Lewat dari itu, slot dialihkan ke antrean berikutnya. Terima kasih telah memilih {brand}!",
   "instagramUrl": "https://www.instagram.com/cutlesshairstudio/",
   "tiktokUrl": "https://www.tiktok.com/@cutlesshairstudio",
-  "footerText": "Hair studio di Kota Bogor. Goodstyle, goodmood.",
+  "email": "cutlesshairstudio@gmail.com",
+  "footerTagline": "Hair studio di {cities}. Goodstyle, goodmood.",
   "stats": {
-    "customers": 5000,
-    "showCustomers": false,
-    "foundedYear": 2021,
-    "showFoundedYear": false,
+    "customers": 1025,
+    "showCustomers": true,
+    "foundedYear": 2026,
+    "showFoundedYear": true,
     "rating": "4.9",
     "showRating": false,
     "reviewCount": 300,
@@ -20,5 +22,6 @@
   },
   "showTestimonials": false,
   "showProducts": false,
-  "showBeforeAfter": false
+  "showBeforeAfter": false,
+  "enablePreloader": true
 }

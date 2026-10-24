@@ -8,10 +8,15 @@ export interface Service {
   icon: IconName;
   /** Opsional: foto layanan; bila diisi, tampil di atas kartu */
   image?: ImageAsset;
-  /** Kategori Daftar Harga sumber "mulai Rp..." (harga terendah item aktif di kategori ini) */
+  /** Tautan "Lihat harga" ke kategori di Daftar Harga (#harga-…); kosong = tanpa tautan. Kartu tidak menampilkan harga */
+  priceHref?: string;
+  /** Kategori harga terkait (untuk memilih tab kategori di HP) */
   pricingCategory?: Exclude<PriceCategoryKey, 'Paket'>;
-  /** Dihitung otomatis dari Daftar Harga (cabang terpilih, atau terendah semua cabang). Kosong → "Tanya harga" */
-  startingPrice?: number;
+}
+
+/** Bagian statis section Layanan (src/content/services.ts); kartu dari Pages CMS → Kartu Layanan */
+export interface ServicesCopy {
+  heading: SectionHeading;
 }
 
 export interface ServicesContent {

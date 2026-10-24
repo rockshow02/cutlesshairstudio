@@ -1,0 +1,20 @@
+/* Badge "DEMO" untuk data dummy (hanya staging/development). Warna peringatan, kontras AA di latar terang & gelap. */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  flex: none;
+  padding: 0.2em 0.6em;
+  border: 1px solid var(--c-warning-line);
+  border-radius: var(--radius);
+  background: var(--c-warning-bg);
+  color: var(--c-warning);
+  font-family: var(--f-body);
+  font-size: var(--fs-xs);
+  font-stretch: normal;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  -webkit-text-stroke: 0;
+  vertical-align: middle;
+}

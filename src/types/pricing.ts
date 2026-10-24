@@ -1,7 +1,8 @@
 import type { SectionHeading } from './common';
+import type { PRICE_CATEGORIES } from '@/content/priceCategories';
 
-/** Kategori harga. Sama persis dengan enum `category` di CMS (Pricing Item). */
-export type PriceCategoryKey = 'Haircut' | 'Shaving' | 'Coloring' | 'Treatment' | 'Kids' | 'Paket';
+/** Kategori harga. Sama persis dengan PRICE_CATEGORIES (schema.ts) & enum `category` di CMS (Daftar Harga). */
+export type PriceCategoryKey = (typeof PRICE_CATEGORIES)[number];
 
 /** Badge opsional. Sama dengan enum `badge` di CMS. */
 export type PriceBadge = 'Best Seller' | 'Baru' | 'Promo';
@@ -15,8 +16,6 @@ export interface PriceItem {
   /** true = tampil "mulai Rp..." */
   priceFrom?: boolean;
   badge?: PriceBadge;
-  /** true bila belum memilih cabang dan harga berbeda antar cabang (tampil "mulai" harga terendah) */
-  varies?: boolean;
 }
 
 export interface PriceCategory {
@@ -42,12 +41,16 @@ export interface PricePackage {
 
 export interface PricingContent {
   heading: SectionHeading;
-  /** Cabang yang harganya ditampilkan (kosong = harga dasar/terendah) */
+  /** Cabang yang harganya ditampilkan (pilihan pengunjung/halaman cabang, atau cabang Aktif pertama) */
   branchSlug?: string;
   branchName?: string;
-  /** Ada item dengan harga khusus cabang */
-  hasBranchPrices: boolean;
+  /** Cabang Aktif untuk pemilih cabang (urutan branches.json) */
+  branchOptions: { slug: string; name: string }[];
+  /** Semua cabang Aktif berdaftar & berharga sama persis → pemilih cabang disembunyikan */
+  uniform: boolean;
   categories: PriceCategory[];
+  /** Label kecil sebelum harga item "mulai" */
+  priceFromLabel: string;
   packagesTitle: string;
   packages: PricePackage[];
 }
@@ -57,6 +60,8 @@ export interface PricingCopy {
   heading: SectionHeading;
   /** Label kategori yang tampil di website, per kunci kategori */
   categoryLabels: Record<Exclude<PriceCategoryKey, 'Paket'>, string>;
+  /** Label kecil sebelum harga item "mulai" di Daftar Harga */
+  priceFromLabel: string;
   packagesTitle: string;
   packageCtaLabel: string;
   /** Tag kartu paket bila entri tidak punya badge */

@@ -12,7 +12,6 @@ import { SectionState } from '@/components/ui/SectionState';
 import { SectionTitle, Kicker } from '@/components/ui/SectionTitle';
 import { Card, CardFooter } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
-import { Reveal } from '@/components/ui/Reveal';
 import { ResponsiveImage } from '@/components/ui/ResponsiveImage';
 import styles from './Products.module.css';
 
@@ -32,13 +31,13 @@ export function Products({ variant }: ProductsProps) {
     if (variant === 'teaser' || state.status !== 'success') return null;
     return (
       <Section id="produk" tone="dark" labelledBy="produk-title" className={styles.page}>
-        <Reveal className={styles.pageHead}>
+        <div className={styles.pageHead}>
           <Kicker>{state.data.heading.kicker}</Kicker>
           <h1 id="produk-title" className={styles.pageTitle}>
             {state.data.labels.unavailableTitle}
           </h1>
           <p className={styles.pageIntro}>{state.data.labels.unavailableText}</p>
-        </Reveal>
+        </div>
         <Button href={pageUrl('/')} variant="light" iconEnd="arrow">
           {state.data.labels.backHome}
         </Button>
@@ -90,13 +89,13 @@ function ProductsPage({ data }: { data: ProductsContent }) {
 
   return (
     <>
-      <Reveal className={styles.pageHead}>
+      <div className={styles.pageHead}>
         <Kicker>{data.heading.kicker}</Kicker>
         <h1 id="produk-title" className={styles.pageTitle}>
           {data.heading.title}
         </h1>
         {data.heading.intro && <p className={styles.pageIntro}>{data.heading.intro}</p>}
-      </Reveal>
+      </div>
 
       {data.categories.length > 1 && (
         <div className={styles.filters} role="group" aria-label={data.labels.filterLabel}>
@@ -145,10 +144,10 @@ function ProductsPage({ data }: { data: ProductsContent }) {
 function ProductGrid({ items, data }: { items: Product[]; data: ProductsContent }) {
   return (
     <ul className={styles.grid}>
-      {items.map((product, i) => (
-        <Reveal as="li" key={product.id} delay={(i % 4) * 0.05}>
+      {items.map((product) => (
+        <li key={product.id}>
           <ProductCard product={product} labels={data.labels} />
-        </Reveal>
+        </li>
       ))}
     </ul>
   );

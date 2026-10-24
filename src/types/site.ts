@@ -6,6 +6,8 @@ export interface NavItem {
   sectionId?: string;
   /** Atau: halaman lain, path relatif root situs (mis. "/produk/") */
   href?: string;
+  /** false = tidak tampil di navbar desktop (tetap di menu mobile & footer), agar navbar tidak sesak */
+  desktop?: boolean;
 }
 
 /**
@@ -52,6 +54,8 @@ export interface UiLabels {
   error: string;
   /** Tombol pengganti harga "mulai" bila kategori belum punya harga */
   askPrice: string;
+  /** Tautan kartu Layanan ke kategori di Daftar Harga */
+  viewPrice: string;
   priceFrom: string;
   previous: string;
   next: string;
@@ -92,7 +96,6 @@ export interface FooterContent {
 
 export interface SiteContent {
   brandName: string;
-  city: string;
   logo: {
     horizontal: ImageAsset;
     stacked: ImageAsset;
@@ -100,11 +103,14 @@ export interface SiteContent {
   };
   nav: NavItem[];
   whatsapp: WhatsAppConfig;
+  /** Kosong = baris email di footer tidak ditampilkan (Pengaturan Situs → Email) */
   email: string;
   /** Domain resmi tanpa garis miring akhir (settings.json → siteUrl) */
   siteUrl: string;
   /** Section yang bisa dimatikan dari Pengaturan Situs */
-  features: { testimonials: boolean; products: boolean; beforeAfter: boolean };
+  features: { testimonials: boolean; products: boolean; beforeAfter: boolean; shoeCare: boolean };
+  /** Preloader (Pengaturan Situs): aktif/tidak + video opsional */
+  intro: { enabled: boolean; video?: string };
   priceRange: string;
   seo: SeoConfig;
   ui: UiLabels;

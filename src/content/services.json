@@ -1,0 +1,90 @@
+[
+  {
+    "name": "Haircut & Grooming",
+    "description": "Pilihan White Grooming dan Black Grooming.",
+    "icon": "scissors",
+    "pricingCategory": "Haircut",
+    "order": 10,
+    "isActive": true
+  },
+  {
+    "name": "Wanita",
+    "description": "Haircut, haircut & blow, catok/blow, creambath, dry wash, serta wash & styling.",
+    "icon": "user",
+    "pricingCategory": "Woman Haircut & Treatment",
+    "order": 20,
+    "isActive": true
+  },
+  {
+    "name": "Treatment",
+    "description": "Hair wash, creambath, dan hair keratin.",
+    "icon": "spa",
+    "pricingCategory": "Special Treatment",
+    "order": 30,
+    "isActive": true
+  },
+  {
+    "name": "Coloring",
+    "description": "Coloring natural, coloring fashion, dan bleaching.",
+    "icon": "color",
+    "pricingCategory": "Special Treatment",
+    "order": 40,
+    "isActive": true
+  },
+  {
+    "name": "Perming",
+    "description": "Hair perm dan down perming.",
+    "icon": "perm",
+    "pricingCategory": "Special Treatment",
+    "order": 50,
+    "isActive": true
+  },
+  {
+    "name": "Braids & Dreadlock",
+    "description": "Cornrow, braids box (non-extension), dan dreadlock.",
+    "icon": "tattoo",
+    "pricingCategory": "Special Treatment",
+    "order": 60,
+    "isActive": true
+  },
+  {
+    "name": "Haircut + Wash",
+    "description": "Haircut lengkap plus keramas, pijat kepala ringan, dan blow-dry.",
+    "icon": "wash",
+    "pricingCategory": "Haircut & Grooming",
+    "order": 100,
+    "isActive": false
+  },
+  {
+    "name": "Shaving & Beard",
+    "description": "Hot towel shave dan beard trim biar jenggot rapi dan kulit tetap adem.",
+    "icon": "shave",
+    "pricingCategory": "Shaving",
+    "order": 110,
+    "isActive": false
+  },
+  {
+    "name": "Kids Haircut",
+    "description": "Untuk jagoan kecil di bawah 12 tahun. Sabar, cepat, dan tetap keren.",
+    "icon": "kids",
+    "pricingCategory": "Kids",
+    "order": 120,
+    "isActive": false
+  },
+  {
+    "name": "Hair Spa",
+    "description": "Treatment nutrisi dan scalp care untuk rambut kering, rontok, atau habis coloring.",
+    "icon": "spa",
+    "pricingCategory": "Treatment",
+    "order": 130,
+    "isActive": false
+  },
+  {
+    "name": "Hair Tattoo",
+    "description": "Garis, pola, atau desain custom di sisi kepala buat look yang beda.",
+    "icon": "tattoo",
+    "pricingCategory": "Treatment",
+    "order": 140,
+    "isActive": false
+  }
+]

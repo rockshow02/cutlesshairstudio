@@ -1,10 +1,18 @@
 # Konfigurasi Pages CMS (https://pagescms.org) untuk website Cutless Hair Studio.
-# Admin login di https://app.pagescms.org dengan akun GitHub (harus kolaborator repo ini).
-# Setiap "Simpan" = 1 commit ke branch main → Cloudflare build & deploy otomatis (±1–2 menit).
+# Admin login di https://app.pagescms.org: pemilik dengan akun GitHub, staf sebagai collaborator Pages CMS
+# (diundang lewat email, login dengan kode email, tanpa akun GitHub). Panduan: docs/panduan-admin.md.
+# Setiap "Simpan" = 1 commit ke branch yang dipilih → Cloudflare build & deploy otomatis (±1–2 menit).
 #
 # Skema field harus sama dengan src/content/schema.ts (validasi Zod saat build).
 # Pilihan cabang (blok "@branch-options") disinkronkan otomatis dari src/content/branches.json
 # oleh GitHub Actions (npm run sync-cms). Jangan diedit manual.
+
+settings:
+  commit:
+    # Collaborator (tanpa akun GitHub) menyimpan lewat token GitHub App Pages CMS. "user" = nama & email
+    # pengedit dicatat sebagai committer, sehingga riwayat commit menunjukkan siapa yang mengubah konten.
+    # Bawaan Pages CMS "app" hanya mencatat identitas aplikasi. https://pagescms.org/docs/configuration/settings/
+    identity: user
 
 media:
   - name: branches
@@ -43,6 +51,55 @@ media:
     output: /uploads/site
     categories: [image]
     rename: safe
+  - name: hero
+    label: Foto Hero
+    input: public/uploads/hero
+    output: /uploads/hero
+    categories: [image]
+    rename: safe
+  - name: about
+    label: Foto Tentang Kami
+    input: public/uploads/about
+    output: /uploads/about
+    categories: [image]
+    rename: safe
+  - name: studio
+    label: Foto Kartu Studio
+    input: public/uploads/studio
+    output: /uploads/studio
+    categories: [image]
+    rename: safe
+  - name: cta
+    label: Foto CTA Penutup
+    input: public/uploads/cta
+    output: /uploads/cta
+    categories: [image]
+    rename: safe
+  - name: shoe-care
+    label: Foto Partner Cuci Sepatu
+    input: public/uploads/shoe-care
+    output: /uploads/shoe-care
+    categories: [image]
+    rename: safe
+  # Folder yang sama, khusus PDF (field "File daftar menu"). Field file hanya menerima ekstensi yang diizinkan media-nya.
+  - name: shoe-care-menu
+    label: Daftar Menu Cuci Sepatu (PDF)
+    input: public/uploads/shoe-care
+    output: /uploads/shoe-care
+    extensions: [pdf]
+    rename: safe
+  - name: partner-logos
+    label: Logo Partner
+    input: public/uploads/partner-logos
+    output: /uploads/partner-logos
+    categories: [image]
+    rename: safe
+  - name: videos
+    label: Video
+    input: public/uploads/videos
+    output: /uploads/videos
+    categories: [video]
+    rename: safe
 
 content:
   # ------------------------------------------------------------------ Cabang
@@ -57,29 +114,39 @@ content:
         label: Kode URL (slug)
         type: string
         required: true
-        description: "Untuk alamat halaman /cabang/<slug>/. Huruf kecil, angka, dan tanda minus, mis. bogor-bantarjati. Jangan diubah setelah tayang."
+        description: "Untuk alamat halaman /cabang/<slug>/. Huruf kecil, angka, dan tanda minus, mis. bogor-bantarjati. Jangan diubah setelah tayang. Maksimal 60 karakter."
         pattern:
           regex: "^[a-z0-9]+(-[a-z0-9]+)*$"
           message: Hanya huruf kecil, angka, dan tanda minus (mis. bogor-bantarjati)
+        options:
+          maxlength: 60
       - name: name
         label: Nama cabang
         type: string
         required: true
-        description: "Tanpa nama merek, mis. Bogor Bantarjati. Dipakai di pesan WhatsApp: ...cabang Bogor Bantarjati."
+        description: "Tanpa nama merek, mis. Bogor Bantarjati. Dipakai di pesan WhatsApp: ...cabang Bogor Bantarjati. Maksimal 60 karakter."
         options:
           maxlength: 60
       - name: city
         label: Kota
         type: string
         required: true
-        description: "Dipakai untuk pengelompokan di pemilih cabang, mis. Bogor."
+        description: "Dipakai untuk pengelompokan di pemilih cabang, mis. Bogor. Maksimal 60 karakter."
+        options:
+          maxlength: 60
       - name: province
         label: Provinsi
         type: string
         required: true
+        options:
+          maxlength: 60
+        description: Maksimal 60 karakter.
       - name: address
         label: Alamat lengkap
         type: text
+        options:
+          maxlength: 300
+        description: Maksimal 300 karakter.
       - name: googleMapsUrl
         label: Link Google Maps
         type: string
@@ -151,7 +218,6 @@ content:
       - name: status
         label: Status
         type: select
-        required: true
         default: Aktif
         description: "Segera Dibuka & Tutup Sementara tampil dengan label dan TANPA tombol booking."
         options:
@@ -159,9 +225,10 @@ content:
       - name: photo
         label: Foto cabang
         type: image
-        description: "Foto studio/fasad, lebar (landscape). Dikompres otomatis ke WebP."
+        description: "Foto studio/fasad, lebar (landscape) minimal 1600 px. Kompres di bawah 1 MB sebelum upload. Dikompres otomatis ke WebP. Format: JPG, PNG, atau WebP."
         options:
           media: branches
+          extensions: [jpg, jpeg, png, webp]
       - name: order
         label: Urutan
         type: number
@@ -182,7 +249,7 @@ content:
         label: Nama layanan
         type: string
         required: true
-        description: "Contoh: Signature Haircut"
+        description: "Contoh: Signature Haircut. Maksimal 80 karakter."
         options:
           maxlength: 80
       - name: category
@@ -190,14 +257,14 @@ content:
         type: select
         required: true
         default: Haircut
-        description: "Pilih \"Paket\" untuk paket/membership (tampil sebagai kartu)."
+        description: "Kategori aktif: Haircut, Special Treatment, Woman Haircut & Treatment (urutan tampil). Kategori lama hanya untuk item nonaktif. Pilih \"Paket\" untuk paket/membership (tampil sebagai kartu)."
         options:
-          values: [Haircut, Shaving, Coloring, Treatment, Kids, Paket]
+          values: [Haircut, Special Treatment, Woman Haircut & Treatment, Haircut & Grooming, Wanita, Treatment, Coloring, Perming, Braids & Dreadlock, Shaving, Kids, Paket]
       - name: price
-        label: Harga (Rupiah)
+        label: Harga utama (Rupiah)
         type: number
         required: true
-        description: "Angka saja, tanpa titik dan tanpa \"Rp\". Contoh: 75000"
+        description: "Berlaku di semua cabang, kecuali cabang yang diisi di Harga per cabang. Angka saja, tanpa titik dan tanpa \"Rp\". Contoh: 75000"
         options:
           min: 0
       - name: priceFrom
@@ -208,7 +275,9 @@ content:
       - name: description
         label: Keterangan
         type: text
-        description: "Opsional. Untuk kategori Paket, tulis isi paket satu baris per poin."
+        description: "Opsional. Untuk kategori Paket, tulis isi paket satu baris per poin. Maksimal 300 karakter."
+        options:
+          maxlength: 300
       - name: badge
         label: Label khusus
         type: select
@@ -216,9 +285,9 @@ content:
         options:
           values: [Best Seller, Baru, Promo]
       - name: branchPrices
-        label: Harga khusus cabang
+        label: Harga per cabang
         type: object
-        description: "Opsional. Kosongkan bila harga sama di semua cabang. Isi hanya untuk cabang yang harganya berbeda."
+        description: "Opsional. Kosongkan bila harga sama di semua cabang (memakai Harga utama). Tambah satu baris untuk tiap cabang yang harganya BERBEDA: pilih cabang, lalu isi harga cabang itu (angka saja tanpa titik, mis. 120000). Harga per cabang menimpa Harga utama untuk cabang itu saja."
         list:
           collapsible:
             collapsed: true
@@ -240,8 +309,22 @@ content:
             label: Harga di cabang ini (Rupiah)
             type: number
             required: true
+            description: "Angka saja, tanpa titik dan tanpa \"Rp\". Contoh: 120000"
             options:
               min: 0
+      - name: branchSlugs
+        label: Tersedia di cabang
+        type: select
+        description: "Kosongkan = tersedia di SEMUA cabang. Pilih satu atau beberapa cabang bila layanan ini hanya ada di cabang tertentu (di cabang lain layanan disembunyikan)."
+        options:
+          multiple: true
+          # @branch-options-start (diisi otomatis dari branches.json oleh scripts/sync-pages-config.mjs)
+          values:
+            - name: "bogor-bantarjati"
+              label: "Bogor Bantarjati"
+            - name: "cibubur"
+              label: "Cibubur"
+          # @branch-options-end
       - name: order
         label: Urutan
         type: number
@@ -254,6 +337,320 @@ content:
         type: boolean
         default: true
         description: "Matikan untuk menyembunyikan tanpa menghapus."
+
+  # ------------------------------------------------------------------ Kartu Layanan
+  - name: services
+    label: Kartu Layanan
+    type: file
+    path: src/content/services.json
+    format: json
+    list: true
+    fields:
+      - name: name
+        label: Judul kartu
+        type: string
+        required: true
+        description: "Mis. Coloring. Juga dipakai di pesan WhatsApp tombol Booking. Maksimal 40 karakter."
+        options:
+          maxlength: 40
+      - name: description
+        label: Deskripsi
+        type: text
+        required: true
+        description: "Kartu deskriptif bebas (tanpa harga). Sebutkan layanan yang memang tersedia, mis. Cornrow, braids box, dan dreadlock. Maksimal 160 karakter."
+        options:
+          maxlength: 160
+      - name: icon
+        label: Ikon
+        type: select
+        default: scissors
+        description: "scissors = gunting, wash = tetes air, shave = pisau cukur, color = palet, perm = gelombang, kids = wajah anak, spa = daun, tattoo = garis, user = orang, star = bintang, gift = hadiah, tag = label."
+        options:
+          values: [scissors, wash, shave, color, perm, kids, spa, tattoo, user, star, gift, tag]
+      - name: pricingCategory
+        label: Kategori harga (opsional)
+        type: select
+        description: "Hanya untuk tautan \"Lihat harga\" yang menggulir ke kategori ini di Daftar Harga. Tautan tidak tampil bila kosong atau kategori tanpa item aktif. Kartu tidak menampilkan harga."
+        options:
+          values: [Haircut, Special Treatment, Woman Haircut & Treatment, Haircut & Grooming, Wanita, Treatment, Coloring, Perming, Braids & Dreadlock, Shaving, Kids]
+      - name: order
+        label: Urutan
+        type: number
+        default: 0
+        description: "Angka kecil tampil lebih dulu."
+        options:
+          min: 0
+      - name: isActive
+        label: Tampilkan
+        type: boolean
+        default: true
+        description: "Matikan untuk menyembunyikan kartu tanpa menghapusnya."
+
+  # ------------------------------------------------------------------ Partner Cuci Sepatu
+  - name: shoeCare
+    label: Partner Cuci Sepatu
+    type: file
+    path: src/content/shoeCare.json
+    format: json
+    fields:
+      - name: enabled
+        label: Tampilkan halaman
+        type: boolean
+        default: false
+        description: "Halaman /cuci-sepatu/ beserta teaser, menu Cuci Sepatu (HP & footer), dan sebutan di Google halaman cabang. Mati = /cuci-sepatu dialihkan ke beranda dan semua link hilang."
+      - name: showTeaser
+        label: Tampilkan teaser di beranda
+        type: boolean
+        default: true
+        description: "Kartu kecil setelah Daftar Harga (beranda & halaman cabang partner) dengan tombol Lihat Layanan ke /cuci-sepatu/. Hanya tampil bila halaman aktif."
+      - name: isDemo
+        label: Data demo (hapus/matikan sebelum launch)
+        type: boolean
+        default: false
+        description: "Centang untuk isian dummy (badge DEMO tampil di staging). Build produksi GAGAL selama data demo masih tayang. Matikan setelah semua isian diganti data asli partner."
+      - name: branchSlug
+        label: Cabang
+        type: select
+        default: bogor-bantarjati
+        description: "Satu-satunya cabang tempat layanan ini tersedia. Pengunjung yang memilih cabang lain melihat catatan bahwa layanan hanya ada di cabang ini."
+        options:
+          # @branch-options-start (diisi otomatis dari branches.json oleh scripts/sync-pages-config.mjs)
+          values:
+            - name: "bogor-bantarjati"
+              label: "Bogor Bantarjati"
+            - name: "cibubur"
+              label: "Cibubur"
+          # @branch-options-end
+      - name: name
+        label: Nama partner
+        type: string
+        required: true
+        description: "Nama usaha cuci sepatu. Maksimal 60 karakter."
+        options:
+          maxlength: 60
+      - name: heroKicker
+        label: Teks kecil di atas judul hero
+        type: string
+        default: Cuci Sepatu
+        description: "Opsional, tampil kecil di atas nama/logo partner di hero (dengan garis di kiri-kanan) dan sebagai label kecil teaser di beranda. Contoh: Cuci Sepatu. Kosongkan untuk menyembunyikan di hero. Maksimal 40 karakter."
+        options:
+          maxlength: 40
+      - name: logo
+        label: Logo partner (opsional)
+        type: image
+        description: "PNG berlatar transparan atau SVG, persegi minimal 400 × 400 px. Kompres di bawah 1 MB sebelum upload. Tampil di hero halaman & teaser. Format: SVG, PNG, atau WebP."
+        options:
+          media: shoe-care
+          extensions: [svg, png, webp]
+      - name: heroLogo
+        label: Logo hero (versi terang untuk latar gelap)
+        type: image
+        description: "Opsional. Logo/wordmark berwarna putih atau terang, latar transparan, lebar minimal 1200 px untuk PNG (SVG lebih baik). Kompres di bawah 1 MB sebelum upload. Bila diisi, tampil menggantikan nama partner sebagai judul hero, dan logo kecil di atas Cuci Sepatu disembunyikan. Format: SVG, PNG, atau WebP."
+        options:
+          media: shoe-care
+          extensions: [svg, png, webp]
+      - name: tagline
+        label: Tagline
+        type: string
+        description: "Kalimat pendek di bawah judul. Maksimal 120 karakter."
+        options:
+          maxlength: 120
+      - name: description
+        label: Deskripsi singkat
+        type: text
+        description: "1–2 kalimat di hero halaman. Maksimal 300 karakter."
+        options:
+          maxlength: 300
+      - name: heroImage
+        label: Foto hero
+        type: image
+        description: "Foto latar besar di atas halaman, lebar (landscape) minimal 1920 × 1080 px. Kompres di bawah 1 MB sebelum upload. Dikompres otomatis ke WebP 1920 px + versi 1280 & 600 px. Kosong = foto hasil pertama, lalu foto CTA penutup. Format: JPG, PNG, atau WebP."
+        options:
+          media: shoe-care
+          extensions: [jpg, jpeg, png, webp]
+      - name: aboutTitle
+        label: Judul About Us
+        type: string
+        description: "Opsional. Kosong = Tentang [nama partner]. Maksimal 60 karakter."
+        options:
+          maxlength: 60
+      - name: aboutParagraphs
+        label: Paragraf About Us
+        type: text
+        list:
+          max: 3
+        description: "0–3 paragraf tentang partner, satu paragraf per isian (Add an entry untuk paragraf berikutnya; jangan menempel beberapa paragraf di satu isian). Paragraf pertama tampil lebih besar. Kosong = Deskripsi singkat. Maksimal 400 karakter per paragraf."
+        options:
+          maxlength: 400
+      - name: aboutImage
+        label: Foto About Us
+        type: image
+        description: "Opsional. Foto pendamping tegak 4:5, minimal 1000 × 1250 px. Kompres di bawah 1 MB sebelum upload. Format: JPG, PNG, WebP, atau SVG."
+        options:
+          media: shoe-care
+          extensions: [jpg, jpeg, png, webp, svg]
+      - name: aboutImageAlt
+        label: Deskripsi foto About Us
+        type: string
+        description: "Wajib bila Foto About Us diisi. Maksimal 150 karakter."
+        options:
+          maxlength: 150
+      - name: aboutImagePlain
+        label: Tampilkan tanpa bingkai (untuk logo transparan)
+        type: boolean
+        default: false
+        description: "Aktifkan bila Foto About Us berupa logo berlatar transparan (SVG/PNG): tampil utuh tanpa kotak, latar, dan sudut membulat, rata tengah di atas warna section. Matikan untuk foto biasa (dengan bingkai)."
+      - name: menuFile
+        label: File daftar menu (PDF)
+        type: file
+        description: "Opsional: daftar menu lengkap partner dalam bentuk PDF, maksimal ±3 MB (lebih besar = website gagal diperbarui). Tombol Lihat Daftar Menu membuka file ini di tab baru. Bila diisi, Link Daftar Menu di bawah tidak dipakai. Format: PDF."
+        options:
+          media: shoe-care-menu
+          extensions: [pdf]
+      - name: menuUrl
+        label: Link Daftar Menu
+        type: string
+        description: "Opsional, dipakai bila File daftar menu (PDF) kosong: link daftar menu & harga partner (boleh Google Drive), harus diawali https://. Bila keduanya kosong, tombol Lihat Daftar Menu tidak tampil."
+        pattern:
+          regex: '^(https://\S+)?$'
+          message: Harus diawali https://
+      - name: advantages
+        label: Keunggulan
+        type: object
+        required: true
+        list:
+          min: 2
+          max: 4
+        description: "2–4 poin singkat, tampil sebagai baris ikon."
+        fields:
+          - name: title
+            label: Judul
+            type: string
+            required: true
+            description: Maksimal 40 karakter.
+            options:
+              maxlength: 40
+          - name: description
+            label: Deskripsi
+            type: string
+            required: true
+            description: Maksimal 120 karakter.
+            options:
+              maxlength: 120
+          - name: icon
+            label: Ikon
+            type: select
+            default: check
+            description: "check = centang, clock = jam, star = bintang, tag = label harga, wash = tetes air, spa = daun, gift = hadiah, pin = lokasi, calendar = kalender, user = orang, info = info, scissors = gunting."
+            options:
+              values: [check, clock, star, tag, wash, spa, gift, pin, calendar, user, info, scissors]
+      - name: services
+        label: Layanan
+        type: object
+        required: true
+        list:
+          min: 1
+          max: 8
+        description: "1–8 layanan. Tiap layanan punya tombol Pesan via WhatsApp yang menyebut nama layanannya. Harga opsional; layanan tanpa harga menampilkan Lihat di daftar menu."
+        fields:
+          - name: name
+            label: Nama layanan
+            type: string
+            required: true
+            description: "Dipakai di pesan WhatsApp ({service}). Maksimal 40 karakter."
+            options:
+              maxlength: 40
+          - name: description
+            label: Deskripsi
+            type: string
+            description: "Opsional. Maksimal 120 karakter."
+            options:
+              maxlength: 120
+          - name: price
+            label: Harga
+            type: string
+            description: "Opsional, format seperti Daftar Harga: angka + K, mis. 45K, 100K, atau rentang 70–120K. Kosong = tampil Lihat di daftar menu. Maksimal 20 karakter."
+            pattern:
+              regex: '^((\d{1,4}(,\d)?\s?[–-]\s?)?\d{1,4}(,\d)?[Kk])?$'
+              message: "Format harga: angka + K, mis. 45K atau 70–120K"
+            options:
+              maxlength: 20
+          - name: estimate
+            label: Estimasi waktu
+            type: string
+            description: "Opsional, mis. ±2 hari atau ±30 menit. Maksimal 30 karakter."
+            options:
+              maxlength: 30
+          - name: icon
+            label: Ikon (opsional)
+            type: select
+            description: "Tampil di kartu bila foto kosong. check = centang, clock = jam, star = bintang, tag = label, wash = tetes air, spa = daun, gift = hadiah, pin = lokasi, calendar = kalender, user = orang, info = info, scissors = gunting."
+            options:
+              values: [check, clock, star, tag, wash, spa, gift, pin, calendar, user, info, scissors]
+          - name: image
+            label: Foto (opsional)
+            type: image
+            description: "Opsional. Foto kecil di kartu layanan (menggantikan ikon), 4:3 minimal 1200 × 900 px. Kompres di bawah 1 MB sebelum upload. Format: JPG, PNG, atau WebP."
+            options:
+              media: shoe-care
+              extensions: [jpg, jpeg, png, webp]
+          - name: isActive
+            label: Tampilkan
+            type: boolean
+            default: true
+          - name: order
+            label: Urutan
+            type: number
+            default: 0
+            description: "Angka kecil tampil lebih dulu."
+            options:
+              min: 0
+      - name: photos
+        label: Foto hasil (opsional)
+        type: object
+        list:
+          max: 8
+        description: "0–8 foto hasil kerja partner (dengan izin partner). Galeri hanya tampil bila ada foto. Dikompres otomatis ke WebP 1200 px + versi HP 600 px."
+        fields:
+          - name: image
+            label: Foto
+            type: image
+            description: "Foto hasil kerja partner, 4:3 minimal 1200 × 900 px (bukan logo atau poster promosi). Kompres di bawah 1 MB sebelum upload. Format: JPG, PNG, atau WebP."
+            required: true
+            options:
+              media: shoe-care
+              extensions: [jpg, jpeg, png, webp]
+          - name: alt
+            label: Deskripsi foto
+            type: string
+            required: true
+            description: "Jelaskan isi foto, mis. Sneakers putih sebelum dan sesudah dicuci. Maksimal 150 karakter."
+            options:
+              maxlength: 150
+      - name: notes
+        label: Catatan / ketentuan
+        type: string
+        list:
+          max: 10
+        description: "Teks kecil di bawah layanan, mis. durasi pengerjaan atau tanggung jawab barang titipan. Maksimal 160 karakter per poin."
+        options:
+          maxlength: 160
+      - name: whatsappNumber
+        label: Nomor WhatsApp partner (opsional)
+        type: string
+        description: "Format 628xxxxxxxxxx. Kosong = nomor WhatsApp cabang di atas."
+        pattern:
+          regex: '^(62\d{8,13})?$'
+          message: Format harus 628xxxxxxxxxx (tanpa +, spasi, atau strip)
+      - name: messageTemplate
+        label: Template pesan WhatsApp
+        type: text
+        description: "{partner} = nama partner, {service} = nama layanan (tombol utama: layanan cuci sepatu), {branch} = nama cabang. Pertahankan penanda (via website Cutless) agar pesanan dari website bisa dilacak. Maksimal 500 karakter."
+        pattern:
+          regex: '^(?:[^{}]|\{(?:partner|service|branch)\})*$'
+          message: Placeholder yang boleh dipakai hanya {partner}, {service}, dan {branch}
+        options:
+          maxlength: 500
 
   # ------------------------------------------------------------------ Barber
   - name: barbers
@@ -269,19 +666,21 @@ content:
         required: true
         options:
           maxlength: 60
+        description: Maksimal 60 karakter.
       - name: role
         label: Jabatan
         type: string
-        description: "Opsional, mis. Head Hairstylist."
+        description: "Opsional, mis. Head Hairstylist. Maksimal 60 karakter."
         options:
           maxlength: 60
       - name: photo
         label: Foto
         type: image
         required: true
-        description: "Foto potret (tegak), wajah jelas. Otomatis dikompres ke WebP maks. 800 px."
+        description: "Foto potret (tegak 3:4), wajah jelas, minimal 800 × 1067 px. Kompres di bawah 1 MB sebelum upload. Otomatis dikompres ke WebP maks. 800 px. Format: JPG, PNG, atau WebP."
         options:
           media: barbers
+          extensions: [jpg, jpeg, png, webp]
       - name: branchSlug
         label: Cabang
         type: select
@@ -298,7 +697,7 @@ content:
       - name: specialty
         label: Spesialisasi
         type: string
-        description: "Pisahkan dengan koma. Contoh: Skin fade, Pompadour"
+        description: "Pisahkan dengan koma. Contoh: Skin fade, Pompadour. Maksimal 120 karakter."
         options:
           maxlength: 120
       - name: whatsappNumber
@@ -340,14 +739,15 @@ content:
         label: Foto
         type: image
         required: true
-        description: "Foto tegak tampil tinggi, foto lebar tampil lebar (otomatis). Dikompres ke WebP maks. 1600 px."
+        description: "Minimal 1600 px di sisi terpanjang. Foto tegak tampil tinggi, foto lebar tampil lebar (otomatis). Kompres di bawah 1 MB sebelum upload. Dikompres ke WebP maks. 1600 px. Format: JPG, PNG, atau WebP."
         options:
           media: gallery
+          extensions: [jpg, jpeg, png, webp]
       - name: altText
         label: Deskripsi foto
         type: string
         required: true
-        description: "Wajib. Jelaskan isi foto, mis. \"Mid fade dengan textured crop\"."
+        description: "Wajib. Jelaskan isi foto, mis. \"Mid fade dengan textured crop\". Maksimal 150 karakter."
         options:
           maxlength: 150
       - name: styleCategory
@@ -359,9 +759,21 @@ content:
       - name: caption
         label: Keterangan singkat
         type: string
-        description: "Opsional, tampil saat foto diperbesar."
+        description: "Opsional, tampil saat foto diperbesar dan sebagai label di kolom foto berjalan (section Lokasi). Kosong = label memakai Gaya rambut. Maksimal 120 karakter."
         options:
           maxlength: 120
+      - name: focalPoint
+        label: Titik fokus
+        type: select
+        default: atas
+        description: "Bagian foto yang dipertahankan saat foto dipotong agar pas di kartu: atas (kepala/wajah), tengah, atau bawah."
+        options:
+          values: [atas, tengah, bawah]
+      - name: showInMarquee
+        label: Tampilkan di kolom foto berjalan
+        type: boolean
+        default: true
+        description: "Ikut berjalan di kolom foto section Lokasi. Matikan untuk foto yang hanya untuk galeri."
       - name: order
         label: Urutan
         type: number
@@ -372,6 +784,331 @@ content:
         label: Tampilkan di website
         type: boolean
         default: true
+
+  # ------------------------------------------------------------------ Hero
+  - name: hero
+    label: Hero (bagian paling atas)
+    type: file
+    path: src/content/hero.json
+    format: json
+    fields:
+      - name: kicker
+        label: Teks kecil di atas judul
+        type: string
+        required: true
+        description: "{cities} diganti otomatis dengan kota cabang, mis. Hair Studio · {cities} → Hair Studio · Bogor & Cibubur. Maksimal 80 karakter."
+        options:
+          maxlength: 80
+      - name: titleLines
+        label: Judul (per baris)
+        type: string
+        list:
+          min: 1
+          max: 3
+        required: true
+        description: "Satu isian = satu baris judul besar. Pendek saja. Maksimal 40 karakter per isian."
+        options:
+          maxlength: 40
+      - name: subtitle
+        label: Subjudul
+        type: text
+        required: true
+        description: "1–2 kalimat. Maksimal 240 karakter."
+        options:
+          maxlength: 240
+      - name: primaryCtaLabel
+        label: Label tombol utama
+        type: string
+        required: true
+        description: "Tombol ini membuka WhatsApp cabang yang dipilih. Contoh: Booking via WhatsApp. Maksimal 30 karakter."
+        options:
+          maxlength: 30
+      - name: secondaryCtaLabel
+        label: Label tombol kedua
+        type: string
+        required: true
+        description: "Menuju daftar layanan. Contoh: Lihat Layanan. Maksimal 30 karakter."
+        options:
+          maxlength: 30
+      - name: image
+        label: Foto desktop
+        type: image
+        required: true
+        description: "Foto lebar (landscape) minimal 1920 × 1080 px. Kompres di bawah 1 MB sebelum upload. Dikompres otomatis ke WebP 1920 px + versi 1280 px. Format: JPG, PNG, atau WebP."
+        options:
+          media: hero
+          extensions: [jpg, jpeg, png, webp]
+      - name: mobileImage
+        label: Foto HP (opsional)
+        type: image
+        description: "Foto tegak (portrait) untuk layar HP, minimal 1080 × 1920 px. Kompres di bawah 1 MB sebelum upload. Kosong = memakai foto desktop. Format: JPG, PNG, atau WebP."
+        options:
+          media: hero
+          extensions: [jpg, jpeg, png, webp]
+      - name: imageAlt
+        label: Deskripsi foto
+        type: string
+        required: true
+        description: "Wajib. Jelaskan isi foto untuk pembaca layar & Google. Maksimal 150 karakter."
+        options:
+          maxlength: 150
+      - name: marquee
+        label: Teks berjalan
+        type: string
+        list:
+          min: 1
+          max: 8
+        required: true
+        description: "Kata-kata pendek di strip berjalan di bawah hero. Maksimal 40 karakter per isian."
+        options:
+          maxlength: 40
+
+  # ------------------------------------------------------------------ Tentang Kami
+  - name: about
+    label: Tentang Kami
+    type: file
+    path: src/content/about.json
+    format: json
+    fields:
+      - name: kicker
+        label: Teks kecil di atas judul
+        type: string
+        required: true
+        options:
+          maxlength: 40
+        description: Maksimal 40 karakter.
+      - name: title
+        label: Judul (tampil di atas foto)
+        type: string
+        required: true
+        options:
+          maxlength: 80
+        description: Maksimal 80 karakter.
+      - name: paragraphs
+        label: Paragraf
+        type: text
+        list:
+          min: 1
+          max: 4
+        required: true
+        description: "Paragraf pertama tampil lebih besar. Maksimal 600 karakter per isian."
+        options:
+          maxlength: 600
+      - name: values
+        label: Poin nilai
+        type: object
+        list:
+          max: 6
+        description: "Daftar bertanda centang di samping foto."
+        fields:
+          - name: title
+            label: Judul poin
+            type: string
+            required: true
+            options:
+              maxlength: 40
+            description: Maksimal 40 karakter.
+          - name: description
+            label: Keterangan
+            type: string
+            required: true
+            options:
+              maxlength: 120
+            description: Maksimal 120 karakter.
+      - name: caption
+        label: Keterangan di bawah foto
+        type: string
+        description: "Contoh: Studio Cutless, Bogor. Maksimal 80 karakter."
+        options:
+          maxlength: 80
+      - name: images
+        label: Foto slideshow
+        type: object
+        list:
+          min: 1
+          max: 8
+        required: true
+        description: "1–8 foto tegak (portrait 4:5). Urutan di sini = urutan tampil; foto pertama dimuat lebih dulu. Satu foto = tampil diam tanpa indikator. Dikompres otomatis ke WebP 1200 px + versi HP 600 px."
+        fields:
+          - name: src
+            label: Foto
+            type: image
+            description: "Foto tegak 4:5, minimal 1200 × 1500 px. Kompres di bawah 1 MB sebelum upload. Format: JPG, PNG, atau WebP."
+            required: true
+            options:
+              media: about
+              extensions: [jpg, jpeg, png, webp]
+          - name: alt
+            label: Deskripsi foto
+            type: string
+            required: true
+            description: "Wajib. Jelaskan isi foto, mis. Hairstylist merapikan fade pelanggan. Maksimal 150 karakter."
+            options:
+              maxlength: 150
+          - name: focalPoint
+            label: Titik fokus
+            type: select
+            default: tengah
+            description: "Bagian foto yang dipertahankan saat foto dipotong agar pas bingkai (mis. atas untuk wajah)."
+            options:
+              values: [atas, tengah, bawah]
+      - name: slideInterval
+        label: Jeda per foto (detik)
+        type: number
+        default: 5
+        options:
+          min: 3
+          max: 15
+      - name: transition
+        label: Efek pergantian
+        type: select
+        default: crossfade
+        description: "crossfade = memudar halus; ken-burns = memudar + foto membesar perlahan."
+        options:
+          values: [crossfade, ken-burns]
+
+  # ------------------------------------------------------------------ Kartu Studio
+  - name: studio
+    label: Kartu Studio ("On point, always.")
+    type: file
+    path: src/content/studio.json
+    format: json
+    fields:
+      - name: image
+        label: Foto
+        type: image
+        description: "Foto lebar suasana studio, minimal 1600 × 1000 px. Kompres di bawah 1 MB sebelum upload. Kosong = memakai foto cabang pertama. Format: JPG, PNG, atau WebP."
+        options:
+          media: studio
+          extensions: [jpg, jpeg, png, webp]
+      - name: imageAlt
+        label: Deskripsi foto
+        type: string
+        description: "Wajib bila foto diisi. Maksimal 150 karakter."
+        options:
+          maxlength: 150
+      - name: taglines
+        label: Tagline
+        type: string
+        list:
+          min: 1
+          max: 5
+        required: true
+        description: "Kalimat pendek yang berganti di atas foto. Maksimal 60 karakter per isian."
+        options:
+          maxlength: 60
+
+  # ------------------------------------------------------------------ CTA Penutup
+  - name: cta
+    label: CTA Penutup ("Kursimu sudah siap.")
+    type: file
+    path: src/content/cta.json
+    format: json
+    fields:
+      - name: kicker
+        label: Teks kecil di atas judul
+        type: string
+        required: true
+        description: "Maksimal 60 karakter."
+        options:
+          maxlength: 60
+      - name: title
+        label: Judul
+        type: string
+        required: true
+        description: "Kalimat pendek, tampil sangat besar. Maksimal 60 karakter."
+        options:
+          maxlength: 60
+      - name: description
+        label: Deskripsi
+        type: text
+        required: true
+        description: "1–2 kalimat ajakan booking. Maksimal 240 karakter."
+        options:
+          maxlength: 240
+      - name: ctaLabel
+        label: Label tombol
+        type: string
+        required: true
+        description: "Tombol selalu membuka WhatsApp cabang yang dipilih pengunjung (tujuannya tidak bisa diubah). Contoh: Booking via WhatsApp. Maksimal 40 karakter."
+        options:
+          maxlength: 40
+      - name: image
+        label: Foto latar
+        type: image
+        description: "Foto lebar (landscape) minimal 1920 × 1080 px. Kompres di bawah 1 MB sebelum upload. Tampil gelap (diberi lapisan hitam) agar teks terbaca. Kosong = foto bawaan. Format: JPG, PNG, atau WebP."
+        options:
+          media: cta
+          extensions: [jpg, jpeg, png, webp]
+      - name: imageAlt
+        label: Deskripsi foto
+        type: string
+        description: "Wajib bila foto latar diisi. Maksimal 150 karakter."
+        options:
+          maxlength: 150
+
+  # ------------------------------------------------------------------ Logo Partner
+  - name: partners
+    label: Logo Partner
+    type: file
+    path: src/content/partners.json
+    format: json
+    fields:
+      - name: enabled
+        label: Tampilkan pita logo
+        type: boolean
+        default: true
+        description: "Pita logo berjalan di beranda, tepat sebelum CTA penutup. Pita tidak muncul bila dimatikan atau belum ada logo yang ditampilkan."
+      - name: label
+        label: Label kecil di atas pita (opsional)
+        type: string
+        description: "Contoh: Partner & Kolaborasi. Kosongkan bila tidak perlu. Maksimal 40 karakter."
+        options:
+          maxlength: 40
+      - name: logos
+        label: Logo
+        type: object
+        list:
+          max: 40
+        description: "Hanya partner yang sudah memberi izin. 1–2 logo tampil diam di tengah; 3 atau lebih berjalan."
+        fields:
+          - name: name
+            label: Nama partner
+            type: string
+            required: true
+            description: "Juga teks alternatif logo. Bila logo kosong, nama ini tampil sebagai teks. Maksimal 60 karakter."
+            options:
+              maxlength: 60
+          - name: logo
+            label: Logo (opsional)
+            type: image
+            description: "PNG atau WebP berlatar TRANSPARAN (bukan SVG), lebar minimal 400 px. Kompres di bawah 1 MB sebelum upload. Tampil satu warna senada pita, berwarna asli saat disentuh kursor. Dikompres otomatis ke WebP 400 px. Kosong = nama partner tampil sebagai teks. Format: JPG, PNG, WebP, atau SVG."
+            options:
+              media: partner-logos
+              extensions: [jpg, jpeg, png, webp, svg]
+          - name: url
+            label: Link (opsional)
+            type: string
+            description: "Situs atau Instagram partner, harus diawali https://. Dibuka di tab baru. Kosong = tidak bisa diklik."
+            pattern:
+              regex: '^(https://\S+)?$'
+              message: Harus diawali https://
+          - name: isActive
+            label: Tampilkan
+            type: boolean
+            default: true
+          - name: order
+            label: Urutan
+            type: number
+            default: 0
+            description: "Angka kecil tampil lebih dulu."
+            options:
+              min: 0
+          - name: isDemo
+            label: Data demo (hapus/matikan sebelum launch)
+            type: boolean
+            default: false
+            description: "Centang untuk isian dummy (badge DEMO tampil di staging). Build produksi GAGAL selama data demo masih tayang."
 
   # ------------------------------------------------------------------ Promo
   - name: promos
@@ -385,29 +1122,35 @@ content:
         label: Judul promo
         type: string
         required: true
-        description: "Contoh: Diskon 20% Haircut Weekday"
+        description: "Contoh: Diskon 20% Haircut Weekday. Maksimal 80 karakter."
         options:
           maxlength: 80
       - name: description
         label: Deskripsi
         type: text
-        description: "Syarat & ketentuan singkat."
+        description: "Syarat & ketentuan singkat. Maksimal 400 karakter."
+        options:
+          maxlength: 400
       - name: image
         label: Gambar
         type: image
-        description: "Opsional. Gambar lebar (16:10) paling bagus."
+        description: "Opsional. Gambar lebar 16:10, minimal 1600 × 1000 px. Kompres di bawah 1 MB sebelum upload. Format: JPG, PNG, atau WebP."
         options:
           media: promos
+          extensions: [jpg, jpeg, png, webp]
       - name: ctaLabel
         label: Teks tombol
         type: string
         default: Ambil Promo
         options:
           maxlength: 40
+        description: Maksimal 40 karakter.
       - name: waMessage
         label: Pesan WhatsApp
         type: text
-        description: "Pesan otomatis saat tombol diklik. Boleh pakai {brand} dan {promo}. Contoh: Halo {brand}, saya mau pakai promo {promo} untuk [hari/jam]."
+        description: "Pesan otomatis saat tombol diklik. Boleh pakai {brand} dan {promo}. Contoh: Halo {brand}, saya mau pakai promo {promo} untuk [hari/jam]. Maksimal 500 karakter."
+        options:
+          maxlength: 500
       - name: startDate
         label: Mulai
         type: date
@@ -455,13 +1198,12 @@ content:
         label: Pesan
         type: string
         required: true
-        description: "Maks. 160 karakter. Tampil sebagai bar tipis di atas menu."
+        description: "Tampil sebagai bar tipis di atas menu. Maksimal 160 karakter."
         options:
           maxlength: 160
       - name: type
         label: Jenis
         type: select
-        required: true
         default: Info
         description: '"Tutup" tampil paling menonjol.'
         options:
@@ -512,7 +1254,7 @@ content:
         label: Nama pemberi ulasan
         type: string
         required: true
-        description: "Tulis seperti di Google, mis. Aditya R."
+        description: "Tulis seperti di Google, mis. Aditya R. Maksimal 60 karakter."
         options:
           maxlength: 60
       - name: rating
@@ -527,7 +1269,9 @@ content:
         label: Isi ulasan
         type: text
         required: true
-        description: "Salin dari ulasan asli (maks. 500 karakter). Jangan mengarang ulasan."
+        description: "Salin dari ulasan asli. Jangan mengarang ulasan. Maksimal 500 karakter."
+        options:
+          maxlength: 500
       - name: date
         label: Tanggal ulasan
         type: date
@@ -562,7 +1306,7 @@ content:
         label: Nama produk
         type: string
         required: true
-        description: "Contoh: Water Based Pomade"
+        description: "Contoh: Water Based Pomade. Maksimal 80 karakter."
         options:
           maxlength: 80
       - name: category
@@ -588,19 +1332,22 @@ content:
       - name: size
         label: Isi / ukuran
         type: string
-        description: "Contoh: 100 ml atau 80 gr"
+        description: "Contoh: 100 ml atau 80 gr. Maksimal 30 karakter."
         options:
           maxlength: 30
       - name: description
         label: Deskripsi singkat
         type: text
-        description: "Manfaat & cocok untuk siapa (maks. 400 karakter)."
+        description: "Manfaat & cocok untuk siapa. Maksimal 400 karakter."
+        options:
+          maxlength: 400
       - name: image
         label: Foto produk
         type: image
-        description: "Foto persegi (1:1), latar polos. Dikompres otomatis ke WebP maks. 1000 px. Kosong = gambar logo."
+        description: "Foto persegi (1:1) latar polos, minimal 1000 × 1000 px. Kompres di bawah 1 MB sebelum upload. Dikompres otomatis ke WebP maks. 1000 px. Kosong = gambar logo. Format: JPG, PNG, atau WebP."
         options:
           media: products
+          extensions: [jpg, jpeg, png, webp]
       - name: badge
         label: Label khusus
         type: select
@@ -647,20 +1394,22 @@ content:
       - name: logo
         label: Logo footer
         type: image
-        description: "PNG/WebP transparan, versi putih."
+        description: "PNG/WebP transparan, versi putih, lebar minimal 400 px. Kompres di bawah 1 MB sebelum upload. Format: JPG, PNG, atau WebP."
         options:
           media: site
+          extensions: [jpg, jpeg, png, webp]
       - name: siteName
         label: Nama usaha
         type: string
         required: true
         options:
           maxlength: 80
+        description: Maksimal 80 karakter.
       - name: siteUrl
         label: Alamat website (domain resmi)
         type: string
         required: true
-        description: "Mis. https://cutlesshairstudio.id (tanpa garis miring di akhir). Satu-satunya sumber domain untuk Google, sitemap, dan preview link."
+        description: "Mis. https://cutlesshairstudio.com (tanpa garis miring di akhir). Satu-satunya sumber domain untuk Google, sitemap, dan preview link."
         pattern:
           regex: "^https://[^\\s]+[^/]$"
           message: Diawali https:// dan tanpa garis miring di akhir
@@ -675,7 +1424,18 @@ content:
       - name: defaultWaMessage
         label: Pesan booking default
         type: text
-        description: "Boleh pakai {brand} dan {branch} (nama cabang). Contoh: Halo {brand} cabang {branch}, saya mau booking haircut untuk [hari/jam]."
+        description: "Boleh pakai {brand} dan {branch} (nama cabang). Contoh: Halo {brand} cabang {branch}, saya mau booking haircut untuk [hari/jam]. Maksimal 500 karakter."
+        options:
+          maxlength: 500
+      - name: barberWaMessage
+        label: Template pesan booking kapster
+        type: text
+        description: "Dipakai semua tombol \"Booking [nama barber]\". Placeholder (huruf kecil): {brand} = nama usaha, {branch} = cabang barber, {barber} = nama barber yang diklik. Kosong = template bawaan. Maksimal 500 karakter (emoji dihitung 2); sisakan ruang untuk nama barber & cabang."
+        pattern:
+          regex: '^(?:[^{}]|\{(?:brand|branch|barber)\})*$'
+          message: Placeholder yang boleh dipakai hanya {brand}, {branch}, dan {barber} (huruf kecil)
+        options:
+          maxlength: 500
       - name: instagramUrl
         label: Link Instagram
         type: string
@@ -690,10 +1450,22 @@ content:
         pattern:
           regex: "^(https?://.+)?$"
           message: Harus diawali https://
-      - name: footerText
-        label: Teks footer
+      - name: email
+        label: Email
+        type: string
+        description: "Opsional, tampil di footer. Kosongkan untuk menyembunyikan baris email. Maksimal 100 karakter."
+        pattern:
+          regex: '^([^@\s]+@[^@\s]+\.[^@\s]+)?$'
+          message: Format email tidak valid, mis. halo@cutlesshairstudio.com
+        options:
+          maxlength: 100
+      - name: footerTagline
+        label: Tagline footer
         type: text
-        description: "Kalimat singkat di bawah logo footer."
+        default: "Hair studio di {cities}. Goodstyle, goodmood."
+        description: "Kalimat singkat di bawah logo footer. {cities} diganti otomatis dengan kota cabang aktif, mis. Bogor & Cibubur. Maksimal 160 karakter."
+        options:
+          maxlength: 160
       - name: stats
         label: Angka statistik
         type: object
@@ -760,3 +1532,15 @@ content:
         type: boolean
         default: false
         description: "Nyalakan setelah foto sebelum-sesudah asli tersedia."
+      - name: enablePreloader
+        label: Tampilkan animasi pembuka
+        type: boolean
+        default: true
+        description: "Logo Cutless beranimasi saat website pertama kali dibuka (sekali per kunjungan, maks. 1,5 detik)."
+      - name: preloaderVideo
+        label: Video animasi pembuka (opsional)
+        type: file
+        description: "MP4/WebM tanpa suara, maks. 500 KB dan ±1,5 detik. Kosongkan untuk memakai animasi logo. Format: MP4 atau WebM."
+        options:
+          media: videos
+          extensions: [mp4, webm]

@@ -1,0 +1,95 @@
+/* Badge DEV / STAGING: sengaja mencolok & beda dari palet brand agar tidak tertukar dengan produksi */
+.wrap {
+  --env-bg: #2563eb;
+  --env-ink: #ffffff;
+  /* Kiri atas, di bawah navbar: tidak menutupi tombol/bar di bawah layar */
+  position: fixed;
+  left: max(var(--space-2), env(safe-area-inset-left));
+  top: calc(var(--header-offset) + var(--nav-safe-top) + var(--space-2));
+  z-index: var(--z-env);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-2);
+  max-width: calc(100vw - 2 * var(--space-3));
+  font-family: var(--f-body);
+  opacity: 0.92;
+}
+.wrap:hover,
+.wrap:focus-within { opacity: 1; }
+.row { display: flex; align-items: center; gap: 2px; }
+
+.wrap[data-env='staging'] {
+  --env-bg: #f59e0b;
+  --env-ink: #1c1203;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 22px;
+  padding: 0 var(--space-2);
+  border: 0;
+  border-radius: 999px;
+  background: var(--env-bg);
+  color: var(--env-ink);
+  font: 800 0.625rem / 1 var(--f-body);
+  letter-spacing: 0.08em;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
+  cursor: pointer;
+}
+
+.wrap[data-collapsed] .badge { width: 22px; padding: 0; justify-content: center; }
+.collapse {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--env-bg);
+  color: var(--env-ink);
+  font: 800 0.875rem / 1 var(--f-body);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
+  cursor: pointer;
+}
+.collapse:focus-visible,
+.badge:focus-visible {
+  outline: 2px solid var(--env-ink);
+  outline-offset: 2px;
+}
+
+.count {
+  padding-left: var(--space-2);
+  border-left: 1px solid currentColor;
+  font-weight: 600;
+  letter-spacing: 0;
+}
+
+.panel {
+  max-height: min(50vh, 360px);
+  width: min(420px, calc(100vw - 2 * var(--space-3)));
+  overflow: auto;
+  padding: var(--space-3) var(--space-4);
+  border-radius: 8px;
+  background: #ffffff;
+  color: #111111;
+  font-size: var(--fs-xs);
+  line-height: 1.45;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+}
+
+.panelTitle {
+  margin: 0 0 var(--space-2);
+  font-weight: 700;
+}
+
+.panel ul {
+  margin: 0;
+  padding-left: 1.1em;
+}
+
+.panel li + li {
+  margin-top: var(--space-1);
+}

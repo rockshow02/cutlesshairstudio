@@ -1,65 +1,81 @@
 [
   {
-    "image": "/uploads/gallery/galeri-01-crop.webp",
+    "image": "/uploads/gallery/7a4879f1-1f3e-4502-8c54-513909eddfae-1.webp",
     "altText": "Hairstylist merapikan jenggot dan rambut pelanggan",
     "styleCategory": "Crop",
     "caption": "Beard trim & textured crop",
+    "focalPoint": "atas",
+    "showInMarquee": true,
     "order": 10,
     "isActive": true
   },
   {
-    "image": "/uploads/gallery/galeri-02-lainnya.webp",
+    "image": "/uploads/gallery/img2854.webp",
     "altText": "Proses hair tattoo garis di sisi kepala",
     "styleCategory": "Lainnya",
     "caption": "Hair tattoo",
+    "focalPoint": "atas",
+    "showInMarquee": true,
     "order": 20,
     "isActive": true
   },
   {
-    "image": "/uploads/gallery/galeri-03-lainnya.webp",
+    "image": "/uploads/gallery/img2849.webp",
     "altText": "Beberapa hairstylist sedang bekerja di studio",
     "styleCategory": "Lainnya",
     "caption": "Suasana studio",
+    "focalPoint": "atas",
+    "showInMarquee": true,
     "order": 30,
     "isActive": true
   },
   {
-    "image": "/uploads/gallery/galeri-04-fade.webp",
+    "image": "/uploads/gallery/img2867.webp",
     "altText": "Hairstylist membuat fade dengan clipper",
     "styleCategory": "Fade",
     "caption": "Fade dengan clipper",
+    "focalPoint": "atas",
+    "showInMarquee": true,
     "order": 40,
     "isActive": true
   },
   {
-    "image": "/uploads/gallery/galeri-05-lainnya.webp",
+    "image": "/uploads/gallery/img0296-1.webp",
     "altText": "Pelanggan berbaring saat beard shaping",
     "styleCategory": "Lainnya",
     "caption": "Beard shaping",
+    "focalPoint": "atas",
+    "showInMarquee": true,
     "order": 50,
     "isActive": true
   },
   {
-    "image": "/uploads/gallery/galeri-06-lainnya.webp",
+    "image": "/uploads/gallery/img6747.webp",
     "altText": "Detail perapian jenggot dengan trimmer",
     "styleCategory": "Lainnya",
     "caption": "Beard detail",
+    "focalPoint": "atas",
+    "showInMarquee": true,
     "order": 60,
     "isActive": true
   },
   {
-    "image": "/uploads/gallery/galeri-07-fade.webp",
+    "image": "/uploads/gallery/img6913-1.webp",
     "altText": "Hairstylist memotong taper fade",
     "styleCategory": "Fade",
     "caption": "Taper fade",
+    "focalPoint": "atas",
+    "showInMarquee": true,
     "order": 70,
     "isActive": true
   },
   {
-    "image": "/uploads/gallery/galeri-08-lainnya.webp",
+    "image": "/uploads/gallery/whatsapp-image-2026-10-19-at-40400-pm-1.webp",
     "altText": "Finishing potongan rambut dengan gunting",
     "styleCategory": "Lainnya",
     "caption": "Finishing",
+    "focalPoint": "atas",
+    "showInMarquee": true,
     "order": 80,
     "isActive": true
   }
