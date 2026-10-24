@@ -158,6 +158,7 @@ export function buildShoeCare(p: ShoeCareEntry | null | undefined, branches: Bra
   const template = text(p.messageTemplate) ?? copy.defaultTemplate;
   const link = (service: string) => templateLink(number, template, { partner: p.name, service, branch: branch.name });
   const logo = text(p.logo);
+  const heroLogo = text(p.heroLogo);
   const photos = (p.photos ?? []).map((ph) => responsiveImage(ph.image, ph.alt, '(min-width: 1024px) 33vw, (min-width: 600px) 50vw, 100vw', { width: 1200, height: 900 }));
   const hero = text(p.heroImage);
   const aboutImage = text(p.aboutImage);
@@ -170,6 +171,8 @@ export function buildShoeCare(p: ShoeCareEntry | null | undefined, branches: Bra
     tagline: text(p.tagline),
     description: text(p.description),
     logo: logo ? toImage(logo, p.name, { width: 240, height: 240 }) : undefined,
+    // Ukuran asli dari file (SVG/PNG/WebP) → width/height di <img> → tanpa CLS
+    heroLogo: heroLogo ? toImage(heroLogo, p.name, { width: 1200, height: 300 }) : undefined,
     heroImage: hero
       ? responsiveImage(hero, `${p.name}, ${copy.kicker.toLowerCase()}`, '100vw', { width: 1920, height: 1080 })
       : (photos[0] ?? fallbackImage ?? placeholder),

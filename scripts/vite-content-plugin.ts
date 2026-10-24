@@ -33,7 +33,7 @@ const VIRTUAL_ID = 'virtual:image-meta';
 const RESOLVED_ID = `\0${VIRTUAL_ID}`;
 const STATUS_ID = 'virtual:content-status';
 const RESOLVED_STATUS_ID = `\0${STATUS_ID}`;
-const IMAGE_KEYS = new Set(['photo', 'image', 'logo', 'mobileImage', 'src']);
+const IMAGE_KEYS = new Set(['photo', 'image', 'logo', 'heroLogo', 'mobileImage', 'src']);
 const OG_IMAGE = '/images/og/og-cutless.jpg';
 const BRANCH_ROUTE = /^\/cabang\/([a-z0-9-]+)\/?(?:index\.html)?(?:[?#].*)?$/;
 /** Build E2E: file uji (mis. PDF daftar menu) yang hanya disalin ke dist/ build E2E, tidak pernah ke public/ */
@@ -107,9 +107,11 @@ export async function loadContent(root: string, { fixtures = false, variant }: {
 
     const images: { path: string; at: string }[] = [];
     collectImages(data, file, images);
+    // Build E2E: file uji di e2e/fixtures/public juga dihitung (disalin ke dist/ saat build E2E saja)
+    const dirs = [publicDir, ...(fixtures ? [path.join(root, FIXTURE_PUBLIC)] : [])];
     for (const img of images) {
       const webp = img.path.replace(/\.(jpe?g|png|gif|tiff?|avif)$/i, '.webp');
-      const found = existsSync(path.join(publicDir, img.path)) || existsSync(path.join(publicDir, webp));
+      const found = dirs.some((dir) => existsSync(path.join(dir, img.path)) || existsSync(path.join(dir, webp)));
       if (img.path.startsWith('/') && !found) errors.push(`  • ${img.at}: gambar tidak ditemukan di public${img.path}`);
     }
   }
@@ -143,18 +145,18 @@ export async function loadContent(root: string, { fixtures = false, variant }: {
 /* ---------- Ukuran gambar ---------- */
 
 /** Ukuran gambar di public/uploads (Pages CMS) dan public/images (aset bawaan, mis. foto hero awal) */
-async function readImageMeta(root: string): Promise<ImageMeta> {
+async function readImageMeta(root: string, fixtures = false): Promise<ImageMeta> {
   const meta: Record<string, { width: number; height: number }> = {};
-  const walk = async (dir: string): Promise<void> => {
+  const walk = async (dir: string, base = path.join(root, 'public')): Promise<void> => {
     if (!existsSync(dir)) return;
     for (const entry of await readdir(dir, { withFileTypes: true })) {
       const full = path.join(dir, entry.name);
-      if (entry.isDirectory()) await walk(full);
-      else if (/\.(webp|jpe?g|png|gif|avif)$/i.test(entry.name)) {
+      if (entry.isDirectory()) await walk(full, base);
+      else if (/\.(webp|jpe?g|png|gif|avif|svg)$/i.test(entry.name)) {
         try {
           const m = await sharp(await readFile(full)).metadata();
           if (m.width && m.height) {
-            const url = '/' + path.relative(path.join(root, 'public'), full).split(path.sep).join('/');
+            const url = '/' + path.relative(base, full).split(path.sep).join('/');
             meta[url] = { width: m.width, height: m.height };
           }
         } catch {
@@ -165,6 +167,8 @@ async function readImageMeta(root: string): Promise<ImageMeta> {
   };
   await walk(path.join(root, 'public', 'uploads'));
   await walk(path.join(root, 'public', 'images'));
+  // Build E2E: ukuran file uji (URL sama seperti di public/, karena disalin ke akar dist/)
+  if (fixtures) await walk(path.join(root, FIXTURE_PUBLIC, 'uploads'), path.join(root, FIXTURE_PUBLIC));
   return meta;
 }
 
@@ -429,7 +433,7 @@ export function contentPlugin(): Plugin {
 
   const refresh = async () => {
     const result = await loadContent(root, { fixtures, variant });
-    imageMeta = await readImageMeta(root);
+    imageMeta = await readImageMeta(root, fixtures);
     if (result.bundle && siteUrlOverride) {
       result.bundle = { ...result.bundle, settings: { ...result.bundle.settings, siteUrl: siteUrlOverride } };
     }
@@ -511,7 +515,7 @@ export function contentPlugin(): Plugin {
         return `export default ${JSON.stringify({ issues: appEnv === 'production' ? [] : launchIssues })};`;
       }
       if (id !== RESOLVED_ID) return null;
-      return `export default ${JSON.stringify(await readImageMeta(root))};`;
+      return `export default ${JSON.stringify(await readImageMeta(root, fixtures))};`;
     },
 
     transformIndexHtml: {

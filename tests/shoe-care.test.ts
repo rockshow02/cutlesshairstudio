@@ -110,6 +110,20 @@ describe('data halaman Cuci Sepatu', () => {
 });
 
 describe('tampilan halaman', () => {
+  it('Logo hero: H1 tetap nama partner (tersembunyi), logo alt = nama, logo kecil tidak dobel; kosong → nama sebagai teks', () => {
+    const logo = '/uploads/shoe-care/logo-kecil.webp';
+    const heroLogo = '/uploads/shoe-care/wordmark-putih.svg';
+    const withLogo = page(entry({ logo, heroLogo }));
+    const h1 = withLogo.match(/<h1 [^>]*>(.*?)<\/h1>/)![1];
+    expect(h1).toContain('<span class="visually-hidden">Cuci Sepatu Uji</span>');
+    expect(h1).toMatch(/<span[^>]*aria-hidden="true"[^>]*><img [^>]*src="\/uploads\/shoe-care\/wordmark-putih\.svg"[^>]*alt="Cuci Sepatu Uji"/);
+    expect(h1).toMatch(/<img [^>]*width="\d+"[^>]*height="\d+"/);
+    expect(withLogo).not.toContain('logo-kecil.webp');
+    const withoutLogo = page(entry({ logo, heroLogo: '' }));
+    expect(withoutLogo.match(/<h1 [^>]*>(.*?)<\/h1>/)![1]).toBe('Cuci Sepatu Uji');
+    expect(withoutLogo).toContain('logo-kecil.webp');
+  });
+
   it('hero, About, layanan, CTA, lokasi; galeri hanya bila ada foto', () => {
     const html = page();
     expect(html).toContain('<h1 id="cuci-sepatu-title"');
@@ -204,6 +218,9 @@ describe('CMS Partner Cuci Sepatu', () => {
     expect(f('enabled')).toMatchObject({ label: 'Tampilkan halaman', default: false });
     expect(f('showTeaser')).toMatchObject({ label: 'Tampilkan teaser di beranda', type: 'boolean', default: true });
     expect(f('heroImage')).toMatchObject({ label: 'Foto hero', type: 'image' });
+    expect(f('heroLogo')).toMatchObject({ label: 'Logo hero (versi terang untuk latar gelap)', type: 'image', options: { media: 'shoe-care', extensions: ['svg', 'png', 'webp'] } });
+    expect(f('heroLogo').required).toBeFalsy();
+    expect((f('heroLogo') as CmsField & { description: string }).description).toContain('Logo/wordmark berwarna putih atau terang, latar transparan, lebar minimal 1200 px untuk PNG');
     expect(f('aboutTitle').options?.maxlength).toBe(60);
     expect(f('aboutParagraphs')).toMatchObject({ list: { max: 3 } });
     expect(f('aboutParagraphs').required).toBeFalsy();
@@ -219,6 +236,15 @@ describe('CMS Partner Cuci Sepatu', () => {
     expect((f('services.price').pattern as { regex: string }).regex).toBe(`^(${SHOE_CARE_PRICE_PATTERN.source.slice(1, -1)})?$`);
     expect(f('menuFile')).toMatchObject({ label: 'File daftar menu (PDF)', type: 'file', options: { media: 'shoe-care-menu', extensions: ['pdf'] } });
     expect(config.media.find((m) => m.name === 'shoe-care-menu')).toMatchObject({ input: 'public/uploads/shoe-care', output: '/uploads/shoe-care', extensions: ['pdf'] });
+  });
+
+  it('form CMS & Zod sepakat: Logo hero SVG/PNG/WebP di folder shoe-care, boleh kosong (data uji)', () => {
+    setMedia(config.media);
+    const base = { ...entry(), services: [{ name: 'A', isActive: true, order: 0 }] };
+    const both = (heroLogo: string) => ({ cms: validateCmsContent(cms, { ...base, heroLogo }).length === 0, zod: shoeCareSchema.safeParse({ ...base, heroLogo }).success });
+    for (const v of ['/uploads/shoe-care/logo.svg', '/uploads/shoe-care/logo.png', '/uploads/shoe-care/logo.webp', '']) expect(both(v), v).toEqual({ cms: true, zod: true });
+    expect(both('/uploads/gallery/logo.png')).toEqual({ cms: false, zod: false });
+    expect(both('/uploads/shoe-care/logo.jpg')).toEqual({ cms: false, zod: false }); // JPG tidak transparan
   });
 
   it('form CMS & Zod sepakat: harga dan file PDF (data uji)', () => {

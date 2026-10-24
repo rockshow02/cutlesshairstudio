@@ -12,6 +12,8 @@ test.skip(!!process.env.E2E_BASE_URL, 'butuh build E2E (data uji)');
 
 const { bogor, cibubur } = E2E_BRANCHES;
 const PAGE = '/cuci-sepatu/';
+/** Build E2E varian "uniform" (:8788): Cuci Sepatu tanpa Logo hero → judul hero = nama partner sebagai teks */
+const NO_HERO_LOGO_URL = 'http://localhost:8788';
 
 /** Gulir ke elemen. Desktop memakai roda mouse (smooth scroll Lenis tidak mengikuti lompatan scroll native di CI). */
 async function scrollTo(page: Page, target: Locator, isMobile: boolean) {
@@ -131,6 +133,36 @@ test('buka /cuci-sepatu langsung & refresh: HTML statis, hero, About, layanan, g
   expect(apiCalls).toEqual([]);
 });
 
+/** Tinggi huruf kapital (1cap) judul hero beranda dengan font Archivo yang sudah termuat: elemen uji dengan font h1 */
+const capHeight = (page: Page) =>
+  page.evaluate(async () => {
+    await document.fonts.ready;
+    const h1 = document.querySelector('#top h1')!;
+    const probe = document.createElement('span');
+    Object.assign(probe.style, { display: 'block', height: '1cap', position: 'absolute', visibility: 'hidden' });
+    h1.appendChild(probe);
+    const h = probe.getBoundingClientRect().height;
+    probe.remove();
+    return h;
+  });
+
+/** Jarak vertikal antarelemen hero (bawah elemen → atas elemen berikutnya) */
+const gapBetween = async (a: Locator, b: Locator) => {
+  const [x, y] = [(await a.boundingBox())!, (await b.boundingBox())!];
+  return Math.round(y.y - (x.y + x.height));
+};
+
+/** CLS sejak halaman dibuka (layout-shift tanpa input) */
+const clsOf = (page: Page) =>
+  page.evaluate(
+    () =>
+      new Promise<number>((resolve) => {
+        let total = 0;
+        new PerformanceObserver((list) => list.getEntries().forEach((e) => { if (!(e as unknown as { hadRecentInput: boolean }).hadRecentInput) total += (e as unknown as { value: number }).value; })).observe({ type: 'layout-shift', buffered: true });
+        setTimeout(() => resolve(total), 300);
+      }),
+  );
+
 /** Ukuran hero & judul (h1), tanpa animasi masuk */
 const heroBox = (page: Page) =>
   page.evaluate(() => {
@@ -152,6 +184,8 @@ test('hero rata tengah, ukurannya sama dengan hero beranda; tombol berdampingan 
   await page.goto('/', { waitUntil: 'domcontentloaded' });
   await expect(page.locator('#top h1')).toBeVisible({ timeout: 20_000 });
   const home = await heroBox(page);
+  const homeCap = await capHeight(page);
+  const homeTitleWidth = (await page.locator('#top h1').boundingBox())!.width;
   await page.goto(PAGE, { waitUntil: 'domcontentloaded' });
   const hero = page.locator('#top');
   await expect(hero.getByRole('heading', { level: 1 })).toBeVisible({ timeout: 20_000 });
@@ -161,9 +195,33 @@ test('hero rata tengah, ukurannya sama dengan hero beranda; tombol berdampingan 
   const vp = page.viewportSize()!;
   expect(shoe.height, 'tinggi hero = tinggi layar').toBe(vp.height);
 
+  // Logo hero (data uji bawaan): H1 tetap bernama partner (teks tersembunyi), logo alt = nama partner, setinggi huruf
+  // kapital judul beranda, tidak lebih lebar dari judul beranda; logo kecil di atas kicker tidak tampil (tidak dobel)
+  const h1 = hero.getByRole('heading', { level: 1, name: E2E_SHOE_CARE.name });
+  await expect(h1).toBeVisible();
+  const wordmark = h1.locator('img');
+  await expect(wordmark).toHaveAttribute('alt', E2E_SHOE_CARE.name);
+  await expect(wordmark).toHaveAttribute('width', /^\d+$/);
+  await expect(wordmark).toHaveAttribute('height', /^\d+$/);
+  await expect(h1.locator('.visually-hidden')).toHaveText(E2E_SHOE_CARE.name);
+  await expect(hero.locator('img')).toHaveCount(2); // foto latar + logo hero
+  const wm = (await wordmark.boundingBox())!;
+  expect(Math.abs(wm.height - homeCap), `tinggi logo ${wm.height} vs cap-height judul beranda ${homeCap}`).toBeLessThanOrEqual(1);
+  expect(wm.width).toBeLessThanOrEqual(homeTitleWidth + 1);
+  expect(wm.width).toBeGreaterThan(wm.height); // proporsi asli (wordmark melebar), tidak gepeng
+  // Jarak: logo → tagline → deskripsi → badge tidak menempel (ikut jarak hero beranda)
+  const tagline = hero.getByText('Tagline uji cuci sepatu.');
+  const description = hero.getByText('Deskripsi uji layanan cuci sepatu partner.');
+  const badge = hero.getByText(`Tersedia di ${bogor.name}`);
+  expect(await gapBetween(h1, tagline)).toBeGreaterThanOrEqual(24);
+  expect(await gapBetween(tagline, description)).toBeGreaterThanOrEqual(12);
+  expect(await gapBetween(description, badge)).toBeGreaterThanOrEqual(32);
+  expect(await clsOf(page), 'CLS halaman').toBeLessThan(0.01);
+  await expectNoHorizontalScroll(page);
+
   // Semua isi hero di tengah horizontal (±2 px), teks rata tengah
   const parts = [
-    hero.locator('img').last(), // logo partner (foto latar = img pertama)
+    wordmark,
     hero.getByText('Cuci Sepatu', { exact: true }),
     hero.getByRole('heading', { level: 1 }),
     hero.getByText('Tagline uji cuci sepatu.'),
@@ -177,10 +235,8 @@ test('hero rata tengah, ukurannya sama dengan hero beranda; tombol berdampingan 
   for (const text of ['Tagline uji cuci sepatu.', 'Deskripsi uji layanan cuci sepatu partner.']) {
     expect(await hero.getByText(text).evaluate((el) => getComputedStyle(el).textAlign)).toBe('center');
   }
-  // Logo kecil tanpa kotak/latar
-  const logo = hero.locator('img').last();
-  expect((await logo.boundingBox())!.height).toBeLessThanOrEqual(64);
-  expect(await logo.evaluate((el) => getComputedStyle(el).backgroundColor)).toBe('rgba(0, 0, 0, 0)');
+  // Logo hero tanpa kotak/latar
+  expect(await wordmark.evaluate((el) => getComputedStyle(el).backgroundColor)).toBe('rgba(0, 0, 0, 0)');
   // Isi di tengah vertikal: jarak ke atas (di bawah navbar) dan ke bawah layar seimbang
   const first = (await hero.getByText('Cuci Sepatu', { exact: true }).boundingBox())!;
   const last = (await hero.getByRole('link', { name: 'Lihat Daftar Menu' }).boundingBox())!;
@@ -205,6 +261,31 @@ test('hero rata tengah, ukurannya sama dengan hero beranda; tombol berdampingan 
     expect(Math.round(a.y)).toBe(Math.round(b.y));
     expect(Math.abs((a.x + b.x + b.width) / 2 - vp.width / 2)).toBeLessThanOrEqual(2);
   }
+});
+
+test('tanpa Logo hero: nama partner tampil sebagai teks judul, logo kecil di atas kicker, jarak tidak menempel', async ({ page }) => {
+  await page.goto(`${NO_HERO_LOGO_URL}/`, { waitUntil: 'domcontentloaded' });
+  await expect(page.locator('#top h1')).toBeVisible({ timeout: 20_000 });
+  const home = await heroBox(page);
+  await page.goto(`${NO_HERO_LOGO_URL}${PAGE}`, { waitUntil: 'domcontentloaded' });
+  const hero = page.locator('#top');
+  const h1 = hero.getByRole('heading', { level: 1, name: E2E_SHOE_CARE.name });
+  await expect(h1).toBeVisible({ timeout: 20_000 });
+  await page.waitForTimeout(500);
+  await expect(h1).toHaveText(E2E_SHOE_CARE.name);
+  await expect(h1.locator('img')).toHaveCount(0);
+  expect(await heroBox(page)).toEqual(home);
+  // Logo kecil di atas kicker (kecil, tanpa kotak/latar)
+  const logo = hero.locator('img').last();
+  expect((await logo.boundingBox())!.height).toBeLessThanOrEqual(64);
+  expect(await logo.evaluate((el) => getComputedStyle(el).backgroundColor)).toBe('rgba(0, 0, 0, 0)');
+  const tagline = hero.getByText('Tagline uji cuci sepatu.');
+  expect(await gapBetween(h1, tagline)).toBeGreaterThanOrEqual(24);
+  expect(await gapBetween(hero.getByText('Deskripsi uji layanan cuci sepatu partner.'), hero.getByText(`Tersedia di ${bogor.name}`))).toBeGreaterThanOrEqual(32);
+  // Judul teks tampil tanpa animasi: sisa pergeseran mendatar kecil saat Archivo menggantikan font cadangan (lebar beda
+  // ±1,5 % per kata; posisi vertikal sudah sama lewat ascent/descent-override). Dengan Logo hero: < 0,01.
+  expect(await clsOf(page), 'CLS halaman').toBeLessThan(0.02);
+  await expectNoHorizontalScroll(page);
 });
 
 test('tidak ada tombol yang tertutup tombol WhatsApp melayang', async ({ page, isMobile }) => {

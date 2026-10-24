@@ -449,6 +449,11 @@ export const shoeCareSchema = z
     .transform((v) => v || 'bogor-bantarjati'),
   name: requiredText(60, 'nama partner'),
   logo: shoeCareLogo,
+  /** Logo/wordmark terang untuk hero (latar gelap): menggantikan nama partner sebagai judul hero; logo kecil disembunyikan.
+   *  Hanya folder media shoe-care (sama dengan form CMS). WebP = PNG yang sudah dikompres workflow. */
+  heroLogo: z
+    .union([z.string().regex(/^\/uploads\/shoe-care\/[\w./-]+\.(webp|png|svg)$/i, 'logo hero harus SVG, PNG, atau WebP di /uploads/shoe-care/...'), z.literal('')])
+    .nullish(),
   tagline: optionalText(120),
   description: optionalText(300),
   /** Foto latar hero; kosong → foto hasil pertama → foto CTA penutup */

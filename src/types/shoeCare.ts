@@ -68,6 +68,8 @@ export interface ShoeCareContent {
   tagline?: string;
   description?: string;
   logo?: ImageAsset;
+  /** Logo terang pengganti nama partner di judul hero (alt = nama partner) */
+  heroLogo?: ImageAsset;
   /** Foto latar hero (CMS → foto hasil pertama → foto CTA penutup) */
   heroImage: ImageAsset;
   /** Satu-satunya cabang tempat layanan tersedia */

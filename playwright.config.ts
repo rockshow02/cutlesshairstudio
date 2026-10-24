@@ -9,8 +9,8 @@ import { defineConfig } from '@playwright/test';
  *   E2E_BASE_URL=https://…staging… npm run e2e   → uji ke staging
  *     (+ E2E_CF_ACCESS_CLIENT_ID/SECRET bila Worker staging dikunci Cloudflare Access)
  * Proyek "hp" = 360 px (layar sentuh), "desktop" = 1280 px.
- * Server kedua (:8788, npm run e2e:server:uniform): build E2E varian "uniform" (Daftar Harga sama di semua cabang),
- * dipakai e2e/branch-pricing.spec.ts lewat UNIFORM_URL.
+ * Server kedua (:8788, npm run e2e:server:uniform): build E2E varian "uniform" (Daftar Harga sama di semua cabang,
+ * Cuci Sepatu tanpa Logo hero), dipakai e2e/branch-pricing.spec.ts & e2e/shoe-care.spec.ts lewat UNIFORM_URL.
  */
 const baseURL = process.env.E2E_BASE_URL ?? 'http://localhost:8787';
 

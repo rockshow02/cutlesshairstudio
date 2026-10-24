@@ -94,6 +94,32 @@
 .heroTitle {
   overflow-wrap: anywhere;
 }
+/*
+ * Logo hero di posisi judul: kotak setinggi satu baris judul beranda (font-size & line-height dari .title beranda),
+ * logo setinggi huruf kapital judul (cap-height Archivo wdth 125 / 800 = 0,686 em, diukur di browser). Sengaja bukan
+ * `1cap`: unit itu ikut font yang sedang termuat (font cadangan lebih tinggi) sehingga logo mengecil saat Archivo masuk
+ * → pergeseran layout. Lebar otomatis dari ukuran asli file (width/height di <img> → tanpa CLS), dibatasi lebar kolom
+ * hero (≤ lebar judul beranda). object-fit: contain menjaga proporsi bila logo sangat lebar.
+ */
+.heroLogoTitle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 0.98em;
+}
+.heroWordmark {
+  display: contents;
+}
+.heroWordmark picture {
+  display: contents;
+}
+.heroWordmarkImg {
+  display: block;
+  width: auto;
+  max-width: 100%;
+  height: 0.686em;
+  object-fit: contain;
+}
 .heroTagline {
   margin-bottom: var(--space-3);
   font-size: var(--fs-lg);
@@ -106,6 +132,14 @@
   justify-content: center;
   gap: var(--space-3);
   margin-bottom: var(--space-6);
+}
+/* Jarak teks terakhir → badge = 32 px (seperti subjudul → tombol di hero beranda), apa pun isian di atasnya:
+   judul/logo (margin 24 px dari .title beranda) +8, tagline (12 px) +20, deskripsi (.subtitle beranda, 32 px) +0 */
+.heroTitle + .heroMeta {
+  margin-top: var(--space-2);
+}
+.heroTagline + .heroMeta {
+  margin-top: calc(var(--space-6) - var(--space-3));
 }
 .available {
   display: inline-flex;
