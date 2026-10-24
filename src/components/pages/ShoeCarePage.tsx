@@ -83,12 +83,24 @@ function Hero({ data, otherBranch }: { data: ShoeCareContent; otherBranch: boole
       </div>
       <div className={styles.heroShade} aria-hidden="true" />
       <Container className={styles.heroInner}>
-        {data.logo && <ResponsiveImage image={data.logo} className={styles.heroLogo} priority />}
+        {/* Logo kecil hanya bila tidak ada Logo hero (tidak dobel) */}
+        {data.logo && !data.heroLogo && <ResponsiveImage image={data.logo} className={styles.heroLogo} priority />}
         <Kicker center className={styles.heroKicker}>
           {copy.kicker}
         </Kicker>
-        <h1 id="cuci-sepatu-title" className={`${heroStyles.title} ${styles.heroTitle}`}>
-          {data.name}
+        {/* H1 selalu berisi nama partner. Dengan Logo hero: nama untuk pembaca layar & mesin pencari, logo (alt = nama)
+            tampil setinggi huruf kapital judul beranda; pembungkusnya aria-hidden agar nama tidak dibacakan dua kali. */}
+        <h1 id="cuci-sepatu-title" className={`${heroStyles.title} ${styles.heroTitle} ${data.heroLogo ? styles.heroLogoTitle : ''}`}>
+          {data.heroLogo ? (
+            <>
+              <span className="visually-hidden">{data.name}</span>
+              <span className={styles.heroWordmark} aria-hidden="true">
+                <ResponsiveImage image={data.heroLogo} className={styles.heroWordmarkImg} priority />
+              </span>
+            </>
+          ) : (
+            data.name
+          )}
         </h1>
         {data.tagline && <p className={styles.heroTagline}>{data.tagline}</p>}
         {data.description && <p className={heroStyles.subtitle}>{data.description}</p>}

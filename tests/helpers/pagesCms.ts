@@ -117,6 +117,7 @@ function checkScalar(f: CmsField, v: unknown, at: string, out: string[]) {
       }
       const ext = path.split('/').pop()!.split('.').pop() ?? '';
       if (!IMAGE_EXT.includes(ext)) fail(`ekstensi .${ext} bukan gambar`);
+      else if (f.options?.extensions && !f.options.extensions.includes(ext.toLowerCase())) fail(`ekstensi .${ext} tidak diizinkan (${f.options.extensions.join(', ')})`);
       return;
     }
     case 'file': {

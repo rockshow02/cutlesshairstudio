@@ -433,6 +433,13 @@ content:
         description: "PNG berlatar transparan atau SVG, persegi minimal 400 × 400 px. Kompres di bawah 1 MB sebelum upload. Tampil di hero halaman & teaser."
         options:
           media: shoe-care
+      - name: heroLogo
+        label: Logo hero (versi terang untuk latar gelap)
+        type: image
+        description: "Opsional. Logo/wordmark berwarna putih atau terang, latar transparan, lebar minimal 1200 px untuk PNG (SVG lebih baik). Kompres di bawah 1 MB sebelum upload. Bila diisi, tampil menggantikan nama partner sebagai judul hero, dan logo kecil di atas Cuci Sepatu disembunyikan."
+        options:
+          media: shoe-care
+          extensions: [svg, png, webp]
       - name: tagline
         label: Tagline
         type: string

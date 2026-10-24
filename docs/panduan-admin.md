@@ -270,6 +270,7 @@ Susunan halaman: **hero** (foto besar, isi rata tengah: logo, nama, tagline, bad
 
 **Cara mengisi:**
 1. **Cabang**, **Nama partner** (wajib, maks. 60), **Logo** (PNG transparan/SVG), **Tagline** (maks. 120), **Deskripsi singkat** (maks. 300, tampil di hero).
+   - **Logo hero (versi terang untuk latar gelap)** (opsional): logo/wordmark **putih atau terang** berlatar transparan, **SVG** (paling tajam) atau **PNG lebar minimal 1200 px**, kompres di bawah 1 MB. Bila diisi, logo ini tampil **menggantikan nama partner** sebagai judul hero, setinggi huruf judul beranda, dan logo kecil di atas *Cuci Sepatu* otomatis disembunyikan (tidak dobel). Nama partner tetap dipakai untuk Google & pembaca layar. Kosong = nama partner tampil sebagai teks seperti biasa. Logo gelap/berwarna pekat tidak akan terbaca di atas foto gelap: pakai versi putih.
 2. **Foto hero**: foto lebar minimal 1920 px. Kosong = foto hasil pertama, lalu foto CTA penutup. Dipakai juga sebagai gambar saat link dibagikan (WhatsApp/sosial media).
 3. **About Us**: **Judul** (opsional, maks. 60; kosong = *Tentang [nama partner]*), **Paragraf** (1–3, maks. 400 per paragraf), **Foto** (opsional; **Deskripsi foto** wajib bila foto diisi, maks. 150).
 4. **Keunggulan**: 2–4 poin (judul maks. 40, deskripsi maks. 120, ikon).
