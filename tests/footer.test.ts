@@ -23,7 +23,7 @@ describe('footer dinamis', () => {
   });
 
   it('email: dari Pengaturan Situs; kosong → tidak ada email', () => {
-    expect(buildSite({ ...settings, email: 'halo@cutless.id' }, site, branches).email).toBe('halo@cutless.id');
+    expect(buildSite({ ...settings, email: 'halo@cutlesshairstudio.com' }, site, branches).email).toBe('halo@cutlesshairstudio.com');
     expect(buildSite({ ...settings, email: '' }, site, branches).email).toBe('');
     expect(buildSite({ ...settings, email: null }, site, branches).email).toBe('');
   });
@@ -38,7 +38,7 @@ describe('footer dinamis', () => {
     const base = JSON.parse(readFileSync('src/content/settings.json', 'utf8'));
     const ok = (extra: Record<string, unknown>) => settingsSchema.safeParse({ ...base, defaultWaMessage: '', ...extra }).success;
     expect(ok({ email: '' })).toBe(true);
-    expect(ok({ email: 'halo@cutlesshairstudio.id' })).toBe(true);
+    expect(ok({ email: 'halo@cutlesshairstudio.com' })).toBe(true);
     expect(ok({ email: 'halo cutless' })).toBe(false);
     expect(ok({ footerTagline: 'x'.repeat(160) })).toBe(true);
     expect(ok({ footerTagline: 'x'.repeat(161) })).toBe(false);
