@@ -300,7 +300,29 @@ function shoeCareFill(html: string, bundle: ContentBundle): string {
         '</div>',
       ].join('')
     : '';
+  // JSON-LD Service: layanan partner di cabang (lokasi = HairSalon cabang, sama dengan @id di halaman cabang)
+  const jsonLd = visible
+    ? jsonLdTag({
+        '@context': 'https://schema.org',
+        '@type': 'Service',
+        '@id': `${siteUrl}${SHOE_CARE_PATH}#service`,
+        name: title,
+        serviceType: 'Cuci sepatu',
+        url: `${siteUrl}${SHOE_CARE_PATH}`,
+        image,
+        description,
+        provider: { '@type': 'LocalBusiness', name: p.name },
+        areaServed: { '@type': 'City', name: branch.city },
+        availableChannel: { '@type': 'ServiceChannel', serviceLocation: { '@id': `${siteUrl}/cabang/${branch.slug}/#salon` } },
+        hasOfferCatalog: {
+          '@type': 'OfferCatalog',
+          name: `Layanan ${p.name}`,
+          itemListElement: services.map((s) => ({ '@type': 'Offer', itemOffered: { '@type': 'Service', name: s.name, ...(s.description ? { description: s.description } : {}) } })),
+        },
+      })
+    : '';
   return html
+    .replace('<!--cutless:shoe-jsonld-->', jsonLd)
     .replaceAll('%SHOE_TITLE%', esc(title))
     .replaceAll('%SHOE_DESCRIPTION%', esc(description))
     .replaceAll('%SHOE_IMAGE%', image)
