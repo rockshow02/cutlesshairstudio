@@ -4,11 +4,12 @@
   "isDemo": false,
   "branchSlug": "bogor-bantarjati",
   "name": "Fotless",
+  "heroLogo": "/uploads/shoe-care/fotless-wordmark-white.svg",
   "heroImage": "/uploads/shoe-care/img9775jpg.webp",
   "aboutParagraphs": [
     "FOTLESS Shoe Lab adalah layanan perawatan dan restorasi sepatu profesional (premium sneaker care & treatment) yang dirancang fleksibel untuk berdiri sendiri maupun diintegrasikan ke dalam ekosistem lifestyle/groominghub by CUTLESS HAIR STUDIO."
   ],
-  "aboutImage": "/uploads/shoe-care/icon-fotless-black.webp",
+  "aboutImage": "/uploads/shoe-care/fotless-icon-black.svg",
   "aboutImageAlt": "About us",
   "menuUrl": "https://drive.google.com/file/d/19L1osGwbbpz9UpwbgpQKhEOFA632UHjf/view?usp=sharing",
   "advantages": [
