@@ -38,6 +38,21 @@ const DEFAULT_MAX_WIDTH = 1600;
 const QUALITY = 78;
 const CONVERTIBLE = /\.(jpe?g|png|gif|tiff?|avif|webp)$/i;
 
+/**
+ * Satu-satunya jalur konversi ke WebP (foto asli & versi kecil). Transparansi (alpha) PNG/WebP dipertahankan apa
+ * adanya: tidak ada flatten/background, dan alpha disimpan kualitas penuh (logo transparan tidak mendapat latar
+ * putih atau tepi kotor). Diuji di tests/optimize-images.test.ts.
+ * @param {Buffer} input
+ * @param {{ maxWidth?: number, width?: number, rotate?: boolean }} options
+ */
+export function toWebp(input, { maxWidth, width, rotate = false } = {}) {
+  let pipeline = sharp(input);
+  if (rotate) pipeline = pipeline.rotate(); // ikuti orientasi EXIF foto HP
+  if (width) pipeline = pipeline.resize({ width });
+  else if (maxWidth) pipeline = pipeline.resize({ width: maxWidth, withoutEnlargement: true });
+  return pipeline.webp({ quality: QUALITY, alphaQuality: 100, effort: 5 });
+}
+
 const toPublicUrl = (abs) => '/' + path.relative(path.join(ROOT, 'public'), abs).split(path.sep).join('/');
 
 async function walk(dir) {
@@ -79,7 +94,7 @@ async function ensureVariants(file) {
   for (const w of widths) {
     const target = file.replace(/\.webp$/i, `-${w}.webp`);
     if (width <= w || existsSync(target)) continue;
-    await sharp(input).resize({ width: w }).webp({ quality: QUALITY, effort: 5 }).toFile(target);
+    await toWebp(input, { width: w }).toFile(target);
     made.push({ to: toPublicUrl(target), size: (await stat(target)).size });
   }
   return made;
@@ -98,11 +113,7 @@ async function optimize(file) {
 
   const before = input.length;
   const tmp = `${file}.tmp.webp`;
-  await sharp(input)
-    .rotate() // ikuti orientasi EXIF foto HP
-    .resize({ width: maxWidth, withoutEnlargement: true })
-    .webp({ quality: QUALITY, effort: 5 })
-    .toFile(tmp);
+  await toWebp(input, { maxWidth, rotate: true }).toFile(tmp);
 
   const target = isWebp ? file : await uniqueTarget(file.replace(CONVERTIBLE, '.webp'));
   if (isWebp) await rm(file);
@@ -188,4 +199,5 @@ async function main() {
   console.log(changes.length ? `Selesai: ${changes.length} gambar dioptimasi.` : 'Tidak ada gambar baru untuk dioptimasi.');
 }
 
-main();
+// Dijalankan sebagai skrip (npm run optimize-images / prebuild); saat di-import (tes) hanya mengekspor toWebp
+if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) main();

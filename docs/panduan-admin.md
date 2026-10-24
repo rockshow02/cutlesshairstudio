@@ -268,11 +268,19 @@ Susunan halaman: **hero** (foto besar, isi rata tengah: logo, nama, tagline, bad
 - **Tampilkan teaser di beranda**: kartu teaser setelah Daftar Harga (beranda & halaman cabang partner).
 - **Data demo**: lihat §3g.
 
+**Format gambar yang bisa dipilih** (form hanya menampilkan file yang diterima, jadi website tidak gagal diperbarui karena jenis file):
+- Foto biasa (Foto hero, Foto layanan, Foto hasil): **JPG, PNG, atau WebP**.
+- Logo (Logo partner, Logo hero): **SVG, PNG, atau WebP** berlatar transparan.
+- Foto About Us: **JPG, PNG, WebP, atau SVG** (boleh foto atau logo).
+- File daftar menu: **PDF**. PNG yang diupload otomatis dikompres ke WebP; latar transparan tetap transparan.
+
 **Cara mengisi:**
-1. **Cabang**, **Nama partner** (wajib, maks. 60), **Logo** (PNG transparan/SVG), **Tagline** (maks. 120), **Deskripsi singkat** (maks. 300, tampil di hero).
-   - **Logo hero (versi terang untuk latar gelap)** (opsional): logo/wordmark **putih atau terang** berlatar transparan, **SVG** (paling tajam) atau **PNG lebar minimal 1200 px**, kompres di bawah 1 MB. Bila diisi, logo ini tampil **menggantikan nama partner** sebagai judul hero, setinggi huruf judul beranda, dan logo kecil di atas *Cuci Sepatu* otomatis disembunyikan (tidak dobel). Nama partner tetap dipakai untuk Google & pembaca layar. Kosong = nama partner tampil sebagai teks seperti biasa. Logo gelap/berwarna pekat tidak akan terbaca di atas foto gelap: pakai versi putih.
+1. **Cabang**, **Nama partner** (wajib, maks. 60), **Teks kecil di atas judul hero** (opsional, maks. 40, bawaan *Cuci Sepatu*), **Logo** (SVG/PNG transparan), **Tagline** (maks. 120), **Deskripsi singkat** (maks. 300, tampil di hero).
+   - **Teks kecil di atas judul hero**: tulisan kecil berhuruf kapital dengan garis di kiri-kanan, di atas nama/logo partner, mis. *Cuci Sepatu* atau *Partner Cuci Sepatu*. Teks yang sama tampil sebagai label kecil di kartu teaser beranda. **Kosongkan** untuk menyembunyikannya di hero (teaser kembali memakai *Cuci Sepatu*). Judul halaman di Google tidak berubah.
+   - **Logo hero (versi terang untuk latar gelap)** (opsional): logo/wordmark **putih atau terang** berlatar transparan, **SVG** (paling tajam) atau **PNG lebar minimal 1200 px**, kompres di bawah 1 MB. Bila diisi, logo ini tampil **menggantikan nama partner** sebagai judul hero, setinggi huruf judul beranda, dan logo kecil di atas teks kecil hero otomatis disembunyikan (tidak dobel). Nama partner tetap dipakai untuk Google & pembaca layar. Kosong = nama partner tampil sebagai teks seperti biasa. Logo gelap/berwarna pekat tidak akan terbaca di atas foto gelap: pakai versi putih.
 2. **Foto hero**: foto lebar minimal 1920 px. Kosong = foto hasil pertama, lalu foto CTA penutup. Dipakai juga sebagai gambar saat link dibagikan (WhatsApp/sosial media).
-3. **About Us**: **Judul** (opsional, maks. 60; kosong = *Tentang [nama partner]*), **Paragraf** (1–3, maks. 400 per paragraf), **Foto** (opsional; **Deskripsi foto** wajib bila foto diisi, maks. 150).
+3. **About Us**: **Judul** (opsional, maks. 60; kosong = *Tentang [nama partner]*), **Paragraf** (1–3, maks. 400 per paragraf), **Foto** (opsional, foto atau logo; **Deskripsi foto** wajib bila foto diisi, maks. 150).
+   - **Tampilkan tanpa bingkai (untuk logo transparan)**: aktifkan bila Foto About Us berupa **logo berlatar transparan** (SVG/PNG). Logo tampil utuh tanpa kotak, latar, atau sudut membulat, rata tengah di atas warna section (tinggi maks. ±320 px di desktop, lebih kecil di HP). Matikan untuk **foto biasa**: foto tampil di dalam bingkai seperti biasa. Logo berwarna gelap cocok di sini (latar section terang); jangan memakai logo putih.
 4. **Keunggulan**: 2–4 poin (judul maks. 40, deskripsi maks. 120, ikon).
 5. **Layanan**: 1–8 layanan: nama (maks. 40), deskripsi (maks. 120), **Harga** (opsional, maks. 20), estimasi waktu (maks. 30), **ikon atau foto** opsional, **Tampilkan**, **Urutan**.
    - **Harga** ditulis seperti Daftar Harga: angka + **K**, mis. `45K`, `100K`, atau rentang `70–120K` (boleh diketik `70-120K`, tampil `70–120K`). Tanpa `Rp`, titik, atau spasi sebelum K. Kosong = kartu menampilkan teks kecil *Lihat di daftar menu* (link ke daftar menu; tidak tampil bila daftar menu juga kosong). Teaser di beranda tidak menampilkan harga.

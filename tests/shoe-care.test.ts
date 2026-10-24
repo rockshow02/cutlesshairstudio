@@ -4,7 +4,8 @@ import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import { parse } from 'yaml';
-import { SHOE_CARE_PRICE_PATTERN, shoeCareSchema, type ShoeCareEntry } from '../src/content/schema';
+import { partnersSchema, SHOE_CARE_PRICE_PATTERN, shoeCareSchema, type ShoeCareEntry } from '../src/content/schema';
+import { svgSize } from '../scripts/vite-content-plugin';
 import { shoeCareCopy } from '../src/content/shoeCare';
 import { shoeCareDescription, shoeCareImage, shoeCareRedirects, shoeCareTitle, shoeCareVisible } from '../src/content/shoeCareSeo';
 import { site } from '../src/content/site';
@@ -124,6 +125,50 @@ describe('tampilan halaman', () => {
     expect(withoutLogo).toContain('logo-kecil.webp');
   });
 
+  it('teks kecil di atas judul hero: dari CMS; kosong → tidak tampil di hero; teaser memakai teks itu (atau "Cuci Sepatu")', () => {
+    const kicker = (html: string) => html.match(/<section[^>]*id="top"[\s\S]*?<h1/)![0];
+    expect(kicker(page(entry({ heroKicker: 'Partner Sepatu' })))).toContain('>Partner Sepatu</p>');
+    const none = kicker(page(entry({ heroKicker: '' })));
+    expect(none).not.toContain('Cuci Sepatu</p>');
+    expect(none).not.toMatch(/<p class="[^"]*kicker/i);
+    const teaser = (p: ShoeCareEntry) => renderToStaticMarkup(createElement(ShoeCareTeaserView, { data: build(p)!, href: '/cuci-sepatu/' }));
+    expect(teaser(entry({ heroKicker: 'Partner Sepatu' }))).toContain('Partner Sepatu');
+    expect(teaser(entry({ heroKicker: '' }))).toContain('Cuci Sepatu');
+    // Judul & meta halaman tidak berubah
+    expect(shoeCareTitle(entry({ heroKicker: 'Partner Sepatu' }), 'Bogor Bantarjati')).toBe(shoeCareTitle(entry(), 'Bogor Bantarjati'));
+    expect(shoeCareSchema.safeParse({ ...entry(), heroKicker: 'x'.repeat(41) }).success).toBe(false);
+  });
+
+  it('About Us: "Tampilkan tanpa bingkai" → gambar tanpa kotak (kelas polos); mati/tanpa gambar → bingkai biasa', () => {
+    const img = '/uploads/shoe-care/logo-about.svg';
+    const plain = page(entry({ aboutImage: img, aboutImageAlt: 'Logo partner', aboutImagePlain: true }));
+    expect(build(entry({ aboutImage: img, aboutImageAlt: 'Logo partner', aboutImagePlain: true }))!.about.imagePlain).toBe(true);
+    expect(plain).toMatch(/class="[^"]*aboutMediaPlain[^"]*"><img [^>]*class="[^"]*aboutImgPlain/);
+    const framed = page(entry({ aboutImage: img, aboutImageAlt: 'Logo partner' }));
+    expect(framed).toMatch(/class="[^"]*aboutMedia[^P"]*"/);
+    expect(framed).not.toContain('aboutMediaPlain');
+    expect(build(entry({ aboutImagePlain: true }))!.about.imagePlain).toBe(false);
+  });
+
+  it('SVG: Foto About Us & logo boleh SVG; foto biasa tidak', () => {
+    const ok = (patch: Record<string, unknown>) => shoeCareSchema.safeParse({ ...entry(), ...patch }).success;
+    expect(ok({ aboutImage: '/uploads/shoe-care/logo.svg', aboutImageAlt: 'Logo' })).toBe(true);
+    expect(ok({ logo: '/uploads/shoe-care/logo.svg' })).toBe(true);
+    expect(ok({ heroImage: '/uploads/shoe-care/foto.svg' })).toBe(false);
+    expect(ok({ photos: [{ image: '/uploads/shoe-care/hasil.svg', alt: 'Hasil' }] })).toBe(false);
+    expect(ok({ logo: '/uploads/shoe-care/logo.jpg' })).toBe(false);
+    expect(partnersSchema.safeParse({ enabled: true, logos: [{ name: 'A', logo: '/uploads/partner-logos/a.svg' }] }).success).toBe(true);
+  });
+
+  it('ukuran SVG dari width/height atau viewBox (untuk width/height <img>, tanpa CLS)', () => {
+    expect(svgSize('<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="240"><g/></svg>')).toEqual({ width: 1200, height: 240 });
+    expect(svgSize('<svg viewBox="0 0 512 128" xmlns="http://www.w3.org/2000/svg"></svg>')).toEqual({ width: 512, height: 128 });
+    expect(svgSize('<?xml version="1.0"?>\n<svg xmlns="http://www.w3.org/2000/svg" viewBox="0,0,300,150" width="600px"></svg>')).toEqual({ width: 600, height: 300 });
+    expect(svgSize('<svg width="100%" height="100%" viewBox="0 0 40 20"></svg>')).toEqual({ width: 40, height: 20 });
+    expect(svgSize('<svg width="100%"></svg>')).toBeUndefined();
+    expect(svgSize('bukan svg')).toBeUndefined();
+  });
+
   it('hero, About, layanan, CTA, lokasi; galeri hanya bila ada foto', () => {
     const html = page();
     expect(html).toContain('<h1 id="cuci-sepatu-title"');
@@ -220,6 +265,9 @@ describe('CMS Partner Cuci Sepatu', () => {
     expect(f('heroImage')).toMatchObject({ label: 'Foto hero', type: 'image' });
     expect(f('heroLogo')).toMatchObject({ label: 'Logo hero (versi terang untuk latar gelap)', type: 'image', options: { media: 'shoe-care', extensions: ['svg', 'png', 'webp'] } });
     expect(f('heroLogo').required).toBeFalsy();
+    expect(f('heroKicker')).toMatchObject({ label: 'Teks kecil di atas judul hero', type: 'string', default: 'Cuci Sepatu', options: { maxlength: 40 } });
+    expect(f('heroKicker').required).toBeFalsy();
+    expect(f('aboutImagePlain')).toMatchObject({ label: 'Tampilkan tanpa bingkai (untuk logo transparan)', type: 'boolean', default: false });
     expect((f('heroLogo') as CmsField & { description: string }).description).toContain('Logo/wordmark berwarna putih atau terang, latar transparan, lebar minimal 1200 px untuk PNG');
     expect(f('aboutTitle').options?.maxlength).toBe(60);
     expect(f('aboutParagraphs')).toMatchObject({ list: { max: 3 } });

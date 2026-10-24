@@ -163,6 +163,27 @@ const clsOf = (page: Page) =>
       }),
   );
 
+/** CLS dari pergeseran elemen di dalam selector saja (mis. section About), tanpa pergeseran font judul hero */
+const clsWithin = (page: Page, selector: string) =>
+  page.evaluate(
+    (sel) =>
+      new Promise<number>((resolve) => {
+        let total = 0;
+        type Shift = { hadRecentInput: boolean; value: number; sources?: { node?: Node | null }[] };
+        new PerformanceObserver((list) =>
+          (list.getEntries() as unknown as Shift[]).forEach((e) => {
+            const inside = (e.sources ?? []).some((src) => {
+              const el = src.node instanceof Element ? src.node : src.node?.parentElement;
+              return Boolean(el?.closest(sel));
+            });
+            if (!e.hadRecentInput && inside) total += e.value;
+          }),
+        ).observe({ type: 'layout-shift', buffered: true });
+        setTimeout(() => resolve(total), 300);
+      }),
+    selector,
+  );
+
 /** Ukuran hero & judul (h1), tanpa animasi masuk */
 const heroBox = (page: Page) =>
   page.evaluate(() => {
@@ -222,7 +243,7 @@ test('hero rata tengah, ukurannya sama dengan hero beranda; tombol berdampingan 
   // Semua isi hero di tengah horizontal (±2 px), teks rata tengah
   const parts = [
     wordmark,
-    hero.getByText('Cuci Sepatu', { exact: true }),
+    hero.getByText(E2E_SHOE_CARE.heroKicker, { exact: true }),
     hero.getByRole('heading', { level: 1 }),
     hero.getByText('Tagline uji cuci sepatu.'),
     hero.getByText('Deskripsi uji layanan cuci sepatu partner.'),
@@ -238,7 +259,11 @@ test('hero rata tengah, ukurannya sama dengan hero beranda; tombol berdampingan 
   // Logo hero tanpa kotak/latar
   expect(await wordmark.evaluate((el) => getComputedStyle(el).backgroundColor)).toBe('rgba(0, 0, 0, 0)');
   // Isi di tengah vertikal: jarak ke atas (di bawah navbar) dan ke bawah layar seimbang
-  const first = (await hero.getByText('Cuci Sepatu', { exact: true }).boundingBox())!;
+  // Teks kecil kustom dari CMS, garis dekoratif di kiri & kanan
+  const kicker = hero.getByText(E2E_SHOE_CARE.heroKicker, { exact: true });
+  const lines = await kicker.evaluate((el) => [getComputedStyle(el, '::before').width, getComputedStyle(el, '::after').width]);
+  expect(lines).toEqual(['28px', '28px']);
+  const first = (await kicker.boundingBox())!;
   const last = (await hero.getByRole('link', { name: 'Lihat Daftar Menu' }).boundingBox())!;
   expect(vp.height - (last.y + last.height), 'isi tidak menempel di bawah layar').toBeGreaterThan(40);
   expect(first.y).toBeGreaterThan(64);
@@ -274,6 +299,15 @@ test('tanpa Logo hero: nama partner tampil sebagai teks judul, logo kecil di ata
   await page.waitForTimeout(500);
   await expect(h1).toHaveText(E2E_SHOE_CARE.name);
   await expect(h1.locator('img')).toHaveCount(0);
+  // Teks kecil dikosongkan di CMS → tidak tampil; nama partner langsung di bawah logo kecil, isi tetap di tengah layar
+  await expect(hero.getByText('Cuci Sepatu', { exact: true })).toHaveCount(0);
+  await expect(hero.getByText(E2E_SHOE_CARE.heroKicker)).toHaveCount(0);
+  expect(await h1.evaluate((el) => el.previousElementSibling?.tagName)).toBe('IMG');
+  const vp = page.viewportSize()!;
+  const title = (await h1.boundingBox())!;
+  const lastBtn = (await hero.getByRole('link', { name: 'Lihat Daftar Menu' }).boundingBox())!;
+  expect(title.y).toBeGreaterThan(64);
+  expect(vp.height - (lastBtn.y + lastBtn.height)).toBeGreaterThan(40);
   expect(await heroBox(page)).toEqual(home);
   // Logo kecil di atas kicker (kecil, tanpa kotak/latar)
   const logo = hero.locator('img').last();
@@ -285,6 +319,36 @@ test('tanpa Logo hero: nama partner tampil sebagai teks judul, logo kecil di ata
   // Judul teks tampil tanpa animasi: sisa pergeseran mendatar kecil saat Archivo menggantikan font cadangan (lebar beda
   // ±1,5 % per kata; posisi vertikal sudah sama lewat ascent/descent-override). Dengan Logo hero: < 0,01.
   expect(await clsOf(page), 'CLS halaman').toBeLessThan(0.02);
+  await expectNoHorizontalScroll(page);
+});
+
+test('About Us: logo SVG tanpa bingkai (latar transparan, proporsional, rata tengah, ukuran dari viewBox)', async ({ page, isMobile }) => {
+  await page.goto(`${NO_HERO_LOGO_URL}${PAGE}`, { waitUntil: 'domcontentloaded' });
+  const about = page.locator('#tentang');
+  await expect(about).toBeAttached({ timeout: 20_000 });
+  await about.scrollIntoViewIfNeeded();
+  const logo = about.getByRole('img', { name: 'Logo About Us uji' });
+  await expect(logo).toBeVisible();
+  // width/height dari viewBox 800 × 400 → rasio diketahui sebelum gambar dimuat (tanpa CLS)
+  await expect(logo).toHaveAttribute('width', '800');
+  await expect(logo).toHaveAttribute('height', '400');
+  const style = await logo.evaluate((el) => {
+    const wrap = getComputedStyle(el.parentElement!.tagName === 'PICTURE' ? el.parentElement!.parentElement! : el.parentElement!);
+    const s = getComputedStyle(el);
+    return { fit: s.objectFit, radius: s.borderRadius, imgBg: s.backgroundColor, wrapBg: wrap.backgroundColor, wrapRadius: wrap.borderRadius, shadow: s.boxShadow };
+  });
+  expect(style).toEqual({ fit: 'contain', radius: '0px', imgBg: 'rgba(0, 0, 0, 0)', wrapBg: 'rgba(0, 0, 0, 0)', wrapRadius: '0px', shadow: 'none' });
+  const box = (await logo.boundingBox())!;
+  expect(box.height).toBeLessThanOrEqual(isMobile ? 200 : 320);
+  expect(Math.abs(box.width / box.height - 2)).toBeLessThan(0.02); // proporsional (800 : 400)
+  // Rata tengah di kolomnya
+  const col = (await logo.evaluate((el) => {
+    const r = el.closest('div')!.getBoundingClientRect();
+    return { x: r.x, width: r.width };
+  }))!;
+  expect(Math.abs(box.x + box.width / 2 - (col.x + col.width / 2))).toBeLessThanOrEqual(2);
+  // Tanpa CLS dari logo/section About (pergeseran font judul hero diuji terpisah)
+  expect(await clsWithin(page, '#tentang')).toBeLessThan(0.001);
   await expectNoHorizontalScroll(page);
 });
 
@@ -310,6 +374,8 @@ test('teaser beranda → /cuci-sepatu; anchor lama #cuci-sepatu → halaman; men
   // Tepat setelah Daftar Harga, tanpa tombol WhatsApp (hanya ringkasan)
   expect(await teaser.evaluate((el) => el.previousElementSibling?.id)).toBe('harga');
   await expect(teaser.getByRole('heading', { name: E2E_SHOE_CARE.name })).toBeVisible();
+  // Label kecil teaser = teks kecil hero dari CMS
+  await expect(teaser.getByText(E2E_SHOE_CARE.heroKicker)).toBeVisible();
   await expect(teaser).toContainText('Tagline uji cuci sepatu.');
   await expect(teaser.locator('a[href^="https://wa.me/"]')).toHaveCount(0);
   // Teaser tetap tanpa harga

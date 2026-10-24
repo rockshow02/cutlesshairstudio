@@ -225,9 +225,10 @@ content:
       - name: photo
         label: Foto cabang
         type: image
-        description: "Foto studio/fasad, lebar (landscape) minimal 1600 px. Kompres di bawah 1 MB sebelum upload. Dikompres otomatis ke WebP."
+        description: "Foto studio/fasad, lebar (landscape) minimal 1600 px. Kompres di bawah 1 MB sebelum upload. Dikompres otomatis ke WebP. Format: JPG, PNG, atau WebP."
         options:
           media: branches
+          extensions: [jpg, jpeg, png, webp]
       - name: order
         label: Urutan
         type: number
@@ -427,16 +428,24 @@ content:
         description: "Nama usaha cuci sepatu. Maksimal 60 karakter."
         options:
           maxlength: 60
+      - name: heroKicker
+        label: Teks kecil di atas judul hero
+        type: string
+        default: Cuci Sepatu
+        description: "Opsional, tampil kecil di atas nama/logo partner di hero (dengan garis di kiri-kanan) dan sebagai label kecil teaser di beranda. Contoh: Cuci Sepatu. Kosongkan untuk menyembunyikan di hero. Maksimal 40 karakter."
+        options:
+          maxlength: 40
       - name: logo
         label: Logo partner (opsional)
         type: image
-        description: "PNG berlatar transparan atau SVG, persegi minimal 400 × 400 px. Kompres di bawah 1 MB sebelum upload. Tampil di hero halaman & teaser."
+        description: "PNG berlatar transparan atau SVG, persegi minimal 400 × 400 px. Kompres di bawah 1 MB sebelum upload. Tampil di hero halaman & teaser. Format: SVG, PNG, atau WebP."
         options:
           media: shoe-care
+          extensions: [svg, png, webp]
       - name: heroLogo
         label: Logo hero (versi terang untuk latar gelap)
         type: image
-        description: "Opsional. Logo/wordmark berwarna putih atau terang, latar transparan, lebar minimal 1200 px untuk PNG (SVG lebih baik). Kompres di bawah 1 MB sebelum upload. Bila diisi, tampil menggantikan nama partner sebagai judul hero, dan logo kecil di atas Cuci Sepatu disembunyikan."
+        description: "Opsional. Logo/wordmark berwarna putih atau terang, latar transparan, lebar minimal 1200 px untuk PNG (SVG lebih baik). Kompres di bawah 1 MB sebelum upload. Bila diisi, tampil menggantikan nama partner sebagai judul hero, dan logo kecil di atas Cuci Sepatu disembunyikan. Format: SVG, PNG, atau WebP."
         options:
           media: shoe-care
           extensions: [svg, png, webp]
@@ -455,9 +464,10 @@ content:
       - name: heroImage
         label: Foto hero
         type: image
-        description: "Foto latar besar di atas halaman, lebar (landscape) minimal 1920 × 1080 px. Kompres di bawah 1 MB sebelum upload. Dikompres otomatis ke WebP 1920 px + versi 1280 & 600 px. Kosong = foto hasil pertama, lalu foto CTA penutup."
+        description: "Foto latar besar di atas halaman, lebar (landscape) minimal 1920 × 1080 px. Kompres di bawah 1 MB sebelum upload. Dikompres otomatis ke WebP 1920 px + versi 1280 & 600 px. Kosong = foto hasil pertama, lalu foto CTA penutup. Format: JPG, PNG, atau WebP."
         options:
           media: shoe-care
+          extensions: [jpg, jpeg, png, webp]
       - name: aboutTitle
         label: Judul About Us
         type: string
@@ -475,19 +485,25 @@ content:
       - name: aboutImage
         label: Foto About Us
         type: image
-        description: "Opsional. Foto pendamping tegak 4:5, minimal 1000 × 1250 px. Kompres di bawah 1 MB sebelum upload."
+        description: "Opsional. Foto pendamping tegak 4:5, minimal 1000 × 1250 px. Kompres di bawah 1 MB sebelum upload. Format: JPG, PNG, WebP, atau SVG."
         options:
           media: shoe-care
+          extensions: [jpg, jpeg, png, webp, svg]
       - name: aboutImageAlt
         label: Deskripsi foto About Us
         type: string
         description: "Wajib bila Foto About Us diisi. Maksimal 150 karakter."
         options:
           maxlength: 150
+      - name: aboutImagePlain
+        label: Tampilkan tanpa bingkai (untuk logo transparan)
+        type: boolean
+        default: false
+        description: "Aktifkan bila Foto About Us berupa logo berlatar transparan (SVG/PNG): tampil utuh tanpa kotak, latar, dan sudut membulat, rata tengah di atas warna section. Matikan untuk foto biasa (dengan bingkai)."
       - name: menuFile
         label: File daftar menu (PDF)
         type: file
-        description: "Opsional: daftar menu lengkap partner dalam bentuk PDF, maksimal ±3 MB (lebih besar = website gagal diperbarui). Tombol Lihat Daftar Menu membuka file ini di tab baru. Bila diisi, Link Daftar Menu di bawah tidak dipakai."
+        description: "Opsional: daftar menu lengkap partner dalam bentuk PDF, maksimal ±3 MB (lebih besar = website gagal diperbarui). Tombol Lihat Daftar Menu membuka file ini di tab baru. Bila diisi, Link Daftar Menu di bawah tidak dipakai. Format: PDF."
         options:
           media: shoe-care-menu
           extensions: [pdf]
@@ -574,9 +590,10 @@ content:
           - name: image
             label: Foto (opsional)
             type: image
-            description: "Opsional. Foto kecil di kartu layanan (menggantikan ikon), 4:3 minimal 1200 × 900 px. Kompres di bawah 1 MB sebelum upload."
+            description: "Opsional. Foto kecil di kartu layanan (menggantikan ikon), 4:3 minimal 1200 × 900 px. Kompres di bawah 1 MB sebelum upload. Format: JPG, PNG, atau WebP."
             options:
               media: shoe-care
+              extensions: [jpg, jpeg, png, webp]
           - name: isActive
             label: Tampilkan
             type: boolean
@@ -598,10 +615,11 @@ content:
           - name: image
             label: Foto
             type: image
-            description: "Foto hasil kerja partner, 4:3 minimal 1200 × 900 px (bukan logo atau poster promosi). Kompres di bawah 1 MB sebelum upload."
+            description: "Foto hasil kerja partner, 4:3 minimal 1200 × 900 px (bukan logo atau poster promosi). Kompres di bawah 1 MB sebelum upload. Format: JPG, PNG, atau WebP."
             required: true
             options:
               media: shoe-care
+              extensions: [jpg, jpeg, png, webp]
           - name: alt
             label: Deskripsi foto
             type: string
@@ -659,9 +677,10 @@ content:
         label: Foto
         type: image
         required: true
-        description: "Foto potret (tegak 3:4), wajah jelas, minimal 800 × 1067 px. Kompres di bawah 1 MB sebelum upload. Otomatis dikompres ke WebP maks. 800 px."
+        description: "Foto potret (tegak 3:4), wajah jelas, minimal 800 × 1067 px. Kompres di bawah 1 MB sebelum upload. Otomatis dikompres ke WebP maks. 800 px. Format: JPG, PNG, atau WebP."
         options:
           media: barbers
+          extensions: [jpg, jpeg, png, webp]
       - name: branchSlug
         label: Cabang
         type: select
@@ -720,9 +739,10 @@ content:
         label: Foto
         type: image
         required: true
-        description: "Minimal 1600 px di sisi terpanjang. Foto tegak tampil tinggi, foto lebar tampil lebar (otomatis). Kompres di bawah 1 MB sebelum upload. Dikompres ke WebP maks. 1600 px."
+        description: "Minimal 1600 px di sisi terpanjang. Foto tegak tampil tinggi, foto lebar tampil lebar (otomatis). Kompres di bawah 1 MB sebelum upload. Dikompres ke WebP maks. 1600 px. Format: JPG, PNG, atau WebP."
         options:
           media: gallery
+          extensions: [jpg, jpeg, png, webp]
       - name: altText
         label: Deskripsi foto
         type: string
@@ -814,15 +834,17 @@ content:
         label: Foto desktop
         type: image
         required: true
-        description: "Foto lebar (landscape) minimal 1920 × 1080 px. Kompres di bawah 1 MB sebelum upload. Dikompres otomatis ke WebP 1920 px + versi 1280 px."
+        description: "Foto lebar (landscape) minimal 1920 × 1080 px. Kompres di bawah 1 MB sebelum upload. Dikompres otomatis ke WebP 1920 px + versi 1280 px. Format: JPG, PNG, atau WebP."
         options:
           media: hero
+          extensions: [jpg, jpeg, png, webp]
       - name: mobileImage
         label: Foto HP (opsional)
         type: image
-        description: "Foto tegak (portrait) untuk layar HP, minimal 1080 × 1920 px. Kompres di bawah 1 MB sebelum upload. Kosong = memakai foto desktop."
+        description: "Foto tegak (portrait) untuk layar HP, minimal 1080 × 1920 px. Kompres di bawah 1 MB sebelum upload. Kosong = memakai foto desktop. Format: JPG, PNG, atau WebP."
         options:
           media: hero
+          extensions: [jpg, jpeg, png, webp]
       - name: imageAlt
         label: Deskripsi foto
         type: string
@@ -911,10 +933,11 @@ content:
           - name: src
             label: Foto
             type: image
-            description: "Foto tegak 4:5, minimal 1200 × 1500 px. Kompres di bawah 1 MB sebelum upload."
+            description: "Foto tegak 4:5, minimal 1200 × 1500 px. Kompres di bawah 1 MB sebelum upload. Format: JPG, PNG, atau WebP."
             required: true
             options:
               media: about
+              extensions: [jpg, jpeg, png, webp]
           - name: alt
             label: Deskripsi foto
             type: string
@@ -954,9 +977,10 @@ content:
       - name: image
         label: Foto
         type: image
-        description: "Foto lebar suasana studio, minimal 1600 × 1000 px. Kompres di bawah 1 MB sebelum upload. Kosong = memakai foto cabang pertama."
+        description: "Foto lebar suasana studio, minimal 1600 × 1000 px. Kompres di bawah 1 MB sebelum upload. Kosong = memakai foto cabang pertama. Format: JPG, PNG, atau WebP."
         options:
           media: studio
+          extensions: [jpg, jpeg, png, webp]
       - name: imageAlt
         label: Deskripsi foto
         type: string
@@ -1012,9 +1036,10 @@ content:
       - name: image
         label: Foto latar
         type: image
-        description: "Foto lebar (landscape) minimal 1920 × 1080 px. Kompres di bawah 1 MB sebelum upload. Tampil gelap (diberi lapisan hitam) agar teks terbaca. Kosong = foto bawaan."
+        description: "Foto lebar (landscape) minimal 1920 × 1080 px. Kompres di bawah 1 MB sebelum upload. Tampil gelap (diberi lapisan hitam) agar teks terbaca. Kosong = foto bawaan. Format: JPG, PNG, atau WebP."
         options:
           media: cta
+          extensions: [jpg, jpeg, png, webp]
       - name: imageAlt
         label: Deskripsi foto
         type: string
@@ -1057,9 +1082,10 @@ content:
           - name: logo
             label: Logo (opsional)
             type: image
-            description: "PNG atau WebP berlatar TRANSPARAN (bukan SVG), lebar minimal 400 px. Kompres di bawah 1 MB sebelum upload. Tampil satu warna senada pita, berwarna asli saat disentuh kursor. Dikompres otomatis ke WebP 400 px. Kosong = nama partner tampil sebagai teks."
+            description: "PNG atau WebP berlatar TRANSPARAN (bukan SVG), lebar minimal 400 px. Kompres di bawah 1 MB sebelum upload. Tampil satu warna senada pita, berwarna asli saat disentuh kursor. Dikompres otomatis ke WebP 400 px. Kosong = nama partner tampil sebagai teks. Format: JPG, PNG, WebP, atau SVG."
             options:
               media: partner-logos
+              extensions: [jpg, jpeg, png, webp, svg]
           - name: url
             label: Link (opsional)
             type: string
@@ -1108,9 +1134,10 @@ content:
       - name: image
         label: Gambar
         type: image
-        description: "Opsional. Gambar lebar 16:10, minimal 1600 × 1000 px. Kompres di bawah 1 MB sebelum upload."
+        description: "Opsional. Gambar lebar 16:10, minimal 1600 × 1000 px. Kompres di bawah 1 MB sebelum upload. Format: JPG, PNG, atau WebP."
         options:
           media: promos
+          extensions: [jpg, jpeg, png, webp]
       - name: ctaLabel
         label: Teks tombol
         type: string
@@ -1317,9 +1344,10 @@ content:
       - name: image
         label: Foto produk
         type: image
-        description: "Foto persegi (1:1) latar polos, minimal 1000 × 1000 px. Kompres di bawah 1 MB sebelum upload. Dikompres otomatis ke WebP maks. 1000 px. Kosong = gambar logo."
+        description: "Foto persegi (1:1) latar polos, minimal 1000 × 1000 px. Kompres di bawah 1 MB sebelum upload. Dikompres otomatis ke WebP maks. 1000 px. Kosong = gambar logo. Format: JPG, PNG, atau WebP."
         options:
           media: products
+          extensions: [jpg, jpeg, png, webp]
       - name: badge
         label: Label khusus
         type: select
@@ -1366,9 +1394,10 @@ content:
       - name: logo
         label: Logo footer
         type: image
-        description: "PNG/WebP transparan, versi putih, lebar minimal 400 px. Kompres di bawah 1 MB sebelum upload."
+        description: "PNG/WebP transparan, versi putih, lebar minimal 400 px. Kompres di bawah 1 MB sebelum upload. Format: JPG, PNG, atau WebP."
         options:
           media: site
+          extensions: [jpg, jpeg, png, webp]
       - name: siteName
         label: Nama usaha
         type: string
@@ -1511,6 +1540,7 @@ content:
       - name: preloaderVideo
         label: Video animasi pembuka (opsional)
         type: file
-        description: "MP4/WebM tanpa suara, maks. 500 KB dan ±1,5 detik. Kosongkan untuk memakai animasi logo."
+        description: "MP4/WebM tanpa suara, maks. 500 KB dan ±1,5 detik. Kosongkan untuk memakai animasi logo. Format: MP4 atau WebM."
         options:
           media: videos
+          extensions: [mp4, webm]

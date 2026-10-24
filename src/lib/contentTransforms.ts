@@ -168,6 +168,7 @@ export function buildShoeCare(p: ShoeCareEntry | null | undefined, branches: Bra
     isDemo: p.isDemo === true,
     showTeaser: p.showTeaser !== false,
     name: p.name,
+    heroKicker: text(p.heroKicker),
     tagline: text(p.tagline),
     description: text(p.description),
     logo: logo ? toImage(logo, p.name, { width: 240, height: 240 }) : undefined,
@@ -186,6 +187,7 @@ export function buildShoeCare(p: ShoeCareEntry | null | undefined, branches: Bra
         return list.length ? list : fallback ? [fallback] : [];
       })(),
       image: aboutImage ? responsiveImage(aboutImage, text(p.aboutImageAlt) ?? p.name, '(min-width: 900px) 40vw, 100vw', { width: 1200, height: 900 }) : undefined,
+      imagePlain: Boolean(aboutImage) && p.aboutImagePlain === true,
     },
     advantages: (p.advantages ?? []).map((a) => ({ title: a.title, description: a.description, icon: a.icon ?? 'check' })),
     services: services.map((s) => {
