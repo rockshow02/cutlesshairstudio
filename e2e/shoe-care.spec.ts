@@ -50,6 +50,11 @@ test('buka /cuci-sepatu langsung & refresh: HTML statis, hero, About, layanan, g
     expect(html).toContain(`<title>[STAGING] Cuci Sepatu ${E2E_SHOE_CARE.name} di Cutless ${bogor.name}</title>`);
     expect(html).toMatch(/<meta name="description" content="Tagline uji cuci sepatu\. Layanan: Deep Clean Uji, Unyellowing Uji, Suede Uji, Kids Uji, dan Gunung Uji\." \/>/);
     expect(html).toMatch(/<meta property="og:image" content="[^"]+\.(webp|jpe?g|png)"/);
+    // JSON-LD Service: lokasi = HairSalon cabang partner (@id sama dengan halaman cabang)
+    const ld = JSON.parse(html.match(/<script type="application\/ld\+json">(.*?)<\/script>/)![1]);
+    expect(ld).toMatchObject({ '@type': 'Service', name: `Cuci Sepatu ${E2E_SHOE_CARE.name} di Cutless ${bogor.name}`, provider: { name: E2E_SHOE_CARE.name } });
+    expect(ld.availableChannel.serviceLocation['@id']).toMatch(new RegExp(`/cabang/${bogor.slug}/#salon$`));
+    expect(ld.hasOfferCatalog.itemListElement).toHaveLength(E2E_SHOE_CARE.services.length);
   }
   await page.goto(PAGE, { waitUntil: 'domcontentloaded' });
   await page.reload({ waitUntil: 'domcontentloaded' });
