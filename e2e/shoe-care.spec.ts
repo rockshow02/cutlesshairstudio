@@ -163,25 +163,25 @@ const clsOf = (page: Page) =>
       }),
   );
 
-/** CLS dari pergeseran elemen di dalam selector saja (mis. section About), tanpa pergeseran font judul hero */
-const clsWithin = (page: Page, selector: string) =>
+/** CLS dari pergeseran elemen di dalam selector saja (mis. section About), sejak `since` (performance.now, ms) */
+const clsWithin = (page: Page, selector: string, since = 0) =>
   page.evaluate(
-    (sel) =>
+    ([sel, from]) =>
       new Promise<number>((resolve) => {
         let total = 0;
-        type Shift = { hadRecentInput: boolean; value: number; sources?: { node?: Node | null }[] };
+        type Shift = { hadRecentInput: boolean; value: number; startTime: number; sources?: { node?: Node | null }[] };
         new PerformanceObserver((list) =>
           (list.getEntries() as unknown as Shift[]).forEach((e) => {
             const inside = (e.sources ?? []).some((src) => {
               const el = src.node instanceof Element ? src.node : src.node?.parentElement;
               return Boolean(el?.closest(sel));
             });
-            if (!e.hadRecentInput && inside) total += e.value;
+            if (!e.hadRecentInput && inside && e.startTime >= from) total += e.value;
           }),
         ).observe({ type: 'layout-shift', buffered: true });
         setTimeout(() => resolve(total), 300);
       }),
-    selector,
+    [selector, since] as const,
   );
 
 /** Ukuran hero & judul (h1), tanpa animasi masuk */
@@ -326,6 +326,11 @@ test('About Us: logo SVG tanpa bingkai (latar transparan, proporsional, rata ten
   await page.goto(`${NO_HERO_LOGO_URL}${PAGE}`, { waitUntil: 'domcontentloaded' });
   const about = page.locator('#tentang');
   await expect(about).toBeAttached({ timeout: 20_000 });
+  // Font web termuat dulu (pergantian font teks judul/paragraf bukan urusan tes ini); logo dimuat saat digulir
+  const since = await page.evaluate(async () => {
+    await document.fonts.ready;
+    return performance.now();
+  });
   await about.scrollIntoViewIfNeeded();
   const logo = about.getByRole('img', { name: 'Logo About Us uji' });
   await expect(logo).toBeVisible();
@@ -347,8 +352,8 @@ test('About Us: logo SVG tanpa bingkai (latar transparan, proporsional, rata ten
     return { x: r.x, width: r.width };
   }))!;
   expect(Math.abs(box.x + box.width / 2 - (col.x + col.width / 2))).toBeLessThanOrEqual(2);
-  // Tanpa CLS dari logo/section About (pergeseran font judul hero diuji terpisah)
-  expect(await clsWithin(page, '#tentang')).toBeLessThan(0.001);
+  // Tanpa CLS dari logo (width/height dari viewBox): tidak ada pergeseran di About sejak logo mulai dimuat
+  expect(await clsWithin(page, '#tentang', since)).toBeLessThan(0.001);
   await expectNoHorizontalScroll(page);
 });
 
