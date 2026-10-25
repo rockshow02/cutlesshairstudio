@@ -247,7 +247,7 @@ function branchJsonLd(b: BranchEntry, bundle: ContentBundle) {
       : {}),
     ...(b.googleMapsUrl ? { hasMap: b.googleMapsUrl } : {}),
     ...(branchPriceRange(b, bundle) ? { priceRange: branchPriceRange(b, bundle) } : {}),
-    parentOrganization: { '@type': 'Organization', name: siteName, url: `${siteUrl}/` },
+    parentOrganization: { '@type': 'Organization', '@id': `${siteUrl}/#organization`, name: siteName, url: `${siteUrl}/` },
   };
 }
 
@@ -269,6 +269,29 @@ export function branchPriceList(b: Pick<BranchEntry, 'slug' | 'name'>, bundle: P
   if (!groups.length) return '';
   const row = (i: (typeof items)[number]) => `<li>${esc(i.name)}: ${i.priceFrom ? `${esc(pricingCopy.priceFromLabel)} ` : ''}${formatThousandsK(priceAt(i, b.slug))}</li>`;
   return `<h2>Harga cabang ${esc(b.name)}</h2>${groups.map((g) => `<h3>${esc(g.name)}</h3><ul>${g.items.map(row).join('')}</ul>`).join('')}`;
+}
+
+/** Logo organisasi untuk Google (persegi 512 px, terbaca di latar putih; scripts/make-favicons.mjs) */
+export const ORG_LOGO = '/icon-512.png';
+
+/** JSON-LD Organization (beranda): logo absolut, kontak, & akun sosial; dirujuk HairSalon cabang lewat @id */
+export function organizationJsonLd(settings: Pick<ContentBundle['settings'], 'siteUrl' | 'siteName' | 'email' | 'instagramUrl' | 'tiktokUrl' | 'mainWhatsappNumber'>) {
+  const { siteUrl, siteName } = settings;
+  const sameAs = [settings.instagramUrl, settings.tiktokUrl].filter((u): u is string => Boolean(u));
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'Organization',
+    '@id': `${siteUrl}/#organization`,
+    name: siteName,
+    url: `${siteUrl}/`,
+    logo: { '@type': 'ImageObject', url: `${siteUrl}${ORG_LOGO}`, width: 512, height: 512 },
+    image: `${siteUrl}${ORG_LOGO}`,
+    ...(settings.email ? { email: settings.email } : {}),
+    ...(isWa(settings.mainWhatsappNumber)
+      ? { contactPoint: { '@type': 'ContactPoint', telephone: `+${settings.mainWhatsappNumber}`, contactType: 'customer service', availableLanguage: 'id' } }
+      : {}),
+    ...(sameAs.length ? { sameAs } : {}),
+  };
 }
 
 const jsonLdTag = (data: unknown) => `<script type="application/ld+json">${JSON.stringify(data).replace(/</g, '\\u003c')}</script>`;
@@ -402,6 +425,7 @@ function fillHtml(html: string, bundle: ContentBundle | undefined, meta: ImageMe
     .replaceAll('%HOME_DESCRIPTION%', esc(homeDescription(siteName, citiesOf(bundle), activeCategoryNames(bundle.pricing))))
     .replaceAll('%OG_IMAGE%', `${siteUrl}${OG_IMAGE}`)
     .replace('<!--cutless:jsonld-->', allBranches)
+    .replace('<!--cutless:org-jsonld-->', jsonLdTag(organizationJsonLd(bundle.settings)))
     .replace('<!--cutless:hero-preload-->', heroPreload(bundle.hero, meta));
   // Halaman /cuci-sepatu/: title, meta, Open Graph & ringkasan dari Partner Cuci Sepatu
   return out.includes('%SHOE_TITLE%') ? shoeCareFill(out, bundle) : out;
@@ -424,7 +448,7 @@ function sitemap(bundle: ContentBundle): string {
   return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${body}\n</urlset>\n`;
 }
 
-const robots = (bundle: ContentBundle, indexable: boolean) =>
+export const robots = (bundle: ContentBundle, indexable: boolean) =>
   indexable
     ? `User-agent: *\nAllow: /\n\nSitemap: ${bundle.settings.siteUrl}/sitemap.xml\n`
     : '# Bukan produksi: jangan diindeks\nUser-agent: *\nDisallow: /\n';
