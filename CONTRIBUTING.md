@@ -2,7 +2,7 @@
 
 | Branch | Fungsi | Deploy | Siapa yang menulis |
 |---|---|---|---|
-| `main` | **Produksi** | Worker `cutlesshairstudio` → https://cutlesshairstudio.adi-yansyaaah.workers.dev | Merge PR dari `staging`; edit konten harian pemilik lewat Pages CMS |
+| `main` | **Produksi** | Worker `cutlesshairstudio` → https://cutlesshairstudio.com (workers.dev produksi mati) | Merge PR dari `staging`; edit konten harian pemilik lewat Pages CMS |
 | `staging` | **Pengujian** | Worker `cutlesshairstudio-staging` → https://cutlesshairstudio-staging.adi-yansyaaah.workers.dev | Merge dari `feature/*`; uji konten lewat Pages CMS (branch staging); PR sinkron `main → staging` |
 | `feature/<nama>` | Pekerjaan baru (mis. `feature/transisi`) | tidak dideploy (uji di lokal) | Developer |
 
