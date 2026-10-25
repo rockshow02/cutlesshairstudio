@@ -63,7 +63,7 @@ Domain + hosting dibeli klien di **Rumahweb**. Pembagian setelah selesai:
 | Email (`…@cutlesshairstudio.com`), webmail, cPanel | Hosting Rumahweb | Record email **DNS only** (awan abu-abu), tidak lewat proxy |
 
 Lakukan di akun Cloudflare **tempat Worker produksi berada** (akun klien, setelah §2). Zona dan Worker harus satu akun.
-Perkiraan waktu: 1 jam kerja + propagasi nameserver (biasanya < 2 jam, maksimal 24–48 jam). Website lama di workers.dev tetap jalan selama proses.
+Perkiraan waktu: 1 jam kerja + propagasi nameserver (biasanya < 2 jam, maksimal 24–48 jam). Website lama di workers.dev tetap jalan selama proses, sampai `"workers_dev": false` di `wrangler.jsonc` ter-deploy (lihat *Sesudah domain aktif*).
 
 ### Langkah 1. Catat record di cPanel Rumahweb (sebelum apa pun diubah)
 
@@ -106,6 +106,8 @@ Perkiraan waktu: 1 jam kerja + propagasi nameserver (biasanya < 2 jam, maksimal 
 - [ ] **SSL/TLS → Edge Certificates → Always Use HTTPS**: aktif.
 - [ ] Jangan ubah Worker staging: tetap di `cutlesshairstudio-staging.<subdomain>.workers.dev`.
 
+**Sesudah domain aktif: alamat produksi hanya `cutlesshairstudio.com`.** `wrangler.jsonc` mematikan `*.workers.dev` & Preview URLs untuk Worker produksi (`"workers_dev": false`, `"preview_urls": false`), staging tetap `"workers_dev": true`. Begitu `main` ter-deploy, `https://cutlesshairstudio.adi-yansyaaah.workers.dev` tidak lagi menyajikan situs, sehingga Google tidak mengindeks salinan di alamat lama. Pengaturan ini dibaca dari file setiap deploy: jangan menyalakannya lagi dari dashboard (akan kembali mati di deploy berikutnya). Untuk mengecek build produksi sebelum domain siap, pakai staging.
+
 ### Langkah 5. Verifikasi email & SSL
 
 - [ ] `https://cutlesshairstudio.com` → website tampil, gembok SSL valid (sertifikat Cloudflare).
@@ -128,7 +130,7 @@ Setelah subdomain/domain baru diketahui, ganti lewat alur biasa (`feature/*` →
 
 | File | Isi sekarang | Ganti ke |
 |---|---|---|
-| `src/content/settings.json` → `siteUrl` (**Pengaturan Situs → Alamat website** di Pages CMS) | `https://cutlesshairstudio.adi-yansyaaah.workers.dev` | `https://cutlesshairstudio.com` **saat launch** (§2a Langkah 6). Dipakai canonical, og, sitemap, robots, JSON-LD |
+| `src/content/settings.json` → `siteUrl` (**Pengaturan Situs → Alamat website** di Pages CMS) | `https://cutlesshairstudio.com` (sudah diisi) | Tetap. Dipakai canonical, og, sitemap, robots, JSON-LD |
 | `.env.staging` → `VITE_SITE_URL` | `https://cutlesshairstudio-staging.adi-yansyaaah.workers.dev` | URL staging baru |
 | `README.md` (tabel lingkungan, §5) | URL `adi-yansyaaah.workers.dev` | URL baru |
 | `CONTRIBUTING.md` (tabel branch) | URL `adi-yansyaaah.workers.dev` | URL baru |

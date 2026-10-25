@@ -12,7 +12,7 @@ Website Vite + React 18 + TypeScript + CSS Modules untuk beberapa cabang (saat i
 
 | Environment | Branch | URL |
 |---|---|---|
-| **Produksi** | `main` | https://cutlesshairstudio.adi-yansyaaah.workers.dev |
+| **Produksi** | `main` | https://cutlesshairstudio.com (satu-satunya alamat; workers.dev produksi mati) |
 | **Staging** (noindex) | `staging` | https://cutlesshairstudio-staging.adi-yansyaaah.workers.dev |
 | Lokal | apa saja | http://localhost:5173 (`npm run dev`) · http://localhost:8787 (`npm run preview:worker`) |
 
@@ -141,7 +141,7 @@ Dua Worker terpisah dari repo yang sama (`wrangler.jsonc` → environment `stagi
 | Branch | `main` | `staging` |
 | Build command | `npm run build` | `npm run build:staging` |
 | Deploy command | `npx wrangler deploy` | `npx wrangler deploy --env staging` |
-| URL | https://cutlesshairstudio.adi-yansyaaah.workers.dev | https://cutlesshairstudio-staging.adi-yansyaaah.workers.dev |
+| URL | https://cutlesshairstudio.com (`workers_dev: false`) | https://cutlesshairstudio-staging.adi-yansyaaah.workers.dev |
 
 **Setup Workers Builds (sekali):**
 
