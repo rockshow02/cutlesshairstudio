@@ -178,6 +178,15 @@ function fixtureBranches(real: unknown): Json[] {
   return merged;
 }
 
+/**
+ * Produk uji (katalog /produk/, pesan lewat WhatsApp). Tampilkan Produk: mati di build bawaan (/produk → 301 ke beranda,
+ * tidak di sitemap), aktif di varian uniform (/produk/ tampil & masuk sitemap).
+ */
+export const E2E_PRODUCTS = [
+  { name: 'Pomade Uji', category: 'Pomade', price: 85000, size: '100 gr', description: 'Pomade uji untuk tes.' },
+  { name: 'Hair Clay Uji', category: 'Hair Clay', price: 95000, size: '80 gr', description: 'Hair clay uji untuk tes.' },
+] as const;
+
 /** Daftar Harga tanpa harga per cabang & "Tersedia di cabang" (varian uniform) */
 const uniformPricing = () => E2E_PRICING.map(({ branchPrices: _bp, branchSlugs: _bs, ...p }: Json) => p);
 
@@ -186,6 +195,8 @@ export function applyE2EFixtures(file: string, data: unknown, variant?: string):
   if (file === 'branches.json') return fixtureBranches(data);
   if (file === 'barbers.json') return E2E_BARBERS.map((b) => ({ ...b, photo: existingPhoto() }));
   if (file === 'shoeCare.json') return shoeCareFixture(variant);
+  if (file === 'settings.json') return { ...(data as Json), showProducts: variant === 'uniform' };
+  if (file === 'products.json') return E2E_PRODUCTS.map((p, i) => ({ ...p, image: existingPhoto(), inStock: true, isActive: true, order: (i + 1) * 10 }));
   if (file === 'pricing.json') return (variant === 'uniform' ? uniformPricing() : [...E2E_PRICING]).map((p, i) => ({ isActive: true, ...p, order: (i + 1) * 10 }));
   if (file === 'partners.json') {
     return {

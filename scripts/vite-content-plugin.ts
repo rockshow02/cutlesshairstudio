@@ -25,6 +25,7 @@ import { applyE2EFixtures } from '../e2e/fixtures/content';
 import { activeCategoryNames, branchDescription, homeDescription } from '../src/content/serviceSeo';
 import { SHOE_CARE_PATH, shoeCareDescription, shoeCareImage, shoeCareRedirects, shoeCareTitle, shoeCareVisible } from '../src/content/shoeCareSeo';
 import { itemsAt, priceAt, priceRangeAt } from '../src/content/branchPricing';
+import { PRODUCTS_PATH, productsRedirects, productsVisible } from '../src/content/productsSeo';
 import { PRICE_CATEGORIES } from '../src/content/priceCategories';
 import { pricingCopy } from '../src/content/pricing';
 import { formatThousandsK } from '../src/lib/format';
@@ -433,14 +434,14 @@ function fillHtml(html: string, bundle: ContentBundle | undefined, meta: ImageMe
 
 const HEAD_REGION = /<!--cutless:head-start-->[\s\S]*?<!--cutless:head-end-->/;
 
-function sitemap(bundle: ContentBundle): string {
+export function sitemap(bundle: ContentBundle): string {
   const { siteUrl } = bundle.settings;
   const today = new Date().toISOString().slice(0, 10);
   const urls = [
     '/',
     '/cabang/',
     ...bundle.branches.map((b) => `/cabang/${b.slug}/`),
-    ...(bundle.settings.showProducts ? ['/produk/'] : []),
+    ...(productsVisible(bundle.settings) ? [PRODUCTS_PATH] : []),
     // Halaman Cuci Sepatu hanya saat aktif (mati → 301 ke beranda)
     ...(shoeCareVisible(bundle.shoeCare, bundle.branches) ? [SHOE_CARE_PATH] : []),
   ];
@@ -614,16 +615,16 @@ export function contentPlugin(): Plugin {
         const current = await readFile(headersFile, 'utf8');
         if (!current.includes('X-Robots-Tag')) await writeFile(headersFile, current.trimEnd() + '\n' + NOINDEX_HEADERS);
       }
-      // Halaman Cuci Sepatu mati: HTML-nya dihapus & /cuci-sepatu dialihkan 301 ke beranda
-      const shoeRules = shoeCareRedirects(shoeCareVisible(bundle.shoeCare, bundle.branches));
-      if (shoeRules.length) {
-        await rm(path.join(outDir, 'cuci-sepatu'), { recursive: true, force: true });
+      // Halaman yang dimatikan di CMS: HTML-nya dihapus dari dist/ & URL-nya dialihkan 301 ke beranda
+      const disablePage = async (dir: string, rules: string[], note: string) => {
+        if (!rules.length) return;
+        await rm(path.join(outDir, dir), { recursive: true, force: true });
         const redirectsFile = path.join(outDir, '_redirects');
         const current = existsSync(redirectsFile) ? await readFile(redirectsFile, 'utf8') : '';
-        if (!current.includes('/cuci-sepatu')) {
-          await writeFile(redirectsFile, `${current.trimEnd()}\n# Halaman Cuci Sepatu mati (Pages CMS → Partner Cuci Sepatu → Tampilkan halaman)\n${shoeRules.join('\n')}\n`);
-        }
-      }
+        if (!current.includes(`/${dir}`)) await writeFile(redirectsFile, `${current.trimEnd()}\n# ${note}\n${rules.join('\n')}\n`);
+      };
+      await disablePage('cuci-sepatu', shoeCareRedirects(shoeCareVisible(bundle.shoeCare, bundle.branches)), 'Halaman Cuci Sepatu mati (Pages CMS → Partner Cuci Sepatu → Tampilkan halaman)');
+      await disablePage('produk', productsRedirects(productsVisible(bundle.settings)), 'Halaman Produk mati (Pages CMS → Pengaturan Situs → Tampilkan Produk)');
       const template = path.join(outDir, 'cabang', 'index.html');
       if (!existsSync(template)) return;
       const html = await readFile(template, 'utf8');
