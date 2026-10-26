@@ -90,7 +90,9 @@ describe('FAQ', () => {
     expect(launch(faq({ enabled: false }))).toEqual([]);
   });
 
-  it('CMS: batas & toggle sama dengan Zod; faq.json awal mati, item tanpa jawaban nonaktif', () => {
+  // Tidak memeriksa nilai faq.json (Tampilkan FAQ, jawaban): admin mengubahnya kapan saja lewat CMS. Aturan "item aktif
+  // tanpa jawaban" diuji dengan data uji di "pemeriksaan launch" di atas.
+  it('CMS: batas & toggle sama dengan Zod; isi faq.json saat ini bisa disimpan form CMS', () => {
     const config = parse(readFileSync('.pages.yml', 'utf8')) as { media: CmsMedia[]; content: { path: string; fields: CmsField[] }[] };
     const cms = config.content.find((c) => c.path === 'src/content/faq.json')!;
     const f = (n: string) => cms.fields.find((x) => x.name === n)! as CmsField & { label: string; default?: unknown };
@@ -101,8 +103,6 @@ describe('FAQ', () => {
     const raw = JSON.parse(readFileSync('src/content/faq.json', 'utf8'));
     setMedia(config.media);
     expect(validateCmsContent(cms, raw)).toEqual([]);
-    expect(raw.enabled).toBe(false);
-    for (const item of raw.items) if (!item.answer) expect(item.isActive, item.question).toBe(false);
   });
 });
 
