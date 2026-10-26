@@ -94,6 +94,12 @@ media:
     output: /uploads/partner-logos
     categories: [image]
     rename: safe
+  - name: video-covers
+    label: Sampul Video Instagram
+    input: public/uploads/video-covers
+    output: /uploads/video-covers
+    categories: [image]
+    rename: safe
   - name: videos
     label: Video
     input: public/uploads/videos
@@ -337,6 +343,76 @@ content:
         type: boolean
         default: true
         description: "Matikan untuk menyembunyikan tanpa menghapus."
+
+  # ------------------------------------------------------------------ Video (embed Instagram)
+  - name: videos
+    label: Video (Instagram)
+    type: file
+    path: src/content/videos.json
+    format: json
+    fields:
+      - name: enabled
+        label: Tampilkan bagian Video
+        type: boolean
+        default: false
+        description: "Aktifkan untuk menampilkan bagian Video di beranda (setelah Galeri). Mati = bagian Video tidak ada. Video diputar dari Instagram (gratis); kartu hanya memuat Instagram setelah pengunjung menekan tombol putar."
+      - name: kicker
+        label: Teks kecil di atas judul
+        type: string
+        description: "Opsional, mis. Video. Kosong = Video. Maksimal 40 karakter."
+        options:
+          maxlength: 40
+      - name: title
+        label: Judul bagian
+        type: string
+        required: true
+        description: "Mis. Lihat prosesnya langsung. Maksimal 80 karakter."
+        options:
+          maxlength: 80
+      - name: items
+        label: Daftar video
+        type: object
+        list:
+          max: 6
+          collapsible:
+            collapsed: true
+            summary: "{caption}"
+        description: "Maksimal 6 video (HP: digeser ke samping; desktop: 3 kolom). Hanya Reel atau postingan dari akun Instagram publik. Cara menyalin link & membuat foto sampul: docs/panduan-admin.md → Video."
+        fields:
+          - name: url
+            label: Link Instagram
+            type: string
+            required: true
+            description: "Salin dari Instagram: ••• (atau ikon pesawat/Bagikan) → Salin tautan. Harus diawali https://www.instagram.com/reel/ atau https://www.instagram.com/p/, mis. https://www.instagram.com/reel/ABC123xyz/. Bagian setelah tanda ? (mis. ?igsh=...) dibuang otomatis."
+            pattern:
+              regex: '^\s*https://www\.instagram\.com/(reel|p)/[A-Za-z0-9_-]+/?([?#].*)?\s*$'
+              message: "Harus link Reel/postingan Instagram, mis. https://www.instagram.com/reel/ABC123xyz/ (bukan link profil, story, atau instagr.am)"
+          - name: image
+            label: Foto sampul
+            type: image
+            required: true
+            description: "Wajib. Screenshot frame terbaik dari video, dipotong tegak rasio 9:16, mis. 1080 × 1920 px. Kompres di bawah 1 MB sebelum upload (maks. 1 MB). Dikompres ke WebP maks. 800 px lebar. Format: JPG, PNG, atau WebP."
+            options:
+              media: video-covers
+              extensions: [jpg, jpeg, png, webp]
+          - name: caption
+            label: Keterangan
+            type: string
+            description: "Tampil di bawah kartu & dibacakan pembaca layar, mis. Proses skin fade di cabang Bogor. Kosong = \"video 1\", \"video 2\", ... Maksimal 120 karakter."
+            options:
+              maxlength: 120
+          - name: isActive
+            label: Tampilkan
+            type: boolean
+            default: true
+            description: "Matikan untuk menyembunyikan tanpa menghapus."
+          - name: order
+            label: Urutan
+            type: number
+            default: 0
+            description: "Angka kecil tampil lebih dulu (10, 20, 30, ...)."
+            options:
+              min: 0
 
   # ------------------------------------------------------------------ FAQ
   - name: faq

@@ -200,6 +200,19 @@ export const E2E_FAQ = {
   hidden: ['Pertanyaan nonaktif uji?', 'Pertanyaan tanpa jawaban uji?'],
 } as const;
 
+/**
+ * Video uji: aktif di build bawaan (2 tampil, urut "Urutan"; link dengan ?igsh=... dirapikan; 1 nonaktif tersembunyi),
+ * mati di varian uniform (bagian tidak ada).
+ */
+export const E2E_VIDEOS = {
+  title: 'Video Uji',
+  shown: [
+    { url: 'https://www.instagram.com/reel/UjiReelSatu/', caption: 'Video uji satu' },
+    { url: 'https://www.instagram.com/p/UjiPostDua/', caption: 'Video uji dua' },
+  ],
+  hidden: 'Video nonaktif uji',
+} as const;
+
 /** Daftar Harga tanpa harga per cabang & "Tersedia di cabang" (varian uniform) */
 const uniformPricing = () => E2E_PRICING.map(({ branchPrices: _bp, branchSlugs: _bs, ...p }: Json) => p);
 
@@ -218,6 +231,18 @@ export function applyE2EFixtures(file: string, data: unknown, variant?: string):
         { ...E2E_FAQ.shown[0], isActive: true, order: 10 },
         { question: E2E_FAQ.hidden[0], answer: 'Tidak boleh tampil.', isActive: false, order: 30 },
         { question: E2E_FAQ.hidden[1], isActive: true, order: 40 },
+      ],
+    };
+  }
+  if (file === 'videos.json') {
+    return {
+      enabled: variant !== 'uniform',
+      kicker: 'Video',
+      title: E2E_VIDEOS.title,
+      items: [
+        { url: `${E2E_VIDEOS.shown[1].url.slice(0, -1)}?igsh=uji123`, image: existingPhoto(), caption: E2E_VIDEOS.shown[1].caption, isActive: true, order: 20 },
+        { url: E2E_VIDEOS.shown[0].url, image: existingPhoto(), caption: E2E_VIDEOS.shown[0].caption, isActive: true, order: 10 },
+        { url: 'https://www.instagram.com/reel/UjiNonaktif/', image: existingPhoto(), caption: E2E_VIDEOS.hidden, isActive: false, order: 30 },
       ],
     };
   }
