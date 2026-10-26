@@ -24,12 +24,14 @@ import { srcSetOf, type ImageMeta } from '../src/lib/responsiveImage';
 import { applyE2EFixtures } from '../e2e/fixtures/content';
 import { activeCategoryNames, branchDescription, homeDescription } from '../src/content/serviceSeo';
 import { SHOE_CARE_PATH, shoeCareDescription, shoeCareImage, shoeCareRedirects, shoeCareTitle, shoeCareVisible } from '../src/content/shoeCareSeo';
-import { itemsAt, priceAt, priceRangeAt } from '../src/content/branchPricing';
+import { itemsAt, priceAt, priceRangeAt, samePricesEverywhere } from '../src/content/branchPricing';
 import { PRODUCTS_PATH, productsRedirects, productsVisible } from '../src/content/productsSeo';
 import { activeFaqItems, faqPageJsonLd } from '../src/content/faqSeo';
 import { PRICE_CATEGORIES } from '../src/content/priceCategories';
 import { pricingCopy } from '../src/content/pricing';
-import { formatThousandsK } from '../src/lib/format';
+import { formatPhoneDisplay, formatThousandsK, formatTime } from '../src/lib/format';
+import { branchesCopy } from '../src/content/branches';
+import { shoeCareCopy } from '../src/content/shoeCare';
 
 const VIRTUAL_ID = 'virtual:image-meta';
 const RESOLVED_ID = `\0${VIRTUAL_ID}`;
@@ -267,15 +269,19 @@ export function branchPriceRange(b: Pick<BranchEntry, 'slug'>, bundle: Pick<Cont
   return range.min === range.max ? rupiah(range.min) : `${rupiah(range.min)} - ${rupiah(range.max)}`;
 }
 
-/** Daftar harga statis halaman cabang: hanya item yang tersedia di cabang itu, format "K" + "Start from" seperti di website */
-export function branchPriceList(b: Pick<BranchEntry, 'slug' | 'name'>, bundle: Pick<ContentBundle, 'pricing'>): string {
+/**
+ * Daftar harga statis, sama dengan baris Daftar Harga yang terlihat: nama, label, keterangan, "Start from", dan harga
+ * format "K" sebagai teks terpisah. `label` = catatan di atas daftar (mis. "Harga cabang Cibubur").
+ */
+export function branchPriceList(b: Pick<BranchEntry, 'slug' | 'name'>, bundle: Pick<ContentBundle, 'pricing'>, label = branchesCopy.labels.priceFor.replace('{branch}', b.name)): string {
   const items = itemsAt(bundle.pricing, b.slug).sort((x, y) => (x.order ?? 0) - (y.order ?? 0));
   const groups = PRICE_CATEGORIES.filter((c) => c !== 'Paket')
     .map((c) => ({ name: pricingCopy.categoryLabels[c], items: items.filter((i) => i.category === c) }))
     .filter((g) => g.items.length > 0);
   if (!groups.length) return '';
-  const row = (i: (typeof items)[number]) => `<li>${esc(i.name)}: ${i.priceFrom ? `${esc(pricingCopy.priceFromLabel)} ` : ''}${formatThousandsK(priceAt(i, b.slug))}</li>`;
-  return `<h2>Harga cabang ${esc(b.name)}</h2>${groups.map((g) => `<h3>${esc(g.name)}</h3><ul>${g.items.map(row).join('')}</ul>`).join('')}`;
+  const row = (i: (typeof items)[number]) =>
+    `<li><span>${esc(i.name)}</span>${i.badge ? ` <span>${esc(i.badge)}</span>` : ''}${i.description ? ` <small>${esc(i.description)}</small>` : ''} ${i.priceFrom ? `<small>${esc(pricingCopy.priceFromLabel)}</small> ` : ''}<span>${formatThousandsK(priceAt(i, b.slug))}</span></li>`;
+  return `<p>${esc(label)}</p>${groups.map((g) => `<h3>${esc(g.name)}</h3><ul>${g.items.map(row).join('')}</ul>`).join('')}`;
 }
 
 /** Logo organisasi untuk Google (persegi 512 px, terbaca di latar putih; scripts/make-favicons.mjs) */
@@ -321,12 +327,14 @@ function shoeCareFill(html: string, bundle: ContentBundle): string {
   const services = visible ? p.services.filter((s) => s.isActive !== false) : [];
   const body = visible
     ? [
+        // Hanya teks yang tampil di halaman (hero & layanan); lihat aturan ringkasan statis di atas branchBody
         '<div class="prerender">',
+        p.heroKicker?.trim() ? `<p>${esc(p.heroKicker.trim())}</p>` : '',
         `<h1>${esc(p.name)}</h1>`,
         p.tagline ? `<p>${esc(p.tagline)}</p>` : '',
-        `<p>Tersedia di Cutless ${esc(branch.name)}${branch.address ? `: ${esc(branch.address)}` : ''}</p>`,
-        `<h2>Layanan</h2><ul>${services.map((s) => `<li>${esc(s.name)}${s.description ? `: ${esc(s.description)}` : ''}</li>`).join('')}</ul>`,
-        '<p><a href="/">Beranda</a> · <a href="/cabang/">Semua cabang</a></p>',
+        p.description ? `<p>${esc(p.description)}</p>` : '',
+        `<p>${esc(shoeCareCopy.availableAt)} ${esc(branch.name)}</p>`,
+        `<h2>${esc(shoeCareCopy.servicesTitle)}</h2><ul>${services.map((s) => `<li><h3>${esc(s.name)}</h3>${s.description ? `<p>${esc(s.description)}</p>` : ''}</li>`).join('')}</ul>`,
         '</div>',
       ].join('')
     : '';
@@ -382,29 +390,60 @@ function branchHead(b: BranchEntry, bundle: ContentBundle): string {
   ].join('\n    ');
 }
 
-/** Ringkasan statis di dalam #root (terbaca crawler; diganti React saat halaman dimuat) */
+/*
+ * Ringkasan statis di dalam #root: HTML awal yang terlihat sampai React merender halaman yang sama lalu menggantinya.
+ * ATURAN: hanya teks yang juga tampil di halaman hasil React, dengan sumber & format yang sama (teks UI dari
+ * src/content/*.ts, format dari src/lib/format.ts). Tidak boleh ada teks khusus mesin pencari/AI (berisiko dianggap
+ * cloaking); e2e/static-content.spec.ts memastikan setiap potongan teks statis ada di halaman yang dirender.
+ */
+
+/** "09.00 – 21.00" atau "Tutup", sama dengan tabel jam buka */
+const timeRange = (h: BranchEntry['openingHours'][number]) =>
+  h.isClosed || !h.openTime || !h.closeTime ? branchesCopy.labels.closed : `${formatTime(h.openTime)} – ${formatTime(h.closeTime)}`;
+
+/** Kartu cabang di section Lokasi: nama, alamat, nomor WhatsApp (cabang yang bisa booking), tabel jam operasional */
+function locationCard(b: BranchEntry, heading: 'h2' | 'h3' | null): string {
+  const phone = b.status === 'Aktif' && isWa(b.whatsappNumber) ? formatPhoneDisplay(b.whatsappNumber) : '';
+  return [
+    heading ? `<${heading}>${esc(b.name)}</${heading}>` : '',
+    `<p>${esc(b.address ?? `${b.city}, ${b.province}`)}</p>`,
+    phone ? `<p><a href="https://wa.me/${b.whatsappNumber}">${phone}</a></p>` : '',
+    b.openingHours.length
+      ? `<table><caption>${esc(branchesCopy.labels.hoursCaption)}</caption><tbody>${b.openingHours.map((h) => `<tr><th>${esc(h.day)}</th><td>${esc(timeRange(h))}</td></tr>`).join('')}</tbody></table>`
+      : '',
+  ].join('');
+}
+
+/** Teaser Cuci Sepatu (beranda & halaman cabang partner), sama dengan ShoeCareTeaser */
+function shoeTeaser(bundle: ContentBundle): string {
+  const p = bundle.shoeCare;
+  if (!shoeCareVisible(p, bundle.branches) || p.showTeaser === false) return '';
+  return [
+    `<p>${esc(shoeCareCopy.ribbon)}</p>`,
+    `<p>${esc(p.heroKicker ?? shoeCareCopy.kicker)}</p>`,
+    `<h2><a href="${SHOE_CARE_PATH}">${esc(p.name)}</a></h2>`,
+    p.tagline ? `<p>${esc(p.tagline)}</p>` : '',
+  ].join('');
+}
+
+const sortedBranches = (bundle: Pick<ContentBundle, 'branches'>) => [...bundle.branches].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+
 function branchBody(b: BranchEntry, bundle: ContentBundle): string {
-  const { siteName } = bundle.settings;
-  const hours = b.openingHours
-    .map((h) => `<li>${esc(h.day)}: ${h.isClosed || !h.openTime || !h.closeTime ? 'Tutup' : `${h.openTime.replace(':', '.')} – ${h.closeTime.replace(':', '.')}`}</li>`)
-    .join('');
   return [
     '<div class="prerender">',
-    `<h1>${esc(siteName)} ${esc(b.name)}</h1>`,
-    `<p>${esc(b.address ?? `${b.city}, ${b.province}`)}</p>`,
-    b.status !== 'Aktif' ? `<p>${esc(b.status)}</p>` : '',
-    isWa(b.whatsappNumber) && b.status === 'Aktif' ? `<p>WhatsApp: <a href="https://wa.me/${b.whatsappNumber}">+${b.whatsappNumber}</a></p>` : '',
-    hours ? `<h2>Jam operasional</h2><ul>${hours}</ul>` : '',
+    `<p><a href="/cabang/">${esc(branchesCopy.labels.allBranches)}</a></p>`,
+    `<p>${esc(b.city)}</p>`,
+    `<h1>${esc(bundle.settings.siteName)} ${esc(b.name)}</h1>`,
+    locationCard(b, null),
     branchPriceList(b, bundle),
-    shoeCareAt(b, bundle) ? `<p>Layanan cuci sepatu oleh ${esc(shoeCareAt(b, bundle)!)} tersedia di cabang ini.</p>` : '',
-    '<p><a href="/cabang/">Semua cabang</a> · <a href="/">Beranda</a></p>',
+    shoeCareAt(b, bundle) ? shoeTeaser(bundle) : '',
     '</div>',
   ].join('');
 }
 
 /* ---------- GEO: konten statis beranda & /cabang/, FAQ, llms.txt (semua dari src/content/) ---------- */
 
-/** "Setiap hari 09.00–21.00" bila semua hari sama, selain itu per hari; "" bila belum ada jam buka */
+/** "Setiap hari 09.00–21.00" bila semua hari sama, selain itu per hari; "" bila belum ada jam buka (untuk /llms.txt) */
 export function hoursSummary(b: Pick<BranchEntry, 'openingHours'>): string {
   const fmt = (t: string) => t.replace(':', '.');
   const rows = b.openingHours.map((h) => ({ day: h.day, text: h.isClosed || !h.openTime || !h.closeTime ? 'Tutup' : `${fmt(h.openTime)}–${fmt(h.closeTime)}` }));
@@ -413,7 +452,7 @@ export function hoursSummary(b: Pick<BranchEntry, 'openingHours'>): string {
   return rows.map((r) => `${r.day} ${r.text}`).join(', ');
 }
 
-/** Harga "mulai" per kategori Daftar Harga (item aktif yang tersedia di cabang Aktif), format "K" */
+/** Harga "mulai" per kategori Daftar Harga (item aktif yang tersedia di cabang Aktif), format "K" (untuk /llms.txt) */
 export function startingPricesText(bundle: Pick<ContentBundle, 'pricing' | 'branches'>): { category: string; from: string }[] {
   const active = bundle.branches.filter((b) => b.status === 'Aktif').map((b) => b.slug);
   return PRICE_CATEGORIES.filter((c) => c !== 'Paket')
@@ -426,54 +465,50 @@ export function startingPricesText(bundle: Pick<ContentBundle, 'pricing' | 'bran
 
 const shownBranches = (bundle: Pick<ContentBundle, 'branches'>) => bundle.branches.filter((b) => b.status !== 'Tutup Sementara');
 
-/** Ringkasan statis beranda di dalam #root (terbaca crawler & asisten AI tanpa JavaScript; diganti React saat dimuat) */
+/**
+ * Ringkasan statis beranda: hero, Daftar Harga (cabang Aktif pertama, seperti tampilan awal), teaser Cuci Sepatu, FAQ,
+ * Lokasi (tab cabang + kartu cabang pertama yang tampil awal), dan footer (tagline, cabang, kontak).
+ */
 export function homeBody(bundle: ContentBundle): string {
-  const { siteName, siteUrl } = bundle.settings;
+  const { settings, hero } = bundle;
+  const cities = citiesOf(bundle);
+  const branches = sortedBranches(bundle);
+  const active = branches.filter((b) => b.status === 'Aktif');
+  const uniform = samePricesEverywhere(bundle.pricing, active.map((b) => b.slug));
   const faq = activeFaqItems(bundle.faq);
-  const prices = startingPricesText(bundle);
-  const shoe = shoeCareVisible(bundle.shoeCare, bundle.branches) ? bundle.branches.find((b) => b.slug === bundle.shoeCare.branchSlug) : undefined;
-  const contact = [
-    isWa(bundle.settings.mainWhatsappNumber) ? `WhatsApp: <a href="https://wa.me/${bundle.settings.mainWhatsappNumber}">+${bundle.settings.mainWhatsappNumber}</a>` : '',
-    bundle.settings.email ? `Email: <a href="mailto:${esc(bundle.settings.email)}">${esc(bundle.settings.email)}</a>` : '',
-    bundle.settings.instagramUrl ? `<a href="${esc(bundle.settings.instagramUrl)}">Instagram</a>` : '',
-    bundle.settings.tiktokUrl ? `<a href="${esc(bundle.settings.tiktokUrl)}">TikTok</a>` : '',
-  ].filter(Boolean);
+  const phone = isWa(settings.mainWhatsappNumber) ? formatPhoneDisplay(settings.mainWhatsappNumber) : '';
+  const fill = (t: string) => t.replaceAll('{cities}', cities);
   return [
     '<div class="prerender">',
-    `<h1>${esc(siteName)}: barbershop &amp; hair studio di ${esc(citiesOf(bundle))}</h1>`,
-    `<p>${esc(homeDescription(siteName, citiesOf(bundle), activeCategoryNames(bundle.pricing)))}</p>`,
-    '<h2>Cabang</h2>',
-    ...shownBranches(bundle).map((b) =>
-      [
-        `<h3><a href="/cabang/${b.slug}/">${esc(siteName)} ${esc(b.name)}</a></h3>`,
-        b.status !== 'Aktif' ? `<p>${esc(b.status)}</p>` : '',
-        `<p>${esc(b.address ?? `${b.city}, ${b.province}`)}</p>`,
-        hoursSummary(b) && b.status === 'Aktif' ? `<p>Jam buka: ${esc(hoursSummary(b))}</p>` : '',
-        isWa(b.whatsappNumber) && b.status === 'Aktif' ? `<p>WhatsApp: <a href="https://wa.me/${b.whatsappNumber}">+${b.whatsappNumber}</a></p>` : '',
-      ].join(''),
-    ),
-    prices.length ? `<h2>Layanan &amp; harga</h2><ul>${prices.map((p) => `<li>${esc(p.category)}: mulai ${p.from}</li>`).join('')}</ul>` : '',
-    shoe ? `<p><a href="${SHOE_CARE_PATH}">Cuci sepatu ${esc(bundle.shoeCare.name)}</a> tersedia di Cutless ${esc(shoe.name)}.</p>` : '',
+    hero.kicker ? `<p>${esc(fill(hero.kicker))}</p>` : '',
+    `<h1>${hero.titleLines.map(esc).join('<br />')}</h1>`,
+    hero.subtitle ? `<p>${esc(hero.subtitle)}</p>` : '',
+    active[0] ? `<h2>${esc(pricingCopy.heading.title)}</h2>${branchPriceList(active[0], bundle, uniform ? branchesCopy.labels.priceAllBranches : undefined)}` : '',
+    shoeTeaser(bundle),
     faq.length ? `<h2>${esc(bundle.faq.title)}</h2><dl>${faq.map((q) => `<dt>${esc(q.question)}</dt><dd>${esc(q.answer)}</dd>`).join('')}</dl>` : '',
-    contact.length ? `<h2>Kontak</h2><p>${contact.join(' · ')}</p>` : '',
-    `<p><a href="${siteUrl}/cabang/">Semua cabang</a></p>`,
+    branches[0]
+      ? `<h2>${esc(branchesCopy.heading.title)}</h2><ul>${branches.map((b) => `<li><a href="/cabang/${b.slug}/">${esc(b.name)}</a></li>`).join('')}</ul>${locationCard(branches[0], 'h3')}`
+      : '',
+    settings.footerTagline ? `<p>${esc(fill(settings.footerTagline))}</p>` : '',
+    phone ? `<p><a href="https://wa.me/${settings.mainWhatsappNumber}">${phone}</a></p>` : '',
+    settings.email ? `<p><a href="mailto:${esc(settings.email)}">${esc(settings.email)}</a></p>` : '',
     '</div>',
   ].join('');
 }
 
-/** Ringkasan statis /cabang/ (daftar cabang: alamat, jam buka, WhatsApp, link halaman cabang) */
+/** Ringkasan statis /cabang/: judul halaman & kartu cabang (kota, nama, alamat), sama dengan daftar cabang */
 export function cabangIndexBody(bundle: ContentBundle): string {
-  const { siteName } = bundle.settings;
+  const h = branchesCopy.indexHeading;
   return [
     '<div class="prerender">',
-    `<h1>Cabang ${esc(siteName)} di ${esc(citiesOf(bundle))}</h1>`,
+    `<p>${esc(h.kicker)}</p>`,
+    `<h1>${esc(h.title)}</h1>`,
+    h.intro ? `<p>${esc(h.intro)}</p>` : '',
     '<ul>',
-    ...shownBranches(bundle).map(
-      (b) =>
-        `<li><a href="/cabang/${b.slug}/">${esc(siteName)} ${esc(b.name)}</a>${b.status !== 'Aktif' ? ` (${esc(b.status)})` : ''}: ${esc(b.address ?? `${b.city}, ${b.province}`)}${hoursSummary(b) && b.status === 'Aktif' ? `. Jam buka: ${esc(hoursSummary(b))}` : ''}${isWa(b.whatsappNumber) && b.status === 'Aktif' ? `. WhatsApp +${b.whatsappNumber}` : ''}</li>`,
+    ...sortedBranches(bundle).map(
+      (b) => `<li><p>${esc(`${b.city}, ${b.province}`)}</p><h2><a href="/cabang/${b.slug}/">${esc(b.name)}</a></h2>${b.address ? `<p>${esc(b.address)}</p>` : ''}</li>`,
     ),
     '</ul>',
-    '<p><a href="/">Beranda</a></p>',
     '</div>',
   ].join('');
 }

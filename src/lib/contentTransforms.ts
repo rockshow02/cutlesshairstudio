@@ -79,7 +79,7 @@ import { srcSetOf } from './responsiveImage';
 import { PRICE_CATEGORIES, priceCategoryAnchor } from '@/content/priceCategories';
 import { availableAt, priceAt, samePricesEverywhere } from '@/content/branchPricing';
 import { activeFaqItems } from '@/content/faqSeo';
-import { formatNumber, formatPriceText } from './format';
+import { formatNumber, formatPhoneDisplay, formatPriceText } from './format';
 import { isActiveNow, parseWIB, toIsoWIB } from './dates';
 import { fillTemplate, templateLink } from './whatsapp';
 
@@ -289,12 +289,8 @@ export function buildShowcase(s: StudioEntry, copy: ShowcaseCopy, branchPhoto: I
 const makeId = (value: string, index: number) =>
   `${value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'item'}-${index}`;
 
-/** "6281234567890" → "0812-3456-7890" */
-export function formatPhoneDisplay(number: string): string {
-  const digits = number.replace(/\D/g, '');
-  const local = digits.startsWith('62') ? `0${digits.slice(2)}` : digits;
-  return [local.slice(0, 4), local.slice(4, 8), local.slice(8)].filter(Boolean).join('-');
-}
+/** Dipindah ke ./format (dipakai juga ringkasan statis saat build) */
+export { formatPhoneDisplay } from './format';
 
 /** Teks multi-baris/berkoma → array bersih */
 function splitList(value: string | null | undefined, separator: RegExp): string[] {

@@ -31,6 +31,13 @@ export function formatPriceText(value: string): string {
   return value.replace(/\s+/g, '').replace(/-/g, '–').toUpperCase();
 }
 
+/** "6281234567890" → "0812-3456-7890" (nomor WhatsApp yang tampil di website) */
+export function formatPhoneDisplay(number: string): string {
+  const digits = number.replace(/\D/g, '');
+  const local = digits.startsWith('62') ? `0${digits.slice(2)}` : digits;
+  return [local.slice(0, 4), local.slice(4, 8), local.slice(8)].filter(Boolean).join('-');
+}
+
 /** 5000 -> "5.000" */
 export function formatNumber(value: number): string {
   return numberFormatter.format(value);

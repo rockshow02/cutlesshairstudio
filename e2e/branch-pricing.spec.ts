@@ -117,9 +117,9 @@ test('(c) layanan hanya di Bogor: tersembunyi saat Cibubur dipilih dan di /caban
   // HTML statis (prerender) & JSON-LD priceRange per cabang
   const html = async (slug: string) => (await request.get(`/cabang/${slug}/`)).text();
   const cibuburHtml = await html(cibubur.slug);
-  expect(cibuburHtml).toContain(`<h2>Harga cabang ${cibubur.name}</h2>`);
-  expect(cibuburHtml).toContain(`<li>${E2E_CIBUBUR_PRICE.name}: ${E2E_CIBUBUR_PRICE.shown}</li>`);
+  expect(cibuburHtml).toContain(`<p>Harga cabang ${cibubur.name}</p>`);
+  expect(cibuburHtml).toContain(`<li><span>${E2E_CIBUBUR_PRICE.name}</span> <span>${E2E_CIBUBUR_PRICE.shown}</span></li>`);
   expect(cibuburHtml).not.toContain(E2E_BOGOR_ONLY);
   expect(cibuburHtml).toMatch(/"priceRange":"Rp\d[\d.]* - Rp\d[\d.]*"/);
-  expect(await html(bogor.slug)).toContain(`<li>${E2E_BOGOR_ONLY}: 120K</li>`);
+  expect(await html(bogor.slug)).toContain(`<li><span>${E2E_BOGOR_ONLY}</span> <span>120K</span></li>`);
 });
