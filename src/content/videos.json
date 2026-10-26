@@ -1,6 +1,13 @@
 {
-  "enabled": false,
+  "enabled": true,
   "kicker": "Video",
   "title": "Lihat prosesnya langsung.",
-  "items": []
+  "items": [
+    {
+      "url": "https://www.instagram.com/reel/De57X-CTezX/?utm_source=ig_web_copy_link&xtok=MzRlODBiNWFlZA==&srtk=MzRlODBiNWFlZA==",
+      "image": "/uploads/video-covers/img3998.jpg",
+      "isActive": true,
+      "order": 10
+    }
+  ]
 }
