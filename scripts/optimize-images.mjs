@@ -12,6 +12,7 @@
  *   - cta/ (foto latar CTA penutup)  : lebar maks. 1920 px + versi 1280 px
  *   - partner-logos/ (pita Logo Partner): lebar maks. 400 px (latar transparan tetap)
  *   - shoe-care/ (Partner Cuci Sepatu)  : lebar maks. 1920 px (foto hero) + versi 1280 & 600 px (SVG logo tidak diubah)
+ *   - video-covers/ (sampul 9:16 bagian Video): lebar maks. 800 px + versi 400 px
  * Versi kecil dipakai otomatis sebagai srcset (src/lib/contentTransforms.ts → responsiveImage).
  * Lalu memperbarui path gambar di src/content/*.json (mis. foto.jpg → foto.webp).
  *
@@ -30,9 +31,9 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const UPLOADS = path.join(ROOT, 'public', 'uploads');
 const CONTENT = path.join(ROOT, 'src', 'content');
 
-const MAX_WIDTH = { barbers: 800, site: 800, products: 1000, gallery: 1600, promos: 1600, about: 1200, hero: 1920, cta: 1920, 'partner-logos': 400, 'shoe-care': 1920 };
+const MAX_WIDTH = { barbers: 800, site: 800, products: 1000, gallery: 1600, promos: 1600, about: 1200, hero: 1920, cta: 1920, 'partner-logos': 400, 'shoe-care': 1920, 'video-covers': 800 };
 /** Versi lebih kecil per folder: <nama>-<lebar>.webp (hanya bila foto aslinya lebih lebar) */
-const VARIANTS = { about: [600], hero: [1280], gallery: [600], cta: [1280], 'shoe-care': [600, 1280] };
+const VARIANTS = { about: [600], hero: [1280], gallery: [600], cta: [1280], 'shoe-care': [600, 1280], 'video-covers': [400] };
 const variantPattern = (folder) => (VARIANTS[folder] ? new RegExp(`-(${VARIANTS[folder].join('|')})\\.webp$`) : null);
 const DEFAULT_MAX_WIDTH = 1600;
 const QUALITY = 78;

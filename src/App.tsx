@@ -9,6 +9,7 @@ import { Pricing } from '@/components/sections/Pricing';
 import { ShoeCareTeaser } from '@/components/sections/ShoeCareTeaser';
 import { Barbers } from '@/components/sections/Barbers';
 import { Gallery } from '@/components/sections/Gallery';
+import { Videos } from '@/components/sections/Videos';
 import { Products } from '@/components/sections/Products';
 import { Faq } from '@/components/sections/Faq';
 import { Location } from '@/components/sections/Location';
@@ -46,6 +47,8 @@ export default function App() {
         <ShoeCareTeaser />
         <Barbers />
         <Gallery />
+        {/* Video Instagram (facade): tidak dirender bila dimatikan / belum ada video aktif */}
+        <Videos />
         <Products variant="teaser" />
         <LazyTestimonials />
         <Faq />

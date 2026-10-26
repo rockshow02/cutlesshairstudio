@@ -327,6 +327,36 @@ Menu **FAQ (tanya-jawab)** mengatur bagian FAQ di beranda (tepat sebelum **Lokas
   - Bila harga, alamat, atau jam buka berubah, perbarui juga jawaban FAQ yang menyebutnya (FAQ tidak ikut berubah otomatis).
 - Website utama memeriksa FAQ saat build: bila **Tampilkan FAQ** aktif tetapi ada pertanyaan aktif yang jawabannya kosong, website **tidak** diperbarui sampai jawabannya diisi atau pertanyaannya dimatikan.
 
+## 3i. Video (Reel Instagram di beranda)
+
+Menu **Video (Instagram)** mengatur bagian Video di beranda (tepat setelah **Galeri**). Video tetap di Instagram (gratis, tanpa API). Website hanya menampilkan **foto sampul + tombol putar**, dan Instagram baru dimuat setelah pengunjung menekan tombol itu, jadi website tetap cepat.
+
+- **Tampilkan bagian Video**: bawaan **mati**. Nyalakan setelah minimal 1 video diisi. Bila menyala tetapi tidak ada video yang **Tampilkan**-nya aktif, website **tidak** diperbarui sampai video ditambah atau bagian ini dimatikan.
+- **Judul bagian** (wajib, maks. 80) dan **Teks kecil di atas judul** (opsional, maks. 40; kosong = *Video*).
+- **Daftar video** (maks. **6**; di HP digeser ke samping, di desktop 3 kolom): **Link Instagram**, **Foto sampul**, **Keterangan**, **Tampilkan**, **Urutan** (angka kecil tampil lebih dulu).
+
+### Menyalin link Reel
+
+Hanya Reel atau postingan dari akun Instagram **publik** (akun privat tidak bisa diputar di website).
+
+- **Aplikasi Instagram (HP):** buka Reel → ketuk ikon **pesawat kertas** (Bagikan) atau **•••** → **Salin tautan**.
+- **Instagram di browser (laptop):** buka Reel → **•••** → **Salin tautan**, atau salin alamat dari kolom alamat browser.
+- Tempel ke **Link Instagram**. Link yang benar diawali `https://www.instagram.com/reel/` atau `https://www.instagram.com/p/`, mis. `https://www.instagram.com/reel/ABC123xyz/`.
+- Bagian setelah tanda **?** (mis. `?igsh=MWx2c3...` atau `?utm_source=...`) boleh ikut ditempel: website membuangnya otomatis.
+- **Ditolak:** link profil (`instagram.com/cutlesshairstudio/`), Story/Highlight, `instagr.am/...`, `http://...`, atau link TikTok/YouTube. Pesan error di form menyebut format yang benar.
+- Bila Reel dihapus atau diarsipkan di Instagram, kartunya tetap tampil tetapi videonya tidak bisa diputar. Matikan **Tampilkan** atau hapus videonya dari daftar.
+
+### Membuat foto sampul (wajib)
+
+1. Putar Reel di HP, **jeda di frame terbaik** (wajah/hasil potongan jelas, tidak buram, tanpa teks Instagram di atasnya), lalu **screenshot**.
+2. **Crop tegak rasio 9:16** (di galeri HP: Edit → Potong → pilih **9:16**). Buang bar status, tombol, dan keterangan Instagram dari tepi gambar.
+3. Ukuran yang disarankan **1080 × 1920 px**. Format **JPG, PNG, atau WebP**, **maks. 1 MB** (kompres dulu bila lebih besar, mis. di squoosh.app).
+4. Upload di **Foto sampul** (folder *Sampul Video Instagram*). Website mengompresnya otomatis ke WebP lebar maks. 800 px.
+
+**Keterangan** (opsional, maks. 120) tampil di bawah kartu dan dibacakan pembaca layar, mis. `Proses skin fade di cabang Bogor`. Kosong = *video 1*, *video 2*, ...
+
+Di bawah setiap kartu selalu ada link **Tonton di Instagram**, untuk pengunjung yang browsernya memblokir Instagram.
+
 ## 4. Membuat promo
 
 1. Klik **Promo** → **Add an entry**.
@@ -499,6 +529,10 @@ Form Pages CMS menolak isian yang melebihi batas, dan website memeriksa batas ya
 | Partner Cuci Sepatu | Foto hasil → Deskripsi foto | 150 | wajib bila foto diisi |
 | Partner Cuci Sepatu | Catatan / ketentuan | 160 per poin | opsional |
 | Partner Cuci Sepatu | Template pesan WhatsApp | 500 | opsional |
+| FAQ (tanya-jawab) | Teks kecil di atas judul / Judul bagian | 40 / 80 | judul wajib |
+| FAQ (tanya-jawab) | Pertanyaan / Jawaban | 120 / 500 | pertanyaan wajib (maks. 12) |
+| Video (Instagram) | Teks kecil di atas judul / Judul bagian | 40 / 80 | judul wajib |
+| Video (Instagram) | Keterangan | 120 | opsional (link & foto sampul wajib, maks. 6 video) |
 
 ---
 

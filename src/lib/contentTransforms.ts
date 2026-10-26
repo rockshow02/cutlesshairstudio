@@ -48,6 +48,8 @@ import type {
   ShowcaseCopy,
   ShoeCareContent,
   FaqContent,
+  VideosContent,
+  VideosCopy,
   ShoeCareCopy,
   SiteContent,
   SocialLink,
@@ -72,6 +74,7 @@ import type {
   SettingsEntry,
   ShoeCareEntry,
   FaqEntry,
+  VideosEntry,
   StudioEntry,
   TestimonialEntry,
 } from '@/content/schema';
@@ -79,6 +82,7 @@ import { srcSetOf } from './responsiveImage';
 import { PRICE_CATEGORIES, priceCategoryAnchor } from '@/content/priceCategories';
 import { availableAt, priceAt, samePricesEverywhere } from '@/content/branchPricing';
 import { activeFaqItems } from '@/content/faqSeo';
+import { activeVideoItems } from '@/content/instagram';
 import { formatNumber, formatPhoneDisplay, formatPriceText } from './format';
 import { isActiveNow, parseWIB, toIsoWIB } from './dates';
 import { fillTemplate, templateLink } from './whatsapp';
@@ -228,6 +232,25 @@ export function buildFaq(f: FaqEntry | null | undefined): FaqContent | null {
   return {
     heading: { kicker: text(f.kicker) ?? '', title: f.title },
     items: items.map((i, index) => ({ id: makeId(i.question, index), question: i.question, answer: i.answer })),
+  };
+}
+
+/* ---------- Video (Pages CMS → Video) ---------- */
+
+/** null = Tampilkan bagian Video mati atau belum ada video aktif (bagian tidak dirender) */
+export function buildVideos(v: VideosEntry | null | undefined, copy: VideosCopy): VideosContent | null {
+  const items = activeVideoItems(v);
+  if (!v || !items.length) return null;
+  return {
+    heading: { kicker: text(v.kicker) ?? copy.defaultKicker, title: v.title },
+    copy,
+    items: items.map((i, index) => ({
+      id: makeId(i.url, index),
+      url: i.url,
+      // Kartu 9:16: HP ±270 px, desktop ±360 px (versi 400 px dari workflow kompres gambar)
+      image: responsiveImage(i.image, i.caption ?? fillTemplate(copy.untitled, { n: index + 1 }), '(min-width: 768px) 360px, 270px', { width: 800, height: 1422 }),
+      ...(i.caption ? { caption: i.caption } : {}),
+    })),
   };
 }
 

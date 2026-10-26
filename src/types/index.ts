@@ -18,3 +18,4 @@ export * from './showcase';
 export * from './partner';
 export * from './shoeCare';
 export * from './faq';
+export * from './videos';

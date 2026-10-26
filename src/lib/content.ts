@@ -30,6 +30,8 @@ import partnersJson from '@/content/partners.json';
 import shoeCareJson from '@/content/shoeCare.json';
 import servicesJson from '@/content/services.json';
 import faqJson from '@/content/faq.json';
+import videosJson from '@/content/videos.json';
+import { videosCopy } from '@/content/videos';
 import type {
   AboutEntry,
   AnnouncementEntry,
@@ -40,6 +42,7 @@ import type {
   HeroEntry,
   PartnersEntry,
   FaqEntry,
+  VideosEntry,
   ShoeCareEntry,
   ServiceCardEntry,
   PricingEntry,
@@ -61,6 +64,7 @@ import type {
   PartnerLogosContent,
   ShoeCareContent,
   FaqContent,
+  VideosContent,
   HeroContent,
   LocationsContent,
   PricingContent,
@@ -84,6 +88,7 @@ import {
   buildPartnerLogos,
   buildShoeCare,
   buildFaq,
+  buildVideos,
   buildPricing,
   buildProducts,
   buildPromos,
@@ -119,6 +124,7 @@ const data = {
   partners: partnersJson as unknown as PartnersEntry,
   shoeCare: shoeCareJson as unknown as ShoeCareEntry,
   faq: faqJson as unknown as FaqEntry,
+  videos: videosJson as unknown as VideosEntry,
   services: servicesJson as unknown as ServiceCardEntry[],
 };
 
@@ -212,5 +218,8 @@ export const getPartnerLogos = (): Promise<PartnerLogosContent | null> =>
   resolve(() => buildPartnerLogos(data.partners, data.settings.siteName));
 /** Bagian FAQ beranda (Pages CMS → FAQ). null = Tampilkan FAQ mati / belum ada item aktif berjawaban → tidak dirender */
 export const getFaq = (): Promise<FaqContent | null> => resolve(() => buildFaq(data.faq));
+
+/** Bagian Video beranda (Pages CMS → Video). null = Tampilkan bagian Video mati / belum ada video aktif → tidak dirender */
+export const getVideos = (): Promise<VideosContent | null> => resolve(() => buildVideos(data.videos, videosCopy));
 /** Section Cuci Sepatu (Pages CMS → Partner Cuci Sepatu). null = dimatikan / belum ada layanan → tidak dirender */
 export const getShoeCare = (): Promise<ShoeCareContent | null> => resolve(shoeCare);
