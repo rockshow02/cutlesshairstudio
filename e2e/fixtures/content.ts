@@ -187,6 +187,19 @@ export const E2E_PRODUCTS = [
   { name: 'Hair Clay Uji', category: 'Hair Clay', price: 95000, size: '80 gr', description: 'Hair clay uji untuk tes.' },
 ] as const;
 
+/**
+ * FAQ uji: aktif di build bawaan (2 item tampil; 1 nonaktif & 1 aktif tanpa jawaban harus tersembunyi), mati di varian
+ * uniform (bagian & JSON-LD FAQPage tidak ada).
+ */
+export const E2E_FAQ = {
+  title: 'FAQ Uji',
+  shown: [
+    { question: 'Pertanyaan uji satu?', answer: 'Jawaban uji satu.' },
+    { question: 'Pertanyaan uji dua?', answer: 'Jawaban uji dua.' },
+  ],
+  hidden: ['Pertanyaan nonaktif uji?', 'Pertanyaan tanpa jawaban uji?'],
+} as const;
+
 /** Daftar Harga tanpa harga per cabang & "Tersedia di cabang" (varian uniform) */
 const uniformPricing = () => E2E_PRICING.map(({ branchPrices: _bp, branchSlugs: _bs, ...p }: Json) => p);
 
@@ -195,6 +208,19 @@ export function applyE2EFixtures(file: string, data: unknown, variant?: string):
   if (file === 'branches.json') return fixtureBranches(data);
   if (file === 'barbers.json') return E2E_BARBERS.map((b) => ({ ...b, photo: existingPhoto() }));
   if (file === 'shoeCare.json') return shoeCareFixture(variant);
+  if (file === 'faq.json') {
+    return {
+      enabled: variant !== 'uniform',
+      kicker: 'FAQ',
+      title: E2E_FAQ.title,
+      items: [
+        { ...E2E_FAQ.shown[1], isActive: true, order: 20 },
+        { ...E2E_FAQ.shown[0], isActive: true, order: 10 },
+        { question: E2E_FAQ.hidden[0], answer: 'Tidak boleh tampil.', isActive: false, order: 30 },
+        { question: E2E_FAQ.hidden[1], isActive: true, order: 40 },
+      ],
+    };
+  }
   if (file === 'settings.json') return { ...(data as Json), showProducts: variant === 'uniform' };
   if (file === 'products.json') return E2E_PRODUCTS.map((p, i) => ({ ...p, image: existingPhoto(), inStock: true, isActive: true, order: (i + 1) * 10 }));
   if (file === 'pricing.json') return (variant === 'uniform' ? uniformPricing() : [...E2E_PRICING]).map((p, i) => ({ isActive: true, ...p, order: (i + 1) * 10 }));

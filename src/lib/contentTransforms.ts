@@ -47,6 +47,7 @@ import type {
   ShowcaseContent,
   ShowcaseCopy,
   ShoeCareContent,
+  FaqContent,
   ShoeCareCopy,
   SiteContent,
   SocialLink,
@@ -70,13 +71,15 @@ import type {
   ServiceCardEntry,
   SettingsEntry,
   ShoeCareEntry,
+  FaqEntry,
   StudioEntry,
   TestimonialEntry,
 } from '@/content/schema';
 import { srcSetOf } from './responsiveImage';
 import { PRICE_CATEGORIES, priceCategoryAnchor } from '@/content/priceCategories';
 import { availableAt, priceAt, samePricesEverywhere } from '@/content/branchPricing';
-import { formatNumber, formatPriceText } from './format';
+import { activeFaqItems } from '@/content/faqSeo';
+import { formatNumber, formatPhoneDisplay, formatPriceText } from './format';
 import { isActiveNow, parseWIB, toIsoWIB } from './dates';
 import { fillTemplate, templateLink } from './whatsapp';
 
@@ -216,6 +219,18 @@ export function shoeCareMenuUrl(p: Pick<ShoeCareEntry, 'menuFile' | 'menuUrl'>):
   return text(p.menuFile) ?? text(p.menuUrl);
 }
 
+/* ---------- FAQ (Pages CMS → FAQ) ---------- */
+
+/** null = Tampilkan FAQ mati atau belum ada item aktif berjawaban (bagian & JSON-LD tidak ada) */
+export function buildFaq(f: FaqEntry | null | undefined): FaqContent | null {
+  const items = activeFaqItems(f);
+  if (!f || !items.length) return null;
+  return {
+    heading: { kicker: text(f.kicker) ?? '', title: f.title },
+    items: items.map((i, index) => ({ id: makeId(i.question, index), question: i.question, answer: i.answer })),
+  };
+}
+
 /**
  * Tempat section Cuci Sepatu: halaman cabang lain → tidak tampil; beranda dengan cabang pilihan lain → tampil
  * dengan catatan "hanya tersedia di cabang …"; selain itu tampil biasa.
@@ -274,12 +289,8 @@ export function buildShowcase(s: StudioEntry, copy: ShowcaseCopy, branchPhoto: I
 const makeId = (value: string, index: number) =>
   `${value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'item'}-${index}`;
 
-/** "6281234567890" → "0812-3456-7890" */
-export function formatPhoneDisplay(number: string): string {
-  const digits = number.replace(/\D/g, '');
-  const local = digits.startsWith('62') ? `0${digits.slice(2)}` : digits;
-  return [local.slice(0, 4), local.slice(4, 8), local.slice(8)].filter(Boolean).join('-');
-}
+/** Dipindah ke ./format (dipakai juga ringkasan statis saat build) */
+export { formatPhoneDisplay } from './format';
 
 /** Teks multi-baris/berkoma → array bersih */
 function splitList(value: string | null | undefined, separator: RegExp): string[] {

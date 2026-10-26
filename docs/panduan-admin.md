@@ -316,6 +316,17 @@ Beberapa isian di **staging** sengaja diisi **data dummy** agar section bisa did
 
 > Jangan pernah membuat testimoni, rating, ulasan, atau nama orang/brand nyata sebagai data demo.
 
+## 3h. FAQ (tanya-jawab di beranda)
+
+Menu **FAQ (tanya-jawab)** mengatur bagian FAQ di beranda (tepat sebelum **Lokasi**). Isinya juga dibaca Google dan asisten AI (ChatGPT, Gemini, Perplexity) sebagai jawaban resmi, jadi **tulis hanya fakta yang benar**.
+
+- **Tampilkan FAQ**: bawaan **mati**. Nyalakan setelah semua jawaban dicek. Mati = bagian FAQ dan ringkasannya untuk Google tidak ada.
+- **Judul bagian** (wajib, maks. 80) dan **Teks kecil di atas judul** (opsional, maks. 40).
+- **Tanya-jawab** (maks. 12): **Pertanyaan** (wajib, maks. 120), **Jawaban** (maks. 500), **Tampilkan**, **Urutan** (angka kecil tampil lebih dulu).
+  - Pertanyaan **tanpa jawaban tidak tampil**. Simpan pertanyaan yang jawabannya belum pasti dengan **Tampilkan** mati, lalu isi jawabannya setelah dikonfirmasi.
+  - Bila harga, alamat, atau jam buka berubah, perbarui juga jawaban FAQ yang menyebutnya (FAQ tidak ikut berubah otomatis).
+- Website utama memeriksa FAQ saat build: bila **Tampilkan FAQ** aktif tetapi ada pertanyaan aktif yang jawabannya kosong, website **tidak** diperbarui sampai jawabannya diisi atau pertanyaannya dimatikan.
+
 ## 4. Membuat promo
 
 1. Klik **Promo** → **Add an entry**.

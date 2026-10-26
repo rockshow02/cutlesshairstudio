@@ -103,10 +103,10 @@ describe('halaman cabang & SEO', () => {
     expect(branchPriceRange(cibubur, { pricing: cheap })).toBe('Rp60.000 - Rp400.000');
     expect(branchPriceRange(cibubur, { pricing: [] })).toBeUndefined();
     const html = branchPriceList(cibubur, { pricing: BOGOR_ONLY.concat(DIFFERENT[1]) });
-    expect(html).toContain('<h2>Harga cabang Cibubur</h2><h3>Haircut</h3>');
-    expect(html).toContain('<li>Coloring Fashion: Start from 400K</li>');
+    expect(html).toContain('<p>Harga cabang Cibubur</p><h3>Haircut</h3>');
+    expect(html).toContain('<li><span>Coloring Fashion</span> <small>Start from</small> <span>400K</span></li>');
     expect(html).not.toContain('Hanya Bogor');
-    expect(branchPriceList(bogor, { pricing: BOGOR_ONLY })).toContain('<li>Hanya Bogor: 120K</li>');
+    expect(branchPriceList(bogor, { pricing: BOGOR_ONLY })).toContain('<li><span>Hanya Bogor</span> <span>120K</span></li>');
   });
 });
 

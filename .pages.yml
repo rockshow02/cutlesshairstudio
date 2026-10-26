@@ -338,6 +338,67 @@ content:
         default: true
         description: "Matikan untuk menyembunyikan tanpa menghapus."
 
+  # ------------------------------------------------------------------ FAQ
+  - name: faq
+    label: FAQ (tanya-jawab)
+    type: file
+    path: src/content/faq.json
+    format: json
+    fields:
+      - name: enabled
+        label: Tampilkan FAQ
+        type: boolean
+        default: false
+        description: "Aktifkan untuk menampilkan bagian FAQ di beranda (sebelum Lokasi) dan ringkasannya untuk Google & asisten AI. Mati = bagian FAQ tidak ada."
+      - name: kicker
+        label: Teks kecil di atas judul
+        type: string
+        description: "Opsional, mis. FAQ. Maksimal 40 karakter."
+        options:
+          maxlength: 40
+      - name: title
+        label: Judul bagian
+        type: string
+        required: true
+        description: "Mis. Pertanyaan yang sering ditanyakan. Maksimal 80 karakter."
+        options:
+          maxlength: 80
+      - name: items
+        label: Tanya-jawab
+        type: object
+        list:
+          max: 12
+          collapsible:
+            collapsed: true
+            summary: "{question}"
+        description: "Maksimal 12 pertanyaan. Tulis hanya fakta yang benar (harga, alamat, jam buka). Pertanyaan tanpa jawaban tidak tampil: simpan dulu dengan Tampilkan mati sampai jawabannya pasti."
+        fields:
+          - name: question
+            label: Pertanyaan
+            type: string
+            required: true
+            description: "Tulis seperti pertanyaan pelanggan, mis. Jam berapa Cutless buka? Maksimal 120 karakter."
+            options:
+              maxlength: 120
+          - name: answer
+            label: Jawaban
+            type: text
+            description: "Jawaban singkat dan jelas. Kosong = pertanyaan tidak tampil. Maksimal 500 karakter."
+            options:
+              maxlength: 500
+          - name: isActive
+            label: Tampilkan
+            type: boolean
+            default: true
+            description: "Matikan untuk menyembunyikan tanpa menghapus."
+          - name: order
+            label: Urutan
+            type: number
+            default: 0
+            description: "Angka kecil tampil lebih dulu (10, 20, 30, ...)."
+            options:
+              min: 0
+
   # ------------------------------------------------------------------ Kartu Layanan
   - name: services
     label: Kartu Layanan

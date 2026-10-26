@@ -1,0 +1,51 @@
+/* Akordeon FAQ: garis pemisah antar pertanyaan, ikon + berputar jadi × saat terbuka. Warna hanya dari token. */
+.list {
+  max-width: 52rem;
+  border-top: 1px solid var(--c-line-light);
+}
+.item {
+  border-bottom: 1px solid var(--c-line-light);
+}
+.question {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  min-height: var(--touch);
+  padding-block: var(--space-5);
+  font-size: var(--fs-lg);
+  font-weight: 600;
+  list-style: none;
+  cursor: pointer;
+}
+.question::-webkit-details-marker {
+  display: none;
+}
+.question:focus-visible {
+  outline: 2px solid var(--c-sand);
+  outline-offset: 4px;
+}
+.icon {
+  flex: none;
+  color: var(--c-sand);
+  transition: transform var(--dur) var(--ease);
+}
+.item[open] .icon {
+  transform: rotate(45deg);
+}
+.answer {
+  max-width: 65ch;
+  padding-bottom: var(--space-5);
+  color: var(--c-bone-dim);
+  white-space: pre-line;
+}
+@media (hover: hover) {
+  .question:hover span {
+    color: var(--c-sand-light);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .icon {
+    transition: none;
+  }
+}
