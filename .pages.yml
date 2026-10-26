@@ -383,10 +383,10 @@ content:
             label: Link Instagram
             type: string
             required: true
-            description: "Salin dari Instagram: ••• (atau ikon pesawat/Bagikan) → Salin tautan. Harus diawali https://www.instagram.com/reel/ atau https://www.instagram.com/p/, mis. https://www.instagram.com/reel/ABC123xyz/. Bagian setelah tanda ? (mis. ?igsh=...) dibuang otomatis."
+            description: "Salin dari Instagram: ••• (atau ikon pesawat/Bagikan) → Salin tautan, mis. https://www.instagram.com/reel/ABC123xyz/. Link Reel (/reel/ atau /reels/) atau postingan (/p/), dari aplikasi maupun browser (instagram.com, www.instagram.com, m.instagram.com). Dirapikan otomatis ke https://www.instagram.com/reel/<kode>/; bagian setelah tanda ? (mis. ?igsh=...) dibuang. Link profil & Story ditolak."
             pattern:
-              regex: '^\s*https://www\.instagram\.com/(reel|p)/[A-Za-z0-9_-]+/?([?#].*)?\s*$'
-              message: "Harus link Reel/postingan Instagram, mis. https://www.instagram.com/reel/ABC123xyz/ (bukan link profil, story, atau instagr.am)"
+              regex: '^\s*https://((www|m)\.)?instagram\.com/([A-Za-z0-9._]+/)?(reels?|p)/[A-Za-z0-9_-]+/?([?#].*)?\s*$'
+              message: "Harus link Reel/postingan Instagram, mis. https://www.instagram.com/reel/ABC123xyz/ (bukan link profil, Story, atau instagr.am)"
           - name: image
             label: Foto sampul
             type: image

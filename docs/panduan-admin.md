@@ -341,9 +341,11 @@ Hanya Reel atau postingan dari akun Instagram **publik** (akun privat tidak bisa
 
 - **Aplikasi Instagram (HP):** buka Reel → ketuk ikon **pesawat kertas** (Bagikan) atau **•••** → **Salin tautan**.
 - **Instagram di browser (laptop):** buka Reel → **•••** → **Salin tautan**, atau salin alamat dari kolom alamat browser.
-- Tempel ke **Link Instagram**. Link yang benar diawali `https://www.instagram.com/reel/` atau `https://www.instagram.com/p/`, mis. `https://www.instagram.com/reel/ABC123xyz/`.
-- Bagian setelah tanda **?** (mis. `?igsh=MWx2c3...` atau `?utm_source=...`) boleh ikut ditempel: website membuangnya otomatis.
-- **Ditolak:** link profil (`instagram.com/cutlesshairstudio/`), Story/Highlight, `instagr.am/...`, `http://...`, atau link TikTok/YouTube. Pesan error di form menyebut format yang benar.
+- Tempel ke **Link Instagram**, mis. `https://www.instagram.com/reel/ABC123xyz/`. Semua bentuk ini diterima dan **dirapikan otomatis** menjadi `https://www.instagram.com/reel/<kode>/` (atau `/p/<kode>/` untuk postingan):
+  - dengan atau tanpa `www.`, atau `m.instagram.com` (Instagram di browser HP);
+  - `/reel/…`, `/reels/…`, atau `/p/…`, juga yang diawali nama akun, mis. `instagram.com/cutlesshairstudio/reel/ABC123xyz/`;
+  - dengan bagian setelah tanda **?** (mis. `?igsh=MWx2c3...` atau `?utm_source=...`): dibuang otomatis.
+- **Ditolak** (pesan error menyebut alasannya): link profil (`instagram.com/cutlesshairstudio/`), Story/Highlight (`instagram.com/stories/...`), link pendek `instagr.am/...`, link tanpa `https://`, atau link TikTok/YouTube.
 - Bila Reel dihapus atau diarsipkan di Instagram, kartunya tetap tampil tetapi videonya tidak bisa diputar. Matikan **Tampilkan** atau hapus videonya dari daftar.
 
 ### Membuat foto sampul (wajib)

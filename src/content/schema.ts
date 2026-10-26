@@ -13,7 +13,7 @@ import { z } from 'zod';
 import { parseWIB } from '../lib/dates';
 import { PRICE_CATEGORIES } from './priceCategories';
 import { itemsAt } from './branchPricing';
-import { INSTAGRAM_POST_URL, INSTAGRAM_URL_MESSAGE, normalizeInstagramUrl } from './instagram';
+import { INSTAGRAM_POST_URL, instagramUrlProblem, normalizeInstagramUrl } from './instagram';
 import type { IconName } from '../types/common';
 
 /* ---------- Helper ---------- */
@@ -568,13 +568,15 @@ export const faqSchema = z.object({
 
 /* ---------- Video (Pages CMS → Video) ---------- */
 
-/** Link Reel/postingan Instagram; parameter (?igsh=...) & #... dibuang otomatis sebelum divalidasi */
+/** Link Reel/postingan Instagram (juga tanpa www., m., /reels/); dirapikan ke https://www.instagram.com/reel/<kode>/ */
 const instagramPostUrl = z
   .string({ error: 'link Instagram wajib diisi' })
   .trim()
-  .min(1, 'link Instagram wajib diisi')
-  .transform(normalizeInstagramUrl)
-  .pipe(z.string().regex(INSTAGRAM_POST_URL, INSTAGRAM_URL_MESSAGE));
+  .min(1, { message: 'link Instagram wajib diisi', abort: true })
+  .superRefine((v, ctx) => {
+    if (!INSTAGRAM_POST_URL.test(normalizeInstagramUrl(v))) ctx.addIssue({ code: 'custom', message: instagramUrlProblem(v) });
+  })
+  .transform(normalizeInstagramUrl);
 
 /**
  * Bagian Video beranda: kartu foto sampul (facade); embed Instagram baru dimuat saat kartu diklik. Daftar sengaja tidak

@@ -27,31 +27,63 @@ const videos = (extra: Partial<Record<keyof VideosEntry, unknown>> = {}): Videos
   });
 
 describe('Video: link Instagram', () => {
-  it('parameter & #... dibuang, "/" ditambahkan; link lain tidak diubah', () => {
-    expect(normalizeInstagramUrl('https://www.instagram.com/reel/ABC123xyz/?igsh=MWx2c3Q0&utm_source=ig_web_copy_link')).toBe(REEL);
-    expect(normalizeInstagramUrl(' https://www.instagram.com/p/Xy_9-z?img_index=1#komentar ')).toBe(POST);
-    expect(normalizeInstagramUrl(REEL)).toBe(REEL);
+  /** Bentuk link yang diterima & hasil rapinya */
+  const ACCEPTED: [string, string][] = [
+    [REEL, REEL],
+    ['https://www.instagram.com/reel/ABC123xyz/?igsh=MWx2c3Q0&utm_source=ig_web_copy_link', REEL],
+    ['https://www.instagram.com/reel/ABC123xyz/?utm_source=ig_web_copy_link&xtok=MzRl==&srtk=MzRl==', REEL],
+    [' https://www.instagram.com/p/Xy_9-z?img_index=1#komentar ', POST],
+    ['https://instagram.com/reel/ABC123xyz', REEL],
+    ['https://m.instagram.com/reel/ABC123xyz/?igsh=abc', REEL],
+    ['https://www.instagram.com/reels/ABC123xyz/', REEL],
+    ['https://instagram.com/reels/ABC123xyz', REEL],
+    ['https://m.instagram.com/p/Xy_9-z/', POST],
+    ['https://www.instagram.com/cutlesshairstudio/reel/ABC123xyz/', REEL],
+    ['https://www.instagram.com/cutless.hair_studio/p/Xy_9-z/', POST],
+    ['HTTPS://WWW.INSTAGRAM.COM/REEL/ABC123xyz/', REEL],
+  ];
+  /** Link yang ditolak & potongan pesan error yang menjelaskan alasannya */
+  const REJECTED: [string, RegExp][] = [
+    ['https://www.instagram.com/cutlesshairstudio/', /link profil/],
+    ['https://instagram.com/cutlesshairstudio?igsh=abc', /link profil/],
+    ['https://www.instagram.com/stories/cutlesshairstudio/123/', /Story\/Highlight/],
+    ['https://www.instagram.com/stories/highlights/1789/', /Story\/Highlight/],
+    ['https://www.instagram.com/s/aGlnaGxpZ2h0/', /Story\/Highlight/],
+    ['https://instagr.am/reel/ABC123xyz/', /instagr\.am/],
+    ['http://www.instagram.com/reel/ABC123xyz/', /diawali https:\/\//],
+    ['www.instagram.com/reel/ABC123xyz/', /diawali https:\/\//],
+    ['https://www.tiktok.com/@cutless/video/1', /bukan link Instagram \(www\.tiktok\.com\)/],
+    ['https://www.instagram.com/reel/ABC123xyz/lainnya/', /link Reel atau postingan Instagram/],
+    ['https://www.instagram.com/explore/tags/barbershop/', /link Reel atau postingan Instagram/],
+  ];
+
+  it('bentuk yang diterima dirapikan ke https://www.instagram.com/reel/<kode>/ atau /p/<kode>/', () => {
+    for (const [raw, clean] of ACCEPTED) expect(normalizeInstagramUrl(raw), raw).toBe(clean);
+    // Link yang ditolak tidak diubah (validasi yang menolaknya)
     expect(normalizeInstagramUrl('https://www.instagram.com/cutlesshairstudio/?hl=id')).toBe('https://www.instagram.com/cutlesshairstudio/?hl=id');
   });
 
-  it('hanya https://www.instagram.com/reel/... atau /p/... yang diterima (pesan error menjelaskan format)', () => {
+  it('skema menerima & merapikan bentuk yang diterima; profil, Story, situs lain ditolak dengan alasan yang jelas', () => {
     const urlOf = (url: string) => videosSchema.safeParse({ title: 'X', items: [item({ url })] });
-    expect(urlOf(`${REEL}?igsh=abc`).data?.items[0].url).toBe(REEL);
-    expect(urlOf(POST).success).toBe(true);
-    for (const bad of [
-      'https://www.instagram.com/cutlesshairstudio/',
-      'https://www.instagram.com/stories/cutlesshairstudio/123/',
-      'https://instagram.com/reel/ABC123xyz/',
-      'http://www.instagram.com/reel/ABC123xyz/',
-      'https://www.instagram.com/reels/ABC123xyz/',
-      'https://www.instagram.com/reel/ABC123xyz/lainnya/',
-      'https://www.tiktok.com/@cutless/video/1',
-      '',
-    ]) {
-      const r = urlOf(bad);
-      expect(r.success, bad).toBe(false);
-      expect(r.error?.issues[0].message, bad).toMatch(bad ? /link Reel atau postingan Instagram, mis\. https:\/\/www\.instagram\.com\/reel\// : /wajib diisi/);
+    for (const [raw, clean] of ACCEPTED) expect(urlOf(raw).data?.items[0].url, raw).toBe(clean);
+    for (const [raw, reason] of REJECTED) {
+      const r = urlOf(raw);
+      expect(r.success, raw).toBe(false);
+      expect(r.error?.issues.map((i) => i.message), raw).toHaveLength(1);
+      expect(r.error?.issues[0].message, raw).toMatch(reason);
+      expect(r.error?.issues[0].message, raw).toContain('mis. https://www.instagram.com/reel/ABC123xyz/');
     }
+    expect(urlOf('').error?.issues.map((i) => i.message)).toEqual(['link Instagram wajib diisi']);
+  });
+
+  it('form Pages CMS menerima & menolak link yang sama dengan skema (admin tidak lolos form lalu gagal build)', () => {
+    const config = parse(readFileSync('.pages.yml', 'utf8')) as { content: { name: string; fields: CmsField[] }[] };
+    const items = config.content.find((c) => c.name === 'videos')!.fields.find((f) => f.name === 'items')!;
+    const pattern = items.fields!.find((f) => f.name === 'url')!.pattern as { regex: string };
+    const cms = new RegExp(pattern.regex);
+    // Huruf besar di domain jarang terjadi; form hanya perlu menerima bentuk yang disalin dari Instagram
+    for (const [raw] of ACCEPTED.filter(([r]) => !r.startsWith('HTTPS'))) expect(cms.test(raw), raw).toBe(true);
+    for (const [raw] of REJECTED) expect(cms.test(raw), raw).toBe(false);
   });
 });
 

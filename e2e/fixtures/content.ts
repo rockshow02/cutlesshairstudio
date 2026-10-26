@@ -201,8 +201,8 @@ export const E2E_FAQ = {
 } as const;
 
 /**
- * Video uji: aktif di build bawaan (2 tampil, urut "Urutan"; link dengan ?igsh=... dirapikan; 1 nonaktif tersembunyi),
- * mati di varian uniform (bagian tidak ada).
+ * Video uji: aktif di build bawaan (2 tampil, urut "Urutan"; link m./tanpa www./reels/?igsh=... dirapikan; 1 nonaktif
+ * tersembunyi), mati di varian uniform (bagian tidak ada).
  */
 export const E2E_VIDEOS = {
   title: 'Video Uji',
@@ -240,8 +240,8 @@ export function applyE2EFixtures(file: string, data: unknown, variant?: string):
       kicker: 'Video',
       title: E2E_VIDEOS.title,
       items: [
-        { url: `${E2E_VIDEOS.shown[1].url.slice(0, -1)}?igsh=uji123`, image: existingPhoto(), caption: E2E_VIDEOS.shown[1].caption, isActive: true, order: 20 },
-        { url: E2E_VIDEOS.shown[0].url, image: existingPhoto(), caption: E2E_VIDEOS.shown[0].caption, isActive: true, order: 10 },
+        { url: 'https://m.instagram.com/p/UjiPostDua?igsh=uji123', image: existingPhoto(), caption: E2E_VIDEOS.shown[1].caption, isActive: true, order: 20 },
+        { url: 'https://instagram.com/reels/UjiReelSatu/', image: existingPhoto(), caption: E2E_VIDEOS.shown[0].caption, isActive: true, order: 10 },
         { url: 'https://www.instagram.com/reel/UjiNonaktif/', image: existingPhoto(), caption: E2E_VIDEOS.hidden, isActive: false, order: 30 },
       ],
     };
