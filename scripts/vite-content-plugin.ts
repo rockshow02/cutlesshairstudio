@@ -26,6 +26,7 @@ import { activeCategoryNames, branchDescription, homeDescription } from '../src/
 import { SHOE_CARE_PATH, shoeCareDescription, shoeCareImage, shoeCareRedirects, shoeCareTitle, shoeCareVisible } from '../src/content/shoeCareSeo';
 import { itemsAt, priceAt, priceRangeAt } from '../src/content/branchPricing';
 import { PRODUCTS_PATH, productsRedirects, productsVisible } from '../src/content/productsSeo';
+import { activeFaqItems, faqPageJsonLd } from '../src/content/faqSeo';
 import { PRICE_CATEGORIES } from '../src/content/priceCategories';
 import { pricingCopy } from '../src/content/pricing';
 import { formatThousandsK } from '../src/lib/format';
@@ -247,10 +248,15 @@ function branchJsonLd(b: BranchEntry, bundle: ContentBundle) {
         }
       : {}),
     ...(b.googleMapsUrl ? { hasMap: b.googleMapsUrl } : {}),
+    ...(branchSameAs(b, bundle).length ? { sameAs: branchSameAs(b, bundle) } : {}),
     ...(branchPriceRange(b, bundle) ? { priceRange: branchPriceRange(b, bundle) } : {}),
     parentOrganization: { '@type': 'Organization', '@id': `${siteUrl}/#organization`, name: siteName, url: `${siteUrl}/` },
   };
 }
+
+/** sameAs HairSalon cabang: akun sosial (Pengaturan Situs) + link Google Maps cabang */
+const branchSameAs = (b: Pick<BranchEntry, 'googleMapsUrl'>, bundle: Pick<ContentBundle, 'settings'>) =>
+  [bundle.settings.instagramUrl, bundle.settings.tiktokUrl, b.googleMapsUrl].filter((u): u is string => Boolean(u));
 
 const rupiah = (n: number) => `Rp${new Intl.NumberFormat('id-ID').format(n)}`;
 
@@ -396,6 +402,126 @@ function branchBody(b: BranchEntry, bundle: ContentBundle): string {
   ].join('');
 }
 
+/* ---------- GEO: konten statis beranda & /cabang/, FAQ, llms.txt (semua dari src/content/) ---------- */
+
+/** "Setiap hari 09.00–21.00" bila semua hari sama, selain itu per hari; "" bila belum ada jam buka */
+export function hoursSummary(b: Pick<BranchEntry, 'openingHours'>): string {
+  const fmt = (t: string) => t.replace(':', '.');
+  const rows = b.openingHours.map((h) => ({ day: h.day, text: h.isClosed || !h.openTime || !h.closeTime ? 'Tutup' : `${fmt(h.openTime)}–${fmt(h.closeTime)}` }));
+  if (!rows.length) return '';
+  if (rows.length === 7 && rows.every((r) => r.text === rows[0].text && r.text !== 'Tutup')) return `Setiap hari ${rows[0].text}`;
+  return rows.map((r) => `${r.day} ${r.text}`).join(', ');
+}
+
+/** Harga "mulai" per kategori Daftar Harga (item aktif yang tersedia di cabang Aktif), format "K" */
+export function startingPricesText(bundle: Pick<ContentBundle, 'pricing' | 'branches'>): { category: string; from: string }[] {
+  const active = bundle.branches.filter((b) => b.status === 'Aktif').map((b) => b.slug);
+  return PRICE_CATEGORIES.filter((c) => c !== 'Paket')
+    .map((c) => {
+      const prices = active.flatMap((slug) => itemsAt(bundle.pricing, slug).filter((i) => i.category === c).map((i) => priceAt(i, slug)));
+      return prices.length ? { category: pricingCopy.categoryLabels[c], from: formatThousandsK(Math.min(...prices)) } : null;
+    })
+    .filter((x): x is { category: string; from: string } => Boolean(x));
+}
+
+const shownBranches = (bundle: Pick<ContentBundle, 'branches'>) => bundle.branches.filter((b) => b.status !== 'Tutup Sementara');
+
+/** Ringkasan statis beranda di dalam #root (terbaca crawler & asisten AI tanpa JavaScript; diganti React saat dimuat) */
+export function homeBody(bundle: ContentBundle): string {
+  const { siteName, siteUrl } = bundle.settings;
+  const faq = activeFaqItems(bundle.faq);
+  const prices = startingPricesText(bundle);
+  const shoe = shoeCareVisible(bundle.shoeCare, bundle.branches) ? bundle.branches.find((b) => b.slug === bundle.shoeCare.branchSlug) : undefined;
+  const contact = [
+    isWa(bundle.settings.mainWhatsappNumber) ? `WhatsApp: <a href="https://wa.me/${bundle.settings.mainWhatsappNumber}">+${bundle.settings.mainWhatsappNumber}</a>` : '',
+    bundle.settings.email ? `Email: <a href="mailto:${esc(bundle.settings.email)}">${esc(bundle.settings.email)}</a>` : '',
+    bundle.settings.instagramUrl ? `<a href="${esc(bundle.settings.instagramUrl)}">Instagram</a>` : '',
+    bundle.settings.tiktokUrl ? `<a href="${esc(bundle.settings.tiktokUrl)}">TikTok</a>` : '',
+  ].filter(Boolean);
+  return [
+    '<div class="prerender">',
+    `<h1>${esc(siteName)}: barbershop &amp; hair studio di ${esc(citiesOf(bundle))}</h1>`,
+    `<p>${esc(homeDescription(siteName, citiesOf(bundle), activeCategoryNames(bundle.pricing)))}</p>`,
+    '<h2>Cabang</h2>',
+    ...shownBranches(bundle).map((b) =>
+      [
+        `<h3><a href="/cabang/${b.slug}/">${esc(siteName)} ${esc(b.name)}</a></h3>`,
+        b.status !== 'Aktif' ? `<p>${esc(b.status)}</p>` : '',
+        `<p>${esc(b.address ?? `${b.city}, ${b.province}`)}</p>`,
+        hoursSummary(b) && b.status === 'Aktif' ? `<p>Jam buka: ${esc(hoursSummary(b))}</p>` : '',
+        isWa(b.whatsappNumber) && b.status === 'Aktif' ? `<p>WhatsApp: <a href="https://wa.me/${b.whatsappNumber}">+${b.whatsappNumber}</a></p>` : '',
+      ].join(''),
+    ),
+    prices.length ? `<h2>Layanan &amp; harga</h2><ul>${prices.map((p) => `<li>${esc(p.category)}: mulai ${p.from}</li>`).join('')}</ul>` : '',
+    shoe ? `<p><a href="${SHOE_CARE_PATH}">Cuci sepatu ${esc(bundle.shoeCare.name)}</a> tersedia di Cutless ${esc(shoe.name)}.</p>` : '',
+    faq.length ? `<h2>${esc(bundle.faq.title)}</h2><dl>${faq.map((q) => `<dt>${esc(q.question)}</dt><dd>${esc(q.answer)}</dd>`).join('')}</dl>` : '',
+    contact.length ? `<h2>Kontak</h2><p>${contact.join(' · ')}</p>` : '',
+    `<p><a href="${siteUrl}/cabang/">Semua cabang</a></p>`,
+    '</div>',
+  ].join('');
+}
+
+/** Ringkasan statis /cabang/ (daftar cabang: alamat, jam buka, WhatsApp, link halaman cabang) */
+export function cabangIndexBody(bundle: ContentBundle): string {
+  const { siteName } = bundle.settings;
+  return [
+    '<div class="prerender">',
+    `<h1>Cabang ${esc(siteName)} di ${esc(citiesOf(bundle))}</h1>`,
+    '<ul>',
+    ...shownBranches(bundle).map(
+      (b) =>
+        `<li><a href="/cabang/${b.slug}/">${esc(siteName)} ${esc(b.name)}</a>${b.status !== 'Aktif' ? ` (${esc(b.status)})` : ''}: ${esc(b.address ?? `${b.city}, ${b.province}`)}${hoursSummary(b) && b.status === 'Aktif' ? `. Jam buka: ${esc(hoursSummary(b))}` : ''}${isWa(b.whatsappNumber) && b.status === 'Aktif' ? `. WhatsApp +${b.whatsappNumber}` : ''}</li>`,
+    ),
+    '</ul>',
+    '<p><a href="/">Beranda</a></p>',
+    '</div>',
+  ].join('');
+}
+
+/**
+ * /llms.txt (format llmstxt.org): ringkasan bisnis untuk asisten AI, dibangkitkan dari konten saat build. Manfaatnya
+ * belum terbukti (belum dipakai resmi oleh mesin pencari), tetapi tanpa biaya.
+ */
+export function llmsTxt(bundle: ContentBundle): string {
+  const { siteName, siteUrl } = bundle.settings;
+  const lines: string[] = [];
+  const shoe = shoeCareVisible(bundle.shoeCare, bundle.branches) ? bundle.branches.find((b) => b.slug === bundle.shoeCare.branchSlug) : undefined;
+  lines.push(`# ${siteName}`, '', `> ${homeDescription(siteName, citiesOf(bundle), activeCategoryNames(bundle.pricing))}`, '');
+  lines.push(`Situs resmi: ${siteUrl}/`, '', '## Cabang', '');
+  for (const b of shownBranches(bundle)) {
+    lines.push(`### ${siteName} ${b.name}${b.status !== 'Aktif' ? ` (${b.status})` : ''}`, '');
+    lines.push(`- Alamat: ${b.address ?? `${b.city}, ${b.province}`}`);
+    if (b.status === 'Aktif' && hoursSummary(b)) lines.push(`- Jam buka: ${hoursSummary(b)}`);
+    if (b.status === 'Aktif' && isWa(b.whatsappNumber)) lines.push(`- WhatsApp: +${b.whatsappNumber} (https://wa.me/${b.whatsappNumber})`);
+    if (b.googleMapsUrl) lines.push(`- Google Maps: ${b.googleMapsUrl}`);
+    lines.push(`- Halaman cabang & daftar harga: ${siteUrl}/cabang/${b.slug}/`, '');
+  }
+  const prices = startingPricesText(bundle);
+  if (prices.length) {
+    lines.push('## Layanan & harga mulai', '');
+    for (const p of prices) lines.push(`- ${p.category}: mulai ${p.from}`);
+    lines.push('- Booking lewat WhatsApp cabang (tombol Booking di website).', '');
+  }
+  lines.push('## Halaman penting', '', `- [Beranda](${siteUrl}/)`, `- [Semua cabang](${siteUrl}/cabang/)`);
+  for (const b of shownBranches(bundle)) lines.push(`- [${siteName} ${b.name}](${siteUrl}/cabang/${b.slug}/)`);
+  if (shoe) lines.push(`- [Cuci sepatu ${bundle.shoeCare.name} di Cutless ${shoe.name}](${siteUrl}${SHOE_CARE_PATH})`);
+  if (productsVisible(bundle.settings)) lines.push(`- [Produk](${siteUrl}${PRODUCTS_PATH})`);
+  lines.push('');
+  const faq = activeFaqItems(bundle.faq);
+  if (faq.length) {
+    lines.push('## FAQ', '');
+    for (const q of faq) lines.push(`### ${q.question}`, '', q.answer, '');
+  }
+  const contact = [
+    isWa(bundle.settings.mainWhatsappNumber) ? `- WhatsApp: +${bundle.settings.mainWhatsappNumber}` : '',
+    bundle.settings.email ? `- Email: ${bundle.settings.email}` : '',
+    bundle.settings.instagramUrl ? `- Instagram: ${bundle.settings.instagramUrl}` : '',
+    bundle.settings.tiktokUrl ? `- TikTok: ${bundle.settings.tiktokUrl}` : '',
+  ].filter(Boolean);
+  if (contact.length) lines.push('## Kontak', '', ...contact, '');
+  return `${lines.join('\n').trimEnd()}\n`;
+}
+
 /** File asli (jpg/png) yang sudah dikonversi ke .webp → pakai .webp */
 const resolveImage = (src: string, meta: ImageMeta) => {
   const webp = src.replace(/\.(jpe?g|png|gif|tiff?|avif)$/i, '.webp');
@@ -427,6 +553,8 @@ function fillHtml(html: string, bundle: ContentBundle | undefined, meta: ImageMe
     .replaceAll('%OG_IMAGE%', `${siteUrl}${OG_IMAGE}`)
     .replace('<!--cutless:jsonld-->', allBranches)
     .replace('<!--cutless:org-jsonld-->', jsonLdTag(organizationJsonLd(bundle.settings)))
+    .replace('<!--cutless:faq-jsonld-->', faqPageJsonLd(bundle.faq, `${siteUrl}/`) ? jsonLdTag(faqPageJsonLd(bundle.faq, `${siteUrl}/`)) : '')
+    .replace('<!--cutless:home-body-->', homeBody(bundle))
     .replace('<!--cutless:hero-preload-->', heroPreload(bundle.hero, meta));
   // Halaman /cuci-sepatu/: title, meta, Open Graph & ringkasan dari Partner Cuci Sepatu
   return out.includes('%SHOE_TITLE%') ? shoeCareFill(out, bundle) : out;
@@ -603,6 +731,7 @@ export function contentPlugin(): Plugin {
       if (!bundle) return;
       this.emitFile({ type: 'asset', fileName: 'sitemap.xml', source: sitemap(bundle) });
       this.emitFile({ type: 'asset', fileName: 'robots.txt', source: robots(bundle, appEnv === 'production') });
+      this.emitFile({ type: 'asset', fileName: 'llms.txt', source: llmsTxt(bundle) });
     },
 
     /** Prerender halaman per cabang dari dist/cabang/index.html */
@@ -638,6 +767,8 @@ export function contentPlugin(): Plugin {
         );
         await writeFile(path.join(dir, 'index.html'), page);
       }
+      // /cabang/ (daftar cabang) sendiri: ringkasan statis (template dipakai halaman cabang di atas)
+      await writeFile(template, applyEnv(html.replace('<!--cutless:body-->', cabangIndexBody(bundle)), appEnv, analyticsToken));
       console.log(`✓ ${bundle.branches.length} halaman cabang diprerender`);
     },
 

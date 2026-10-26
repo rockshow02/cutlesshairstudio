@@ -29,6 +29,7 @@ import ctaJson from '@/content/cta.json';
 import partnersJson from '@/content/partners.json';
 import shoeCareJson from '@/content/shoeCare.json';
 import servicesJson from '@/content/services.json';
+import faqJson from '@/content/faq.json';
 import type {
   AboutEntry,
   AnnouncementEntry,
@@ -38,6 +39,7 @@ import type {
   GalleryEntry,
   HeroEntry,
   PartnersEntry,
+  FaqEntry,
   ShoeCareEntry,
   ServiceCardEntry,
   PricingEntry,
@@ -58,6 +60,7 @@ import type {
   GalleryContent,
   PartnerLogosContent,
   ShoeCareContent,
+  FaqContent,
   HeroContent,
   LocationsContent,
   PricingContent,
@@ -80,6 +83,7 @@ import {
   buildLocations,
   buildPartnerLogos,
   buildShoeCare,
+  buildFaq,
   buildPricing,
   buildProducts,
   buildPromos,
@@ -114,6 +118,7 @@ const data = {
   cta: ctaJson as unknown as CtaEntry,
   partners: partnersJson as unknown as PartnersEntry,
   shoeCare: shoeCareJson as unknown as ShoeCareEntry,
+  faq: faqJson as unknown as FaqEntry,
   services: servicesJson as unknown as ServiceCardEntry[],
 };
 
@@ -205,5 +210,7 @@ export const getShowcase = (): Promise<ShowcaseContent> =>
 /** Pita logo partner di beranda (Pages CMS → Logo Partner). null = dimatikan / belum ada logo aktif → tidak dirender */
 export const getPartnerLogos = (): Promise<PartnerLogosContent | null> =>
   resolve(() => buildPartnerLogos(data.partners, data.settings.siteName));
+/** Bagian FAQ beranda (Pages CMS → FAQ). null = Tampilkan FAQ mati / belum ada item aktif berjawaban → tidak dirender */
+export const getFaq = (): Promise<FaqContent | null> => resolve(() => buildFaq(data.faq));
 /** Section Cuci Sepatu (Pages CMS → Partner Cuci Sepatu). null = dimatikan / belum ada layanan → tidak dirender */
 export const getShoeCare = (): Promise<ShoeCareContent | null> => resolve(shoeCare);

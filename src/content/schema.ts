@@ -540,6 +540,31 @@ export const shoeCareSchema = z
     if (s.aboutImage && !s.aboutImageAlt) ctx.addIssue({ code: 'custom', path: ['aboutImageAlt'], message: 'deskripsi foto About Us wajib diisi bila foto dipilih' });
   });
 
+/* ---------- FAQ (Pages CMS → FAQ) ---------- */
+
+/**
+ * Tanya-jawab di beranda (+ JSON-LD FAQPage). Item tampil hanya bila aktif DAN berjawaban; item tanpa jawaban boleh
+ * disimpan nonaktif sebagai catatan pertanyaan yang belum dijawab. Daftar sengaja tidak wajib (lihat aboutParagraphs).
+ */
+export const faqSchema = z.object({
+  /** false = bagian FAQ & JSON-LD FAQPage tidak ada */
+  enabled: z.boolean().default(false),
+  kicker: optionalText(40),
+  title: requiredText(80, 'judul bagian FAQ'),
+  items: z
+    .array(
+      z.object({
+        question: requiredText(120, 'pertanyaan'),
+        /** Kosong = tidak tampil (walau aktif) */
+        answer: optionalText(500),
+        isActive,
+        order,
+      }),
+    )
+    .max(12, 'maksimal 12 pertanyaan')
+    .default([]),
+});
+
 /* ---------- CTA penutup ("Kursimu sudah siap.") ---------- */
 
 export const ctaSchema = z
@@ -574,6 +599,7 @@ export const CONTENT_FILES = {
   'partners.json': partnersSchema,
   'shoeCare.json': shoeCareSchema,
   'services.json': z.array(serviceCardSchema),
+  'faq.json': faqSchema,
 } as const;
 
 /* ---------- Tipe hasil (dipakai src/lib/content.ts) ---------- */
@@ -595,6 +621,7 @@ export type CtaEntry = z.output<typeof ctaSchema>;
 export type PartnersEntry = z.output<typeof partnersSchema>;
 export type ShoeCareEntry = z.output<typeof shoeCareSchema>;
 export type ServiceCardEntry = z.output<typeof serviceCardSchema>;
+export type FaqEntry = z.output<typeof faqSchema>;
 
 /* ---------- Pemeriksaan lintas file ---------- */
 
@@ -615,6 +642,7 @@ export interface ContentBundle {
   partners: PartnersEntry;
   shoeCare: ShoeCareEntry;
   services: ServiceCardEntry[];
+  faq: FaqEntry;
 }
 
 export interface ContentIssue {
@@ -691,6 +719,7 @@ export function crossCheck(c: ContentBundle): { errors: ContentIssue[]; launch: 
     ...(c.settings.showTestimonials ? [{ file: 'testimonials.json', entries: shown(c.testimonials) }] : []),
     ...(c.settings.showProducts ? [{ file: 'products.json', entries: shown(c.products) }] : []),
     ...(c.shoeCare.enabled ? [{ file: 'shoeCare.json', entries: [c.shoeCare as unknown as Record<string, unknown>] }] : []),
+    ...(c.faq.enabled ? [{ file: 'faq.json', entries: shown(c.faq.items) }] : []),
   ];
 
   for (const { file, entries } of displayed) {
@@ -728,6 +757,13 @@ export function crossCheck(c: ContentBundle): { errors: ContentIssue[]; launch: 
   }
   // Data demo yang TAYANG: peringatan di staging, menggagalkan build produksi (mode ketat)
   const DEMO = 'data demo masih tayang: hapus atau matikan "Data demo", lalu isi konten asli (lihat panduan admin → Data demo)';
+  if (c.faq.enabled) {
+    // Nomor = posisi di daftar Tanya-jawab Pages CMS
+    c.faq.items.forEach((q, i) => {
+      if (q.isActive !== false && !q.answer?.trim()) launch.push({ file: 'faq.json', where: `pertanyaan ${i + 1} "${q.question.slice(0, 50)}"`, message: 'aktif tetapi jawabannya kosong (isi jawaban atau matikan Tampilkan)' });
+    });
+    if (!shown(c.faq.items).some((q) => q.answer?.trim())) launch.push({ file: 'faq.json', where: 'Tampilkan FAQ', message: 'aktif tetapi belum ada pertanyaan aktif yang berjawaban' });
+  }
   if (c.shoeCare.enabled && c.shoeCare.isDemo) launch.push({ file: 'shoeCare.json', where: `Partner Cuci Sepatu "${c.shoeCare.name}"`, message: DEMO });
   if (c.partners.enabled !== false) {
     shown(c.partners.logos ?? []).forEach((l) => {

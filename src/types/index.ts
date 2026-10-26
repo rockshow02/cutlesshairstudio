@@ -17,3 +17,4 @@ export * from './branches';
 export * from './showcase';
 export * from './partner';
 export * from './shoeCare';
+export * from './faq';
