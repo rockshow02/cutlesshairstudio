@@ -10,6 +10,7 @@ import { ShoeCareTeaser } from '@/components/sections/ShoeCareTeaser';
 import { Barbers } from '@/components/sections/Barbers';
 import { Gallery } from '@/components/sections/Gallery';
 import { Products } from '@/components/sections/Products';
+import { Faq } from '@/components/sections/Faq';
 import { Location } from '@/components/sections/Location';
 import { PartnerLogos } from '@/components/sections/PartnerLogos';
 import { CtaBanner } from '@/components/sections/CtaBanner';
@@ -47,6 +48,7 @@ export default function App() {
         <Gallery />
         <Products variant="teaser" />
         <LazyTestimonials />
+        <Faq />
         <Location />
         {/* Pita logo partner: tidak dirender bila dimatikan / belum ada logo aktif */}
         <PartnerLogos />

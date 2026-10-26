@@ -1,0 +1,74 @@
+{
+  "enabled": false,
+  "kicker": "FAQ",
+  "title": "Pertanyaan yang sering ditanyakan",
+  "items": [
+    {
+      "question": "Di mana lokasi Cutless Hair Studio?",
+      "answer": "Cutless Hair Studio punya dua cabang: Bogor Bantarjati di Jl Pandawa Raya No.4 Blk B1, RT.07/RW.15, Bantarjati, Kec. Bogor Utara, Kota Bogor, Jawa Barat 16152, dan Cibubur di Jl. Alternatif Cibubur No.87, Harjamukti, Kec. Cimanggis, Kota Depok, Jawa Barat 16454. Petunjuk arah ada di halaman masing-masing cabang.",
+      "isActive": true,
+      "order": 10
+    },
+    {
+      "question": "Jam berapa Cutless Hair Studio buka?",
+      "answer": "Kedua cabang, Bogor Bantarjati dan Cibubur, buka setiap hari (Senin sampai Minggu) pukul 09.00–21.00.",
+      "isActive": true,
+      "order": 20
+    },
+    {
+      "question": "Bagaimana cara booking di Cutless Hair Studio?",
+      "answer": "Booking lewat WhatsApp: tekan tombol Booking di website, pilih cabang, lalu kirim pesan yang sudah terisi otomatis ke WhatsApp cabang itu. Untuk hairstylist tertentu, tekan tombol booking di kartu hairstylist.",
+      "isActive": true,
+      "order": 30
+    },
+    {
+      "question": "Berapa harga potong rambut di Cutless Hair Studio?",
+      "answer": "Haircut mulai 100K (White Grooming: Haircut + Hair Wash). Daftar lengkap Haircut, Special Treatment, dan Woman Haircut & Treatment ada di Daftar Harga di website.",
+      "isActive": true,
+      "order": 40
+    },
+    {
+      "question": "Apakah Cutless Hair Studio melayani potong rambut wanita?",
+      "answer": "Ya. Woman Haircut 150K (haircut + hair wash). Layanan wanita lainnya antara lain Woman Catok / Blow 50K, Woman Dry Wash 80K, Woman Creambath 120K, Woman Wash & Styling 150K, dan Woman Haircut & Blow 200K.",
+      "isActive": true,
+      "order": 50
+    },
+    {
+      "question": "Apakah ada layanan cuci sepatu?",
+      "answer": "Ada, di Cutless Bogor Bantarjati oleh partner Fotless: Deep Cleaning, Unyellowing, Suede Renew, Kids Shoes, dan Sepatu Gunung. Titip dan pesan lewat WhatsApp; detailnya di halaman Cuci Sepatu.",
+      "isActive": true,
+      "order": 60
+    },
+    {
+      "question": "Bagaimana cara menghubungi Cutless Hair Studio?",
+      "answer": "Lewat WhatsApp +628132220932, email cutlesshairstudio@gmail.com, atau Instagram dan TikTok @cutlesshairstudio.",
+      "isActive": true,
+      "order": 70
+    },
+    {
+      "question": "Apakah bisa datang langsung tanpa booking (walk-in)?",
+      "isActive": false,
+      "order": 80
+    },
+    {
+      "question": "Apakah tersedia tempat parkir?",
+      "isActive": false,
+      "order": 90
+    },
+    {
+      "question": "Metode pembayaran apa saja yang diterima?",
+      "isActive": false,
+      "order": 100
+    },
+    {
+      "question": "Berapa lama durasi potong rambut?",
+      "isActive": false,
+      "order": 110
+    },
+    {
+      "question": "Apakah ada layanan potong rambut anak?",
+      "isActive": false,
+      "order": 120
+    }
+  ]
+}

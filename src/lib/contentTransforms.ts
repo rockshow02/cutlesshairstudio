@@ -47,6 +47,7 @@ import type {
   ShowcaseContent,
   ShowcaseCopy,
   ShoeCareContent,
+  FaqContent,
   ShoeCareCopy,
   SiteContent,
   SocialLink,
@@ -70,12 +71,14 @@ import type {
   ServiceCardEntry,
   SettingsEntry,
   ShoeCareEntry,
+  FaqEntry,
   StudioEntry,
   TestimonialEntry,
 } from '@/content/schema';
 import { srcSetOf } from './responsiveImage';
 import { PRICE_CATEGORIES, priceCategoryAnchor } from '@/content/priceCategories';
 import { availableAt, priceAt, samePricesEverywhere } from '@/content/branchPricing';
+import { activeFaqItems } from '@/content/faqSeo';
 import { formatNumber, formatPriceText } from './format';
 import { isActiveNow, parseWIB, toIsoWIB } from './dates';
 import { fillTemplate, templateLink } from './whatsapp';
@@ -214,6 +217,18 @@ export function buildShoeCare(p: ShoeCareEntry | null | undefined, branches: Bra
 /** Tombol "Lihat Daftar Menu": file PDF → Link Daftar Menu → tidak ada (tombol tidak tampil) */
 export function shoeCareMenuUrl(p: Pick<ShoeCareEntry, 'menuFile' | 'menuUrl'>): string | undefined {
   return text(p.menuFile) ?? text(p.menuUrl);
+}
+
+/* ---------- FAQ (Pages CMS → FAQ) ---------- */
+
+/** null = Tampilkan FAQ mati atau belum ada item aktif berjawaban (bagian & JSON-LD tidak ada) */
+export function buildFaq(f: FaqEntry | null | undefined): FaqContent | null {
+  const items = activeFaqItems(f);
+  if (!f || !items.length) return null;
+  return {
+    heading: { kicker: text(f.kicker) ?? '', title: f.title },
+    items: items.map((i, index) => ({ id: makeId(i.question, index), question: i.question, answer: i.answer })),
+  };
 }
 
 /**
