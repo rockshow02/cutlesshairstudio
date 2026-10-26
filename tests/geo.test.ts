@@ -38,6 +38,7 @@ const bundle = (f: FaqEntry = faq(), extra: Partial<ContentBundle> = {}) =>
     branches: [branch('bogor-bantarjati', 'Bogor Bantarjati'), branch('cibubur', 'Cibubur')],
     pricing: [pricingItemSchema.parse({ name: 'Haircut Uji', category: 'Haircut', price: 100000 }), pricingItemSchema.parse({ name: 'Wash Uji', category: 'Special Treatment', price: 30000 })],
     shoeCare: { enabled: false, branchSlug: 'bogor-bantarjati', services: [] },
+    hero: { kicker: 'Hair studio · {cities}', titleLines: ['Cut Less.', 'Style More.'], subtitle: 'Subjudul uji.' },
     faq: f,
     ...extra,
   }) as unknown as ContentBundle;
@@ -112,15 +113,20 @@ describe('konten statis untuk crawler & asisten AI', () => {
     expect(hoursSummary(branch('a', 'A', { openingHours: sunday }))).toMatch(/^Senin 09\.00–21\.00, .*Minggu Tutup$/);
   });
 
-  it('beranda: H1 dengan lokasi, alamat & jam & WhatsApp tiap cabang, harga mulai, FAQ (bila aktif)', () => {
+  it('beranda & /cabang/: hanya teks yang terlihat pengunjung (hero, harga, FAQ, cabang tampilan awal, footer)', () => {
+    // Hanya teks yang tampil setelah React (lihat e2e/static-content.spec.ts): hero, harga, FAQ, Lokasi, footer
     const html = homeBody(bundle());
-    expect(html).toContain('<h1>Cutless Uji: barbershop &amp; hair studio di Bogor Bantarjati &amp; Cibubur</h1>');
-    expect(html).toContain('Jl. Uji Bogor Bantarjati No. 1');
-    expect(html).toContain('Jam buka: Setiap hari 09.00–21.00');
-    expect(html).toContain('<li>Haircut: mulai 100K</li>');
+    expect(html).toContain('<p>Hair studio · Bogor Bantarjati &amp; Cibubur</p><h1>Cut Less.<br />Style More.</h1><p>Subjudul uji.</p>');
+    expect(html).toContain('<p>Berlaku di semua cabang</p><h3>Haircut</h3><ul><li><span>Haircut Uji</span> <span>100K</span></li></ul>');
     expect(html).toContain('<dt>Pertama?</dt><dd>Jawaban pertama.</dd>');
+    expect(html).toContain('<li><a href="/cabang/cibubur/">Cibubur</a></li>');
+    expect(html).toContain('<h3>Bogor Bantarjati</h3><p>Jl. Uji Bogor Bantarjati No. 1</p><p><a href="https://wa.me/6281100000101">0811-0000-0101</a></p>');
+    expect(html).toContain('<tr><th>Senin</th><td>09.00 – 21.00</td></tr>');
+    // Cabang kedua hanya tampil setelah tab dipilih → tidak masuk ringkasan; format khusus bot tidak ada
+    expect(html).not.toContain('Jl. Uji Cibubur');
+    for (const botOnly of ['barbershop &amp; hair studio di', 'mulai 100K', 'WhatsApp: +62', 'Jam buka:']) expect(html).not.toContain(botOnly);
     expect(homeBody(bundle(faq({ enabled: false })))).not.toContain('<dl>');
-    expect(cabangIndexBody(bundle())).toContain('href="/cabang/cibubur/"');
+    expect(cabangIndexBody(bundle())).toContain('<li><p>Cibubur, Jawa Barat</p><h2><a href="/cabang/cibubur/">Cibubur</a></h2><p>Jl. Uji Cibubur No. 1</p></li>');
   });
 
   it('/llms.txt dari konten: cabang, alamat, jam buka, WhatsApp, Maps, halaman penting, FAQ, kontak', () => {
