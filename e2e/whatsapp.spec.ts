@@ -111,8 +111,6 @@ test('halaman /cabang/:slug: tombol booking selalu ke cabang halaman itu (bukan 
   expect(wa.number).toBe(bogor.whatsappNumber);
   expect(wa.text).toContain(`cabang ${bogor.name}`);
   await expectNoHorizontalScroll(page);
-  await page.goto('/produk/', { waitUntil: 'domcontentloaded' });
-  await expect(page.locator('h1')).toBeVisible();
   expect(apiCalls).toEqual([]);
 });
 

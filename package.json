@@ -14,6 +14,7 @@
     "lint": "eslint .",
     "check:content": "node scripts/check-content.mjs",
     "optimize-images": "node scripts/optimize-images.mjs",
+    "favicons": "node scripts/make-favicons.mjs",
     "sync-cms": "node scripts/sync-pages-config.mjs",
     "test": "vitest run",
     "dev:worker": "npm run build:staging && wrangler dev --env staging --port 8787",

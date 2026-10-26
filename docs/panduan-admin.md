@@ -264,7 +264,7 @@ Menu **Partner Cuci Sepatu** mengatur **halaman tersendiri** `/cuci-sepatu/` unt
 Susunan halaman: **hero** (foto besar, isi rata tengah: logo, nama, tagline, badge *Tersedia di [cabang]*, tombol *Titip Sepatu via WhatsApp* & *Lihat Daftar Menu*) → **About Us** (judul, paragraf, foto, poin keunggulan) → **Layanan** (kartu dengan harga, tombol *Pesan via WhatsApp* per layanan) → **Galeri** hasil (klik foto untuk memperbesar; tidak tampil bila belum ada foto) → **tombol WhatsApp penutup** → **lokasi cabang & catatan** (alamat, jam buka, petunjuk arah, catatan/ketentuan).
 
 **Tombol tampil/sembunyi:**
-- **Tampilkan halaman**: mati = `/cuci-sepatu` dialihkan ke beranda, teaser, menu *Cuci Sepatu* (HP & footer), dan sebutan cuci sepatu di Google halaman cabang hilang. Halaman juga otomatis tidak tampil bila belum ada layanan yang ditampilkan.
+- **Tampilkan halaman**: mati = `/cuci-sepatu` dialihkan ke beranda, teaser, menu *Cuci Sepatu* (HP & footer), dan sebutan cuci sepatu di Google halaman cabang hilang. Halaman juga otomatis tidak tampil bila belum ada layanan yang ditampilkan. Halaman ikut **dikeluarkan dari situs & sitemap** (Google tidak lagi mengindeksnya); lihat catatan *Menyalakan/mematikan halaman* di §6 Mengelola produk.
 - **Tampilkan teaser di beranda**: kartu teaser setelah Daftar Harga (beranda & halaman cabang partner).
 - **Data demo**: lihat §3g.
 
@@ -354,6 +354,8 @@ Menurunkan pengumuman: matikan **Aktif** → **Save** (atau hapus entrinya). Bil
 ## 6. Mengelola produk (pomade, hair tonic, dll.)
 
 Produk tampil di halaman **/produk** dan 4 produk teratas juga tampil di halaman utama, setelah **Pengaturan Situs → Tampilkan Produk** dinyalakan. Pembeli memesan lewat tombol WhatsApp (pesan otomatis berisi nama produk).
+
+> **Menyalakan/mematikan halaman (Produk & Cuci Sepatu).** Mematikan **Pengaturan Situs → Tampilkan Produk** atau **Partner Cuci Sepatu → Tampilkan halaman** otomatis **mengeluarkan halaman itu dari situs dan dari sitemap.xml**: `/produk` atau `/cuci-sepatu` dialihkan permanen (301) ke beranda, menu & bagian di beranda hilang, dan Google berhenti mengindeksnya. Menyalakannya lagi mengembalikan halaman, menu, dan entri sitemap. Perubahan ini terjadi saat website dibangun ulang: di staging ±3–5 menit setelah Save di branch `staging`, di website utama setelah perubahan masuk ke `main` (Save di `main`, atau PR `staging → main` di-merge).
 
 
 **Menambah produk:**
@@ -493,7 +495,7 @@ Form Pages CMS menolak isian yang melebihi batas, dan website memeriksa batas ya
 
 1. **Tunggu 3–5 menit.** Setiap Save memicu proses otomatis: foto baru dikompres, website dibangun ulang, lalu dipasang. Foto baru bisa butuh sedikit lebih lama (ada commit otomatis *"sinkron gambar"*; nama file foto bisa berubah menjadi `.webp`, itu normal).
 2. Buka **hanya** alamat ini:
-   - Website utama (branch `main`): **https://cutlesshairstudio.adi-yansyaaah.workers.dev**; setelah launch: **https://cutlesshairstudio.com**.
+   - Website utama (branch `main`): **https://cutlesshairstudio.com** (satu-satunya alamat produksi; `www.` dialihkan ke sini, dan alamat lama `cutlesshairstudio.adi-yansyaaah.workers.dev` sudah tidak aktif).
    - Staging (branch `staging`, untuk uji coba, berlabel *STAGING*): **https://cutlesshairstudio-staging.adi-yansyaaah.workers.dev**
 3. Tekan **Ctrl+F5** (Windows) / **Cmd+Shift+R** (Mac) agar browser tidak menampilkan versi lama. Di HP: tutup tab lalu buka lagi, atau pakai tab penyamaran.
 4. **Abaikan alamat berkode versi**, mis. `https://3f9c1a2b-cutlesshairstudio-staging.….workers.dev` (dari email/notifikasi Cloudflare). Itu salinan satu versi tertentu, sering bukan yang terbaru.
