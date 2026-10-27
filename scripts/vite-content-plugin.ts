@@ -28,6 +28,7 @@ import { itemsAt, priceAt, priceRangeAt, samePricesEverywhere } from '../src/con
 import { PRODUCTS_PATH, productsRedirects, productsVisible } from '../src/content/productsSeo';
 import { activeFaqItems, faqPageJsonLd } from '../src/content/faqSeo';
 import { activeVideoItems } from '../src/content/instagram';
+import { postalAddressParts } from '../src/content/postalAddress';
 import { videosCopy } from '../src/content/videos';
 import { PRICE_CATEGORIES } from '../src/content/priceCategories';
 import { pricingCopy } from '../src/content/pricing';
@@ -219,7 +220,7 @@ function citiesOf(bundle: ContentBundle): string {
   return joinCities([...new Set((operating.length ? operating : bundle.branches).map((b) => b.city))]);
 }
 
-function branchJsonLd(b: BranchEntry, bundle: ContentBundle) {
+export function branchJsonLd(b: BranchEntry, bundle: ContentBundle) {
   const { siteUrl, siteName } = bundle.settings;
   const url = `${siteUrl}/cabang/${b.slug}/`;
   const hours = b.openingHours.filter((h) => !h.isClosed && h.openTime && h.closeTime);
@@ -231,13 +232,8 @@ function branchJsonLd(b: BranchEntry, bundle: ContentBundle) {
     url,
     image: b.photo ? imageUrl(siteUrl, b.photo) : `${siteUrl}${OG_IMAGE}`,
     ...(isWa(b.whatsappNumber) ? { telephone: `+${b.whatsappNumber}` } : {}),
-    address: {
-      '@type': 'PostalAddress',
-      ...(b.address ? { streetAddress: b.address } : {}),
-      addressLocality: b.city,
-      addressRegion: b.province,
-      addressCountry: 'ID',
-    },
+    // Jalan/kelurahan/kecamatan, kota, provinsi, kode pos terpisah (streetAddress tidak mengulang kota/provinsi/kode pos)
+    address: { '@type': 'PostalAddress', ...postalAddressParts(b), addressCountry: 'ID' },
     ...(b.latitude !== null && b.longitude !== null && b.latitude !== undefined && b.longitude !== undefined
       ? { geo: { '@type': 'GeoCoordinates', latitude: b.latitude, longitude: b.longitude } }
       : {}),
