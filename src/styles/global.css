@@ -104,11 +104,17 @@ section[data-snap] {
 .prerender p, .prerender li { color: var(--c-bone-dim); margin-bottom: 0.4rem; }
 .prerender a { text-decoration: underline; }
 
+/*
+ * Kurangi gerakan: animasi selesai seketika; transisi 0s (langsung), BUKAN 0.01ms. transition-property bawaan = all,
+ * jadi durasi 0.01ms menyalakan transisi untuk setiap properti di setiap elemen: perubahan tata letak (mis. padding
+ * saat bar pengumuman muncul) tertunda satu frame atau lebih dan tercatat sebagai layout shift.
+ */
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
   *, *::before, *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
+    transition-duration: 0s !important;
+    transition-delay: 0s !important;
   }
 }

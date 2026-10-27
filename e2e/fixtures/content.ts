@@ -219,6 +219,12 @@ const E2E_SERVICES = [
   { name: 'Woman Haircut', description: 'Potong rambut wanita uji.', icon: 'scissors', pricingCategory: 'Woman Haircut & Treatment' },
 ];
 
+/** Pengumuman uji (varian uniform): khusus Cibubur lebih dulu, lalu untuk semua cabang */
+export const E2E_ANNOUNCEMENTS = [
+  { message: 'Pengumuman uji khusus Cibubur.', type: 'Info', branchSlugs: ['cibubur'] },
+  { message: 'Pengumuman uji untuk semua cabang.', type: 'Info' },
+] as const;
+
 /** Label tombol utama hero (Pages CMS → Hero bisa mengubahnya kapan saja) */
 export const E2E_HERO_CTA = 'Booking Hero Uji';
 
@@ -260,8 +266,10 @@ export function applyE2EFixtures(file: string, data: unknown, variant?: string):
     // Toggle & nama usaha tetap (tata letak beranda & selector tidak ikut berubah saat admin mengubahnya di CMS)
     return { ...(data as Json), siteName: E2E_SITE_NAME, showProducts: variant === 'uniform', showTestimonials: false, showBeforeAfter: false, enablePreloader: true, preloaderVideo: '' };
   }
-  // Promo & pengumuman bertanggal (tampil/tidak tergantung jam) → tidak ada di build uji
-  if (file === 'promos.json' || file === 'announcements.json') return [];
+  // Promo bertanggal (tampil/tidak tergantung jam) → tidak ada di build uji. Pengumuman tanpa tanggal hanya di varian
+  // uniform (e2e/announcement.spec.ts); build bawaan tanpa bar pengumuman.
+  if (file === 'promos.json') return [];
+  if (file === 'announcements.json') return variant === 'uniform' ? E2E_ANNOUNCEMENTS.map((a) => ({ ...a, isActive: true })) : [];
   if (file === 'gallery.json') return [1, 2, 3, 4].map((n) => ({ image: existingPhoto(), altText: `Foto galeri uji ${n}`, caption: `Galeri uji ${n}`, styleCategory: 'Lainnya', focalPoint: 'atas', showInMarquee: true, isActive: true, order: n * 10 }));
   if (file === 'services.json') return E2E_SERVICES.map((c, i) => ({ ...c, isActive: true, order: (i + 1) * 10 }));
   if (file === 'products.json') return E2E_PRODUCTS.map((p, i) => ({ ...p, image: existingPhoto(), inStock: true, isActive: true, order: (i + 1) * 10 }));
