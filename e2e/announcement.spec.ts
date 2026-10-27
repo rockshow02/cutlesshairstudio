@@ -14,8 +14,8 @@ const UNIFORM_URL = 'http://localhost:8788';
 const [CIBUBUR_ONLY, ALL_BRANCHES] = E2E_ANNOUNCEMENTS;
 
 /**
- * Pergeseran VERTIKAL yang terlihat (Layout Instability API, frame yang benar-benar tergambar) pada header, judul
- * halaman, atau kontainer judul, sejak halaman mulai dimuat. Pergeseran mendatar (pergantian font) tidak dihitung.
+ * Pergeseran VERTIKAL > 2 px yang terlihat (Layout Instability API, frame yang benar-benar tergambar) pada header,
+ * judul halaman, atau kontainer judul, sejak halaman mulai dimuat. Pergeseran mendatar (pergantian font) tidak dihitung.
  */
 async function verticalShifts(page: Page, path: string) {
   await page.addInitScript(() => {
@@ -28,7 +28,8 @@ async function verticalShifts(page: Page, path: string) {
         const h1 = document.querySelector('main h1');
         for (const s of e.sources) {
           const el = s.node instanceof Element ? s.node : s.node?.parentElement;
-          if (!el || Math.round(s.previousRect.y) === Math.round(s.currentRect.y)) continue;
+          // ≤ 2 px = pembulatan saat font Archivo menggantikan font cadangan (CI Linux), bukan bar pengumuman (26–52 px)
+          if (!el || Math.abs(s.previousRect.y - s.currentRect.y) <= 2) continue;
           if (el.closest('header') || (h1 && (el === h1 || el.contains(h1)))) w.__shifts.push(`${el.tagName}.${el.className} y${Math.round(s.previousRect.y)}→${Math.round(s.currentRect.y)}`);
         }
       }
