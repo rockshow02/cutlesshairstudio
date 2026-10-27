@@ -1,4 +1,5 @@
 import { useEffect, useRef, type KeyboardEvent } from 'react';
+import { createPortal } from 'react-dom';
 import type { ImageAsset } from '@/types';
 import { asset, assetSrcSet } from '@/lib/asset';
 import { Icon } from './Icon';
@@ -14,7 +15,9 @@ interface LightboxProps {
 
 /**
  * Lightbox sederhana: dialog modal, fokus ke tombol Tutup, Esc menutup, ←/→ berganti foto, Tab berputar di dalam
- * dialog, fokus kembali ke pemicu saat ditutup. Klik latar menutup.
+ * dialog, fokus kembali ke pemicu saat ditutup. Klik latar menutup. Dirender ke <body> (portal): di dalam section,
+ * `position: fixed` mengikuti induk yang ber-transform (animasi reveal) dan lapisannya kalah dari navbar & bar
+ * pengumuman, sehingga latar tidak menutup layar dan tombol Tutup tertutup bar pengumuman.
  */
 export function Lightbox({ images, index, onIndex, onClose, labels }: LightboxProps) {
   const dialogRef = useRef<HTMLDivElement>(null);
@@ -62,7 +65,7 @@ export function Lightbox({ images, index, onIndex, onClose, labels }: LightboxPr
   };
 
   if (!image) return null;
-  return (
+  return createPortal(
     <div
       ref={dialogRef}
       className={styles.backdrop}
@@ -96,6 +99,7 @@ export function Lightbox({ images, index, onIndex, onClose, labels }: LightboxPr
           </button>
         </>
       )}
-    </div>
+    </div>,
+    document.body,
   );
 }
