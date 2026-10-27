@@ -7,12 +7,13 @@ import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import { parse } from 'yaml';
-import { crossCheck, videosSchema, type ContentBundle, type VideosEntry } from '../src/content/schema';
+import { crossCheck, videosSchema, type VideosEntry } from '../src/content/schema';
 import { activeVideoItems, normalizeInstagramUrl } from '../src/content/instagram';
 import { videosCopy } from '../src/content/videos';
 import { buildVideos } from '../src/lib/contentTransforms';
 import { VideosView } from '../src/components/sections/Videos';
 import { homeBody } from '../scripts/vite-content-plugin';
+import { contentFixture } from './helpers/contentFixture';
 import { setMedia, validateCmsContent, type CmsField, type CmsMedia } from './helpers/pagesCms';
 
 const REEL = 'https://www.instagram.com/reel/ABC123xyz/';
@@ -146,44 +147,20 @@ describe('Video: Pages CMS & build', () => {
   });
 
   it('pemeriksaan launch: bagian aktif tanpa video aktif ditandai; mati tidak', () => {
-    const launch = (v: VideosEntry) => crossCheck({ ...minimalBundle(), videos: v } as unknown as ContentBundle).launch.filter((i) => i.file === 'videos.json');
+    const launch = (v: VideosEntry) => crossCheck(contentFixture({ videos: v })).launch.filter((i) => i.file === 'videos.json');
     expect(launch(videos({ items: [item({ isActive: false })] })).map((i) => i.where)).toEqual(['Tampilkan bagian Video']);
     expect(launch(videos())).toEqual([]);
     expect(launch(videos({ enabled: false, items: [] }))).toEqual([]);
   });
 
   it('HTML statis beranda: judul, keterangan & link video hanya bila bagian Video tampil', () => {
-    const on = homeBody({ ...minimalBundle(), videos: videos() } as unknown as ContentBundle);
+    const on = homeBody(contentFixture({ videos: videos() }));
     expect(on).toContain(`<p>Video</p><h2>Video uji</h2><ul><li><p>Pertama</p><a href="${REEL}">Tonton di Instagram</a></li><li><p>Kedua</p><a href="${POST}">Tonton di Instagram</a></li></ul>`);
     expect(on).not.toContain('Nonaktif');
     for (const off of [videos({ enabled: false }), videos({ items: [] })]) {
-      const html = homeBody({ ...minimalBundle(), videos: off } as unknown as ContentBundle);
+      const html = homeBody(contentFixture({ videos: off }));
       expect(html).not.toContain('Video uji');
       expect(html).not.toContain('instagram.com/reel');
     }
   });
 });
-
-/** Bundle minimal untuk crossCheck & homeBody */
-function minimalBundle() {
-  const everyDay = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'].map((day) => ({ day, openTime: '09:00', closeTime: '21:00', isClosed: false }));
-  return {
-    settings: { siteUrl: 'https://cutlesshairstudio.com', siteName: 'Cutless Uji', mainWhatsappNumber: '6281100000909', email: '', stats: {}, showProducts: false },
-    branches: [{ slug: 'bogor', name: 'Bogor', city: 'Bogor', province: 'Jawa Barat', whatsappNumber: '6281100000101', openingHours: everyDay, status: 'Aktif', order: 0 }],
-    pricing: [],
-    barbers: [],
-    gallery: [],
-    promos: [],
-    announcements: [],
-    testimonials: [],
-    products: [],
-    partners: { enabled: false, logos: [] },
-    services: [],
-    hero: { titleLines: ['Cut Less.'] },
-    about: {},
-    studio: {},
-    cta: {},
-    shoeCare: { enabled: false, branchSlug: 'bogor', services: [] },
-    faq: { enabled: false, title: 'FAQ', items: [] },
-  };
-}

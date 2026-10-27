@@ -1,18 +1,19 @@
 /** Galeri: foto untuk kolom foto berjalan (section Lokasi): toggle, titik fokus, srcset versi kecil. */
-import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { galleryCopy } from '../src/content/gallery';
 import { galleryItemSchema } from '../src/content/schema';
 import { buildGallery } from '../src/lib/contentTransforms';
 import type { GalleryEntry } from '../src/content/schema';
 
-const raw = JSON.parse(readFileSync('src/content/gallery.json', 'utf8')) as GalleryEntry[];
+// Data uji (bukan gallery.json asli: jumlah & isi foto diubah admin kapan saja)
+const raw = [1, 2, 3, 4, 5].map((n) =>
+  galleryItemSchema.parse({ image: `/uploads/gallery/foto-${n}.webp`, altText: `Foto galeri ${n}`, focalPoint: 'atas', showInMarquee: true, order: n * 10 }),
+) as GalleryEntry[];
 
 describe('galeri untuk kolom foto berjalan', () => {
-  it('bawaan: ikut berjalan & fokus atas; data sekarang punya kedua field', () => {
+  it('bawaan: ikut berjalan & fokus atas (isian lama tanpa kedua field)', () => {
     const parsed = galleryItemSchema.parse({ image: '/uploads/gallery/a.webp', altText: 'Fade' });
     expect(parsed).toMatchObject({ showInMarquee: true, focalPoint: 'atas' });
-    for (const g of raw) expect(g).toMatchObject({ showInMarquee: expect.any(Boolean), focalPoint: expect.stringMatching(/^(atas|tengah|bawah)$/) });
   });
 
   it('toggle & titik fokus diteruskan; item nonaktif tidak ikut; urutan sesuai order', () => {

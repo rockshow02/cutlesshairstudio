@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs';
 import { createElement } from 'react';
 import { describe, expect, it } from 'vitest';
 import { parse } from 'yaml';
-import { CONTENT_FILES, crossCheck, pricingItemSchema, serviceCardSchema, type ContentBundle, type PricingEntry, type ServiceCardEntry } from '../src/content/schema';
+import { crossCheck, pricingItemSchema, serviceCardSchema, type PricingEntry, type ServiceCardEntry } from '../src/content/schema';
 import { servicesCopy } from '../src/content/services';
 import { activeCategoryNames, branchDescription, fitDescription, homeDescription, joinList, META_MAX } from '../src/content/serviceSeo';
 import { buildServices } from '../src/lib/contentTransforms';
@@ -11,6 +11,7 @@ import { categoryFromHash } from '../src/lib/priceCategoryEvent';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { ServiceCardView } from '../src/components/sections/Services';
 import { setMedia, validateCmsContent, type CmsField, type CmsMedia } from './helpers/pagesCms';
+import { contentFixture } from './helpers/contentFixture';
 
 const price = (name: string, category: string, value: number, extra: Record<string, unknown> = {}): PricingEntry =>
   pricingItemSchema.parse({ name, category, price: value, ...extra });
@@ -58,9 +59,7 @@ describe('kartu Layanan tanpa harga', () => {
   });
 
   it('tidak ada lagi aturan launch "satu kartu per kategori"', () => {
-    const bundle = Object.fromEntries(
-      Object.entries(CONTENT_FILES).map(([f, s]) => [f.replace('.json', ''), s.parse(JSON.parse(readFileSync(`src/content/${f}`, 'utf8')))]),
-    ) as unknown as ContentBundle;
+    const bundle = contentFixture();
     expect(crossCheck({ ...bundle, pricing: PRICING, services: CARDS }).launch.filter((i) => i.file === 'services.json')).toEqual([]);
     expect(crossCheck({ ...bundle, pricing: PRICING, services: [] }).launch.filter((i) => i.file === 'services.json')).toEqual([]);
   });

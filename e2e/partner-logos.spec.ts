@@ -1,5 +1,5 @@
 import { expect, type Page } from '@playwright/test';
-import { E2E_PARTNER_LABEL, E2E_PARTNERS } from './fixtures/content';
+import { E2E_PARTNER_LABEL, E2E_PARTNERS, E2E_SITE_NAME } from './fixtures/content';
 import { expectNoHorizontalScroll, test } from './helpers';
 
 /**
@@ -7,7 +7,7 @@ import { expectNoHorizontalScroll, test } from './helpers';
  * Default config: "kurangi gerakan" → deret statis yang bisa digeser; blok kedua menguji animasi.
  */
 const fixtureBuild = !process.env.E2E_BASE_URL;
-const STRIP = 'section[aria-label="Partner Cutless Hair Studio"]';
+const STRIP = `section[aria-label="Partner ${E2E_SITE_NAME}"]`;
 
 async function openStrip(page: Page) {
   await page.goto('/', { waitUntil: 'domcontentloaded' });

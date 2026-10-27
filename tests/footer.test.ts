@@ -1,13 +1,13 @@
-/** Footer & kontak dinamis: tagline {cities} dari cabang aktif, email opsional, validasi Pengaturan Situs. */
-import { readFileSync } from 'node:fs';
+/** Footer & kontak dinamis: tagline {cities} dari cabang aktif, email opsional, validasi Pengaturan Situs (data uji). */
 import { describe, expect, it } from 'vitest';
-import { settingsSchema } from '../src/content/schema';
+import { CONTENT_FILES, settingsSchema } from '../src/content/schema';
 import { site } from '../src/content/site';
 import { buildBranches, buildSite } from '../src/lib/contentTransforms';
+import { rawFixture } from './helpers/contentFixture';
 
-const settings = settingsSchema.parse({ ...JSON.parse(readFileSync('src/content/settings.json', 'utf8')), defaultWaMessage: 'Halo {brand} cabang {branch}' });
-// Status dipaksa "Aktif": tes tidak boleh ikut berubah saat admin mengubah status cabang di CMS
-const branchesJson = JSON.parse(readFileSync('src/content/branches.json', 'utf8')).map((b: object) => ({ ...b, status: 'Aktif' }));
+// Data uji (bukan src/content/*.json): cabang Bogor & Cibubur, keduanya Aktif
+const settings = settingsSchema.parse({ ...rawFixture.settings, defaultWaMessage: 'Halo {brand} cabang {branch}' });
+const branchesJson = CONTENT_FILES['branches.json'].parse(rawFixture.branches.map((b) => ({ ...b, status: 'Aktif' })));
 const branches = buildBranches(branchesJson, settings.siteName);
 
 describe('footer dinamis', () => {
@@ -18,7 +18,7 @@ describe('footer dinamis', () => {
     // Tagline kosong → bawaan, tetap dari data cabang
     expect(buildSite({ ...settings, footerTagline: '' }, site, branches).footer.description).toBe('Hair studio di Bogor & Cibubur. Goodstyle, goodmood.');
     // Cabang "Segera Dibuka" tidak ikut disebut
-    const soon = buildBranches(branchesJson.map((b: { slug: string }) => (b.slug === 'cibubur' ? { ...b, status: 'Segera Dibuka' } : b)), settings.siteName);
+    const soon = buildBranches(branchesJson.map((b) => (b.slug === 'cibubur' ? { ...b, status: 'Segera Dibuka' as const } : b)), settings.siteName);
     expect(buildSite(settings, site, soon).footer.description).toBe('Hair studio di Bogor. Goodstyle, goodmood.');
   });
 
@@ -35,7 +35,7 @@ describe('footer dinamis', () => {
   });
 
   it('validasi: email harus valid bila diisi, tagline maks. 160 karakter', () => {
-    const base = JSON.parse(readFileSync('src/content/settings.json', 'utf8'));
+    const base = rawFixture.settings;
     const ok = (extra: Record<string, unknown>) => settingsSchema.safeParse({ ...base, defaultWaMessage: '', ...extra }).success;
     expect(ok({ email: '' })).toBe(true);
     expect(ok({ email: 'halo@cutlesshairstudio.com' })).toBe(true);
