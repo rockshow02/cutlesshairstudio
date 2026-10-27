@@ -1,6 +1,4 @@
 import { useLayoutEffect, useRef, useState } from 'react';
-import { getAnnouncements } from '@/lib/content';
-import { useContent } from '@/lib/useContent';
 import { useSite } from '@/lib/SiteContext';
 import { useBranch } from '@/lib/BranchContext';
 import { joinIndonesian } from '@/lib/contentTransforms';
@@ -22,23 +20,23 @@ function isDismissed(a: Announcement): boolean {
   }
 }
 
+/** Cabang dipilih → pengumuman semua cabang + cabang itu; belum memilih → semua (diberi nama cabang) */
+const appliesTo = (a: Announcement, branchSlug?: string) => !branchSlug || a.branchSlugs.length === 0 || a.branchSlugs.includes(branchSlug);
+
 /**
  * Bar tipis di atas navbar (fixed, lapisan z-index navbar).
  * Tingginya ditulis ke CSS var --announce-h sehingga navbar, hero, dan offset anchor
  * otomatis bergeser: tidak ada konten yang tertutup.
+ * Data dari BranchContext (sudah dimuat SiteShell sebelum halaman dirender), bukan dimuat lagi secara async: bar
+ * ikut render pertama bersama navbar & hero, dan tingginya ditulis sebelum paint → hero tidak turun saat dimuat.
  */
 export function AnnouncementBar() {
-  const { effective } = useBranch();
-  // Cabang dipilih → pengumuman semua cabang + cabang itu; belum memilih → semua (diberi nama cabang)
-  const state = useContent(() => getAnnouncements(effective?.slug), [effective?.slug]);
+  const { effective, announcements } = useBranch();
   const { site } = useSite();
   const [dismissed, setDismissed] = useState<string[]>([]);
   const ref = useRef<HTMLDivElement>(null);
 
-  const current =
-    state.status === 'success'
-      ? state.data.find((a) => !dismissed.includes(a.id) && !isDismissed(a))
-      : undefined;
+  const current = announcements.find((a) => appliesTo(a, effective?.slug) && !dismissed.includes(a.id) && !isDismissed(a));
 
   // Sinkronkan tinggi bar ke CSS variable (sebelum paint agar tidak ada lompatan layout)
   useLayoutEffect(() => {
