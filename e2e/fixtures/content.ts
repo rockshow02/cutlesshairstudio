@@ -168,14 +168,10 @@ export const E2E_PRICING = [
 
 /** branches.json asli → cabang uji menimpa cabang dengan slug sama (field lain, mis. alamat & foto, tetap), sisanya utuh */
 function fixtureBranches(real: unknown): Json[] {
+  // Hanya cabang uji: cabang yang ditambah admin di CMS tidak ikut. Field tampilan lain (alamat, foto, peta) boleh
+  // dari cabang asli dengan slug sama; tes tidak memeriksa isinya.
   const list = Array.isArray(real) ? (real as Json[]) : [];
-  const fixtures = Object.values(E2E_BRANCHES) as unknown as Json[];
-  const merged = list.map((b) => {
-    const f = fixtures.find((x) => x.slug === b.slug);
-    return f ? { ...b, ...f } : b;
-  });
-  for (const f of fixtures) if (!merged.some((b) => b.slug === f.slug)) merged.push({ ...f });
-  return merged;
+  return (Object.values(E2E_BRANCHES) as unknown as Json[]).map((f) => ({ ...(list.find((b) => b.slug === f.slug) ?? {}), ...f }));
 }
 
 /**
@@ -200,6 +196,38 @@ export const E2E_FAQ = {
   hidden: ['Pertanyaan nonaktif uji?', 'Pertanyaan tanpa jawaban uji?'],
 } as const;
 
+/**
+ * Video uji: aktif di build bawaan (2 tampil, urut "Urutan"; link m./tanpa www./reels/?igsh=... dirapikan; 1 nonaktif
+ * tersembunyi), mati di varian uniform (bagian tidak ada).
+ */
+export const E2E_VIDEOS = {
+  title: 'Video Uji',
+  shown: [
+    { url: 'https://www.instagram.com/reel/UjiReelSatu/', caption: 'Video uji satu' },
+    { url: 'https://www.instagram.com/p/UjiPostDua/', caption: 'Video uji dua' },
+  ],
+  hidden: 'Video nonaktif uji',
+} as const;
+
+/** Nama usaha (Pages CMS → Pengaturan Situs → Nama usaha) */
+export const E2E_SITE_NAME = 'Cutless Hair Studio';
+
+/** Kartu Layanan uji (kategori sama dengan Daftar Harga uji → tombol "Lihat harga") */
+const E2E_SERVICES = [
+  { name: 'Haircut', description: 'Potong rambut uji.', icon: 'scissors', pricingCategory: 'Haircut' },
+  { name: 'Coloring', description: 'Pewarnaan rambut uji.', icon: 'color', pricingCategory: 'Special Treatment' },
+  { name: 'Woman Haircut', description: 'Potong rambut wanita uji.', icon: 'scissors', pricingCategory: 'Woman Haircut & Treatment' },
+];
+
+/** Pengumuman uji (varian uniform): khusus Cibubur lebih dulu, lalu untuk semua cabang */
+export const E2E_ANNOUNCEMENTS = [
+  { message: 'Pengumuman uji khusus Cibubur.', type: 'Info', branchSlugs: ['cibubur'] },
+  { message: 'Pengumuman uji untuk semua cabang.', type: 'Info' },
+] as const;
+
+/** Label tombol utama hero (Pages CMS → Hero bisa mengubahnya kapan saja) */
+export const E2E_HERO_CTA = 'Booking Hero Uji';
+
 /** Daftar Harga tanpa harga per cabang & "Tersedia di cabang" (varian uniform) */
 const uniformPricing = () => E2E_PRICING.map(({ branchPrices: _bp, branchSlugs: _bs, ...p }: Json) => p);
 
@@ -221,7 +249,29 @@ export function applyE2EFixtures(file: string, data: unknown, variant?: string):
       ],
     };
   }
-  if (file === 'settings.json') return { ...(data as Json), showProducts: variant === 'uniform' };
+  if (file === 'videos.json') {
+    return {
+      enabled: variant !== 'uniform',
+      kicker: 'Video',
+      title: E2E_VIDEOS.title,
+      items: [
+        { url: 'https://m.instagram.com/p/UjiPostDua?igsh=uji123', image: existingPhoto(), caption: E2E_VIDEOS.shown[1].caption, isActive: true, order: 20 },
+        { url: 'https://instagram.com/reels/UjiReelSatu/', image: existingPhoto(), caption: E2E_VIDEOS.shown[0].caption, isActive: true, order: 10 },
+        { url: 'https://www.instagram.com/reel/UjiNonaktif/', image: existingPhoto(), caption: E2E_VIDEOS.hidden, isActive: false, order: 30 },
+      ],
+    };
+  }
+  if (file === 'hero.json') return { ...(data as Json), primaryCtaLabel: E2E_HERO_CTA };
+  if (file === 'settings.json') {
+    // Toggle & nama usaha tetap (tata letak beranda & selector tidak ikut berubah saat admin mengubahnya di CMS)
+    return { ...(data as Json), siteName: E2E_SITE_NAME, showProducts: variant === 'uniform', showTestimonials: false, showBeforeAfter: false, enablePreloader: true, preloaderVideo: '' };
+  }
+  // Promo bertanggal (tampil/tidak tergantung jam) → tidak ada di build uji. Pengumuman tanpa tanggal hanya di varian
+  // uniform (e2e/announcement.spec.ts); build bawaan tanpa bar pengumuman.
+  if (file === 'promos.json') return [];
+  if (file === 'announcements.json') return variant === 'uniform' ? E2E_ANNOUNCEMENTS.map((a) => ({ ...a, isActive: true })) : [];
+  if (file === 'gallery.json') return [1, 2, 3, 4].map((n) => ({ image: existingPhoto(), altText: `Foto galeri uji ${n}`, caption: `Galeri uji ${n}`, styleCategory: 'Lainnya', focalPoint: 'atas', showInMarquee: true, isActive: true, order: n * 10 }));
+  if (file === 'services.json') return E2E_SERVICES.map((c, i) => ({ ...c, isActive: true, order: (i + 1) * 10 }));
   if (file === 'products.json') return E2E_PRODUCTS.map((p, i) => ({ ...p, image: existingPhoto(), inStock: true, isActive: true, order: (i + 1) * 10 }));
   if (file === 'pricing.json') return (variant === 'uniform' ? uniformPricing() : [...E2E_PRICING]).map((p, i) => ({ isActive: true, ...p, order: (i + 1) * 10 }));
   if (file === 'partners.json') {

@@ -31,7 +31,12 @@ async function settled(page: Page, id: string, from?: number) {
   return page.evaluate((sectionId) => {
     const el = document.getElementById(sectionId)!;
     const top = el.getBoundingClientRect().top;
-    const header = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--header-offset')) || 80;
+    // --header-offset = calc(tinggi navbar + bar pengumuman): ukur lewat elemen bantu (parseFloat tidak bisa membaca calc)
+    const probe = document.createElement('div');
+    probe.style.cssText = 'position:absolute;visibility:hidden;height:var(--header-offset)';
+    document.body.appendChild(probe);
+    const header = probe.getBoundingClientRect().height;
+    probe.remove();
     const atBottom = Math.ceil(window.scrollY + innerHeight) >= document.documentElement.scrollHeight - 2;
     return { top: Math.round(top), header, atBottom, lenis: document.documentElement.classList.contains('lenis') };
   }, id);

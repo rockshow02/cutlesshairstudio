@@ -1,0 +1,25 @@
+{
+  "enabled": true,
+  "kicker": "Video",
+  "title": "Lihat prosesnya langsung.",
+  "items": [
+    {
+      "url": "https://www.instagram.com/reel/De57X-CTezX/?utm_source=ig_web_copy_link&xtok=MzRlODBiNWFlZA==&srtk=MzRlODBiNWFlZA==",
+      "image": "/uploads/video-covers/img3998.webp",
+      "isActive": true,
+      "order": 10
+    },
+    {
+      "url": "https://www.instagram.com/reel/De07J4Dzmu3/?utm_source=ig_web_copy_link&xtok=MzRlODBiNWFlZA==&srtk=MzRlODBiNWFlZA==",
+      "image": "/uploads/video-covers/agus.webp",
+      "isActive": true,
+      "order": 24
+    },
+    {
+      "url": "https://www.instagram.com/reel/DerGQQxy4YO/?utm_source=ig_web_copy_link",
+      "image": "/uploads/video-covers/soemardi-erte.webp",
+      "isActive": true,
+      "order": 26
+    }
+  ]
+}

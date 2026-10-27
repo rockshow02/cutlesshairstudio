@@ -1,5 +1,5 @@
 {
-  "enabled": false,
+  "enabled": true,
   "kicker": "FAQ",
   "title": "Pertanyaan yang sering ditanyakan",
   "items": [
@@ -47,26 +47,31 @@
     },
     {
       "question": "Apakah bisa datang langsung tanpa booking (walk-in)?",
+      "answer": "Bisa. Cutless Hair Studio menerima pelanggan walk-in di kedua cabang. Agar tidak perlu menunggu, terutama di akhir pekan, kamu bisa booking lebih dulu lewat WhatsApp.",
       "isActive": false,
       "order": 80
     },
     {
       "question": "Apakah tersedia tempat parkir?",
+      "answer": "Tersedia. Cabang Bogor Bantarjati dan Cibubur sama-sama memiliki area parkir untuk motor dan mobil.",
       "isActive": false,
       "order": 90
     },
     {
       "question": "Metode pembayaran apa saja yang diterima?",
+      "answer": "Kami menerima pembayaran tunai, QRIS, transfer bank, dan kartu debit/kredit di kedua cabang.",
       "isActive": false,
       "order": 100
     },
     {
       "question": "Berapa lama durasi potong rambut?",
+      "answer": "Potong rambut membutuhkan waktu sekitar 45 menit. Durasi bisa lebih lama untuk layanan tambahan seperti treatment atau coloring.",
       "isActive": false,
       "order": 110
     },
     {
       "question": "Apakah ada layanan potong rambut anak?",
+      "answer": "Ada. Cutless Hair Studio juga melayani potong rambut anak. Harganya menyesuaikan, silakan tanyakan langsung lewat WhatsApp cabang terdekat.",
       "isActive": false,
       "order": 120
     }

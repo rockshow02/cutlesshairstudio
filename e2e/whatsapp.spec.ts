@@ -1,5 +1,5 @@
 import { expect } from '@playwright/test';
-import { E2E_BARBERS, E2E_BRANCHES } from './fixtures/content';
+import { E2E_BARBERS, E2E_BRANCHES, E2E_HERO_CTA } from './fixtures/content';
 import { expectNoHorizontalScroll, parseWa, test } from './helpers';
 
 /**
@@ -24,7 +24,7 @@ const waLinks = (page: import('@playwright/test').Page) =>
 test('belum memilih cabang: tombol hero → pemilih cabang → WhatsApp cabang itu dengan pesan menyebut cabang', async ({ page, context, apiCalls }) => {
   test.skip(!fixtureBuild, 'butuh build E2E (data uji)');
   await page.goto('/', { waitUntil: 'domcontentloaded' });
-  const hero = page.getByRole('link', { name: 'Booking via WhatsApp' }).first();
+  const hero = page.getByRole('link', { name: E2E_HERO_CTA }).first();
   await expect(hero).toBeVisible();
   await hero.click();
   const picker = page.getByRole('dialog', { name: 'Pilih cabang' });

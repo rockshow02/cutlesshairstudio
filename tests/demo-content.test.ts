@@ -4,18 +4,17 @@ import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { parse } from 'yaml';
-import { CONTENT_FILES, crossCheck, partnersSchema, shoeCareSchema, type ContentBundle } from '../src/content/schema';
+import { crossCheck, partnersSchema, shoeCareSchema, type ContentBundle } from '../src/content/schema';
 import { shoeCareCopy } from '../src/content/shoeCare';
 import { buildPartnerLogos, buildShoeCare } from '../src/lib/contentTransforms';
 import { PartnerStrip } from '../src/components/sections/PartnerLogos';
 import { ShoeCarePageView } from '../src/components/pages/ShoeCarePage';
 import type { Branch } from '../src/types';
 import type { CmsField } from './helpers/pagesCms';
+import { contentFixture } from './helpers/contentFixture';
 
-// Struktur bundle dari file konten; bagian yang diuji (shoeCare, partners) selalu data uji sendiri
-const base = Object.fromEntries(
-  Object.entries(CONTENT_FILES).map(([file, schema]) => [file.replace('.json', ''), schema.parse(JSON.parse(readFileSync(`src/content/${file}`, 'utf8')))]),
-) as unknown as ContentBundle;
+// Bundle data uji (bukan file konten asli); bagian yang diuji (shoeCare, partners) ditimpa per tes
+const base = contentFixture();
 const slug = base.branches[0].slug;
 const shoe = (extra: Record<string, unknown> = {}) =>
   shoeCareSchema.parse({

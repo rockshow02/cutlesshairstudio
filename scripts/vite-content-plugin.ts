@@ -27,6 +27,8 @@ import { SHOE_CARE_PATH, shoeCareDescription, shoeCareImage, shoeCareRedirects, 
 import { itemsAt, priceAt, priceRangeAt, samePricesEverywhere } from '../src/content/branchPricing';
 import { PRODUCTS_PATH, productsRedirects, productsVisible } from '../src/content/productsSeo';
 import { activeFaqItems, faqPageJsonLd } from '../src/content/faqSeo';
+import { activeVideoItems } from '../src/content/instagram';
+import { videosCopy } from '../src/content/videos';
 import { PRICE_CATEGORIES } from '../src/content/priceCategories';
 import { pricingCopy } from '../src/content/pricing';
 import { formatPhoneDisplay, formatThousandsK, formatTime } from '../src/lib/format';
@@ -466,7 +468,8 @@ export function startingPricesText(bundle: Pick<ContentBundle, 'pricing' | 'bran
 const shownBranches = (bundle: Pick<ContentBundle, 'branches'>) => bundle.branches.filter((b) => b.status !== 'Tutup Sementara');
 
 /**
- * Ringkasan statis beranda: hero, Daftar Harga (cabang Aktif pertama, seperti tampilan awal), teaser Cuci Sepatu, FAQ,
+ * Ringkasan statis beranda: hero, Daftar Harga (cabang Aktif pertama, seperti tampilan awal), teaser Cuci Sepatu, Video
+ * (judul & keterangan, hanya bila bagian Video tampil), FAQ,
  * Lokasi (tab cabang + kartu cabang pertama yang tampil awal), dan footer (tagline, cabang, kontak).
  */
 export function homeBody(bundle: ContentBundle): string {
@@ -476,6 +479,7 @@ export function homeBody(bundle: ContentBundle): string {
   const active = branches.filter((b) => b.status === 'Aktif');
   const uniform = samePricesEverywhere(bundle.pricing, active.map((b) => b.slug));
   const faq = activeFaqItems(bundle.faq);
+  const videos = activeVideoItems(bundle.videos);
   const phone = isWa(settings.mainWhatsappNumber) ? formatPhoneDisplay(settings.mainWhatsappNumber) : '';
   const fill = (t: string) => t.replaceAll('{cities}', cities);
   return [
@@ -485,6 +489,9 @@ export function homeBody(bundle: ContentBundle): string {
     hero.subtitle ? `<p>${esc(hero.subtitle)}</p>` : '',
     active[0] ? `<h2>${esc(pricingCopy.heading.title)}</h2>${branchPriceList(active[0], bundle, uniform ? branchesCopy.labels.priceAllBranches : undefined)}` : '',
     shoeTeaser(bundle),
+    videos.length
+      ? `<p>${esc(bundle.videos.kicker?.trim() || videosCopy.defaultKicker)}</p><h2>${esc(bundle.videos.title)}</h2><ul>${videos.map((v) => `<li>${v.caption ? `<p>${esc(v.caption)}</p>` : ''}<a href="${esc(v.url)}">${esc(videosCopy.watchOnInstagram)}</a></li>`).join('')}</ul>`
+      : '',
     faq.length ? `<h2>${esc(bundle.faq.title)}</h2><dl>${faq.map((q) => `<dt>${esc(q.question)}</dt><dd>${esc(q.answer)}</dd>`).join('')}</dl>` : '',
     branches[0]
       ? `<h2>${esc(branchesCopy.heading.title)}</h2><ul>${branches.map((b) => `<li><a href="/cabang/${b.slug}/">${esc(b.name)}</a></li>`).join('')}</ul>${locationCard(branches[0], 'h3')}`

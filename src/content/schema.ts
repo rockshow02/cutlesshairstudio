@@ -13,6 +13,7 @@ import { z } from 'zod';
 import { parseWIB } from '../lib/dates';
 import { PRICE_CATEGORIES } from './priceCategories';
 import { itemsAt } from './branchPricing';
+import { INSTAGRAM_POST_URL, instagramUrlProblem, normalizeInstagramUrl } from './instagram';
 import type { IconName } from '../types/common';
 
 /* ---------- Helper ---------- */
@@ -565,6 +566,43 @@ export const faqSchema = z.object({
     .default([]),
 });
 
+/* ---------- Video (Pages CMS → Video) ---------- */
+
+/** Link Reel/postingan Instagram (juga tanpa www., m., /reels/); dirapikan ke https://www.instagram.com/reel/<kode>/ */
+const instagramPostUrl = z
+  .string({ error: 'link Instagram wajib diisi' })
+  .trim()
+  .min(1, { message: 'link Instagram wajib diisi', abort: true })
+  .superRefine((v, ctx) => {
+    if (!INSTAGRAM_POST_URL.test(normalizeInstagramUrl(v))) ctx.addIssue({ code: 'custom', message: instagramUrlProblem(v) });
+  })
+  .transform(normalizeInstagramUrl);
+
+/**
+ * Bagian Video beranda: kartu foto sampul (facade); embed Instagram baru dimuat saat kartu diklik. Daftar sengaja tidak
+ * wajib (lihat aboutParagraphs); bagian tidak dirender bila mati atau belum ada video aktif.
+ */
+export const videosSchema = z.object({
+  /** false = bagian Video tidak ada (juga di HTML statis) */
+  enabled: z.boolean().default(false),
+  kicker: optionalText(40),
+  title: requiredText(80, 'judul bagian Video'),
+  items: z
+    .array(
+      z.object({
+        url: instagramPostUrl,
+        /** Foto sampul 9:16 (screenshot frame terbaik) */
+        image: imagePath,
+        /** Keterangan di bawah kartu + teks alternatif foto sampul */
+        caption: optionalText(120),
+        isActive,
+        order,
+      }),
+    )
+    .max(6, 'maksimal 6 video')
+    .default([]),
+});
+
 /* ---------- CTA penutup ("Kursimu sudah siap.") ---------- */
 
 export const ctaSchema = z
@@ -600,6 +638,7 @@ export const CONTENT_FILES = {
   'shoeCare.json': shoeCareSchema,
   'services.json': z.array(serviceCardSchema),
   'faq.json': faqSchema,
+  'videos.json': videosSchema,
 } as const;
 
 /* ---------- Tipe hasil (dipakai src/lib/content.ts) ---------- */
@@ -622,6 +661,7 @@ export type PartnersEntry = z.output<typeof partnersSchema>;
 export type ShoeCareEntry = z.output<typeof shoeCareSchema>;
 export type ServiceCardEntry = z.output<typeof serviceCardSchema>;
 export type FaqEntry = z.output<typeof faqSchema>;
+export type VideosEntry = z.output<typeof videosSchema>;
 
 /* ---------- Pemeriksaan lintas file ---------- */
 
@@ -643,6 +683,7 @@ export interface ContentBundle {
   shoeCare: ShoeCareEntry;
   services: ServiceCardEntry[];
   faq: FaqEntry;
+  videos: VideosEntry;
 }
 
 export interface ContentIssue {
@@ -720,6 +761,7 @@ export function crossCheck(c: ContentBundle): { errors: ContentIssue[]; launch: 
     ...(c.settings.showProducts ? [{ file: 'products.json', entries: shown(c.products) }] : []),
     ...(c.shoeCare.enabled ? [{ file: 'shoeCare.json', entries: [c.shoeCare as unknown as Record<string, unknown>] }] : []),
     ...(c.faq.enabled ? [{ file: 'faq.json', entries: shown(c.faq.items) }] : []),
+    ...(c.videos?.enabled ? [{ file: 'videos.json', entries: shown(c.videos.items) }] : []),
   ];
 
   for (const { file, entries } of displayed) {
@@ -763,6 +805,9 @@ export function crossCheck(c: ContentBundle): { errors: ContentIssue[]; launch: 
       if (q.isActive !== false && !q.answer?.trim()) launch.push({ file: 'faq.json', where: `pertanyaan ${i + 1} "${q.question.slice(0, 50)}"`, message: 'aktif tetapi jawabannya kosong (isi jawaban atau matikan Tampilkan)' });
     });
     if (!shown(c.faq.items).some((q) => q.answer?.trim())) launch.push({ file: 'faq.json', where: 'Tampilkan FAQ', message: 'aktif tetapi belum ada pertanyaan aktif yang berjawaban' });
+  }
+  if (c.videos?.enabled && shown(c.videos.items).length === 0) {
+    launch.push({ file: 'videos.json', where: 'Tampilkan bagian Video', message: 'aktif tetapi belum ada video yang ditampilkan; tambah video atau matikan' });
   }
   if (c.shoeCare.enabled && c.shoeCare.isDemo) launch.push({ file: 'shoeCare.json', where: `Partner Cuci Sepatu "${c.shoeCare.name}"`, message: DEMO });
   if (c.partners.enabled !== false) {

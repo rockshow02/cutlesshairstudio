@@ -7,6 +7,7 @@ import { parse } from 'yaml';
 import { partnersSchema, type PartnersEntry } from '../src/content/schema';
 import { buildPartnerLogos } from '../src/lib/contentTransforms';
 import { PartnerStrip } from '../src/components/sections/PartnerLogos';
+import { rawFixture } from './helpers/contentFixture';
 import { setMedia, validateCmsContent, type CmsField, type CmsMedia } from './helpers/pagesCms';
 
 const logo = (name: string, extra: Partial<PartnersEntry['logos'][number]> = {}) => ({
@@ -70,6 +71,8 @@ describe('CMS Logo Partner', () => {
   const config = parse(readFileSync('.pages.yml', 'utf8')) as { media: CmsMedia[]; content: { name: string; path: string; fields: CmsField[] }[] };
   const cms = config.content.find((c) => c.path === 'src/content/partners.json')!;
   const raw = JSON.parse(readFileSync('src/content/partners.json', 'utf8'));
+  // Isian tidak valid diuji pada data uji (partners.json asli diubah admin kapan saja)
+  const base = { ...rawFixture.partners, label: 'Partner uji' };
 
   it('koleksi "Logo Partner": batas karakter, folder media, isi saat ini lolos form', () => {
     expect(cms.name).toBe('partners');
@@ -86,15 +89,15 @@ describe('CMS Logo Partner', () => {
   it('form & Zod menolak isian yang tidak valid', () => {
     setMedia(config.media);
     const ok = logo('Brand Uji', { url: 'https://contoh.id' });
-    expect(validateCmsContent(cms, { ...raw, logos: [ok] })).toEqual([]);
-    expect(validateCmsContent(cms, { ...raw, logos: [{ name: 'Tanpa Logo' }] })).toEqual([]);
-    expect(validateCmsContent(cms, { ...raw, logos: [{ ...ok, url: 'http://contoh.id' }] })[0]).toMatch(/url/);
-    expect(validateCmsContent(cms, { ...raw, logos: [{ ...ok, name: 'x'.repeat(61) }] })[0]).toMatch(/lebih dari 60/);
-    expect(validateCmsContent(cms, { ...raw, label: 'x'.repeat(41) })[0]).toMatch(/lebih dari 40/);
-    expect(validateCmsContent(cms, { ...raw, logos: [{ ...ok, logo: '/uploads/gallery/a.webp' }] })[0]).toMatch(/partner-logos/);
-    expect(partnersSchema.safeParse({ ...raw, logos: [{ ...ok, url: 'http://contoh.id' }] }).success).toBe(false);
-    expect(partnersSchema.safeParse({ ...raw, logos: [{ ...ok, name: '' }] }).success).toBe(false);
-    expect(partnersSchema.safeParse({ ...raw, label: 'x'.repeat(41) }).success).toBe(false);
+    expect(validateCmsContent(cms, { ...base, logos: [ok] })).toEqual([]);
+    expect(validateCmsContent(cms, { ...base, logos: [{ name: 'Tanpa Logo' }] })).toEqual([]);
+    expect(validateCmsContent(cms, { ...base, logos: [{ ...ok, url: 'http://contoh.id' }] })[0]).toMatch(/url/);
+    expect(validateCmsContent(cms, { ...base, logos: [{ ...ok, name: 'x'.repeat(61) }] })[0]).toMatch(/lebih dari 60/);
+    expect(validateCmsContent(cms, { ...base, label: 'x'.repeat(41) })[0]).toMatch(/lebih dari 40/);
+    expect(validateCmsContent(cms, { ...base, logos: [{ ...ok, logo: '/uploads/gallery/a.webp' }] })[0]).toMatch(/partner-logos/);
+    expect(partnersSchema.safeParse({ ...base, logos: [{ ...ok, url: 'http://contoh.id' }] }).success).toBe(false);
+    expect(partnersSchema.safeParse({ ...base, logos: [{ ...ok, name: '' }] }).success).toBe(false);
+    expect(partnersSchema.safeParse({ ...base, label: 'x'.repeat(41) }).success).toBe(false);
     expect(partnersSchema.safeParse({ logos: [{ name: 'Tanpa Logo' }] }).success).toBe(true);
   });
 });

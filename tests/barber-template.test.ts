@@ -7,6 +7,7 @@ import { site } from '../src/content/site';
 import { buildSite } from '../src/lib/contentTransforms';
 import { bookingMessage } from '../src/lib/whatsapp';
 import { setMedia, validateCmsContent, type CmsField, type CmsMedia } from './helpers/pagesCms';
+import { rawFixture } from './helpers/contentFixture';
 
 const DEFAULT = [
   'Halo Kak! Untuk reservasi di {brand} cabang {branch}, mohon isi formulir berikut ya:',
@@ -20,7 +21,8 @@ const DEFAULT = [
   'Catatan: Toleransi keterlambatan maks. 15 menit. Lewat dari itu, slot dialihkan ke antrean berikutnya. Terima kasih telah memilih {brand}!',
 ].join('\n');
 
-const rawSettings = JSON.parse(readFileSync('src/content/settings.json', 'utf8'));
+// Data uji (bukan settings.json asli): template di CMS bisa diubah admin kapan saja
+const rawSettings = rawFixture.settings;
 const settings = settingsSchema.parse(rawSettings);
 const siteWith = (barberWaMessage: string | null) => buildSite({ ...settings, barberWaMessage }, site, []);
 
@@ -56,13 +58,12 @@ describe('template pesan booking kapster', () => {
     expect(ok('')).toBe(true);
   });
 
-  it('pesan terisi nama barber & cabang terpanjang yang ada tetap ≤ 500 karakter', () => {
-    const barbers = JSON.parse(readFileSync('src/content/barbers.json', 'utf8')) as { name: string }[];
-    const branches = JSON.parse(readFileSync('src/content/branches.json', 'utf8')) as { name: string }[];
-    const longest = (xs: { name: string }[]) => xs.map((x) => x.name).sort((a, b) => b.length - a.length)[0] ?? '';
-    const s = siteWith(settings.barberWaMessage ?? null);
-    const msg = bookingMessage(s, 'barber', { barber: longest(barbers), branch: longest(branches) });
-    expect(msg).toContain(`Kapster Pilihan: ${longest(barbers)}`);
+  // Batas 500 hanya untuk field template; pesan terisi boleh lebih panjang (wa.me tidak membatasi). Nama uji realistis.
+  it('template bawaan terisi nama barber & cabang yang panjang (data uji) tetap ringkas, ≤ 500 karakter', () => {
+    const barber = 'Muhammad Rizky Akbar';
+    const branch = 'Bogor Bantarjati Utara';
+    const msg = bookingMessage(siteWith(DEFAULT), 'barber', { barber, branch });
+    expect(msg).toContain(`Kapster Pilihan: ${barber}`);
     expect(msg.length).toBeLessThanOrEqual(500);
   });
 
@@ -73,7 +74,9 @@ describe('template pesan booking kapster', () => {
     expect(f).toMatchObject({ label: 'Template pesan booking kapster', type: 'text' });
     expect(f.options?.maxlength).toBe(500);
     setMedia(config.media);
-    expect(validateCmsContent(cms, rawSettings)).toEqual([]);
+    // Isi settings.json saat ini (apa pun yang diisi admin) harus bisa disimpan form
+    const current = JSON.parse(readFileSync('src/content/settings.json', 'utf8'));
+    expect(validateCmsContent(cms, current)).toEqual([]);
     expect(validateCmsContent(cms, { ...rawSettings, barberWaMessage: 'Halo {nama}' })[0]).toMatch(/barberWaMessage/);
     expect(validateCmsContent(cms, { ...rawSettings, barberWaMessage: DEFAULT })).toEqual([]);
   });
