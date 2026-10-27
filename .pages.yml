@@ -137,7 +137,7 @@ content:
         label: Kota
         type: string
         required: true
-        description: "Dipakai untuk pengelompokan di pemilih cabang, mis. Bogor. Maksimal 60 karakter."
+        description: "Nama kota/kabupaten tanpa kata Kota, mis. Depok atau Bogor. Dipakai untuk pengelompokan di pemilih cabang, teks \"Hair studio di …\", dan Google (bila Alamat lengkap tidak menyebut Kota …). Maksimal 60 karakter."
         options:
           maxlength: 60
       - name: province
@@ -146,13 +146,20 @@ content:
         required: true
         options:
           maxlength: 60
-        description: Maksimal 60 karakter.
+        description: "Mis. Jawa Barat. Maksimal 60 karakter."
       - name: address
         label: Alamat lengkap
         type: text
         options:
           maxlength: 300
-        description: Maksimal 300 karakter.
+        description: "Tampil apa adanya di website. Isi jalan + kelurahan + kecamatan, mis. Jl. Alternatif Cibubur No.87, Harjamukti, Kec. Cimanggis; boleh ditambah kota, provinsi & kode pos di akhir (mis. …, Kota Depok, Jawa Barat 16454): untuk Google bagian itu dipisahkan otomatis. Maksimal 300 karakter."
+      - name: postalCode
+        label: Kode pos
+        type: string
+        description: "5 digit angka, mis. 16454. Untuk Google (alamat cabang). Kosong = diambil dari 5 digit di akhir Alamat lengkap, bila ada."
+        pattern:
+          regex: '^\s*(\d{5})?\s*$'
+          message: "Kode pos harus 5 digit angka, mis. 16454"
       - name: googleMapsUrl
         label: Link Google Maps
         type: string

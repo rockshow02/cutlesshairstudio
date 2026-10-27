@@ -75,7 +75,11 @@ Semua alamat, jam buka, dan nomor WhatsApp booking ada di menu **Cabang**, satu 
 **Menambah cabang:**
 1. Klik **Cabang** → **Add an entry**.
 2. **Kode URL (slug)**: huruf kecil dan strip, mis. `depok-margonda`. Menjadi alamat halaman `/cabang/depok-margonda/`. **Jangan diubah setelah tayang**, karena barber, harga, dan promo menautkan cabang lewat kode ini.
-3. Isi **Nama cabang**, **Kota**, **Provinsi**, **Alamat lengkap**, **Link Google Maps**.
+3. Isi **Nama cabang**, **Kota**, **Provinsi**, **Alamat lengkap**, **Kode pos**, **Link Google Maps**. Contoh cabang Cibubur:
+   - **Alamat lengkap**: `Jl. Alternatif Cibubur No.87, Harjamukti, Kec. Cimanggis` (jalan + kelurahan + kecamatan). Tampil apa adanya di website. Boleh juga ditulis lengkap sampai `…, Kota Depok, Jawa Barat 16454`: untuk Google, kota, provinsi, dan kode pos di akhir alamat dipisahkan otomatis.
+   - **Kota**: `Depok` (tanpa kata *Kota*). Kolom ini juga dipakai untuk pengelompokan di pemilih cabang dan teks *Hair studio di …*.
+   - **Provinsi**: `Jawa Barat`.
+   - **Kode pos**: `16454` (5 digit angka, opsional). Untuk data alamat di Google. Kosong = diambil dari 5 digit di akhir Alamat lengkap, bila ada.
 4. **Latitude / Longitude** (disarankan): buka Google Maps → klik kanan titik lokasi → klik angka koordinat paling atas (otomatis tersalin), mis. `-6.5717, 106.8061`. Tempel angka pertama ke Latitude dan angka kedua ke Longitude. Dipakai untuk tombol **Cabang terdekat** dan peta.
 5. **Nomor WhatsApp cabang** *(wajib)*: format `628xxxxxxxxxx`. Semua booking cabang ini masuk ke nomor ini.
 6. **Zona waktu**: WIB untuk Jawa/Sumatra, WITA untuk Bali/Kalimantan Timur/Sulawesi, WIT untuk Papua/Maluku.
@@ -474,6 +478,7 @@ Form Pages CMS menolak isian yang melebihi batas, dan website memeriksa batas ya
 | Cabang | Kota | 60 | wajib |
 | Cabang | Provinsi | 60 | wajib |
 | Cabang | Alamat lengkap | 300 | opsional |
+| Cabang | Kode pos | 5 digit angka | opsional |
 | Daftar Harga | Nama layanan | 80 | wajib |
 | Daftar Harga | Keterangan | 300 | opsional |
 | Kartu Layanan | Judul kartu | 40 | wajib |
