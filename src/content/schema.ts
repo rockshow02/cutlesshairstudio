@@ -14,6 +14,7 @@ import { parseWIB } from '../lib/dates';
 import { PRICE_CATEGORIES } from './priceCategories';
 import { itemsAt } from './branchPricing';
 import { INSTAGRAM_POST_URL, instagramUrlProblem, normalizeInstagramUrl } from './instagram';
+import { POSTAL_CODE } from './postalAddress';
 import type { IconName } from '../types/common';
 
 /* ---------- Helper ---------- */
@@ -155,7 +156,10 @@ export const branchSchema = z.object({
   name: z.string().trim().min(1, 'nama cabang wajib diisi').max(60),
   city: z.string().trim().min(1, 'kota wajib diisi').max(60),
   province: z.string().trim().min(1, 'provinsi wajib diisi').max(60),
+  /** Alamat lengkap seperti tampil di halaman; untuk JSON-LD dipecah oleh src/content/postalAddress.ts */
   address: optionalText(300),
+  /** Kode pos 5 digit (JSON-LD address.postalCode); kosong = diambil dari 5 digit di akhir alamat, bila ada */
+  postalCode: z.union([z.string().trim().regex(POSTAL_CODE, 'kode pos harus 5 digit angka, mis. 16454'), z.literal('')]).nullish(),
   googleMapsUrl: optionalUrl,
   latitude: coordinate(-90, 90, 'latitude'),
   longitude: coordinate(-180, 180, 'longitude'),
