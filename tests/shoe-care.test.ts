@@ -15,6 +15,7 @@ import { templateLink } from '../src/lib/whatsapp';
 import { MenuButton, ShoeCarePageView } from '../src/components/pages/ShoeCarePage';
 import { ShoeCareTeaserView } from '../src/components/sections/ShoeCareTeaser';
 import type { Branch, ImageAsset } from '../src/types';
+import { rawFixture } from './helpers/contentFixture';
 import { setMedia, validateCmsContent, type CmsField, type CmsMedia } from './helpers/pagesCms';
 
 const branch = (slug: string, name: string, whatsappNumber: string) =>
@@ -316,19 +317,22 @@ describe('CMS Partner Cuci Sepatu', () => {
     setMedia(config.media);
     expect(validateCmsContent(cms, raw)).toEqual([]);
     expect(shoeCareSchema.safeParse(raw).success).toBe(true);
-    expect(validateCmsContent(cms, { ...raw, menuUrl: 'http://drive.google.com/x' })[0]).toMatch(/menuUrl/);
-    expect(validateCmsContent(cms, { ...raw, menuUrl: 'https://drive.google.com/drive/folders/abc' })).toEqual([]);
-    expect(shoeCareSchema.safeParse({ ...raw, menuUrl: 'drive.google.com/x' }).success).toBe(false);
+    // Isian tidak valid: diuji pada data uji (shoeCare.json asli diubah admin kapan saja)
+    const base = { ...rawFixture.shoeCare, menuUrl: '', aboutTitle: 'Tentang uji' };
+    expect(validateCmsContent(cms, base)).toEqual([]);
+    expect(validateCmsContent(cms, { ...base, menuUrl: 'http://drive.google.com/x' })[0]).toMatch(/menuUrl/);
+    expect(validateCmsContent(cms, { ...base, menuUrl: 'https://drive.google.com/drive/folders/abc' })).toEqual([]);
+    expect(shoeCareSchema.safeParse({ ...base, menuUrl: 'drive.google.com/x' }).success).toBe(false);
     // Boleh kosong (bukan field wajib; editor lama tidak menolak Save) → About memakai Deskripsi singkat
-    expect(validateCmsContent(cms, { ...raw, aboutParagraphs: [] })).toEqual([]);
-    expect(shoeCareSchema.safeParse({ ...raw, aboutParagraphs: undefined }).success).toBe(true);
-    expect(validateCmsContent(cms, { ...raw, aboutParagraphs: ['a', 'b', 'c', 'd'] })[0]).toMatch(/maksimal 3/);
-    expect(validateCmsContent(cms, { ...raw, aboutParagraphs: ['x'.repeat(401)] })[0]).toMatch(/lebih dari 400/);
-    expect(validateCmsContent(cms, { ...raw, aboutTitle: 'x'.repeat(61) })[0]).toMatch(/lebih dari 60/);
+    expect(validateCmsContent(cms, { ...base, aboutParagraphs: [] })).toEqual([]);
+    expect(shoeCareSchema.safeParse({ ...base, aboutParagraphs: undefined }).success).toBe(true);
+    expect(validateCmsContent(cms, { ...base, aboutParagraphs: ['a', 'b', 'c', 'd'] })[0]).toMatch(/maksimal 3/);
+    expect(validateCmsContent(cms, { ...base, aboutParagraphs: ['x'.repeat(401)] })[0]).toMatch(/lebih dari 400/);
+    expect(validateCmsContent(cms, { ...base, aboutTitle: 'x'.repeat(61) })[0]).toMatch(/lebih dari 60/);
     // Foto About Us tanpa deskripsi ditolak Zod
-    expect(shoeCareSchema.safeParse({ ...raw, aboutImage: '/uploads/shoe-care/a.webp', aboutImageAlt: '' }).success).toBe(false);
-    expect(shoeCareSchema.safeParse({ ...raw, aboutImage: '/uploads/shoe-care/a.webp', aboutImageAlt: 'Partner di studio' }).success).toBe(true);
+    expect(shoeCareSchema.safeParse({ ...base, aboutImage: '/uploads/shoe-care/a.webp', aboutImageAlt: '' }).success).toBe(false);
+    expect(shoeCareSchema.safeParse({ ...base, aboutImage: '/uploads/shoe-care/a.webp', aboutImageAlt: 'Partner di studio' }).success).toBe(true);
     // Template: {partner} {service} {branch} saja
-    expect(shoeCareSchema.safeParse({ ...raw, messageTemplate: 'Halo {brand}' }).success).toBe(false);
+    expect(shoeCareSchema.safeParse({ ...base, messageTemplate: 'Halo {brand}' }).success).toBe(false);
   });
 });

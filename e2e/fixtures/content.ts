@@ -168,14 +168,10 @@ export const E2E_PRICING = [
 
 /** branches.json asli → cabang uji menimpa cabang dengan slug sama (field lain, mis. alamat & foto, tetap), sisanya utuh */
 function fixtureBranches(real: unknown): Json[] {
+  // Hanya cabang uji: cabang yang ditambah admin di CMS tidak ikut. Field tampilan lain (alamat, foto, peta) boleh
+  // dari cabang asli dengan slug sama; tes tidak memeriksa isinya.
   const list = Array.isArray(real) ? (real as Json[]) : [];
-  const fixtures = Object.values(E2E_BRANCHES) as unknown as Json[];
-  const merged = list.map((b) => {
-    const f = fixtures.find((x) => x.slug === b.slug);
-    return f ? { ...b, ...f } : b;
-  });
-  for (const f of fixtures) if (!merged.some((b) => b.slug === f.slug)) merged.push({ ...f });
-  return merged;
+  return (Object.values(E2E_BRANCHES) as unknown as Json[]).map((f) => ({ ...(list.find((b) => b.slug === f.slug) ?? {}), ...f }));
 }
 
 /**
@@ -213,6 +209,19 @@ export const E2E_VIDEOS = {
   hidden: 'Video nonaktif uji',
 } as const;
 
+/** Nama usaha (Pages CMS → Pengaturan Situs → Nama usaha) */
+export const E2E_SITE_NAME = 'Cutless Hair Studio';
+
+/** Kartu Layanan uji (kategori sama dengan Daftar Harga uji → tombol "Lihat harga") */
+const E2E_SERVICES = [
+  { name: 'Haircut', description: 'Potong rambut uji.', icon: 'scissors', pricingCategory: 'Haircut' },
+  { name: 'Coloring', description: 'Pewarnaan rambut uji.', icon: 'color', pricingCategory: 'Special Treatment' },
+  { name: 'Woman Haircut', description: 'Potong rambut wanita uji.', icon: 'scissors', pricingCategory: 'Woman Haircut & Treatment' },
+];
+
+/** Label tombol utama hero (Pages CMS → Hero bisa mengubahnya kapan saja) */
+export const E2E_HERO_CTA = 'Booking Hero Uji';
+
 /** Daftar Harga tanpa harga per cabang & "Tersedia di cabang" (varian uniform) */
 const uniformPricing = () => E2E_PRICING.map(({ branchPrices: _bp, branchSlugs: _bs, ...p }: Json) => p);
 
@@ -246,7 +255,15 @@ export function applyE2EFixtures(file: string, data: unknown, variant?: string):
       ],
     };
   }
-  if (file === 'settings.json') return { ...(data as Json), showProducts: variant === 'uniform' };
+  if (file === 'hero.json') return { ...(data as Json), primaryCtaLabel: E2E_HERO_CTA };
+  if (file === 'settings.json') {
+    // Toggle & nama usaha tetap (tata letak beranda & selector tidak ikut berubah saat admin mengubahnya di CMS)
+    return { ...(data as Json), siteName: E2E_SITE_NAME, showProducts: variant === 'uniform', showTestimonials: false, showBeforeAfter: false, enablePreloader: true, preloaderVideo: '' };
+  }
+  // Promo & pengumuman bertanggal (tampil/tidak tergantung jam) → tidak ada di build uji
+  if (file === 'promos.json' || file === 'announcements.json') return [];
+  if (file === 'gallery.json') return [1, 2, 3, 4].map((n) => ({ image: existingPhoto(), altText: `Foto galeri uji ${n}`, caption: `Galeri uji ${n}`, styleCategory: 'Lainnya', focalPoint: 'atas', showInMarquee: true, isActive: true, order: n * 10 }));
+  if (file === 'services.json') return E2E_SERVICES.map((c, i) => ({ ...c, isActive: true, order: (i + 1) * 10 }));
   if (file === 'products.json') return E2E_PRODUCTS.map((p, i) => ({ ...p, image: existingPhoto(), inStock: true, isActive: true, order: (i + 1) * 10 }));
   if (file === 'pricing.json') return (variant === 'uniform' ? uniformPricing() : [...E2E_PRICING]).map((p, i) => ({ isActive: true, ...p, order: (i + 1) * 10 }));
   if (file === 'partners.json') {

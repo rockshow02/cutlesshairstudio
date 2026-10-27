@@ -3,6 +3,7 @@ import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { aboutSchema, heroSchema, studioSchema } from '../src/content/schema';
 import { imageVariants, srcSetOf } from '../src/lib/responsiveImage';
+import { rawFixture } from './helpers/contentFixture';
 
 const json = (file: string) => JSON.parse(readFileSync(`src/content/${file}`, 'utf8'));
 const photo = (n: number) => ({ src: `/uploads/about/foto-${n}.webp`, alt: `Foto ${n}` });
@@ -15,7 +16,8 @@ describe('skema konten', () => {
   });
 
   it('slideshow: 1–8 foto, alt wajib, titik fokus atas/tengah/bawah, default jeda 5 detik & crossfade', () => {
-    const base = json('about.json');
+    // Data uji sebagai dasar (about.json asli hanya diperiksa lolos skema di atas)
+    const base: Record<string, unknown> = { ...rawFixture.about, slideInterval: 6, transition: 'ken-burns' };
     const parse = (images: unknown[], extra: Record<string, unknown> = {}) => aboutSchema.safeParse({ ...base, images, ...extra });
     expect(parse([]).success).toBe(false);
     expect(parse(Array.from({ length: 9 }, (_, i) => photo(i))).success).toBe(false);

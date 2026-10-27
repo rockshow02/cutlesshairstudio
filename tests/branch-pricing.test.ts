@@ -8,15 +8,17 @@ import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import { parse } from 'yaml';
-import { branchSchema, CONTENT_FILES, crossCheck, pricingItemSchema, type BranchEntry, type ContentBundle, type PricingEntry } from '../src/content/schema';
+import { branchSchema, CONTENT_FILES, crossCheck, pricingItemSchema, type BranchEntry, type PricingEntry } from '../src/content/schema';
 import { availableAt, priceAt, priceRangeAt, samePricesEverywhere } from '../src/content/branchPricing';
 import { pricingCopy } from '../src/content/pricing';
 import { buildPricing, buildServices } from '../src/lib/contentTransforms';
 import { servicesCopy } from '../src/content/services';
 import { PriceRows } from '../src/components/sections/Pricing';
 import { branchPriceList, branchPriceRange } from '../scripts/vite-content-plugin';
+import { syncBranchOptions } from '../scripts/sync-pages-config.mjs';
 import type { Branch } from '../src/types';
 import { setMedia, validateCmsContent, type CmsField, type CmsMedia } from './helpers/pagesCms';
+import { contentFixture } from './helpers/contentFixture';
 
 const item = (name: string, category: string, price: number, extra: Record<string, unknown> = {}): PricingEntry =>
   pricingItemSchema.parse({ name, category, price, ...extra });
@@ -122,9 +124,7 @@ describe('validasi', () => {
       status,
       openingHours: [{ day: 'Senin', openTime: '09:00', closeTime: '21:00', isClosed: false }],
     });
-  const base = Object.fromEntries(
-    Object.entries(CONTENT_FILES).map(([f, s]) => [f.replace('.json', ''), s.parse(JSON.parse(readFileSync(`src/content/${f}`, 'utf8')))]),
-  ) as unknown as ContentBundle;
+  const base = contentFixture();
   const check = (pricingEntries: PricingEntry[]) => {
     const r = crossCheck({ ...base, branches: [branchEntry('bogor-bantarjati', 'Bogor Bantarjati'), branchEntry('cibubur', 'Cibubur'), branchEntry('depok', 'Depok', 'Segera Dibuka')], pricing: pricingEntries });
     return { errors: r.errors.filter((i) => i.file === 'pricing.json'), launch: r.launch.filter((i) => i.file === 'pricing.json') };
@@ -161,8 +161,29 @@ describe('CMS Daftar Harga', () => {
     expect(f('branchSlugs')).toMatchObject({ label: 'Tersedia di cabang', type: 'select', options: { multiple: true } });
     expect(f('branchSlugs').required).toBeFalsy();
     expect(f('branchSlugs').description).toMatch(/Kosongkan = tersedia di SEMUA cabang/);
-    const branches = JSON.parse(readFileSync('src/content/branches.json', 'utf8')) as { slug: string }[];
-    expect((f('branchSlugs').options!.values as { name: string }[]).map((v) => v.name)).toEqual(branches.map((b) => b.slug));
+    // Pilihan diisi workflow sinkron dari branches.json (bisa tertinggal sesaat setelah admin menambah cabang)
+    expect(f('branchSlugs').options!.values!.length).toBeGreaterThan(0);
+  });
+
+  it('sinkron pilihan cabang (npm run sync-cms): semua dropdown cabang diisi dari daftar cabang, urut Urutan (data uji)', () => {
+    const yaml = readFileSync('.pages.yml', 'utf8');
+    const branches = [
+      { slug: 'depok', name: 'Depok Margonda', city: 'Depok', order: 30 },
+      { slug: 'bogor-bantarjati', name: 'Bogor Bantarjati', city: 'Bogor', order: 10 },
+      { slug: 'cibubur', name: 'Cibubur', city: 'Cibubur', order: 20 },
+      { slug: '', name: 'Tanpa slug' },
+    ];
+    const { text, blocks } = syncBranchOptions(yaml, branches);
+    expect(blocks).toBeGreaterThanOrEqual(4);
+    const synced = parse(text) as { content: { path: string; fields: CmsField[] }[] };
+    const options = synced.content.find((c) => c.path === 'src/content/pricing.json')!.fields.find((x) => x.name === 'branchSlugs')!.options!.values as { name: string; label: string }[];
+    expect(options).toEqual([
+      { name: 'bogor-bantarjati', label: 'Bogor Bantarjati' },
+      { name: 'cibubur', label: 'Cibubur' },
+      { name: 'depok', label: 'Depok Margonda' },
+    ]);
+    // Berjalan ulang dengan daftar yang sama tidak mengubah apa pun
+    expect(syncBranchOptions(text, branches).text).toBe(text);
   });
 
   it('form CMS & Zod sepakat: "Tersedia di cabang" kosong, satu, atau beberapa cabang (data uji)', () => {
@@ -176,7 +197,7 @@ describe('CMS Daftar Harga', () => {
     expect(validateCmsContent(cms, [{ ...row, branchSlugs: ['bekasi'] }])[0]).toMatch(/bekasi/);
   });
 
-  it('pricing.json saat ini lolos form & Zod, tanpa "Tersedia di cabang" yang terisi', () => {
+  it('pricing.json saat ini (apa pun isi dari CMS) lolos form & Zod', () => {
     setMedia(config.media);
     const raw = JSON.parse(readFileSync('src/content/pricing.json', 'utf8'));
     expect(validateCmsContent(cms, raw)).toEqual([]);

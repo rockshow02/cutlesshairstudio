@@ -6,16 +6,19 @@ import { ctaBannerCopy } from '../src/content/cta';
 import { ctaSchema } from '../src/content/schema';
 import { buildCtaBanner } from '../src/lib/contentTransforms';
 import { setMedia, validateCmsContent, type CmsField, type CmsMedia } from './helpers/pagesCms';
+import { rawFixture } from './helpers/contentFixture';
 
-const current = JSON.parse(readFileSync('src/content/cta.json', 'utf8'));
+// Data uji sebagai dasar; cta.json asli hanya diperiksa lolos Zod & form (isinya diubah admin kapan saja)
+const current: Record<string, unknown> = { ...rawFixture.cta };
 const config = parse(readFileSync('.pages.yml', 'utf8')) as { media: CmsMedia[]; content: { name: string; fields: CmsField[] }[] };
 const form = config.content.find((c) => c.name === 'cta')!;
 setMedia(config.media);
 
 describe('CTA penutup', () => {
   it('cta.json saat ini valid (Zod) dan bisa disimpan lewat form CMS', () => {
-    expect(ctaSchema.safeParse(current).success).toBe(true);
-    expect(validateCmsContent(form, current)).toEqual([]);
+    const file = JSON.parse(readFileSync('src/content/cta.json', 'utf8'));
+    expect(ctaSchema.safeParse(file).success).toBe(true);
+    expect(validateCmsContent(form, file)).toEqual([]);
   });
 
   it('batas: kicker 60, judul 60, deskripsi 240, label tombol 40, deskripsi foto 150 (Zod & form)', () => {

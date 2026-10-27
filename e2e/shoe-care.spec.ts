@@ -138,18 +138,17 @@ test('buka /cuci-sepatu langsung & refresh: HTML statis, hero, About, layanan, g
   expect(apiCalls).toEqual([]);
 });
 
-/** Tinggi huruf kapital (1cap) judul hero beranda dengan font Archivo yang sudah termuat: elemen uji dengan font h1 */
-const capHeight = (page: Page) =>
-  page.evaluate(async () => {
-    await document.fonts.ready;
-    const h1 = document.querySelector('#top h1')!;
-    const probe = document.createElement('span');
-    Object.assign(probe.style, { display: 'block', height: '1cap', position: 'absolute', visibility: 'hidden' });
-    h1.appendChild(probe);
-    const h = probe.getBoundingClientRect().height;
-    probe.remove();
-    return h;
-  });
+/**
+ * Hero cuci sepatu = hero beranda: ukuran & jarak judul sama, setinggi layar. Tinggi beranda boleh lebih bila isinya
+ * (teks hero dari CMS + bar pengumuman) melebihi layar HP; min-height tetap 100svh.
+ */
+function expectSameHero(shoe: Awaited<ReturnType<typeof heroBox>>, home: Awaited<ReturnType<typeof heroBox>>, viewportHeight: number) {
+  const { height: shoeHeight, ...shoeStyle } = shoe;
+  const { height: homeHeight, ...homeStyle } = home;
+  expect(shoeStyle).toEqual(homeStyle);
+  expect(shoeHeight).toBe(viewportHeight);
+  expect(homeHeight).toBeGreaterThanOrEqual(viewportHeight);
+}
 
 /** Jarak vertikal antarelemen hero (bawah elemen → atas elemen berikutnya) */
 const gapBetween = async (a: Locator, b: Locator) => {
@@ -210,14 +209,13 @@ test('hero rata tengah, ukurannya sama dengan hero beranda; tombol berdampingan 
   await page.goto('/', { waitUntil: 'domcontentloaded' });
   await expect(page.locator('#top h1')).toBeVisible({ timeout: 20_000 });
   const home = await heroBox(page);
-  const homeCap = await capHeight(page);
   const homeTitleWidth = (await page.locator('#top h1').boundingBox())!.width;
   await page.goto(PAGE, { waitUntil: 'domcontentloaded' });
   const hero = page.locator('#top');
   await expect(hero.getByRole('heading', { level: 1 })).toBeVisible({ timeout: 20_000 });
   await page.waitForTimeout(500);
   const shoe = await heroBox(page);
-  expect(shoe).toEqual(home);
+  expectSameHero(shoe, home, page.viewportSize()!.height);
   const vp = page.viewportSize()!;
   expect(shoe.height, 'tinggi hero = tinggi layar').toBe(vp.height);
 
@@ -232,6 +230,8 @@ test('hero rata tengah, ukurannya sama dengan hero beranda; tombol berdampingan 
   await expect(h1.locator('.visually-hidden')).toHaveText(E2E_SHOE_CARE.name);
   await expect(hero.locator('img')).toHaveCount(2); // foto latar + logo hero
   const wm = (await wordmark.boundingBox())!;
+  // Setinggi huruf kapital judul beranda: 0,686 × ukuran huruf judul (cap-height Archivo; sama dengan CSS logo)
+  const homeCap = 0.686 * parseFloat(home.fontSize);
   expect(Math.abs(wm.height - homeCap), `tinggi logo ${wm.height} vs cap-height judul beranda ${homeCap}`).toBeLessThanOrEqual(1);
   expect(wm.width).toBeLessThanOrEqual(homeTitleWidth + 1);
   expect(wm.width).toBeGreaterThan(wm.height); // proporsi asli (wordmark melebar), tidak gepeng
@@ -313,7 +313,7 @@ test('tanpa Logo hero: nama partner tampil sebagai teks judul, logo kecil di ata
   const lastBtn = (await hero.getByRole('link', { name: 'Lihat Daftar Menu' }).boundingBox())!;
   expect(title.y).toBeGreaterThan(64);
   expect(vp.height - (lastBtn.y + lastBtn.height)).toBeGreaterThan(40);
-  expect(await heroBox(page)).toEqual(home);
+  expectSameHero(await heroBox(page), home, vp.height);
   // Logo kecil di atas kicker (kecil, tanpa kotak/latar)
   const logo = hero.locator('img').last();
   expect((await logo.boundingBox())!.height).toBeLessThanOrEqual(64);

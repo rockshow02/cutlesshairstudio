@@ -22,12 +22,15 @@ const END = /^\s*# @branch-options-end/;
 
 const quote = (v) => JSON.stringify(String(v));
 
-async function main() {
-  const branches = JSON.parse(await readFile(BRANCHES, 'utf8'))
+/**
+ * Isi ulang setiap blok pilihan cabang di teks .pages.yml dari daftar cabang (urut "Urutan").
+ * Murni (tanpa baca/tulis file): diuji dengan data uji di tests/branch-pricing.test.ts.
+ */
+export function syncBranchOptions(configText, branchList) {
+  const branches = branchList
     .filter((b) => b && typeof b.slug === 'string' && b.slug.trim())
     .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
-
-  const lines = (await readFile(CONFIG, 'utf8')).split(/\r?\n/);
+  const lines = configText.split(/\r?\n/);
   const out = [];
   let blocks = 0;
 
@@ -48,18 +51,24 @@ async function main() {
     while (i + 1 < lines.length && !END.test(lines[i + 1])) i += 1;
     blocks += 1;
   }
+  return { text: out.join('\n'), branches: branches.length, blocks };
+}
 
-  const next = out.join('\n');
+async function main() {
   const current = await readFile(CONFIG, 'utf8');
+  const { text: next, branches, blocks } = syncBranchOptions(current, JSON.parse(await readFile(BRANCHES, 'utf8')));
   if (next.replace(/\r\n/g, '\n') === current.replace(/\r\n/g, '\n')) {
-    console.log(`Pilihan cabang di .pages.yml sudah sesuai (${branches.length} cabang, ${blocks} dropdown).`);
+    console.log(`Pilihan cabang di .pages.yml sudah sesuai (${branches} cabang, ${blocks} dropdown).`);
     return;
   }
   await writeFile(CONFIG, next);
-  console.log(`✓ .pages.yml diperbarui: ${branches.length} cabang di ${blocks} dropdown.`);
+  console.log(`✓ .pages.yml diperbarui: ${branches} cabang di ${blocks} dropdown.`);
 }
 
-main().catch((error) => {
-  console.error('Gagal sinkron .pages.yml:', error);
-  process.exit(1);
-});
+// Hanya saat dijalankan langsung (npm run sync-cms), bukan saat diimpor tes
+if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  main().catch((error) => {
+    console.error('Gagal sinkron .pages.yml:', error);
+    process.exit(1);
+  });
+}
