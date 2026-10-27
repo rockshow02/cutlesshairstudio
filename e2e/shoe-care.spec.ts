@@ -296,6 +296,10 @@ test('hero rata tengah, ukurannya sama dengan hero beranda; tombol berdampingan 
 test('tanpa Logo hero: nama partner tampil sebagai teks judul, logo kecil di atas kicker, jarak tidak menempel', async ({ page }) => {
   await page.goto(`${NO_HERO_LOGO_URL}/`, { waitUntil: 'domcontentloaded' });
   await expect(page.locator('#top h1')).toBeVisible({ timeout: 20_000 });
+  // Varian uniform punya bar pengumuman (e2e/announcement.spec.ts): tutup dulu (tersimpan di localStorage) agar CLS di
+  // bawah hanya mengukur hero, bukan teks bar yang ikut bergeser mendatar saat font Archivo dimuat
+  const close = page.getByRole('region', { name: 'Pengumuman' }).getByRole('button', { name: 'Tutup pengumuman' });
+  while (await close.count()) await close.click();
   const home = await heroBox(page);
   await page.goto(`${NO_HERO_LOGO_URL}${PAGE}`, { waitUntil: 'domcontentloaded' });
   const hero = page.locator('#top');
