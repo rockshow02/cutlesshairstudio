@@ -12,6 +12,13 @@ Cara menaikkan versi & merilis: [CONTRIBUTING.md → Rilis versi](CONTRIBUTING.m
 
 ## [Belum dirilis]
 
+## [1.2.2] - 2026-10-29
+
+### Diperbaiki
+- Sinkron main → staging tidak lagi meninggalkan run CI merah palsu: PR sinkron buatan bot memicu CI yang menunggu persetujuan lalu kedaluwarsa (*"required approval but was not approved before it expired"*) saat sinkron me-merge PR itu. Sinkron yang lancar kini tidak membuat PR.
+- Sinkron lebih tangguh: satu run dalam satu waktu (`sinkron-staging`), push yang ditolak karena staging berubah diulang dari staging terbaru (maks. 3×), install & tes unit yang gagal diulang sekali (lolos → dicatat *kemungkinan flaky*).
+- Sinkron yang gagal sungguhan selalu terlihat: run merah + ringkasan alasan + PR `main → staging` berlabel `perlu-dicek` (termasuk bentrok, yang sebelumnya berakhir hijau).
+
 ## [1.2.1] - 2026-10-29
 
 ### Diperbaiki
@@ -58,7 +65,8 @@ Launch https://cutlesshairstudio.com.
 - Halaman `/cuci-sepatu/` untuk partner cuci sepatu (layanan, harga, daftar menu PDF, galeri) dan teaser di beranda.
 - Validasi konten saat build (skema & aturan siap tayang), kompres gambar otomatis, SEO dasar (title/meta, JSON-LD, sitemap), staging terpisah, CI (typecheck, lint, tes, e2e).
 
-[Belum dirilis]: https://github.com/rockshow02/cutlesshairstudio/compare/v1.2.1...staging
+[Belum dirilis]: https://github.com/rockshow02/cutlesshairstudio/compare/v1.2.2...staging
+[1.2.2]: https://github.com/rockshow02/cutlesshairstudio/compare/v1.2.1...v1.2.2
 [1.2.1]: https://github.com/rockshow02/cutlesshairstudio/compare/v1.2.0...v1.2.1
 [1.2.0]: https://github.com/rockshow02/cutlesshairstudio/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/rockshow02/cutlesshairstudio/compare/v1.0.0...v1.1.0

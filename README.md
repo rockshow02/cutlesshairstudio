@@ -316,7 +316,7 @@ Detail lengkap: **[CONTRIBUTING.md](CONTRIBUTING.md)**.
 2. **Fitur:** `feat/<nama>` dari `staging` → `npm run dev` → PR ke `staging` (CI: typecheck, lint, tes, validasi konten, build, e2e) → otomatis tayang di URL staging (badge STAGING, tidak diindeks). Fitur baru wajib punya toggle CMS, default mati.
 3. **Rilis versi:** naikkan `version` di `package.json` + bagian CHANGELOG.md → PR `staging → main`. CI **wajib lolos** (konten ketat + build produksi + cek versi), lalu merge → produksi + tag `vX.Y.Z` & GitHub Release otomatis.
 4. **Hotfix:** `hotfix/<nama>` dari `main` → PR langsung ke `main` (versi PATCH).
-5. **Sinkron balik:** setiap push ke `main` → PR `main → staging`, di-merge otomatis bila tanpa bentrok & pemeriksaan lolos; selain itu label `perlu-dicek`.
+5. **Sinkron balik:** setiap push ke `main` → di-merge ke `staging` otomatis bila tanpa bentrok & pemeriksaan lolos (push diulang bila staging berubah, tes flaky diulang sekali); gagal sungguhan → run merah + PR `main → staging` berlabel `perlu-dicek`.
 
 **Menguji konten lewat Pages CMS di staging:** app.pagescms.org → repo → pilih branch **staging** → edit → Save. Hasilnya tayang di URL staging ±2 menit, atau di laptop dalam ±15 detik dengan `npm run dev:sync` (branch lokal `staging`). Pemilik tetap di branch **main**.
 
