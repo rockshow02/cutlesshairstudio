@@ -55,7 +55,7 @@ Simpanan Pages CMS langsung ke `main` diizinkan (bypass ruleset, lihat [Branch p
 
 ## 3. Rilis versi (staging → main)
 
-1. Pastikan tidak ada PR sinkron `main → staging` yang terbuka (biasanya sudah di-merge otomatis; berlabel **perlu-dicek** → selesaikan dulu, §5).
+1. Pastikan tidak ada PR sinkron `main → staging` berlabel **perlu-dicek** yang terbuka (sinkron lancar tidak membuat PR; ada PR → selesaikan dulu, §5).
 2. Uji di URL staging ([checklist](#checklist-sebelum-merge-ke-main)). Badge **STAGING** harus **0 belum siap**.
 3. **Naikkan versi** lewat branch kecil ke staging (mis. `chore/rilis-1.3.0`):
    ```bash
@@ -99,11 +99,13 @@ Buka PR **hotfix/… → main**. CI sama dengan PR rilis. Setelah merge: produks
 
 Workflow **Sinkron main → staging** (`.github/workflows/sync-staging.yml`) berjalan di **setiap push ke `main`** (edit Pages CMS, rilis, hotfix), plus jadwal harian 03.00 WIB sebagai cadangan dan manual (**Actions → Sinkron main → staging → Run workflow**):
 
-1. Membuat/memperbarui PR **main → staging**.
-2. Tanpa bentrok: menggabungkan `main` ke `staging` di runner, menjalankan pemeriksaan yang sama dengan CI staging (typecheck, lint, tes, validasi konten, build staging), lalu push ke `staging`. PR tercatat *merged* otomatis; Cloudflare mendeploy staging.
-3. Bentrok atau pemeriksaan gagal: PR diberi label **perlu-dicek** + komentar alasannya. Tidak ada yang di-push.
+1. Menggabungkan `main` ke `staging` di runner, menjalankan pemeriksaan yang sama dengan CI staging (typecheck, lint, tes, validasi konten, build staging), lalu push ke `staging`. Cloudflare mendeploy staging. Logikanya di `scripts/sync-staging.mjs` (diuji `tests/syncStaging.test.ts`), yang selalu diambil dari `main` (staging bisa belum memuat versi terbarunya).
+2. **Satu sinkron dalam satu waktu** (concurrency `sinkron-staging`): run baru menunggu, tidak berebut push.
+3. **Push ditolak karena staging berubah** di tengah sinkron (mis. fitur baru di-merge): fetch ulang, merge & periksa lagi dari staging terbaru, maks. 3×. Tidak pernah *force push*.
+4. **Install dependensi & tes unit yang gagal diulang sekali.** Lolos saat diulang → sinkron jalan terus, ringkasan run & anotasi mencatat *kemungkinan flaky* (perlu diperiksa, bukan diabaikan). Gagal 2× → kegagalan sungguhan. Typecheck, lint, validasi konten, dan build tidak diulang (hasilnya selalu sama).
+5. **Gagal sungguhan** (bentrok, pemeriksaan gagal, push ditolak 3×): run merah (centang merah di commit `main`), ringkasan run berisi alasannya, dan dibuat PR **main → staging** berlabel **perlu-dicek** dengan alasan + tautan log (sudah ada → diberi label & komentar). Tidak ada yang di-push.
 
-PR buatan bot tidak memicu workflow CI (batasan GitHub untuk `GITHUB_TOKEN`), karena itu pemeriksaannya dijalankan di dalam workflow sinkron.
+Sinkron yang lancar **tidak** membuat PR. PR buatan bot (`GITHUB_TOKEN`) memicu CI yang menunggu *Approve and run*; begitu sinkron mem-push ke staging, PR itu ter-merge dan run CI-nya kedaluwarsa merah (*"required approval but was not approved before it expired"*), padahal sinkronnya lolos. Karena itu pemeriksaannya dijalankan di dalam workflow sinkron. Di PR **perlu-dicek**, tekan *Approve and run* bila ingin CI lengkap (termasuk e2e).
 
 ### Menyelesaikan sinkron yang perlu dicek
 
@@ -115,10 +117,12 @@ git merge origin/main            # muncul konflik
 # Buka file yang konflik. Untuk konten: pertahankan versi PRODUKSI (main) kecuali memang sedang diuji di staging.
 #   Ambil versi main untuk satu file: git checkout --theirs src/content/pricing.json
 npm run check:content            # pastikan JSON tetap valid
-git add . && git commit && git push   # PR sinkron tercatat merged; hapus label perlu-dicek
+git add . && git commit && git push   # PR perlu-dicek tercatat merged otomatis
 ```
 
-**Pemeriksaan gagal:** buka log run (tautan di komentar PR), perbaiki di `staging` lewat branch kecil, lalu jalankan workflow sinkron lagi.
+**Pemeriksaan gagal:** buka log run (tautan di PR), perbaiki di `staging` lewat branch kecil, lalu jalankan workflow sinkron lagi (**Actions → Sinkron main → staging → Run workflow**).
+
+**Push ditolak 3×:** staging terus berubah selama sinkron, atau izin/ruleset menolak push bot (alasan lengkap di ringkasan run). Jalankan workflow sinkron lagi; bila tetap ditolak, cek bypass list ruleset staging (§ Branch protection).
 
 ## 6. Menguji konten lewat Pages CMS (branch staging)
 
