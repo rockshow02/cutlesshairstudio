@@ -2,7 +2,10 @@
  * Alur rilis (CONTRIBUTING.md): pemicu & aturan di workflow GitHub Actions tidak hilang tanpa sengaja.
  * Konten → main (CI verify tiap push), fitur → staging → rilis berversi, hotfix → main, sinkron main → staging.
  */
-import { readdirSync, readFileSync } from 'node:fs';
+import { execFileSync, spawnSync } from 'node:child_process';
+import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { parse } from 'yaml';
 
@@ -88,5 +91,102 @@ describe('workflow alur rilis', () => {
     // Langkah pemberitahuan adalah yang terakhir dan tidak menelan kegagalan (run tetap merah)
     expect(steps.at(-1)).toBe(notify);
     expect(notify.run).not.toMatch(/exit 0/);
+  });
+});
+
+/**
+ * Langkah "Merge, periksa & push" dijalankan APA ADANYA (teks run dari YAML, lewat bash) di repo uji. Kasus run
+ * 40850682569 (v1.2.2): checkout = staging, yang belum memuat scripts/sync-staging.mjs → skrip harus diambil dari main.
+ * Pemeriksaan npm diganti daftar kosong (SYNC_CHECKS) agar cepat; logika sinkron diuji di tests/syncStaging.test.ts.
+ */
+describe('langkah sinkron di workflow (repo uji, staging tanpa skrip sinkron)', { timeout: 60_000 }, () => {
+  const step = workflow('sync-staging.yml').jobs.sync.steps.find((s) => s.run?.includes('sync-staging.mjs'))!;
+  const git = (cwd: string, ...args: string[]) =>
+    execFileSync('git', ['-c', 'user.name=Uji', '-c', 'user.email=uji@example.com', '-c', 'core.autocrlf=false', ...args], {
+      cwd,
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'pipe'],
+    }).trim();
+  // Windows: bash di PATH bisa bash WSL (path Windows tidak terbaca) → pakai Git Bash
+  const bash =
+    process.platform === 'win32' ? path.resolve(execFileSync('git', ['--exec-path'], { encoding: 'utf8' }).trim(), '../../../bin/bash.exe') : 'bash';
+  const posix = (p: string) => p.replace(/\\/g, '/');
+
+  /** origin: staging (tanpa skrip) ← main (+ skrip bila withScript, + edit konten); workspace = checkout staging */
+  function setup(withScript: boolean) {
+    const dir = mkdtempSync(path.join(tmpdir(), 'sync-workflow-'));
+    const origin = path.join(dir, 'origin.git');
+    const seed = path.join(dir, 'seed');
+    git(dir, 'init', '--quiet', '--bare', '--initial-branch=main', origin);
+    git(dir, 'clone', '--quiet', origin, seed);
+    writeFileSync(path.join(seed, 'konten.json'), '{"v":1}\n');
+    git(seed, 'add', '.');
+    git(seed, 'commit', '--quiet', '-m', 'awal');
+    git(seed, 'push', '--quiet', 'origin', 'HEAD:staging');
+    if (withScript) {
+      mkdirSync(path.join(seed, 'scripts'));
+      writeFileSync(path.join(seed, 'scripts/sync-staging.mjs'), readFileSync('scripts/sync-staging.mjs'));
+    }
+    writeFileSync(path.join(seed, 'konten.json'), '{"v":2}\n');
+    git(seed, 'add', '.');
+    git(seed, 'commit', '--quiet', '-m', 'edit konten di main');
+    git(seed, 'push', '--quiet', 'origin', 'HEAD:main');
+    const workspace = path.join(dir, 'workspace');
+    git(dir, 'clone', '--quiet', '--branch', 'staging', origin, workspace);
+    git(workspace, 'fetch', '--quiet', 'origin', 'main', 'staging'); // langkah "Perlu sinkron?"
+    const temp = path.join(dir, 'runner-temp');
+    mkdirSync(temp);
+    const output = path.join(dir, 'output.txt');
+    writeFileSync(output, '');
+    const env = {
+      ...process.env,
+      RUNNER_TEMP: posix(temp),
+      GITHUB_WORKSPACE: posix(workspace),
+      GITHUB_OUTPUT: posix(output),
+      GITHUB_STEP_SUMMARY: posix(path.join(dir, 'summary.md')),
+      SYNC_CHECKS: '[]',
+    };
+    const run = () => spawnSync(bash, ['-e', '-c', step.run!], { cwd: workspace, env, encoding: 'utf8' });
+    return { dir, origin, workspace, output, run };
+  }
+
+  it('skrip ada di main tapi tidak di staging (kasus run 40850682569) → skrip dari main dipakai, staging tersinkron', () => {
+    const t = setup(true);
+    try {
+      expect(existsSync(path.join(t.workspace, 'scripts/sync-staging.mjs'))).toBe(false);
+      const r = t.run();
+      expect(r.status, r.stdout + r.stderr).toBe(0);
+      expect(readFileSync(t.output, 'utf8')).toMatch(/^result=synced$/m);
+      expect(git(t.origin, 'show', 'staging:konten.json')).toBe('{"v":2}');
+      expect(git(t.origin, 'log', '-1', '--format=%s', 'staging')).toBe('Merge main → staging (sinkron otomatis)');
+    } finally {
+      rmSync(t.dir, { recursive: true, force: true });
+    }
+  });
+
+  it('skrip tidak ada di main → exit 1 dengan reason spesifik + ::error (bukan alasan generik)', () => {
+    const t = setup(false);
+    try {
+      const r = t.run();
+      expect(r.status).toBe(1);
+      expect(readFileSync(t.output, 'utf8')).toContain('reason=skrip sinkron tidak ditemukan di main (scripts/sync-staging.mjs)');
+      expect(r.stdout).toContain('::error title=Sinkron main → staging gagal::skrip sinkron tidak ditemukan di main');
+    } finally {
+      rmSync(t.dir, { recursive: true, force: true });
+    }
+  });
+
+  it('langkah pemberitahuan menyebut langkah yang gagal bila skrip belum sempat menulis reason', () => {
+    const notify = workflow('sync-staging.yml').jobs.sync.steps.at(-1)!;
+    expect(notify.env).toMatchObject({
+      GH_REPO: '${{ github.repository }}',
+      CHECKOUT: '${{ steps.checkout.outcome }}',
+      STATE: '${{ steps.state.outcome }}',
+      NODE: '${{ steps.node.outcome }}',
+      SYNC: '${{ steps.sync.outcome }}',
+    });
+    for (const text of ['checkout branch staging gagal', 'fetch main & staging gagal', 'setup Node.js gagal', 'skrip sinkron berhenti tanpa alasan']) {
+      expect(notify.run).toContain(text);
+    }
   });
 });

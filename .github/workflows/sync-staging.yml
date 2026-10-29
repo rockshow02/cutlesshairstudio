@@ -46,6 +46,7 @@ jobs:
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v7
+        id: checkout
         with:
           ref: staging
           fetch-depth: 0
@@ -64,6 +65,7 @@ jobs:
           fi
 
       - uses: actions/setup-node@v7
+        id: node
         if: steps.state.outputs.behind != '0'
         with:
           node-version-file: .node-version
@@ -74,19 +76,37 @@ jobs:
         if: steps.state.outputs.behind != '0'
         env:
           CONTENT_CHECK: warn
-        # Salinan di luar checkout: setiap percobaan mengganti isi folder kerja dengan staging terbaru
+        # Skrip diambil dari MAIN (checkout di atas = staging, yang bisa belum memuat skrip / versi terbarunya) dan disalin
+        # di luar checkout: setiap percobaan mengganti isi folder kerja dengan staging terbaru. Diuji tests/workflows.test.ts.
         run: |
-          cp scripts/sync-staging.mjs "$RUNNER_TEMP/"
+          if ! git show origin/main:scripts/sync-staging.mjs > "$RUNNER_TEMP/sync-staging.mjs"; then
+            reason="skrip sinkron tidak ditemukan di main (scripts/sync-staging.mjs)"
+            echo "reason=$reason" >> "$GITHUB_OUTPUT"
+            echo "::error title=Sinkron main → staging gagal::$reason"
+            exit 1
+          fi
           node "$RUNNER_TEMP/sync-staging.mjs" --cwd "$GITHUB_WORKSPACE"
 
       - name: Tandai perlu dicek (PR + label + komentar)
         if: failure()
         env:
           GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }} # gh tetap tahu repo-nya walau checkout gagal
           REASON: ${{ steps.sync.outputs.reason }}
+          CHECKOUT: ${{ steps.checkout.outcome }}
+          STATE: ${{ steps.state.outcome }}
+          NODE: ${{ steps.node.outcome }}
+          SYNC: ${{ steps.sync.outcome }}
         run: |
           set -uo pipefail
-          reason=${REASON:-langkah sinkron gagal sebelum merge (lihat log run)}
+          # Alasan dari skrip sinkron; bila langkah sebelumnya yang gagal, sebut langkahnya
+          if [ -n "$REASON" ]; then reason=$REASON
+          elif [ "$CHECKOUT" = failure ]; then reason="checkout branch staging gagal"
+          elif [ "$STATE" = failure ]; then reason="fetch main & staging gagal (langkah \"Perlu sinkron?\")"
+          elif [ "$NODE" = failure ]; then reason="setup Node.js gagal"
+          elif [ "$SYNC" = failure ]; then reason="skrip sinkron berhenti tanpa alasan (lihat log langkah \"Merge, periksa & push\")"
+          else reason="langkah sinkron gagal (lihat log run)"
+          fi
           run_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
           gh label create "$LABEL" --color D93F0B \
             --description "Sinkron main → staging butuh penanganan manual (bentrok / pemeriksaan gagal)" 2>/dev/null || true

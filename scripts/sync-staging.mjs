@@ -10,7 +10,7 @@
  * staging terbaru, maks. 3×. Langkah yang bisa gagal karena kebetulan (install via jaringan, tes unit) diulang sekali;
  * lolos saat diulang → sinkron jalan terus, dicatat "kemungkinan flaky". Gagal 2× → kegagalan sungguhan.
  *
- * Hasil (result): synced | up-to-date | conflict | checks-failed | push-rejected. Di GitHub Actions ditulis ke
+ * Hasil (result): synced | up-to-date | conflict | checks-failed | push-rejected | error (error tak terduga). Di GitHub Actions ditulis ke
  * $GITHUB_OUTPUT (result, attempts, files, failed, flaky, sha, error) & $GITHUB_STEP_SUMMARY; selain synced /
  * up-to-date → exit 1, lalu workflow membuat PR berlabel perlu-dicek. sync() diuji tests/syncStaging.test.ts.
  */
@@ -108,6 +108,7 @@ export function reasonOf(r) {
     case 'conflict': return `bentrok di: ${r.files.join(', ')}`;
     case 'checks-failed': return `pemeriksaan "${r.failed}" gagal pada hasil merge main → staging${r.retried ? ' (juga saat diulang)' : ''}`;
     case 'push-rejected': return `push ke staging ditolak ${r.attempts}× (staging terus berubah, atau izin/ruleset menolak): ${r.error}`;
+    case 'error': return `skrip sinkron error: ${r.error}`;
     default: return 'langkah sinkron gagal (lihat log run)';
   }
 }
@@ -117,7 +118,15 @@ export function reasonOf(r) {
 async function main() {
   const i = process.argv.indexOf('--cwd');
   const cwd = i > 0 ? path.resolve(process.argv[i + 1]) : path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-  const r = await sync({ cwd });
+  // SYNC_CHECKS (JSON, khusus tes workflow): ganti daftar pemeriksaan bawaan
+  const checks = process.env.SYNC_CHECKS ? JSON.parse(process.env.SYNC_CHECKS) : DEFAULT_CHECKS;
+  let r;
+  try {
+    r = await sync({ cwd, checks });
+  } catch (e) {
+    // Error tak terduga (mis. git fetch gagal): tetap dilaporkan sebagai alasan, bukan crash tanpa reason
+    r = { result: 'error', attempts: 0, error: e instanceof Error ? e.message : String(e), flaky: [] };
+  }
   const ok = r.result === 'synced' || r.result === 'up-to-date';
   const output = { result: r.result, attempts: r.attempts, files: r.files?.join(' '), failed: r.failed, flaky: r.flaky.join(', '), sha: r.sha, error: r.error };
   const reason = reasonOf(r);
