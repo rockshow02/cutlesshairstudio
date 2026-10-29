@@ -1,0 +1,75 @@
+# Rilis versi: setelah PR staging → main (rilis fitur) atau hotfix/* → main (rilis PATCH) di-merge,
+# buat tag vX.Y.Z di commit merge + GitHub Release berisi bagian CHANGELOG.md versi itu.
+# Versi dibaca dari package.json. Gagal dengan pesan jelas bila versi belum dinaikkan (tag sudah ada) atau
+# CHANGELOG belum punya bagian versi itu (CI "verify" sudah memeriksa hal yang sama sebelum merge).
+# Cara menaikkan versi: CONTRIBUTING.md → Rilis versi.
+name: Rilis versi
+
+on:
+  pull_request:
+    types: [closed]
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: 'Commit/branch main yang dirilis (default: main). Dipakai bila rilis otomatis gagal.'
+        required: false
+        default: main
+
+# Minimum (yang tidak disebut = none): push tag vX.Y.Z & membuat GitHub Release. Default repo tetap "Read".
+permissions:
+  contents: write
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.pull_request.merged == true &&
+       (github.event.pull_request.head.ref == 'staging' || startsWith(github.event.pull_request.head.ref, 'hotfix/')))
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.pull_request.merge_commit_sha || inputs.ref }}
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .node-version
+
+      - name: Cek versi (package.json) & CHANGELOG.md
+        run: node scripts/release.mjs check
+
+      - name: Buat tag & GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_HEAD: ${{ github.event.pull_request.head.ref }}
+        run: |
+          set -euo pipefail
+          version=$(node scripts/release.mjs version)
+          tag="v$version"
+          node scripts/release.mjs notes "$version" > release-notes.md
+          {
+            echo
+            echo "---"
+            if [ -n "${PR_NUMBER:-}" ]; then echo "Dirilis lewat PR #$PR_NUMBER (\`$PR_HEAD\` → \`main\`)."; fi
+            echo "Catatan lengkap: [CHANGELOG.md](https://github.com/${GITHUB_REPOSITORY}/blob/$tag/CHANGELOG.md)"
+          } >> release-notes.md
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag -a "$tag" -m "Rilis $tag"
+          git push origin "$tag"
+
+          gh release create "$tag" --verify-tag --title "$tag" --notes-file release-notes.md
+          {
+            echo "### ✓ Rilis $tag"
+            echo
+            cat release-notes.md
+          } >> "$GITHUB_STEP_SUMMARY"

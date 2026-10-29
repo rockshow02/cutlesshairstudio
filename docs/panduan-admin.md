@@ -573,19 +573,55 @@ Pesan muncul di pojok layar Pages CMS atau di bawah kolom (merah). Isian Anda **
 | *Harus diawali https://* | Link tidak lengkap | Salin link lengkap dari browser (diawali `https://`) |
 | *Placeholder yang boleh dipakai hanya …* | Template pesan memakai `{…}` yang tidak dikenal | Pakai hanya placeholder yang disebut di keterangan kolom, huruf kecil persis, mis. `{branch}` |
 | *harus di folder media …* / *ekstensi … bukan gambar* | Foto diambil dari folder lain atau bukan gambar | Pilih/upload foto lewat tombol di kolom itu sendiri; JPG/PNG/WebP |
-| Save berhasil, tetapi website tidak berubah setelah 10 menit | Isian lolos Pages CMS tetapi ditolak saat website dibangun (mis. data demo di website utama, deskripsi foto kosong, nomor contoh) | Website tetap menampilkan versi sebelumnya (aman). Cek badge STAGING atau hubungi developer |
+| Save berhasil, tetapi website tidak berubah setelah 10 menit | Isian lolos Pages CMS tetapi ditolak saat website dibangun (mis. data demo di website utama, deskripsi foto kosong, nomor contoh) | Website tetap menampilkan versi sebelumnya (aman). Lihat **Jika website tidak berubah setelah Save** |
+
+## Cara memastikan perubahan sudah tayang
+
+Edit konten di branch **`main`** langsung tayang di website utama, **bila lolos pemeriksaan otomatis**. Untuk memastikan:
+
+1. Buka **https://github.com/rockshow02/cutlesshairstudio/commits/main**. Baris paling atas = Save terakhir (nama Anda + *via Pages CMS*).
+2. Lihat ikon di baris itu (muncul ±1–5 menit setelah Save):
+   - **✓ hijau**: lolos pemeriksaan. Website sudah/sedang diperbarui; buka https://cutlesshairstudio.com lalu tekan **Ctrl+F5**.
+   - **● kuning**: masih diproses. Tunggu beberapa menit.
+   - **✗ merah**: ditolak. **Website tidak berubah** (tetap versi sebelumnya). Lihat bagian berikut.
+3. Versi website yang sedang tayang juga terlihat di Cloudflare: **Workers & Pages → cutlesshairstudio → Deployments** (baris teratas = versi aktif, beserta pesan commit-nya).
+
+## Jika website tidak berubah setelah Save
+
+Setiap Save di `main` diperiksa dua kali dengan aturan yang sama (ketat): oleh **Cloudflare** saat membangun website, dan oleh **GitHub (CI)**. Bila ada isian yang belum benar (mis. pertanyaan FAQ aktif tanpa jawaban, data demo masih tampil, nomor WhatsApp contoh, deskripsi foto kosong):
+
+- Cloudflare **membatalkan pembaruan**; website **tetap menampilkan versi sebelumnya**. Pengunjung tidak melihat isian yang salah.
+- Commit Anda di GitHub bertanda **✗ merah**.
+
+**Memperbaiki:**
+
+1. Di halaman commit GitHub, klik **✗** → **Details** pada pemeriksaan **CI / verify**.
+2. Baca **ringkasan** di halaman itu (atau langkah merah *Validasi konten*). Pesannya menyebut file, entri, dan kolomnya, mis. `faq.json: pertanyaan 3 "…": aktif tetapi jawabannya kosong (isi jawaban atau matikan Tampilkan)`. Nama file menunjuk menu Pages CMS (`faq.json` = FAQ, `pricing.json` = Daftar Harga, `branches.json` = Cabang, dst.).
+3. Betulkan isian itu di Pages CMS (branch **main**) → **Save**. Bila Save berikutnya bertanda ✓, semua perubahan yang tertunda ikut tayang.
+
+Tidak menemukan penyebabnya? Hubungi developer dan sertakan tautan commit yang bertanda ✗.
+
+## Mengembalikan perubahan (rollback)
+
+**Isian konten salah, tetapi sudah tayang** (mis. harga keliru): cara tercepat adalah membetulkannya lagi di Pages CMS → Save. Riwayat isian lama bisa dilihat di GitHub: buka file konten (mis. `src/content/pricing.json`) → **History** → pilih commit → lihat isi sebelumnya.
+
+**Website rusak setelah pembaruan dan perlu kembali SEKARANG** *(Owner)*:
+
+1. Cloudflare → **Workers & Pages → cutlesshairstudio → Deployments**.
+2. Pada versi sebelumnya yang masih benar: **⋯ → Rollback** → konfirmasi. Website kembali ke versi itu dalam hitungan detik.
+3. **Penting:** rollback Cloudflare tidak mengubah isi GitHub. Save berikutnya di Pages CMS akan membangun ulang website dari isi GitHub, termasuk perubahan yang salah. Jadi segera betulkan isiannya lewat Pages CMS, atau minta developer membatalkan commit-nya (`git revert`, lihat CONTRIBUTING.md → *Rollback*), sebelum mengedit lagi.
 
 ## Bila ada masalah
 
 | Masalah | Solusi |
 |---|---|
 | Perubahan belum muncul | Tunggu 3–5 menit, tekan Ctrl+F5 di alamat website utama/staging (bukan alamat berkode versi). Masih belum? Lihat baris berikut |
-| Perubahan tidak pernah muncul | Kemungkinan ada isian yang salah sehingga sistem menolak memperbarui website (website tetap menampilkan versi sebelumnya, jadi aman). Hubungi developer, atau cek pesan error di Cloudflare |
+| Perubahan tidak pernah muncul | Ada isian yang ditolak pemeriksaan (website tetap menampilkan versi sebelumnya, jadi aman). Lihat **Jika website tidak berubah setelah Save** |
 | Kolom ditolak saat Save | Baca pesan merah di bawah kolom (mis. format nomor WA atau jam) |
 | Nomor WA ditolak | Harus diawali `62`, hanya angka, mis. `628129876xxxx` |
 | Website tidak berubah setelah menambah cabang | Pastikan cabang Aktif sudah punya nomor WA, jam buka, dan alamat, atau pakai status **Segera Dibuka** |
 | Cabang baru tidak ada di pilihan Barber/Harga | Tunggu ±1 menit setelah menyimpan cabang, lalu refresh Pages CMS |
-| Salah ubah / terhapus | Tenang, semua perubahan tercatat. Hubungi developer untuk mengembalikan (rollback) |
+| Salah ubah / terhapus | Tenang, semua perubahan tercatat. Lihat **Mengembalikan perubahan (rollback)** |
 | Tidak bisa login | Pastikan undangan kolaborator GitHub sudah di-*Accept* |
 
 Setiap perubahan tercatat atas nama akun GitHub Anda (siapa mengubah apa dan kapan).
