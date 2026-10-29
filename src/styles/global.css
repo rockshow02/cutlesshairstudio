@@ -1,3 +1,4 @@
+@import './fonts.css';
 @import './tokens.css';
 
 *,
@@ -98,7 +99,10 @@ section[data-snap] {
   margin: 0 auto;
   padding: 7rem var(--gutter) 3rem;
   color: var(--c-bone);
+  /* Font sistem: tampil sebelum font situs termuat, jadi tidak boleh berganti font (layout shift) */
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
 }
+.prerender :is(h1, h2, h3, dt) { font-family: inherit; }
 .prerender h1 { font-size: 2rem; margin-bottom: 1rem; }
 .prerender h2 { font-size: 1.1rem; margin: 1.5rem 0 0.5rem; }
 .prerender p, .prerender li { color: var(--c-bone-dim); margin-bottom: 0.4rem; }

@@ -157,15 +157,32 @@ const gapBetween = async (a: Locator, b: Locator) => {
 };
 
 /** CLS sejak halaman dibuka (layout-shift tanpa input) */
+/**
+ * CLS halaman sejak dimuat: menunggu font situs selesai (document.fonts.ready) dan dua frame, lalu menjumlahkan semua
+ * layout shift tanpa input (buffered + takeRecords). Tidak bergantung pada jeda waktu tetap.
+ */
 const clsOf = (page: Page) =>
-  page.evaluate(
-    () =>
-      new Promise<number>((resolve) => {
-        let total = 0;
-        new PerformanceObserver((list) => list.getEntries().forEach((e) => { if (!(e as unknown as { hadRecentInput: boolean }).hadRecentInput) total += (e as unknown as { value: number }).value; })).observe({ type: 'layout-shift', buffered: true });
-        setTimeout(() => resolve(total), 300);
-      }),
-  );
+  page.evaluate(async () => {
+    await document.fonts.ready;
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+    type Shift = { hadRecentInput: boolean; value: number };
+    let total = 0;
+    const add = (entries: PerformanceEntry[]) => entries.forEach((e) => { if (!(e as unknown as Shift).hadRecentInput) total += (e as unknown as Shift).value; });
+    const observer = new PerformanceObserver((list) => add(list.getEntries()));
+    observer.observe({ type: 'layout-shift', buffered: true });
+    // Entri buffered dikirim ke callback secara async: tunggu satu frame, lalu ambil sisanya
+    await new Promise((r) => requestAnimationFrame(r));
+    add(observer.takeRecords());
+    observer.disconnect();
+    return total;
+  });
+
+/** Font situs termuat & dua frame tergambar (pengganti jeda waktu tetap) */
+const settled = (page: Page) =>
+  page.evaluate(async () => {
+    await document.fonts.ready;
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+  });
 
 /** CLS dari pergeseran elemen di dalam selector saja (mis. section About), sejak `since` (performance.now, ms) */
 const clsWithin = (page: Page, selector: string, since = 0) =>
@@ -213,7 +230,7 @@ test('hero rata tengah, ukurannya sama dengan hero beranda; tombol berdampingan 
   await page.goto(PAGE, { waitUntil: 'domcontentloaded' });
   const hero = page.locator('#top');
   await expect(hero.getByRole('heading', { level: 1 })).toBeVisible({ timeout: 20_000 });
-  await page.waitForTimeout(500);
+  await settled(page);
   const shoe = await heroBox(page);
   expectSameHero(shoe, home, page.viewportSize()!.height);
   const vp = page.viewportSize()!;
@@ -242,7 +259,7 @@ test('hero rata tengah, ukurannya sama dengan hero beranda; tombol berdampingan 
   expect(await gapBetween(h1, tagline)).toBeGreaterThanOrEqual(24);
   expect(await gapBetween(tagline, description)).toBeGreaterThanOrEqual(12);
   expect(await gapBetween(description, badge)).toBeGreaterThanOrEqual(32);
-  expect(await clsOf(page), 'CLS halaman').toBeLessThan(0.01);
+  expect(await clsOf(page), 'CLS halaman').toBeLessThan(0.005);
   await expectNoHorizontalScroll(page);
 
   // Semua isi hero di tengah horizontal (±2 px), teks rata tengah
@@ -296,16 +313,13 @@ test('hero rata tengah, ukurannya sama dengan hero beranda; tombol berdampingan 
 test('tanpa Logo hero: nama partner tampil sebagai teks judul, logo kecil di atas kicker, jarak tidak menempel', async ({ page }) => {
   await page.goto(`${NO_HERO_LOGO_URL}/`, { waitUntil: 'domcontentloaded' });
   await expect(page.locator('#top h1')).toBeVisible({ timeout: 20_000 });
-  // Varian uniform punya bar pengumuman (e2e/announcement.spec.ts): tutup dulu (tersimpan di localStorage) agar CLS di
-  // bawah hanya mengukur hero, bukan teks bar yang ikut bergeser mendatar saat font Archivo dimuat
-  const close = page.getByRole('region', { name: 'Pengumuman' }).getByRole('button', { name: 'Tutup pengumuman' });
-  while (await close.count()) await close.click();
+  await settled(page);
   const home = await heroBox(page);
   await page.goto(`${NO_HERO_LOGO_URL}${PAGE}`, { waitUntil: 'domcontentloaded' });
   const hero = page.locator('#top');
   const h1 = hero.getByRole('heading', { level: 1, name: E2E_SHOE_CARE.name });
   await expect(h1).toBeVisible({ timeout: 20_000 });
-  await page.waitForTimeout(500);
+  await settled(page);
   await expect(h1).toHaveText(E2E_SHOE_CARE.name);
   await expect(h1.locator('img')).toHaveCount(0);
   // Teks kecil dikosongkan di CMS → tidak tampil; nama partner langsung di bawah logo kecil, isi tetap di tengah layar
@@ -325,9 +339,9 @@ test('tanpa Logo hero: nama partner tampil sebagai teks judul, logo kecil di ata
   const tagline = hero.getByText('Tagline uji cuci sepatu.');
   expect(await gapBetween(h1, tagline)).toBeGreaterThanOrEqual(24);
   expect(await gapBetween(hero.getByText('Deskripsi uji layanan cuci sepatu partner.'), hero.getByText(`Tersedia di ${bogor.name}`))).toBeGreaterThanOrEqual(32);
-  // Judul teks tampil tanpa animasi: sisa pergeseran mendatar kecil saat Archivo menggantikan font cadangan (lebar beda
-  // ±1,5 % per kata; posisi vertikal sudah sama lewat ascent/descent-override). Dengan Logo hero: < 0,01.
-  expect(await clsOf(page), 'CLS halaman').toBeLessThan(0.02);
+  // Font situs di-host sendiri, di-preload, dan render pertama menunggu font (src/lib/fontsReady.ts): judul teks & bar
+  // pengumuman tergambar langsung dengan Archivo/Jakarta, tidak ada pergeseran karena ganti font
+  expect(await clsOf(page), 'CLS halaman').toBeLessThan(0.005);
   await expectNoHorizontalScroll(page);
 });
 

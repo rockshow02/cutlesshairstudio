@@ -32,13 +32,10 @@
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/site.webmanifest" />
 
-    <!-- Fonts: Archivo (display, expanded) + Plus Jakarta Sans (body) -->
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <!-- Font tidak memblokir render: dimuat paralel, diterapkan begitu siap (font-display: swap) -->
-    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@125,700;125,800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" />
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@125,700;125,800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" media="print" onload="this.media='all'" />
-    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@125,700;125,800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" /></noscript>
+    <!-- Font di-host sendiri (src/styles/fonts.css, public/fonts/): Archivo (display, expanded) + Plus Jakarta Sans (body).
+         File latin di-preload agar sudah ada saat teks pertama kali tergambar (tanpa layout shift karena ganti font). -->
+    <link rel="preload" as="font" type="font/woff2" href="/fonts/archivo-v1-latin.woff2" crossorigin />
+    <link rel="preload" as="font" type="font/woff2" href="/fonts/plus-jakarta-sans-v1-latin.woff2" crossorigin />
 
     <!-- Preload foto hero dari src/content/hero.json (diisi saat build) -->
     <!--cutless:hero-preload-->

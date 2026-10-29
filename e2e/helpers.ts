@@ -21,10 +21,20 @@ export async function prepareContext(context: BrowserContext, baseURL: string | 
   }
 }
 
+/** CPU dilambatkan N× (Chromium, CDP) untuk menguji tes yang peka waktu: E2E_CPU_THROTTLE=4 npx playwright test … */
+const CPU_THROTTLE = Number(process.env.E2E_CPU_THROTTLE ?? 0);
+
 export const test = base.extend<{ apiCalls: string[] }>({
   context: async ({ context, baseURL }, use) => {
     await prepareContext(context, baseURL);
     await use(context);
+  },
+  page: async ({ page }, use) => {
+    if (CPU_THROTTLE > 1) {
+      const cdp = await page.context().newCDPSession(page);
+      await cdp.send('Emulation.setCPUThrottlingRate', { rate: CPU_THROTTLE });
+    }
+    await use(page);
   },
   apiCalls: async ({ context }, use) => {
     const calls: string[] = [];
