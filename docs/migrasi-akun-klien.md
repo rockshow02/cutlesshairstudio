@@ -126,7 +126,7 @@ Perkiraan waktu: 1 jam kerja + propagasi nameserver (biasanya < 2 jam, maksimal 
 
 ## 3. URL dan nama akun yang ditulis di repo
 
-Setelah subdomain/domain baru diketahui, ganti lewat alur biasa (`feature/*` → `staging` → `main`):
+Setelah subdomain/domain baru diketahui, ganti lewat alur biasa (`feat/*` → `staging` → rilis ke `main`, lihat CONTRIBUTING.md):
 
 | File | Isi sekarang | Ganti ke |
 |---|---|---|

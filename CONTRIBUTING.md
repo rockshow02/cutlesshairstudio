@@ -1,49 +1,113 @@
-# Alur kerja: feature → staging → main
+# Alur kerja: konten → main · fitur → staging → rilis berversi · hotfix → main
 
-| Branch | Fungsi | Deploy | Siapa yang menulis |
+| Perubahan | Jalur | Tayang | Versi |
 |---|---|---|---|
-| `main` | **Produksi** | Worker `cutlesshairstudio` → https://cutlesshairstudio.com (workers.dev produksi mati) | Merge PR dari `staging`; edit konten harian pemilik lewat Pages CMS |
-| `staging` | **Pengujian** | Worker `cutlesshairstudio-staging` → https://cutlesshairstudio-staging.adi-yansyaaah.workers.dev | Merge dari `feature/*`; uji konten lewat Pages CMS (branch staging); PR sinkron `main → staging` |
-| `feature/<nama>` | Pekerjaan baru (mis. `feature/transisi`) | tidak dideploy (uji di lokal) | Developer |
+| **Konten** (harga, foto, FAQ, video, cabang, …) | Pages CMS → branch `main` langsung | otomatis ±3–5 menit, **bila lolos validasi ketat** | tidak berubah |
+| **Fitur / perbaikan biasa** | `feat/<nama>` (atau `fix/…`, `chore/…`) → PR ke `staging` → uji → **rilis**: PR `staging` → `main` | saat PR rilis di-merge | MINOR (`1.2.0` → `1.3.0`) atau PATCH |
+| **Hotfix** (produksi rusak, tidak bisa menunggu rilis) | `hotfix/<nama>` dari `main` → PR langsung ke `main` | saat PR hotfix di-merge | PATCH (`1.2.0` → `1.2.1`) |
+
+| Branch | Fungsi | Deploy |
+|---|---|---|
+| `main` | **Produksi** | Worker `cutlesshairstudio` → https://cutlesshairstudio.com (workers.dev produksi mati) |
+| `staging` | **Pengujian** fitur sebelum rilis | Worker `cutlesshairstudio-staging` → https://cutlesshairstudio-staging.adi-yansyaaah.workers.dev |
+| `feat/*`, `fix/*`, `chore/*` | Pekerjaan baru | tidak dideploy (uji lokal) |
+| `hotfix/*` | Perbaikan darurat dari `main` | tidak dideploy sampai di-merge ke main |
 
 ```
-feature/transisi ──PR──▶ staging ──PR (CI wajib lolos)──▶ main
-                             ▲                              │
-                             └──── PR otomatis harian ──────┘  (edit konten pemilik di produksi)
+Pages CMS ─────────────────────────────────────────────▶ main ──▶ cutlesshairstudio.com
+feat/x ──PR──▶ staging ──PR rilis vX.Y.Z (CI wajib lolos)──▶ main ──▶ tag vX.Y.Z + GitHub Release
+hotfix/y (dari main) ──PR vX.Y.Z+1──────────────────────────▶ main
+                  ▲                                            │
+                  └──── sinkron otomatis tiap push ke main ────┘  (merge otomatis bila tanpa bentrok)
 ```
 
 ## 1. Mengerjakan fitur
 
 ```bash
 git switch staging && git pull
-git switch -c feature/transisi
+git switch -c feat/transisi
 npm run dev                         # http://localhost:5173 (badge DEV)
 # ... kerjakan, commit ...
-npm run typecheck && npm run lint && npm run check:content   # sama seperti CI
-git push -u origin feature/transisi
+npm run typecheck && npm run lint && npm test && npm run check:content   # sama seperti CI
+git push -u origin feat/transisi
 ```
 
-Buka Pull Request **feature/transisi → staging** di GitHub. CI berjalan (konten boleh belum lengkap; masalah "siap tayang" hanya peringatan). Setelah merge, staging otomatis dideploy (±2 menit). Uji di URL staging.
+Buka Pull Request **feat/transisi → staging** di GitHub. CI berjalan (konten boleh belum lengkap; masalah "siap tayang" hanya peringatan). Setelah merge, staging otomatis dideploy (±2 menit). Uji di URL staging. Tambahkan catatan di bagian **`## [Belum dirilis]`** CHANGELOG.md (Ditambahkan / Diubah / Diperbaiki) di PR yang sama.
 
-## 2. Rilis ke produksi
+### Aturan: fitur baru wajib punya toggle di CMS, default mati
 
-1. Uji di URL staging (lihat [checklist](#checklist-sebelum-merge-ke-main)). Badge **STAGING** di pojok kiri bawah menunjukkan konten yang belum siap tayang. Angkanya harus **0**.
-2. Buka PR **staging → main**. CI menjalankan typecheck, lint, tes, validasi konten **ketat** (tidak ada nomor contoh 6281234567890, kata "contoh", TODO, branchSlug tidak dikenal, cabang Aktif tanpa WA/jam), dan build produksi.
-3. Merge (pakai **Create a merge commit**) setelah CI hijau. Cloudflare mendeploy produksi otomatis.
+Setiap bagian/halaman baru yang tampil ke pengunjung **wajib** punya toggle di Pages CMS (mis. *Tampilkan FAQ*, *Tampilkan bagian Video*, *Tampilkan Produk*) dengan **default mati**: `z.boolean().default(false)` di skema, `default: false` di `.pages.yml`, dan nilai awal `false` di file konten.
 
-PR ke `main` dari branch selain `staging` otomatis ditolak CI. Hotfix pun lewat staging dulu (cepat: buat `feature/hotfix-…` → staging → main).
+- Rilis aman walau kontennya belum siap: kode tayang di produksi, bagiannya baru muncul saat pemilik menyalakannya.
+- Mati = tidak dirender sama sekali (termasuk HTML statis, JSON-LD, sitemap, menu), bukan disembunyikan dengan CSS.
+- Tes unit untuk keadaan mati & aktif; e2e memakai data uji (mis. aktif di build bawaan, mati di varian uniform).
+- Aturan launch (`crossCheck` di `src/content/schema.ts`) menandai toggle yang aktif tetapi isinya belum lengkap.
 
-## 3. Sinkron main → staging (otomatis)
+## 2. Edit konten di main (Pages CMS)
 
-Pemilik mengedit konten langsung di `main` lewat Pages CMS. Workflow **Sinkron main → staging** (`.github/workflows/sync-staging.yml`) berjalan setiap hari 03.00 WIB (atau manual: **Actions → Sinkron main → staging → Run workflow**) dan membuka/memperbarui PR **main → staging**.
+Pemilik & staf mengedit konten di branch **`main`** lewat Pages CMS (panduan: `docs/panduan-admin.md`). Setiap Save = 1 commit ke `main`:
 
-- Merge PR itu dengan **Create a merge commit** (jangan squash/rebase).
-- PR yang dibuat bot tidak memicu CI (batasan GitHub untuk `GITHUB_TOKEN`); itu tidak masalah karena isinya sudah ada di produksi.
-- **Selalu merge PR sinkron sebelum membuat PR staging → main**, agar edit pemilik tidak tertimpa.
+1. **Cloudflare Workers Builds** menjalankan `npm run build`: validasi konten **mode ketat**, selalu (variabel `CONTENT_CHECK=warn` diabaikan untuk build produksi). Lolos → deploy. Gagal → **deploy tidak dijalankan, versi sebelumnya tetap tayang**.
+2. **CI `verify`** berjalan di push yang sama dengan pemeriksaan yang sama. Bila gagal, ringkasan run menyebut file/entri/kolom yang harus dibetulkan dan bahwa website tidak berubah.
+3. **Sinkron main → staging** membawa perubahan itu ke staging (§5).
 
-### Menyelesaikan konflik sinkron
+Simpanan Pages CMS langsung ke `main` diizinkan (bypass ruleset, lihat [Branch protection](#branch-protection-sekali-oleh-admin-repo)); perubahan **kode** tetap wajib lewat PR.
 
-PR berlabel **conflict** berarti file yang sama diubah di main (oleh pemilik) dan di staging. Biasanya `src/content/*.json`.
+## 3. Rilis versi (staging → main)
+
+1. Pastikan tidak ada PR sinkron `main → staging` yang terbuka (biasanya sudah di-merge otomatis; berlabel **perlu-dicek** → selesaikan dulu, §5).
+2. Uji di URL staging ([checklist](#checklist-sebelum-merge-ke-main)). Badge **STAGING** harus **0 belum siap**.
+3. **Naikkan versi** lewat branch kecil ke staging (mis. `chore/rilis-1.3.0`):
+   ```bash
+   npm version minor --no-git-tag-version   # 1.2.0 → 1.3.0 (fitur). Perbaikan saja: patch. Perubahan besar: major
+   node scripts/release.mjs check           # versi > tag terakhir & bagian CHANGELOG ada
+   ```
+   Di CHANGELOG.md: ganti judul `## [Belum dirilis]` menjadi `## [1.3.0] - YYYY-MM-DD` (tanggal rilis), tambahkan `## [Belum dirilis]` kosong di atasnya, dan perbarui tautan perbandingan di bawah file.
+4. Buka PR **staging → main** (judul mis. `Rilis v1.3.0`). CI menjalankan typecheck, lint, tes, validasi konten **ketat**, build produksi, e2e, dan **cek versi** (versi > tag terakhir, tag belum ada, bagian CHANGELOG bertanggal & berisi). Versi belum dinaikkan → CI merah dengan pesan langkah perbaikannya.
+5. Merge (pakai **Create a merge commit**) setelah CI hijau. Cloudflare mendeploy produksi; workflow **Rilis versi** (`.github/workflows/release.yml`) membuat tag `v1.3.0` di commit merge dan GitHub Release berisi bagian CHANGELOG versi itu. Bila workflow itu gagal: perbaiki penyebabnya (pesan di log), lalu **Actions → Rilis versi → Run workflow** (ref: `main`).
+
+PR ke `main` dari branch selain `staging` dan `hotfix/*` ditolak CI dengan penjelasan alurnya.
+
+## 4. Hotfix (perbaikan darurat produksi)
+
+Untuk kesalahan **kode** di produksi yang tidak bisa menunggu rilis berikutnya. Kesalahan **konten** cukup dibetulkan lewat Pages CMS.
+
+```bash
+git fetch origin && git switch -c hotfix/harga-tidak-tampil origin/main
+# ... perbaiki seminimal mungkin + tes ...
+npm version patch --no-git-tag-version          # mis. 1.3.0 → 1.3.1
+# CHANGELOG.md: tambah "## [1.3.1] - YYYY-MM-DD" + "### Diperbaiki" (di bawah "## [Belum dirilis]")
+node scripts/release.mjs check && npm run typecheck && npm run lint && npm test
+git push -u origin hotfix/harga-tidak-tampil
+```
+
+Buka PR **hotfix/… → main**. CI sama dengan PR rilis. Setelah merge: produksi terdeploy, tag `v1.3.1` + GitHub Release dibuat otomatis, dan sinkron otomatis membawa hotfix ke `staging`. Bila staging sudah menaikkan versi untuk rilis berikutnya, sinkron bisa bentrok di `package.json`/CHANGELOG.md: pertahankan versi staging dan sisipkan bagian hotfix di CHANGELOG (§5).
+
+### Rollback
+
+1. **Segera (detik):** Cloudflare → **Workers & Pages → cutlesshairstudio → Deployments → ⋯ → Rollback** ke versi yang benar (atau `npx wrangler rollback`). Isi GitHub tidak berubah, jadi build berikutnya (mis. Save Pages CMS) menayangkan lagi isi `main`. Lanjutkan ke langkah 2.
+2. **Permanen:** batalkan commit-nya di `main` lewat jalur hotfix (tombol *Revert* GitHub membuat branch `revert-…`, yang ditolak CI):
+   ```bash
+   git fetch origin && git switch -c hotfix/revert-v1.3.0 origin/main
+   git revert -m 1 <sha-merge-rilis>      # commit merge PR rilis; commit Pages CMS biasa: git revert <sha>
+   npm version patch --no-git-tag-version  # + CHANGELOG "### Diperbaiki: membatalkan …"
+   git push -u origin hotfix/revert-v1.3.0  # PR → main
+   ```
+   Konten yang salah cukup dibetulkan lewat Pages CMS (tanpa revert).
+
+## 5. Sinkron main → staging (otomatis)
+
+Workflow **Sinkron main → staging** (`.github/workflows/sync-staging.yml`) berjalan di **setiap push ke `main`** (edit Pages CMS, rilis, hotfix), plus jadwal harian 03.00 WIB sebagai cadangan dan manual (**Actions → Sinkron main → staging → Run workflow**):
+
+1. Membuat/memperbarui PR **main → staging**.
+2. Tanpa bentrok: menggabungkan `main` ke `staging` di runner, menjalankan pemeriksaan yang sama dengan CI staging (typecheck, lint, tes, validasi konten, build staging), lalu push ke `staging`. PR tercatat *merged* otomatis; Cloudflare mendeploy staging.
+3. Bentrok atau pemeriksaan gagal: PR diberi label **perlu-dicek** + komentar alasannya. Tidak ada yang di-push.
+
+PR buatan bot tidak memicu workflow CI (batasan GitHub untuk `GITHUB_TOKEN`), karena itu pemeriksaannya dijalankan di dalam workflow sinkron.
+
+### Menyelesaikan sinkron yang perlu dicek
+
+**Bentrok:** file yang sama diubah di main (oleh pemilik) dan di staging. Biasanya `src/content/*.json`.
 
 ```bash
 git switch staging && git pull
@@ -51,19 +115,21 @@ git merge origin/main            # muncul konflik
 # Buka file yang konflik. Untuk konten: pertahankan versi PRODUKSI (main) kecuali memang sedang diuji di staging.
 #   Ambil versi main untuk satu file: git checkout --theirs src/content/pricing.json
 npm run check:content            # pastikan JSON tetap valid
-git add . && git commit && git push   # PR sinkron otomatis tertutup sebagai merged
+git add . && git commit && git push   # PR sinkron tercatat merged; hapus label perlu-dicek
 ```
 
-## 4. Menguji konten lewat Pages CMS (branch staging)
+**Pemeriksaan gagal:** buka log run (tautan di komentar PR), perbaiki di `staging` lewat branch kecil, lalu jalankan workflow sinkron lagi.
+
+## 6. Menguji konten lewat Pages CMS (branch staging)
 
 1. Buka https://app.pagescms.org → repo **cutlesshairstudio** → pilih branch **staging** (menu branch di kiri atas).
 2. Edit konten seperti biasa → **Save**. Commit masuk ke `staging`, URL staging terdeploy ±2 menit.
 3. Ingin lihat langsung di laptop? Jalankan `npm run dev:sync` (lihat di bawah); perubahan tampil di localhost dalam ±15 detik.
 4. Pemilik tetap memakai branch **main**. Konten yang diuji di staging ikut ke produksi saat PR staging → main di-merge.
 
-`.pages.yml` ada di kedua branch (branch staging dibuat dari main). Ubah `.pages.yml` lewat alur feature → staging → main seperti kode.
+`.pages.yml` ada di kedua branch (branch staging dibuat dari main). Ubah `.pages.yml` lewat alur fitur → staging → rilis seperti kode.
 
-## 5. Perintah lokal
+## 7. Perintah lokal
 
 | Perintah | Fungsi |
 |---|---|
@@ -81,7 +147,7 @@ git add . && git commit && git push   # PR sinkron otomatis tertutup sebagai mer
 
 Konten tidak valid di dev (mis. commit Pages CMS yang salah) tampil sebagai **overlay error** di browser, berisi nama file, entri, dan kolomnya.
 
-## 6. Environment
+## 8. Environment
 
 | | development | staging | production |
 |---|---|---|---|
@@ -103,7 +169,9 @@ Tidak ada rahasia di file `.env.*` (semua `VITE_*` terbaca di browser). Override
 - [ ] `/cabang/<slug>/` tiap cabang bisa di-**refresh** (dan `/cabang/<slug>` tanpa garis miring diarahkan) di URL staging
 - [ ] Transisi/animasi aman dengan **prefers-reduced-motion** (DevTools → Rendering → Emulate CSS prefers-reduced-motion: reduce → tidak ada animasi besar, konten tetap tampil)
 - [ ] **Lighthouse mobile ≥ 85** (Performance, Accessibility, Best Practices, SEO) di URL staging. SEO staging memang turun karena noindex; nilai SEO dicek di `npm run preview`
-- [ ] PR sinkron `main → staging` (bila ada) sudah di-merge
+- [ ] Fitur baru punya **toggle di CMS, default mati** ([aturan](#aturan-fitur-baru-wajib-punya-toggle-di-cms-default-mati))
+- [ ] Tidak ada PR sinkron `main → staging` yang terbuka / berlabel **perlu-dicek**
+- [ ] **Versi dinaikkan** di `package.json` + bagian `## [X.Y.Z] - tanggal` di CHANGELOG.md (`node scripts/release.mjs check`)
 - [ ] CI hijau
 
 ## Branch protection (sekali, oleh admin repo)
@@ -116,7 +184,11 @@ Gratis untuk repo publik. **Settings → Rules → Rulesets → New ruleset → 
 - **Rules:** ✅ Restrict deletions · ✅ Require a pull request before merging (Required approvals: **0**, karena developer tunggal tidak bisa menyetujui PR sendiri) · ✅ Require status checks to pass → **Add checks → `verify` dan `e2e`** · ✅ Block force pushes
 - **Create**.
 
-Lalu **Settings → Actions → General → Workflow permissions** → centang **Allow GitHub Actions to create and approve pull requests** → Save (dibutuhkan workflow sinkron main → staging).
+PR ke `main` hanya diterima dari `staging` dan `hotfix/*` (dicek CI `verify`, yang wajib lolos). Commit Pages CMS ke `main` lewat bypass di atas tetap langsung masuk.
+
+Lalu **Settings → Actions → General → Workflow permissions** → pilih **Read and write permissions** dan centang **Allow GitHub Actions to create and approve pull requests** → Save. Dibutuhkan workflow **Sinkron main → staging** (membuat PR & push ke staging) dan **Rilis versi** (membuat tag & GitHub Release).
+
+Bila `staging` juga diberi ruleset (opsional), tambahkan *GitHub Actions* ke bypass list-nya agar sinkron otomatis bisa push ke staging; tanpa itu PR sinkron tetap dibuat tetapi harus di-merge manual.
 
 > **Konsekuensi:** setelah launch, pengeditan harian konten dilakukan di branch `main` lewat Pages CMS. Pemilik (admin repo) dan collaborator Pages CMS (lewat bypass aplikasi **Pages CMS**) bisa langsung menyimpan; akun GitHub *non-admin* lain akan ditolak (wajib PR). Nama & email pengedit tercatat di commit (`settings.commit.identity: user` di `.pages.yml`).
 

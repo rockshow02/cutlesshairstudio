@@ -16,7 +16,7 @@ Website Vite + React 18 + TypeScript + CSS Modules untuk beberapa cabang (saat i
 | **Staging** (noindex) | `staging` | https://cutlesshairstudio-staging.adi-yansyaaah.workers.dev |
 | Lokal | apa saja | http://localhost:5173 (`npm run dev`) · http://localhost:8787 (`npm run preview:worker`) |
 
-Alur kerja **feature → staging → main**, sinkron konten main → staging, dan checklist rilis: **[CONTRIBUTING.md](CONTRIBUTING.md)**.
+Alur kerja (konten → main, fitur → staging → rilis berversi, hotfix → main), sinkron main → staging, dan checklist rilis: **[CONTRIBUTING.md](CONTRIBUTING.md)**. Riwayat versi: **[CHANGELOG.md](CHANGELOG.md)**.
 
 > Versi lama dengan Strapi diarsipkan di branch [`archive/strapi`](../../tree/archive/strapi).
 
@@ -312,10 +312,11 @@ Harga efektif satu layanan di satu cabang: `COALESCE(bp.price, pi.price)` dari `
 
 Detail lengkap: **[CONTRIBUTING.md](CONTRIBUTING.md)**.
 
-1. **Fitur:** `feature/<nama>` dari `staging` → `npm run dev` → PR ke `staging` (CI: typecheck, lint, validasi konten, build).
-2. **Uji:** merge ke `staging` → otomatis tayang di URL staging (badge STAGING, tidak diindeks).
-3. **Rilis:** PR `staging → main`. CI **wajib lolos** (konten ketat + build produksi), lalu merge → produksi.
-4. **Sinkron balik:** workflow harian membuka PR `main → staging` berisi edit konten pemilik; bentrok → label `conflict`.
+1. **Konten:** Pages CMS → `main` langsung → tayang otomatis bila lolos validasi ketat (gagal → versi sebelumnya tetap tayang).
+2. **Fitur:** `feat/<nama>` dari `staging` → `npm run dev` → PR ke `staging` (CI: typecheck, lint, tes, validasi konten, build, e2e) → otomatis tayang di URL staging (badge STAGING, tidak diindeks). Fitur baru wajib punya toggle CMS, default mati.
+3. **Rilis versi:** naikkan `version` di `package.json` + bagian CHANGELOG.md → PR `staging → main`. CI **wajib lolos** (konten ketat + build produksi + cek versi), lalu merge → produksi + tag `vX.Y.Z` & GitHub Release otomatis.
+4. **Hotfix:** `hotfix/<nama>` dari `main` → PR langsung ke `main` (versi PATCH).
+5. **Sinkron balik:** setiap push ke `main` → PR `main → staging`, di-merge otomatis bila tanpa bentrok & pemeriksaan lolos; selain itu label `perlu-dicek`.
 
 **Menguji konten lewat Pages CMS di staging:** app.pagescms.org → repo → pilih branch **staging** → edit → Save. Hasilnya tayang di URL staging ±2 menit, atau di laptop dalam ±15 detik dengan `npm run dev:sync` (branch lokal `staging`). Pemilik tetap di branch **main**.
 

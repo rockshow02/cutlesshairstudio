@@ -705,7 +705,12 @@ export function contentPlugin(): Plugin {
         ?? (config.mode === 'production' ? 'production' : 'development');
       siteUrlOverride = (env.VITE_SITE_URL ?? '').trim().replace(/\/+$/, '');
       analyticsToken = (env.VITE_CF_ANALYTICS_TOKEN ?? '').trim();
-      lenient = (env.CONTENT_CHECK || (appEnv === 'production' ? 'strict' : 'warn')) === 'warn';
+      // Build produksi SELALU ketat: konten belum siap tayang → build gagal → Workers Builds tidak menjalankan deploy,
+      // versi yang tayang tetap versi sebelumnya. CONTENT_CHECK=warn (mis. terpasang di Cloudflare) diabaikan.
+      if (isBuild && appEnv === 'production' && env.CONTENT_CHECK === 'warn') {
+        console.warn('• CONTENT_CHECK=warn diabaikan: build produksi selalu memakai cek siap tayang strict');
+      }
+      lenient = !(isBuild && appEnv === 'production') && (env.CONTENT_CHECK || (appEnv === 'production' ? 'strict' : 'warn')) === 'warn';
       fixtures = env.E2E_FIXTURES === '1';
       variant = env.E2E_VARIANT || undefined;
       if (fixtures && appEnv === 'production') throw new Error('E2E_FIXTURES tidak boleh dipakai untuk build produksi');
