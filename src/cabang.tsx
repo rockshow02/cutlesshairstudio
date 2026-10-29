@@ -1,6 +1,7 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import '@/styles/global.css';
+import { fontsReady } from '@/lib/fontsReady';
 import { SiteShell } from '@/components/layout/SiteShell';
 import { BranchPage, BranchesIndex } from '@/components/pages/BranchPages';
 
@@ -11,8 +12,11 @@ import { BranchPage, BranchesIndex } from '@/components/pages/BranchPages';
  */
 const slug = window.location.pathname.match(/\/cabang\/([a-z0-9-]+)\/?/)?.[1];
 
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <SiteShell pageBranchSlug={slug}>{slug ? <BranchPage /> : <BranchesIndex />}</SiteShell>
-  </StrictMode>,
+// Teks pertama tergambar dengan font situs (tanpa layout shift karena ganti font): src/lib/fontsReady.ts
+void fontsReady().then(() =>
+  createRoot(document.getElementById('root')!).render(
+    <StrictMode>
+      <SiteShell pageBranchSlug={slug}>{slug ? <BranchPage /> : <BranchesIndex />}</SiteShell>
+    </StrictMode>,
+  ),
 );
