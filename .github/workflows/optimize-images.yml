@@ -14,6 +14,8 @@ on:
       - 'src/content/*.json'
   workflow_dispatch:
 
+# Minimum (yang tidak disebut = none): meng-commit WebP hasil kompres & dropdown cabang .pages.yml ke branch yang sama.
+# Default repo tetap "Read"; izin tulis hanya untuk workflow ini, sinkron main → staging, dan rilis versi.
 permissions:
   contents: write
 

@@ -16,8 +16,9 @@ on:
         required: false
         default: main
 
+# Minimum (yang tidak disebut = none): push tag vX.Y.Z & membuat GitHub Release. Default repo tetap "Read".
 permissions:
-  contents: write # membuat tag & GitHub Release
+  contents: write
 
 concurrency:
   group: release

@@ -9,9 +9,9 @@
 #      Cloudflare mendeploy staging). Gagal → label "perlu-dicek" + komentar langkah yang gagal.
 #   PR buatan bot tidak memicu workflow CI (batasan GITHUB_TOKEN), karena itu pemeriksaannya dijalankan di sini.
 #
-# Perlu (sekali): Settings → Actions → General → Workflow permissions → "Read and write permissions" dan centang
-#   "Allow GitHub Actions to create and approve pull requests". Bila staging dilindungi ruleset, tambahkan
-#   GitHub Actions ke bypass list (lihat CONTRIBUTING.md → Branch protection).
+# Izin GITHUB_TOKEN diberikan eksplisit di bawah (default repo tetap "Read repository contents"). Perlu (sekali):
+#   Settings → Actions → General → centang "Allow GitHub Actions to create and approve pull requests" (gh pr create).
+#   Bila staging dilindungi ruleset, tambahkan GitHub Actions ke bypass list (CONTRIBUTING.md → Branch protection).
 name: Sinkron main → staging
 
 on:
@@ -21,10 +21,11 @@ on:
     - cron: '0 20 * * *' # 20.00 UTC = 03.00 WIB (cadangan; jadwal hanya berjalan dari branch default)
   workflow_dispatch:
 
+# Minimum (yang tidak disebut = none): push hasil merge ke staging; buat/perbarui PR, buat & pasang label "perlu-dicek",
+# dan komentar PR (endpoint label & komentar menerima izin "Pull requests" write, tidak perlu "issues").
 permissions:
-  contents: write # push hasil merge ke staging
+  contents: write
   pull-requests: write
-  issues: write # label & komentar
 
 concurrency:
   group: sync-main-to-staging

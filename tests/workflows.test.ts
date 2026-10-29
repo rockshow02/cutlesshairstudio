@@ -2,13 +2,34 @@
  * Alur rilis (CONTRIBUTING.md): pemicu & aturan di workflow GitHub Actions tidak hilang tanpa sengaja.
  * Konten → main (CI verify tiap push), fitur → staging → rilis berversi, hotfix → main, sinkron main → staging.
  */
-import { readFileSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { parse } from 'yaml';
 
 type Step = { name?: string; if?: string; run?: string; env?: Record<string, string> };
 type Workflow = { on: Record<string, { branches?: string[]; types?: string[] } | null>; jobs: Record<string, { if?: string; steps: Step[] }> };
 const workflow = (file: string) => parse(readFileSync(`.github/workflows/${file}`, 'utf8')) as Workflow;
+
+describe('izin GITHUB_TOKEN (default repo tetap "Read"; izin tulis hanya eksplisit & minimum)', () => {
+  /** Izin yang diharapkan per workflow; workflow baru wajib ditambahkan di sini */
+  const EXPECTED: Record<string, Record<string, string>> = {
+    'ci.yml': { contents: 'read' },
+    'optimize-images.yml': { contents: 'write' },
+    'sync-staging.yml': { contents: 'write', 'pull-requests': 'write' },
+    'release.yml': { contents: 'write' },
+  };
+
+  it('setiap workflow punya blok permissions eksplisit di tingkat workflow, persis set minimum', () => {
+    const files = readdirSync('.github/workflows').filter((f) => /\.ya?ml$/.test(f)).sort();
+    expect(files).toEqual(Object.keys(EXPECTED).sort());
+    for (const file of files) {
+      const w = workflow(file) as Workflow & { permissions?: unknown };
+      expect(w.permissions, file).toEqual(EXPECTED[file]);
+      // Tidak ada job yang menaikkan izin sendiri (write-all / read-all / blok job)
+      for (const [name, job] of Object.entries(w.jobs)) expect((job as { permissions?: unknown }).permissions, `${file} → ${name}`).toBeUndefined();
+    }
+  });
+});
 
 describe('workflow alur rilis', () => {
   it('CI: push ke main & staging, PR ke main/staging; e2e tidak diulang untuk push ke main', () => {
