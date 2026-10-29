@@ -4,7 +4,7 @@
  * diganti skrip kecil yang bisa disetel lolos / gagal / gagal sekali.
  */
 import { execFileSync, spawnSync } from 'node:child_process';
-import { copyFileSync, existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
@@ -175,5 +175,17 @@ describe('sinkron main → staging', { timeout: 60_000 }, () => {
     expect(readFileSync(out, 'utf8')).toMatch(/^result=conflict$/m);
     expect(readFileSync(out, 'utf8')).toMatch(/^reason=bentrok di: konten\.json$/m);
     expect(readFileSync(summary, 'utf8')).toContain('✗ Sinkron gagal: bentrok di: konten.json');
+  });
+
+  it('CLI: error tak terduga (mis. --cwd bukan repo git) → ditangkap: exit 1, reason & ::error terisi, bukan crash', async () => {
+    const notRepo = path.join(dir, 'bukan-repo');
+    mkdirSync(notRepo);
+    const out = path.join(dir, 'output.txt');
+    const r = spawnSync(process.execPath, ['scripts/sync-staging.mjs', '--cwd', notRepo], { env: { ...process.env, GITHUB_OUTPUT: out }, encoding: 'utf8' });
+    expect(r.status).toBe(1);
+    expect(r.stderr).not.toMatch(/at .*sync-staging\.mjs/); // tidak ada stack trace crash
+    expect(readFileSync(out, 'utf8')).toMatch(/^result=error$/m);
+    expect(readFileSync(out, 'utf8')).toMatch(/^reason=skrip sinkron error: git fetch --quiet origin main staging: .+/m);
+    expect(r.stdout).toContain('::error title=Sinkron main → staging gagal::skrip sinkron error:');
   });
 });

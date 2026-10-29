@@ -99,7 +99,7 @@ Buka PR **hotfix/… → main**. CI sama dengan PR rilis. Setelah merge: produks
 
 Workflow **Sinkron main → staging** (`.github/workflows/sync-staging.yml`) berjalan di **setiap push ke `main`** (edit Pages CMS, rilis, hotfix), plus jadwal harian 03.00 WIB sebagai cadangan dan manual (**Actions → Sinkron main → staging → Run workflow**):
 
-1. Menggabungkan `main` ke `staging` di runner, menjalankan pemeriksaan yang sama dengan CI staging (typecheck, lint, tes, validasi konten, build staging), lalu push ke `staging`. Cloudflare mendeploy staging. Logikanya di `scripts/sync-staging.mjs` (diuji `tests/syncStaging.test.ts`).
+1. Menggabungkan `main` ke `staging` di runner, menjalankan pemeriksaan yang sama dengan CI staging (typecheck, lint, tes, validasi konten, build staging), lalu push ke `staging`. Cloudflare mendeploy staging. Logikanya di `scripts/sync-staging.mjs` (diuji `tests/syncStaging.test.ts`), yang selalu diambil dari `main` (staging bisa belum memuat versi terbarunya).
 2. **Satu sinkron dalam satu waktu** (concurrency `sinkron-staging`): run baru menunggu, tidak berebut push.
 3. **Push ditolak karena staging berubah** di tengah sinkron (mis. fitur baru di-merge): fetch ulang, merge & periksa lagi dari staging terbaru, maks. 3×. Tidak pernah *force push*.
 4. **Install dependensi & tes unit yang gagal diulang sekali.** Lolos saat diulang → sinkron jalan terus, ringkasan run & anotasi mencatat *kemungkinan flaky* (perlu diperiksa, bukan diabaikan). Gagal 2× → kegagalan sungguhan. Typecheck, lint, validasi konten, dan build tidak diulang (hasilnya selalu sama).

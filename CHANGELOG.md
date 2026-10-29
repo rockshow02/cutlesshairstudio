@@ -12,6 +12,12 @@ Cara menaikkan versi & merilis: [CONTRIBUTING.md → Rilis versi](CONTRIBUTING.m
 
 ## [Belum dirilis]
 
+## [1.2.3] - 2026-10-29
+
+### Diperbaiki
+- Sinkron main → staging gagal sebelum skrip berjalan (v1.2.2): workflow men-checkout `staging`, yang belum memuat `scripts/sync-staging.mjs`. Skrip kini selalu diambil dari `main` (`git show origin/main:…`); diuji dengan menjalankan langkah workflow apa adanya di repo uji yang staging-nya tanpa skrip.
+- Sinkron yang gagal selalu menyebut alasan spesifik: skrip tidak ditemukan di main, checkout / fetch / setup Node gagal, atau error tak terduga di skrip (ditangkap, ditulis sebagai alasan + `::error`, bukan crash).
+
 ## [1.2.2] - 2026-10-29
 
 ### Diperbaiki
@@ -65,7 +71,8 @@ Launch https://cutlesshairstudio.com.
 - Halaman `/cuci-sepatu/` untuk partner cuci sepatu (layanan, harga, daftar menu PDF, galeri) dan teaser di beranda.
 - Validasi konten saat build (skema & aturan siap tayang), kompres gambar otomatis, SEO dasar (title/meta, JSON-LD, sitemap), staging terpisah, CI (typecheck, lint, tes, e2e).
 
-[Belum dirilis]: https://github.com/rockshow02/cutlesshairstudio/compare/v1.2.2...staging
+[Belum dirilis]: https://github.com/rockshow02/cutlesshairstudio/compare/v1.2.3...staging
+[1.2.3]: https://github.com/rockshow02/cutlesshairstudio/compare/v1.2.2...v1.2.3
 [1.2.2]: https://github.com/rockshow02/cutlesshairstudio/compare/v1.2.1...v1.2.2
 [1.2.1]: https://github.com/rockshow02/cutlesshairstudio/compare/v1.2.0...v1.2.1
 [1.2.0]: https://github.com/rockshow02/cutlesshairstudio/compare/v1.1.0...v1.2.0
