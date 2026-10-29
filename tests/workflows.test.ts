@@ -63,14 +63,30 @@ describe('workflow alur rilis', () => {
     expect(run).toContain('gh release create');
   });
 
-  it('Sinkron main → staging: setiap push ke main (+ jadwal cadangan), label perlu-dicek, pemeriksaan sebelum push', () => {
-    const sync = workflow('sync-staging.yml');
+  it('Sinkron main → staging: setiap push ke main (+ jadwal cadangan), satu run dalam satu waktu, logika di skrip teruji', () => {
+    const sync = workflow('sync-staging.yml') as Workflow & { concurrency: unknown; env: { LABEL: string } };
     expect(sync.on.push?.branches).toEqual(['main']);
     expect(sync.on).toHaveProperty('schedule');
-    expect((sync as unknown as { env: { LABEL: string } }).env.LABEL).toBe('perlu-dicek');
+    expect(sync.concurrency).toEqual({ group: 'sinkron-staging', 'cancel-in-progress': false });
+    expect(sync.env.LABEL).toBe('perlu-dicek');
     const steps = sync.jobs.sync.steps;
-    const names = steps.map((s) => s.name);
-    expect(names.indexOf('Pemeriksaan (sama dengan CI staging)')).toBeLessThan(names.indexOf('Push hasil merge ke staging'));
-    expect(steps.find((s) => s.name === 'Push hasil merge ke staging')?.if).toContain("steps.checks.outcome == 'success'");
+    // Merge + pemeriksaan + push (dengan ulang) di scripts/sync-staging.mjs (tests/syncStaging.test.ts), dari salinan di luar checkout
+    const main = steps.find((s) => s.run?.includes('sync-staging.mjs'))!;
+    expect(main.run).toContain('node "$RUNNER_TEMP/sync-staging.mjs" --cwd "$GITHUB_WORKSPACE"');
+  });
+
+  it('Sinkron: PR hanya saat gagal sungguhan (PR bot memicu CI yang kedaluwarsa merah), berlabel perlu-dicek + ringkasan run', () => {
+    const steps = workflow('sync-staging.yml').jobs.sync.steps;
+    const prSteps = steps.filter((s) => s.run?.includes('gh pr create'));
+    expect(prSteps).toHaveLength(1);
+    const notify = prSteps[0];
+    expect(notify.if).toBe('failure()');
+    expect(notify.run).toContain('--label "$LABEL"');
+    expect(notify.run).toContain('gh pr edit "$pr" --add-label "$LABEL"');
+    expect(notify.run).toContain('GITHUB_STEP_SUMMARY');
+    expect(notify.env?.REASON).toBe('${{ steps.sync.outputs.reason }}');
+    // Langkah pemberitahuan adalah yang terakhir dan tidak menelan kegagalan (run tetap merah)
+    expect(steps.at(-1)).toBe(notify);
+    expect(notify.run).not.toMatch(/exit 0/);
   });
 });

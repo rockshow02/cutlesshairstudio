@@ -1,13 +1,16 @@
 # Sinkron main → staging: edit konten di produksi (Pages CMS di branch main), rilis, dan hotfix dibawa ke staging
 # agar staging tidak tertinggal dan PR rilis berikutnya tidak menimpa konten produksi.
 #
-# Berjalan di SETIAP push ke main (+ jadwal harian 03.00 WIB sebagai cadangan, + manual: Actions → Run workflow):
-#   1. Buat/perbarui PR main → staging (jejak di GitHub).
-#   2. Bentrok (file sama diubah di main & staging) → label "perlu-dicek", selesaikan manual (CONTRIBUTING.md).
-#   3. Tanpa bentrok → merge main ke staging di runner, jalankan pemeriksaan yang sama dengan CI staging
-#      (typecheck, lint, tes, validasi konten, build staging). Lolos → push ke staging (PR otomatis tercatat merged,
-#      Cloudflare mendeploy staging). Gagal → label "perlu-dicek" + komentar langkah yang gagal.
-#   PR buatan bot tidak memicu workflow CI (batasan GITHUB_TOKEN), karena itu pemeriksaannya dijalankan di sini.
+# Berjalan di SETIAP push ke main (+ jadwal harian 03.00 WIB sebagai cadangan, + manual: Actions → Run workflow).
+# Logikanya di scripts/sync-staging.mjs (diuji tests/syncStaging.test.ts):
+#   merge main ke staging di runner → pemeriksaan yang sama dengan CI staging (typecheck, lint, tes, validasi konten,
+#   build staging) → push ke staging (Cloudflare mendeploy staging). Push ditolak karena staging berubah → fetch ulang &
+#   ulang, maks. 3×. Install & tes unit yang gagal diulang sekali (flaky); lolos saat diulang → jalan terus + peringatan.
+#
+# Sinkron yang lancar TIDAK membuat PR: PR buatan bot (GITHUB_TOKEN) memicu CI yang menunggu "Approve and run", lalu
+# kedaluwarsa merah ("required approval but was not approved before it expired") begitu sinkron me-merge PR itu.
+# PR hanya dibuat bila sinkron gagal sungguhan (bentrok / pemeriksaan gagal 2× / push ditolak 3×): label "perlu-dicek"
+# + komentar alasan + ringkasan run, dan run ini merah (centang merah di commit main). Tidak pernah gagal diam-diam.
 #
 # Izin GITHUB_TOKEN diberikan eksplisit di bawah (default repo tetap "Read repository contents"). Perlu (sekali):
 #   Settings → Actions → General → centang "Allow GitHub Actions to create and approve pull requests" (gh pr create).
@@ -21,14 +24,17 @@ on:
     - cron: '0 20 * * *' # 20.00 UTC = 03.00 WIB (cadangan; jadwal hanya berjalan dari branch default)
   workflow_dispatch:
 
-# Minimum (yang tidak disebut = none): push hasil merge ke staging; buat/perbarui PR, buat & pasang label "perlu-dicek",
-# dan komentar PR (endpoint label & komentar menerima izin "Pull requests" write, tidak perlu "issues").
+# Minimum (yang tidak disebut = none): push hasil merge ke staging; bila gagal: buat PR, buat & pasang label
+# "perlu-dicek", dan komentar PR (endpoint label & komentar menerima izin "Pull requests" write, tidak perlu "issues").
 permissions:
   contents: write
   pull-requests: write
 
+# Satu sinkron dalam satu waktu (tidak ada dua run yang berebut push ke staging); run baru menunggu, tidak membatalkan
+# yang sedang jalan. GitHub hanya menyimpan SATU run yang menunggu: run lebih baru menggantikannya. Aman, karena
+# setiap run selalu menyinkronkan main terbaru.
 concurrency:
-  group: sync-main-to-staging
+  group: sinkron-staging
   cancel-in-progress: false
 
 env:
@@ -37,7 +43,7 @@ env:
 jobs:
   sync:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v7
         with:
@@ -57,105 +63,58 @@ jobs:
             echo "$behind commit di main belum ada di staging."
           fi
 
-      - name: Buat / perbarui PR main → staging
-        id: pr
+      - uses: actions/setup-node@v7
+        if: steps.state.outputs.behind != '0'
+        with:
+          node-version-file: .node-version
+          cache: npm
+
+      - name: Merge, periksa & push ke staging (ulang bila staging berubah, maks. 3×)
+        id: sync
         if: steps.state.outputs.behind != '0'
         env:
+          CONTENT_CHECK: warn
+        # Salinan di luar checkout: setiap percobaan mengganti isi folder kerja dengan staging terbaru
+        run: |
+          cp scripts/sync-staging.mjs "$RUNNER_TEMP/"
+          node "$RUNNER_TEMP/sync-staging.mjs" --cwd "$GITHUB_WORKSPACE"
+
+      - name: Tandai perlu dicek (PR + label + komentar)
+        if: failure()
+        env:
           GH_TOKEN: ${{ github.token }}
-          BEHIND: ${{ steps.state.outputs.behind }}
+          REASON: ${{ steps.sync.outputs.reason }}
         run: |
           set -uo pipefail
+          reason=${REASON:-langkah sinkron gagal sebelum merge (lihat log run)}
+          run_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
           gh label create "$LABEL" --color D93F0B \
             --description "Sinkron main → staging butuh penanganan manual (bentrok / pemeriksaan gagal)" 2>/dev/null || true
           pr=$(gh pr list --base staging --head main --state open --json number --jq '.[0].number // empty')
           if [ -z "$pr" ]; then
             body=$(printf '%s\n' \
-              "Sinkron otomatis: membawa $BEHIND commit dari \`main\` (edit konten Pages CMS, rilis, hotfix) ke \`staging\`." \
+              "Sinkron otomatis \`main\` → \`staging\` **berhenti** dan perlu ditangani manual." \
               "" \
-              "Tanpa bentrok & pemeriksaan lolos → workflow **Sinkron main → staging** me-merge otomatis (PR ini tercatat *merged*)." \
-              "Berlabel \`$LABEL\` → selesaikan manual: CONTRIBUTING.md → *Menyelesaikan sinkron yang perlu dicek*.")
-            if url=$(gh pr create --base staging --head main --title "chore(sync): main → staging" --body "$body"); then
+              "Alasan: $reason" \
+              "" \
+              "Log: $run_url" \
+              "" \
+              "Langkah: CONTRIBUTING.md → *Menyelesaikan sinkron yang perlu dicek*. PR ini tercatat *merged* otomatis begitu staging memuat main." \
+              "CI di PR ini dibuat oleh bot: bila GitHub meminta, tekan **Approve and run** di tab Checks.")
+            if url=$(gh pr create --base staging --head main --title "chore(sync): main → staging (perlu dicek)" --body "$body" --label "$LABEL"); then
               pr=${url##*/}
-              echo "PR dibuat: $url"
             else
-              echo "::warning::PR tidak bisa dibuat (cek Settings → Actions → General → Allow GitHub Actions to create and approve pull requests). Sinkron tetap dilanjutkan."
+              echo "::error title=PR pemberitahuan tidak bisa dibuat::Cek Settings → Actions → General → Allow GitHub Actions to create and approve pull requests. Alasan sinkron: $reason"
             fi
           else
-            echo "PR #$pr sudah ada; isinya ikut main."
+            gh pr edit "$pr" --add-label "$LABEL" || true
+            gh pr comment "$pr" --body "⚠ Sinkron otomatis gagal lagi: $reason. Log: $run_url" || true
           fi
-          echo "number=$pr" >> "$GITHUB_OUTPUT"
-
-      - name: Merge main ke staging (lokal di runner)
-        id: merge
-        if: steps.state.outputs.behind != '0'
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          if git merge --no-ff --no-edit -m "Merge main → staging (sinkron otomatis)" origin/main; then
-            echo "conflict=false" >> "$GITHUB_OUTPUT"
-          else
-            files=$(git diff --name-only --diff-filter=U | tr '\n' ' ')
-            git merge --abort
-            echo "conflict=true" >> "$GITHUB_OUTPUT"
-            echo "files=$files" >> "$GITHUB_OUTPUT"
-            echo "::warning title=Sinkron bentrok::File yang diubah di main dan staging: $files"
-          fi
-
-      - uses: actions/setup-node@v7
-        if: steps.merge.outputs.conflict == 'false'
-        with:
-          node-version-file: .node-version
-          cache: npm
-
-      - name: Pemeriksaan (sama dengan CI staging)
-        id: checks
-        if: steps.merge.outputs.conflict == 'false'
-        env:
-          CONTENT_CHECK: warn
-        run: |
-          set -o pipefail
-          run() { echo "::group::$1"; shift; "$@"; local s=$?; echo "::endgroup::"; return $s; }
-          fail() { echo "failed=$1" >> "$GITHUB_OUTPUT"; echo "::error title=Sinkron: pemeriksaan gagal::$1"; exit 1; }
-          run "Install dependensi" npm ci --no-audit --no-fund || fail "Install dependensi"
-          run "Typecheck" npm run typecheck || fail "Typecheck"
-          run "Lint" npm run lint || fail "Lint"
-          run "Tes unit" npm test || fail "Tes unit"
-          run "Validasi konten" npm run check:content || fail "Validasi konten"
-          run "Build staging" npm run build:staging || fail "Build staging"
-
-      - name: Push hasil merge ke staging
-        if: steps.merge.outputs.conflict == 'false' && steps.checks.outcome == 'success'
-        env:
-          GH_TOKEN: ${{ github.token }}
-          PR: ${{ steps.pr.outputs.number }}
-        run: |
-          set -euo pipefail
-          # Gagal bila staging berubah sejak checkout (ada push baru): run berikutnya mengulang dari staging terbaru
-          git push origin HEAD:staging
-          if [ -n "$PR" ]; then gh pr edit "$PR" --remove-label "$LABEL" >/dev/null 2>&1 || true; fi
-          echo "✓ main digabung ke staging $(git rev-parse --short HEAD); Cloudflare mendeploy staging otomatis." | tee -a "$GITHUB_STEP_SUMMARY"
-
-      - name: Tandai perlu dicek
-        if: failure() || steps.merge.outputs.conflict == 'true'
-        env:
-          GH_TOKEN: ${{ github.token }}
-          PR: ${{ steps.pr.outputs.number }}
-          FILES: ${{ steps.merge.outputs.files }}
-          FAILED: ${{ steps.checks.outputs.failed }}
-        run: |
-          if [ -n "$FILES" ]; then
-            reason="bentrok di: $FILES"
-          elif [ -n "$FAILED" ]; then
-            reason="pemeriksaan \"$FAILED\" gagal pada hasil merge main → staging"
-          else
-            reason="langkah sinkron gagal (lihat log run)"
-          fi
-          run_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
-          { echo "### ⚠ Sinkron main → staging perlu dicek"; echo; echo "Alasan: $reason. Log: $run_url"; } >> "$GITHUB_STEP_SUMMARY"
-          if [ -n "$PR" ]; then
-            gh pr edit "$PR" --add-label "$LABEL" || true
-            gh pr comment "$PR" --body "⚠ Sinkron otomatis berhenti: $reason. Log: $run_url. Langkah: CONTRIBUTING.md → *Menyelesaikan sinkron yang perlu dicek*." || true
-          fi
-          # Bentrok bukan kegagalan workflow (sudah ditandai); pemeriksaan gagal tetap merah
-          if [ -n "$FILES" ]; then exit 0; fi
-          exit 1
+          {
+            echo "### ⚠ Sinkron main → staging perlu dicek"
+            echo
+            echo "Alasan: $reason"
+            echo
+            if [ -n "$pr" ]; then echo "PR: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/pull/$pr (label \`$LABEL\`)"; fi
+            echo "Langkah: CONTRIBUTING.md → *Menyelesaikan sinkron yang perlu dicek*."
+          } >> "$GITHUB_STEP_SUMMARY"
