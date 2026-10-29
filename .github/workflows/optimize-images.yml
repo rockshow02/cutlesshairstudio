@@ -1,5 +1,5 @@
 # Sinkron konten dari Pages CMS:
-# 1. Kompres gambar baru di public/uploads ke WebP & perbaiki referensi gambar di src/content/*.json
+# 1. Kompres gambar baru di public/uploads ke WebP & perbaiki referensi gambar di src/content/*.json & tips/*.md
 # 2. Salin daftar cabang (branches.json) ke pilihan cabang di .pages.yml (dropdown Barber/Harga/Promo/Pengumuman)
 # Berjalan di runner gratis GitHub Actions (repo publik: gratis; privat: 2.000 menit/bulan, 1 run ±1 menit).
 # Commit dari GITHUB_TOKEN tidak memicu workflow lagi, jadi tidak ada loop.
@@ -12,6 +12,7 @@ on:
     paths:
       - 'public/uploads/**'
       - 'src/content/*.json'
+      - 'src/content/tips/**'
   workflow_dispatch:
 
 # Minimum (yang tidak disebut = none): meng-commit WebP hasil kompres & dropdown cabang .pages.yml ke branch yang sama.

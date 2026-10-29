@@ -1,5 +1,5 @@
 import { expect, type Page } from '@playwright/test';
-import { E2E_BRANCHES } from './fixtures/content';
+import { E2E_BRANCHES, E2E_TIPS } from './fixtures/content';
 import { test } from './helpers';
 
 /**
@@ -12,6 +12,8 @@ test.skip(!!process.env.E2E_BASE_URL, 'butuh build E2E (data uji)');
 
 const UNIFORM_URL = 'http://localhost:8788';
 const PAGES = ['/', '/cabang/', ...Object.values(E2E_BRANCHES).map((b) => `/cabang/${b.slug}/`), '/cuci-sepatu/'];
+/** Tips & Trik hanya aktif di varian uniform (build bawaan: 301 ke beranda) */
+const TIPS_PAGES = ['/tips/', '/tips/halaman/2/', `/tips/${E2E_TIPS.withToc.slug}/`, `/tips/${E2E_TIPS.noToc.slug}/`];
 
 const norm = (s: string) => s.replace(/\s+/g, ' ').trim().toLowerCase();
 
@@ -41,7 +43,7 @@ for (const [variant, base] of [
   ['bawaan', ''],
   ['uniform', UNIFORM_URL],
 ] as const) {
-  for (const path of PAGES) {
+  for (const path of variant === 'uniform' ? [...PAGES, ...TIPS_PAGES] : PAGES) {
     test(`ringkasan statis ${path} (${variant}) = teks yang terlihat`, async ({ page }, testInfo) => {
       test.skip(testInfo.project.name !== 'desktop', 'desktop saja');
       const { texts, rendered } = await staticVsRendered(page, `${base}${path}`);

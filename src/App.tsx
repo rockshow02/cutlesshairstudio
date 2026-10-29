@@ -11,6 +11,7 @@ import { Barbers } from '@/components/sections/Barbers';
 import { Gallery } from '@/components/sections/Gallery';
 import { Videos } from '@/components/sections/Videos';
 import { Products } from '@/components/sections/Products';
+import { TipsLatest } from '@/components/sections/TipsLatest';
 import { Faq } from '@/components/sections/Faq';
 import { Location } from '@/components/sections/Location';
 import { PartnerLogos } from '@/components/sections/PartnerLogos';
@@ -50,6 +51,8 @@ export default function App() {
         {/* Video Instagram (facade): tidak dirender bila dimatikan / belum ada video aktif */}
         <Videos />
         <Products variant="teaser" />
+        {/* Tips Terbaru (3 artikel): tidak dirender bila Tips & Trik dimatikan / belum ada artikel terbit */}
+        <TipsLatest />
         <LazyTestimonials />
         <Faq />
         <Location />

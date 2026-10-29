@@ -228,6 +228,63 @@ export const E2E_ANNOUNCEMENTS = [
 /** Label tombol utama hero (Pages CMS → Hero bisa mengubahnya kapan saja) */
 export const E2E_HERO_CTA = 'Booking Hero Uji';
 
+/** Sampul uji (e2e/fixtures/public, hanya disalin ke dist/ build E2E) */
+export const E2E_TIP_COVER = '/uploads/tips/sampul-uji.webp';
+
+/**
+ * Artikel Tips & Trik uji (src/content/tips/*.md diganti seluruhnya saat build E2E): 13 artikel Terbit (lebih dari
+ * 12 → paginasi /tips/halaman/2/) + 1 Draf yang tidak boleh tampil. Tampil hanya di varian uniform (Tampilkan Tips &
+ * Trik aktif); build bawaan: mati → /tips/ 301 ke beranda.
+ * - `withToc`: 3 subjudul H2 (daftar isi), penulis Barber Uji Satu, layanan Haircut, gambar di isi artikel
+ * - `noToc`: 2 subjudul (tanpa daftar isi), tanpa penulis
+ */
+export const E2E_TIPS = {
+  withToc: {
+    slug: 'cara-uji-merawat-rambut',
+    title: 'Cara Uji Merawat Rambut',
+    summary: 'Ringkasan uji artikel dengan daftar isi.',
+    category: 'Hair Care',
+    author: 'Barber Uji Satu',
+    headings: ['Langkah uji pertama', 'Langkah uji kedua', 'Langkah uji ketiga'],
+    service: 'Haircut',
+  },
+  noToc: { slug: 'gaya-uji-tanpa-daftar-isi', title: 'Gaya Uji Tanpa Daftar Isi', summary: 'Ringkasan uji artikel tanpa daftar isi.', category: 'Hair Style' },
+  draft: { slug: 'draf-uji-tidak-tampil', title: 'Draf Uji Tidak Tampil' },
+  /** Artikel Terbit seluruhnya (withToc + noToc + 11 artikel "Grooming") */
+  publishedCount: 13,
+} as const;
+
+const tipFile = (fm: Record<string, unknown>, body: string) => ({
+  file: `${fm.slug as string}.md`,
+  source: `---\n${Object.entries(fm)
+    .map(([k, v]) => `${k}: ${Array.isArray(v) ? `\n${v.map((x) => `  - ${JSON.stringify(x)}`).join('\n')}` : JSON.stringify(v)}`)
+    .join('\n')}\n---\n${body}`,
+});
+
+export function e2eTipFiles(): { file: string; source: string }[] {
+  const t = E2E_TIPS;
+  const base = { cover: E2E_TIP_COVER, coverAlt: 'Foto sampul uji', status: 'Terbit' };
+  const words = (n: number) => Array.from({ length: n }, (_, i) => `kata${i}`).join(' ');
+  return [
+    tipFile(
+      { ...base, slug: t.withToc.slug, title: t.withToc.title, summary: t.withToc.summary, category: t.withToc.category, author: t.withToc.author, publishedAt: '2026-10-20', updatedAt: '2026-10-25', services: [t.withToc.service] },
+      // ±600 kata → 3 menit baca
+      `Paragraf pembuka uji yang langsung menjawab. ${words(600)}\n\n${t.withToc.headings.map((h) => `## ${h}\n\nIsi ${h.toLowerCase()}.`).join('\n\n')}\n\n![Gambar isi uji](${E2E_TIP_COVER})\n\n<script>window.__tipXss = true</script>\n`,
+    ),
+    tipFile(
+      { ...base, slug: t.noToc.slug, title: t.noToc.title, summary: t.noToc.summary, category: t.noToc.category, publishedAt: '2026-10-21' },
+      `Paragraf pembuka uji.\n\n## Subjudul uji satu\n\nIsi satu.\n\n## Subjudul uji dua\n\nIsi dua.\n`,
+    ),
+    ...Array.from({ length: t.publishedCount - 2 }, (_, i) =>
+      tipFile(
+        { ...base, slug: `grooming-uji-${i + 1}`, title: `Grooming Uji ${i + 1}`, summary: `Ringkasan grooming uji ${i + 1}.`, category: 'Grooming', publishedAt: `2026-09-${String(i + 1).padStart(2, '0')}` },
+        `Isi grooming uji ${i + 1}.\n`,
+      ),
+    ),
+    tipFile({ ...base, slug: t.draft.slug, title: t.draft.title, summary: 'Draf uji.', category: 'Produk', publishedAt: '2026-10-28', status: 'Draf' }, 'Belum selesai.\n'),
+  ];
+}
+
 /** Daftar Harga tanpa harga per cabang & "Tersedia di cabang" (varian uniform) */
 const uniformPricing = () => E2E_PRICING.map(({ branchPrices: _bp, branchSlugs: _bs, ...p }: Json) => p);
 
@@ -264,7 +321,7 @@ export function applyE2EFixtures(file: string, data: unknown, variant?: string):
   if (file === 'hero.json') return { ...(data as Json), primaryCtaLabel: E2E_HERO_CTA };
   if (file === 'settings.json') {
     // Toggle & nama usaha tetap (tata letak beranda & selector tidak ikut berubah saat admin mengubahnya di CMS)
-    return { ...(data as Json), siteName: E2E_SITE_NAME, showProducts: variant === 'uniform', showTestimonials: false, showBeforeAfter: false, enablePreloader: true, preloaderVideo: '' };
+    return { ...(data as Json), siteName: E2E_SITE_NAME, showProducts: variant === 'uniform', showTips: variant === 'uniform', showTestimonials: false, showBeforeAfter: false, enablePreloader: true, preloaderVideo: '' };
   }
   // Promo bertanggal (tampil/tidak tergantung jam) → tidak ada di build uji. Pengumuman tanpa tanggal hanya di varian
   // uniform (e2e/announcement.spec.ts); build bawaan tanpa bar pengumuman.

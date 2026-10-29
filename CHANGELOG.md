@@ -12,6 +12,9 @@ Cara menaikkan versi & merilis: [CONTRIBUTING.md → Rilis versi](CONTRIBUTING.m
 
 ## [Belum dirilis]
 
+### Ditambahkan
+- Halaman **Tips & Trik** (`/tips/`): artikel gaya rambut, perawatan, & grooming yang ditulis di Pages CMS (satu file Markdown per artikel, status Draf/Terbit). Daftar dengan filter kategori & paginasi, halaman artikel dengan daftar isi otomatis, penulis (kapster), waktu baca, CTA WhatsApp, layanan terkait, & artikel terkait; menu **Tips** dan bagian **Tips Terbaru** di beranda. SEO: title/meta/canonical/og per artikel, JSON-LD `BlogPosting`, `BreadcrumbList`, `CollectionPage` + `ItemList`, sitemap & llms.txt. Toggle **Pengaturan Situs → Tampilkan Tips & Trik** (default mati: halaman 301 ke beranda). 2 artikel contoh berstatus Draf.
+
 ## [1.2.3] - 2026-10-29
 
 ### Diperbaiki

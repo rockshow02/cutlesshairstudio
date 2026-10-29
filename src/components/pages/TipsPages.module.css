@@ -1,0 +1,361 @@
+/* ---------- Halaman /tips/ & artikel: ruang untuk navbar fixed di atas ---------- */
+.page {
+  padding-top: calc(var(--header-offset) + var(--nav-safe-top) + var(--space-8));
+}
+
+.pageHead {
+  max-width: 44rem;
+  margin-bottom: var(--space-7);
+}
+.pageTitle {
+  font-size: clamp(2rem, 1.2rem + 4vw, 4rem);
+  line-height: 1.02;
+  letter-spacing: -0.03em;
+  text-transform: uppercase;
+}
+.pageIntro {
+  max-width: 34rem;
+  margin-top: var(--space-4);
+  color: var(--c-bone-dim);
+}
+
+/* ---------- Filter kategori (sama dengan halaman Produk) ---------- */
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-bottom: var(--space-6);
+}
+.chip {
+  min-height: 40px;
+  padding: 0 var(--space-4);
+  border: 1px solid var(--c-line-light);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--c-bone-dim);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color var(--dur) var(--ease), color var(--dur) var(--ease), border-color var(--dur) var(--ease);
+}
+.chip:hover {
+  border-color: var(--c-sand);
+  color: var(--c-bone);
+}
+.chip[aria-pressed='true'] {
+  background: var(--c-bone);
+  border-color: var(--c-bone);
+  color: var(--c-ink);
+}
+
+.empty {
+  padding: var(--space-7) var(--space-5);
+  border: 1px dashed var(--c-line-light);
+  border-radius: var(--radius);
+  text-align: center;
+  color: var(--c-bone-dim);
+}
+
+/* ---------- Kartu: 1 kolom di HP, 2 di tablet, 3 di desktop ---------- */
+.grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-5);
+}
+@media (min-width: 640px) {
+  .grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (min-width: 1024px) {
+  .grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.card {
+  min-width: 0;
+  border: 1px solid var(--c-line-light);
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: var(--c-ink-2);
+  transition: border-color var(--dur) var(--ease);
+}
+.card:hover {
+  border-color: rgba(165, 151, 137, 0.45);
+}
+.cardLink {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  color: inherit;
+}
+/* Rasio tetap 16:9 (ruang sudah tersedia sebelum gambar dimuat: tanpa layout shift) */
+.cardImage {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  background: var(--c-ink);
+}
+.cardBody {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-4) var(--space-4) var(--space-5);
+}
+.category {
+  color: var(--c-sand);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.cardTitle {
+  font-size: var(--fs-lg);
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+}
+.cardLink:hover .cardTitle {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.cardSummary {
+  color: var(--c-bone-dim);
+  font-size: var(--fs-sm);
+}
+.cardMeta {
+  margin-top: auto;
+  padding-top: var(--space-2);
+  color: var(--c-bone-dim);
+  font-size: var(--fs-xs);
+}
+
+/* ---------- Paginasi ---------- */
+.pagination {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  margin-top: var(--space-7);
+  color: var(--c-bone-dim);
+  font-size: var(--fs-sm);
+}
+.pageLinks {
+  display: flex;
+  gap: var(--space-3);
+}
+
+/* ---------- Artikel: lebar baca ±65 karakter ---------- */
+.article {
+  max-width: 48rem;
+  margin: 0 auto;
+}
+.breadcrumb ol {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-bottom: var(--space-5);
+  color: var(--c-bone-dim);
+  font-size: var(--fs-sm);
+}
+.breadcrumb li {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.breadcrumb li + li::before {
+  content: '/';
+  margin-right: var(--space-2);
+  opacity: 0.6;
+}
+.breadcrumb a {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.breadcrumb a:hover {
+  color: var(--c-bone);
+}
+
+.articleHead {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin-bottom: var(--space-6);
+}
+.articleTitle {
+  font-size: clamp(1.75rem, 1.1rem + 3vw, 3rem);
+  line-height: 1.08;
+  letter-spacing: -0.02em;
+}
+.lead {
+  max-width: 65ch;
+  color: var(--c-bone-dim);
+  font-size: var(--fs-lg);
+  line-height: 1.6;
+}
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-5);
+  color: var(--c-bone-dim);
+  font-size: var(--fs-sm);
+}
+.meta a {
+  color: var(--c-bone);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.cover {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  border-radius: var(--radius);
+  background: var(--c-ink-2);
+  margin-bottom: var(--space-6);
+}
+
+.toc {
+  max-width: 65ch;
+  margin-bottom: var(--space-6);
+  padding: var(--space-4) var(--space-5);
+  border: 1px solid var(--c-line-light);
+  border-radius: var(--radius);
+}
+.tocTitle {
+  margin-bottom: var(--space-2);
+  font-weight: 700;
+}
+.toc ol {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding-left: 1.25rem;
+  list-style: decimal;
+  color: var(--c-bone-dim);
+}
+.toc a {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.toc a:hover {
+  color: var(--c-bone);
+}
+
+/* Isi Markdown: Plus Jakarta Sans (font body self-hosted), baris ±65 karakter, jarak nyaman */
+.prose {
+  max-width: 65ch;
+  font-size: 1.0625rem;
+  line-height: 1.75;
+  overflow-wrap: break-word;
+}
+.prose > * + * {
+  margin-top: 1.15em;
+}
+.prose h2 {
+  margin-top: 2em;
+  font-size: var(--fs-h3);
+  line-height: 1.2;
+  scroll-margin-top: calc(var(--header-offset) + var(--space-4));
+}
+.prose h3,
+.prose h4 {
+  margin-top: 1.6em;
+  font-family: var(--f-body);
+  font-stretch: normal;
+  font-size: 1.125rem;
+  font-weight: 700;
+  letter-spacing: 0;
+}
+.prose ul,
+.prose ol {
+  padding-left: 1.4rem;
+}
+.prose ul {
+  list-style: disc;
+}
+.prose ol {
+  list-style: decimal;
+}
+.prose li + li {
+  margin-top: 0.4em;
+}
+.prose a {
+  color: var(--c-sand-light);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.prose blockquote {
+  padding-left: var(--space-4);
+  border-left: 3px solid var(--c-sand);
+  color: var(--c-bone-dim);
+}
+.prose img {
+  width: 100%;
+  height: auto;
+  border-radius: var(--radius);
+}
+.prose strong {
+  color: var(--c-bone);
+}
+.prose code {
+  font-size: 0.9em;
+}
+
+/* ---------- CTA WhatsApp ---------- */
+.cta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-3);
+  max-width: 65ch;
+  margin-top: var(--space-8);
+  padding: var(--space-5);
+  border-radius: var(--radius);
+  background: var(--c-ink-2);
+  border: 1px solid var(--c-line-light);
+}
+.ctaTitle,
+.sectionTitle {
+  font-size: var(--fs-h3);
+  line-height: 1.15;
+}
+.cta p {
+  color: var(--c-bone-dim);
+}
+
+.services {
+  max-width: 65ch;
+  margin-top: var(--space-7);
+}
+.services ul {
+  display: flex;
+  flex-direction: column;
+  margin-top: var(--space-4);
+  border-top: 1px solid var(--c-line-light);
+}
+.services li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2) var(--space-4);
+  min-height: var(--touch);
+  padding: var(--space-3) 0;
+  border-bottom: 1px solid var(--c-line-light);
+}
+.services a {
+  color: var(--c-sand-light);
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.related {
+  margin-top: var(--space-9);
+}
+.related .sectionTitle {
+  margin-bottom: var(--space-5);
+}
