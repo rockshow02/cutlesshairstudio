@@ -4,9 +4,12 @@
  * Data uji saja (artikel ditulis di sini / e2e/fixtures), tidak membaca artikel CMS di src/content/tips/.
  */
 import { describe, expect, it } from 'vitest';
-import { tipSchema } from '../src/content/schema';
-import { readingMinutes, relatedTips, slugify, tipLastModified, tipsPageCount, tipsRedirects, tipsVisible, type TipSummary } from '../src/content/tipsSeo';
-import { processTips, renderMarkdown, splitFrontmatter, tipBody, tipJsonLd, tipsCollectionJsonLd, tipsIndexBody, tipsLlmsLines, type TipFile } from '../scripts/tips';
+import { barberSchema, tipSchema } from '../src/content/schema';
+import { parseTipsPath, readingMinutes, relatedTips, slugify, tipLastModified, tipsPageCount, tipsPagePath, tipsRedirects, tipsVisible, type TipSummary } from '../src/content/tipsSeo';
+import { tipCtaMessage, tipsCopy } from '../src/content/tipsCopy';
+import { fillTemplate, withBranchPlaceholder } from '../src/lib/whatsapp';
+import { whatsappShareUrl } from '../src/lib/tips';
+import { processTips, renderMarkdown, splitFrontmatter, tipBody, tipFaqJsonLd, tipHead, tipJsonLd, tipsCollectionJsonLd, tipsIndexBody, tipsIndexHead, tipsLlmsLines, tipsSitemapEntries, type TipFile } from '../scripts/tips';
 import { llmsTxt, sitemap } from '../scripts/vite-content-plugin';
 import { E2E_TIPS, e2eTipFiles } from '../e2e/fixtures/content';
 // @ts-expect-error modul JS tanpa deklarasi tipe
@@ -285,5 +288,150 @@ describe('Pages CMS: pilihan penulis & layanan, gambar di Markdown', () => {
     const md = 'cover: /uploads/tips/a.jpg\n---\n![x](/uploads/tips/a.jpg) /uploads/tips/a.jpg-lama.jpg';
     expect(replaceImagePath(md, '/uploads/tips/a.jpg', '/uploads/tips/a.webp', true)).toBe('cover: /uploads/tips/a.webp\n---\n![x](/uploads/tips/a.webp) /uploads/tips/a.jpg-lama.jpg');
     expect(replaceImagePath('{"image":"/uploads/a.jpg"}', '/uploads/a.jpg', '/uploads/a.webp')).toBe('{"image":"/uploads/a.webp"}');
+  });
+});
+
+describe('E-E-A-T: poin penting, FAQ artikel, kotak penulis', () => {
+  const issues = (v: Record<string, unknown>) => {
+    const r = tipSchema.safeParse({ ...FM, ...v });
+    return r.success ? [] : r.error.issues.map((i) => `${i.path.join('.')}: ${i.message}`);
+  };
+  const faq = [{ question: 'Berapa lama fade bertahan?', answer: 'Sekitar 2–3 minggu.' }];
+
+  it('Poin penting: kosong atau 2–5 butir, masing-masing ≤ 140 karakter', () => {
+    expect(issues({ keyPoints: [] })).toEqual([]);
+    expect(issues({ keyPoints: ['Satu.', 'Dua.'] })).toEqual([]);
+    expect(issues({ keyPoints: ['Satu.'] })[0]).toMatch(/^keyPoints: isi minimal 2 poin penting, atau kosongkan/);
+    expect(issues({ keyPoints: ['1', '2', '3', '4', '5', '6'] })[0]).toMatch(/^keyPoints: maksimal 5 poin penting/);
+    expect(issues({ keyPoints: ['x'.repeat(141), 'Dua.'] })[0]).toMatch(/^keyPoints\.0: maksimal 140 karakter/);
+  });
+
+  it('FAQ artikel: maks. 5, pertanyaan ≤ 120 & jawaban ≤ 400, keduanya wajib', () => {
+    expect(issues({ faq })).toEqual([]);
+    expect(issues({ faq: Array(6).fill(faq[0]) })[0]).toMatch(/^faq: maksimal 5 pertanyaan/);
+    expect(issues({ faq: [{ question: 'x'.repeat(121), answer: 'a' }] })[0]).toMatch(/^faq\.0\.question: maksimal 120/);
+    expect(issues({ faq: [{ question: 'q', answer: 'x'.repeat(401) }] })[0]).toMatch(/^faq\.0\.answer: maksimal 400/);
+    expect(issues({ faq: [{ question: 'q', answer: '' }] })[0]).toMatch(/^faq\.0\.answer: jawaban wajib diisi/);
+  });
+
+  it('Barber: bio singkat ≤ 200 & pengalaman ≤ 60 (opsional)', () => {
+    const barber = { name: 'A', photo: '/uploads/barbers/a.webp', branchSlug: 'x' };
+    expect(barberSchema.safeParse(barber).success).toBe(true);
+    expect(barberSchema.safeParse({ ...barber, bio: 'x'.repeat(200), experience: 'x'.repeat(60) }).success).toBe(true);
+    expect(barberSchema.safeParse({ ...barber, bio: 'x'.repeat(201) }).success).toBe(false);
+    expect(barberSchema.safeParse({ ...barber, experience: 'x'.repeat(61) }).success).toBe(false);
+  });
+
+  const author = { name: 'Barber Uji', role: 'Hairstylist', photo: '/uploads/barbers/uji.jpg', specialty: 'Fade, Crop', bio: 'Bio uji.', experience: '8 tahun' };
+  const [tip] = run([file('cara.md', { ...frontmatter, author: 'Barber Uji', keyPoints: ['Poin satu.', 'Poin dua.'], faq })]).published;
+
+  it('ringkasan statis memuat poin penting, FAQ (dt/dd), dan kotak penulis (jabatan, nama → kartu kapster, pengalaman, keahlian, bio)', () => {
+    const html = tipBody(tip, [], author);
+    expect(html).toContain('<h2>Poin penting</h2><ul><li>Poin satu.</li><li>Poin dua.</li></ul>');
+    expect(html).toContain('<h2>Tanya jawab</h2><dl><dt>Berapa lama fade bertahan?</dt><dd>Sekitar 2–3 minggu.</dd></dl>');
+    expect(html).toContain('<h2>Tentang penulis</h2><p>Hairstylist</p><p><a href="/#hairstylist">Barber Uji</a></p><p><span>Pengalaman</span> <span>8 tahun</span></p><p>Keahlian</p><ul><li>Fade</li><li>Crop</li></ul><p>Bio uji.</p>');
+    const [plain] = run([file('a.md', frontmatter)]).published;
+    expect(tipBody(plain, [])).not.toMatch(/Poin penting|Tanya jawab|Tentang penulis/);
+  });
+
+  it('JSON-LD: author Person lengkap (jobTitle, image .webp, url, bio, keahlian) & FAQPage artikel', () => {
+    expect(tipJsonLd(tip, SITE, author).author).toEqual({
+      '@type': 'Person',
+      name: 'Barber Uji',
+      jobTitle: 'Hairstylist',
+      image: 'https://cutlesshairstudio.com/uploads/barbers/uji.webp',
+      description: 'Bio uji.',
+      knowsAbout: ['Fade', 'Crop'],
+      url: 'https://cutlesshairstudio.com/#hairstylist',
+      worksFor: { '@id': 'https://cutlesshairstudio.com/#organization' },
+    });
+    expect(tipFaqJsonLd(tip, SITE)).toEqual({
+      '@context': 'https://schema.org',
+      '@type': 'FAQPage',
+      '@id': 'https://cutlesshairstudio.com/tips/cara/#faq',
+      url: 'https://cutlesshairstudio.com/tips/cara/',
+      mainEntity: [{ '@type': 'Question', name: faq[0].question, acceptedAnswer: { '@type': 'Answer', text: faq[0].answer } }],
+    });
+    expect(tipHead(tip, SITE, {}, author)).toContain('"@type":"FAQPage"');
+    const [plain] = run([file('a.md', frontmatter)]).published;
+    expect(tipFaqJsonLd(plain, SITE)).toBeUndefined();
+    expect(tipHead(plain, SITE)).not.toContain('FAQPage');
+  });
+});
+
+describe('CTA & bagikan', () => {
+  it('pesan CTA menyebut judul artikel; judul terpanjang + nama usaha & cabang terpanjang tetap ≤ 500 karakter', () => {
+    expect(tipCtaMessage('Cara Merawat Jenggot')).toBe('Halo {brand} cabang {branch}, saya baca tips "Cara Merawat Jenggot" di website, mau konsultasi soal rambut saya.');
+    // Seperti useBooking: {brand} = nama usaha (maks. 80), {branch} = nama cabang (maks. 80)
+    const longest = fillTemplate(withBranchPlaceholder(tipCtaMessage('x'.repeat(70))), { brand: 'b'.repeat(80), branch: 'c'.repeat(80) });
+    expect(longest.length).toBeLessThanOrEqual(500);
+    // Kurung kurawal di judul tidak dianggap placeholder
+    expect(tipCtaMessage('Tips {brand} hemat')).toContain('"Tips brand hemat"');
+  });
+
+  it('Bagikan ke WhatsApp: wa.me/?text=judul + link (tanpa nomor)', () => {
+    expect(whatsappShareUrl('Cara Fade & Crop', 'https://cutlesshairstudio.com/tips/cara/')).toBe(
+      'https://wa.me/?text=Cara%20Fade%20%26%20Crop%20https%3A%2F%2Fcutlesshairstudio.com%2Ftips%2Fcara%2F',
+    );
+  });
+});
+
+describe('halaman kategori /tips/kategori/<slug>/', () => {
+  const tips = [
+    ...Array.from({ length: 13 }, (_, i) => summary({ slug: `g-${i}`, title: `G ${i}`, category: 'Grooming', publishedAt: `2026-09-${String(i + 1).padStart(2, '0')}` })),
+    summary({ slug: 'h', title: 'H', category: 'Hair Care', publishedAt: '2026-10-20', updatedAt: '2026-10-25' }),
+  ];
+
+  it('URL → halaman: daftar, kategori (+ halaman ke-n), artikel; kategori tak dikenal & slug cadangan ditolak', () => {
+    expect(parseTipsPath('/tips/')).toEqual({ kind: 'index', page: 1 });
+    expect(parseTipsPath('/tips/halaman/2/')).toEqual({ kind: 'index', page: 2 });
+    expect(parseTipsPath('/tips/kategori/hair-care')).toEqual({ kind: 'index', category: 'Hair Care', page: 1 });
+    expect(parseTipsPath('/tips/kategori/tips-barbershop/halaman/3/index.html')).toEqual({ kind: 'index', category: 'Tips Barbershop', page: 3 });
+    expect(parseTipsPath('/tips/cara-merawat/')).toEqual({ kind: 'article', slug: 'cara-merawat' });
+    expect(parseTipsPath('/tips/kategori/jenggot/')).toBeUndefined();
+    expect(parseTipsPath('/tips/kategori/')).toBeUndefined();
+    expect(parseTipsPath('/produk/')).toBeUndefined();
+    expect(tipsPagePath(2, 'Hair Care')).toBe('/tips/kategori/hair-care/halaman/2/');
+  });
+
+  it('eyebrow /tips/ berbeda dengan judul; halaman kategori: judul = kategori, deskripsi sendiri', () => {
+    expect(tipsCopy.heading.kicker).toBe('Dari kursi barber');
+    expect(tipsCopy.heading.kicker).not.toBe(tipsCopy.heading.title);
+    const body = tipsIndexBody(tips, 1, 'Hair Care');
+    expect(body).toContain(`<p>Tips &amp; Trik</p><h1>Hair Care</h1><p>${tipsCopy.categoryIntro['Hair Care']}</p>`);
+    expect(tipsIndexBody(tips, 1)).toContain('<p>Dari kursi barber</p><h1>Tips &amp; Trik</h1>');
+  });
+
+  it('chip kategori = link ke halaman kategori (tanpa JavaScript), kategori aktif aria-current', () => {
+    const body = tipsIndexBody(tips, 1, 'Grooming');
+    // Urutan = urutan pilihan Kategori di CMS
+    expect(body).toContain('<li><a href="/tips/">Semua</a></li><li><a href="/tips/kategori/hair-care/">Hair Care</a></li><li><a href="/tips/kategori/grooming/" aria-current="page">Grooming</a></li>');
+    expect(body).not.toContain('?kategori=');
+  });
+
+  it('paginasi per kategori (12 per halaman); head: title, description, canonical, CollectionPage + BreadcrumbList', () => {
+    expect(tipsIndexBody(tips, 1, 'Grooming')).toContain('<p>Halaman 1 dari 2</p> <a href="/tips/kategori/grooming/halaman/2/">Berikutnya</a>');
+    expect(tipsIndexBody(tips, 2, 'Grooming').match(/<h2>/g)).toHaveLength(1);
+    const head = tipsIndexHead(tips, SITE, 2, '', 'Grooming');
+    expect(head).toContain('<title>Grooming: Tips &amp; Trik (Halaman 2) | Cutless Hair Studio</title>');
+    expect(head).toContain(`<meta name="description" content="${tipsCopy.categoryIntro.Grooming}" />`);
+    expect(head).toContain('<link rel="canonical" href="https://cutlesshairstudio.com/tips/kategori/grooming/halaman/2/" />');
+    expect(head).toContain('{"@type":"ListItem","position":3,"name":"Grooming","item":"https://cutlesshairstudio.com/tips/kategori/grooming/"}');
+    const ld = tipsCollectionJsonLd(tips, SITE, 2, 'Grooming');
+    expect(ld).toMatchObject({ '@type': 'CollectionPage', url: 'https://cutlesshairstudio.com/tips/kategori/grooming/halaman/2/' });
+    expect(ld.mainEntity).toMatchObject({ numberOfItems: 13 });
+    expect(ld.mainEntity.itemListElement).toHaveLength(1);
+  });
+
+  it('sitemap: halaman kategori (lastmod terbaru kategori itu) hanya untuk kategori berartikel', () => {
+    const paths = tipsSitemapEntries(tips);
+    expect(paths).toEqual(
+      expect.arrayContaining([
+        { path: '/tips/kategori/grooming/', lastmod: '2026-09-13' },
+        { path: '/tips/kategori/grooming/halaman/2/', lastmod: '2026-09-13' },
+        { path: '/tips/kategori/hair-care/', lastmod: '2026-10-25' },
+      ]),
+    );
+    expect(paths.some((p) => p.path.includes('/kategori/produk/'))).toBe(false);
   });
 });

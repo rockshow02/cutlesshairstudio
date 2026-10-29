@@ -13,7 +13,8 @@
  *    [DEV]/[STAGING], modul `virtual:content-status` untuk badge. Web Analytics hanya di produksi.
  * 5. Prerender /cabang/<slug>/index.html per cabang (title/meta unik + JSON-LD HairSalon + ringkasan statis).
  * 7. Tips & Trik (scripts/tips.ts): validasi src/content/tips/*.md, modul `virtual:tips`, prerender /tips/,
- *    /tips/halaman/<n>/ & /tips/<slug>/ (atau 301 ke beranda bila dimatikan), entri sitemap & llms.txt.
+ *    /tips/halaman/<n>/, /tips/kategori/<slug>/(halaman/<n>/) & /tips/<slug>/ (atau 301 ke beranda bila
+ *    dimatikan), entri sitemap & llms.txt.
  */
 import { cp, readdir, readFile, mkdir, rm, stat, writeFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
@@ -37,8 +38,8 @@ import { pricingCopy } from '../src/content/pricing';
 import { formatPhoneDisplay, formatThousandsK, formatTime } from '../src/lib/format';
 import { branchesCopy } from '../src/content/branches';
 import { shoeCareCopy } from '../src/content/shoeCare';
-import { TIPS_PATH, tipsPageCount, tipsRedirects, tipsVisible, type TipSummary } from '../src/content/tipsSeo';
-import { processTips, readTipFiles, summaryOf, tipBody, tipDataTag, tipHead, tipsIndexBody, tipsIndexHead, tipsLlmsLines, tipsSitemapEntries, type TipsResult } from './tips';
+import { TIPS_PATH, parseTipsPath, tipsPageCount, tipsPagePath, tipsRedirects, tipsVisible, type TipSummary, type TipsRoute } from '../src/content/tipsSeo';
+import { processTips, readTipFiles, summaryOf, tipBody, tipCategoriesOf, tipDataTag, tipHead, tipsIndexBody, tipsIndexHead, tipsLlmsLines, tipsSitemapEntries, type TipsResult } from './tips';
 
 const VIRTUAL_ID = 'virtual:image-meta';
 const RESOLVED_ID = `\0${VIRTUAL_ID}`;
@@ -47,8 +48,6 @@ const RESOLVED_STATUS_ID = `\0${STATUS_ID}`;
 const IMAGE_KEYS = new Set(['photo', 'image', 'logo', 'heroLogo', 'mobileImage', 'src']);
 const OG_IMAGE = '/images/og/og-cutless.jpg';
 const BRANCH_ROUTE = /^\/cabang\/([a-z0-9-]+)\/?(?:index\.html)?(?:[?#].*)?$/;
-/** /tips/, /tips/halaman/<n>/, /tips/<slug>/ (dev server; di build file statis hasil prerender) */
-const TIPS_ROUTE = /^\/tips(?:\/(?:halaman\/(\d+)|([a-z0-9-]+)))?\/?(?:index\.html)?(?:[?#].*)?$/;
 const TIPS_VIRTUAL_ID = 'virtual:tips';
 const RESOLVED_TIPS_ID = `\0${TIPS_VIRTUAL_ID}`;
 /** Build E2E: file uji (mis. PDF daftar menu) yang hanya disalin ke dist/ build E2E, tidak pernah ke public/ */
@@ -728,24 +727,27 @@ export function contentPlugin(): Plugin {
     }
   };
 
-  /** Halaman Tips dari template: daftar (halaman `page`) atau artikel `slug`; undefined = tidak ada */
-  const tipsPage = (html: string, slug: string | undefined, page: number): string | undefined => {
+  /** Halaman Tips dari template: daftar (semua/kategori, halaman ke-n) atau artikel; undefined = tidak ada */
+  const tipsPage = (html: string, route: TipsRoute): string | undefined => {
     if (!bundle) return undefined;
     const list = shownTips().map(summaryOf);
     const site = bundle.settings;
-    if (slug) {
-      const t = shownTips().find((a) => a.slug === slug);
+    if (route.kind === 'article') {
+      const t = shownTips().find((a) => a.slug === route.slug);
       if (!t) return undefined;
       const barber = bundle.barbers.find((b) => b.name === t.author);
       return html
         .replace(HEAD_REGION, tipHead(t, site, imageMeta, barber))
-        .replace('<!--cutless:body-->', tipBody(t, list))
+        .replace('<!--cutless:body-->', tipBody(t, list, barber))
         .replace('<!--cutless:tip-data-->', tipDataTag(t));
     }
-    if (page < 1 || page > tipsPageCount(list.length)) return undefined;
+    const { page, category } = route;
+    const count = category ? list.filter((t) => t.category === category).length : list.length;
+    // Kategori tanpa artikel terbit tidak punya halaman
+    if ((category && !count) || page > tipsPageCount(count)) return undefined;
     return html
-      .replace(HEAD_REGION, tipsIndexHead(list, site, page, `${site.siteUrl}${OG_IMAGE}`))
-      .replace('<!--cutless:body-->', tipsIndexBody(list, page))
+      .replace(HEAD_REGION, tipsIndexHead(list, site, page, `${site.siteUrl}${OG_IMAGE}`, category))
+      .replace('<!--cutless:body-->', tipsIndexBody(list, page, category))
       .replace('<!--cutless:tip-data-->', '');
   };
 
@@ -759,11 +761,17 @@ export function contentPlugin(): Plugin {
       await mkdir(path.join(outDir, dir), { recursive: true });
       await writeFile(path.join(outDir, dir, 'index.html'), applyEnv(page, appEnv, analyticsToken));
     };
-    const pages = tipsPageCount(shownTips().length);
-    for (let n = 2; n <= pages; n++) await write(path.join('tips', 'halaman', String(n)), tipsPage(html, undefined, n));
-    for (const t of shownTips()) await write(path.join('tips', t.slug), tipsPage(html, t.slug, 1));
-    await write('tips', tipsPage(html, undefined, 1));
-    console.log(`✓ Tips & Trik: ${shownTips().length} artikel diprerender (${tips.drafts} draf tidak di-build)`);
+    const list = shownTips().map(summaryOf);
+    const dirOf = (p: string) => p.split('/').filter(Boolean).join(path.sep);
+    // Daftar semua & per kategori (hanya kategori yang punya artikel terbit), lalu artikel; /tips/ terakhir (template)
+    const lists = [undefined, ...tipCategoriesOf(list)].flatMap((category) => {
+      const count = category ? list.filter((t) => t.category === category).length : list.length;
+      return Array.from({ length: tipsPageCount(count) }, (_, i) => ({ category, page: i + 1 }));
+    });
+    for (const r of lists.filter((x) => x.category || x.page > 1)) await write(dirOf(tipsPagePath(r.page, r.category)), tipsPage(html, { kind: 'index', ...r }));
+    for (const t of shownTips()) await write(path.join('tips', t.slug), tipsPage(html, { kind: 'article', slug: t.slug }));
+    await write('tips', tipsPage(html, { kind: 'index', page: 1 }));
+    console.log(`✓ Tips & Trik: ${shownTips().length} artikel, ${tipCategoriesOf(list).length} kategori diprerender (${tips.drafts} draf tidak di-build)`);
   };
 
   return {
@@ -843,8 +851,8 @@ export function contentPlugin(): Plugin {
           out = out.replace(HEAD_REGION, branchHead(branch, bundle)).replace('<!--cutless:body-->', branchBody(branch, bundle));
         }
         // Dev server: /tips/... memakai head & ringkasan halaman itu (build: closeBundle)
-        const tipsUrl = !isBuild && out.includes('<!--cutless:tip-data-->') ? ctx.originalUrl?.match(TIPS_ROUTE) : null;
-        if (tipsUrl && bundle) out = tipsPage(out, tipsUrl[2], Number(tipsUrl[1] ?? 1)) ?? out;
+        const tipsRoute = !isBuild && out.includes('<!--cutless:tip-data-->') ? parseTipsPath(ctx.originalUrl?.split(/[?#]/)[0] ?? '') : undefined;
+        if (tipsRoute && bundle) out = tipsPage(out, tipsRoute) ?? out;
         return applyEnv(out, appEnv, analyticsToken);
       },
     },
@@ -902,7 +910,7 @@ export function contentPlugin(): Plugin {
       // /cabang/<slug>/ → template cabang (dev server; di produksi file statis hasil prerender)
       server.middlewares.use((req, _res, next) => {
         if (req.url && BRANCH_ROUTE.test(req.url)) req.url = '/cabang/index.html';
-        else if (req.url && TIPS_ROUTE.test(req.url) && !req.url.startsWith('/tips/index.html')) req.url = '/tips/index.html';
+        else if (req.url && parseTipsPath(req.url.split(/[?#]/)[0]) && !req.url.startsWith('/tips/index.html')) req.url = '/tips/index.html';
         next();
       });
       server.watcher.add(uploadsDir);

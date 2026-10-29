@@ -6,6 +6,9 @@ export interface Barber {
   /** Opsional (CMS: field `role`) */
   role?: string;
   specialties: string[];
+  /** Opsional: bio singkat & pengalaman (kotak penulis artikel Tips & Trik) */
+  bio?: string;
+  experience?: string;
   /** Foto rasio 3:4 */
   photo: ImageAsset;
   /** Opsional: URL Instagram pribadi barber */

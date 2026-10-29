@@ -851,6 +851,18 @@ content:
         description: "Pisahkan dengan koma. Contoh: Skin fade, Pompadour. Maksimal 120 karakter."
         options:
           maxlength: 120
+      - name: bio
+        label: Bio singkat
+        type: text
+        description: "Opsional. 1–2 kalimat tentang kapster, tampil di kotak penulis artikel Tips & Trik. Contoh: Spesialis fade & textured crop, senang membantu klien menemukan gaya yang mudah ditata sendiri. Maksimal 200 karakter."
+        options:
+          maxlength: 200
+      - name: experience
+        label: Pengalaman
+        type: string
+        description: "Opsional, tampil di kotak penulis artikel. Contoh: 8 tahun sebagai hairstylist. Maksimal 60 karakter."
+        options:
+          maxlength: 60
       - name: whatsappNumber
         label: WhatsApp pribadi
         type: string
@@ -1576,6 +1588,35 @@ content:
             - name: "Hair Tattoo"
               label: "Hair Tattoo"
           # @service-options-end
+      - name: keyPoints
+        label: Poin penting
+        type: string
+        list:
+          max: 5
+        description: "Opsional, 2–5 butir ringkasan yang tampil di kotak di bawah foto sampul. Satu kalimat pendek per butir, mis. Keramas 2–3 kali seminggu dengan sampo tanpa sulfat. Maksimal 140 karakter per butir."
+        options:
+          maxlength: 140
+      - name: faq
+        label: FAQ artikel
+        type: object
+        list:
+          max: 5
+        description: "Opsional, maks. 5 pertanyaan yang sering ditanyakan klien soal topik ini. Tampil sebagai tanya jawab di akhir artikel (juga untuk Google)."
+        fields:
+          - name: question
+            label: Pertanyaan
+            type: string
+            required: true
+            description: "Tulis seperti yang ditanyakan klien, mis. Berapa lama fade bertahan rapi? Maksimal 120 karakter."
+            options:
+              maxlength: 120
+          - name: answer
+            label: Jawaban
+            type: text
+            required: true
+            description: "Jawaban langsung dan singkat. Maksimal 400 karakter."
+            options:
+              maxlength: 400
       - name: body
         label: Isi artikel
         type: rich-text

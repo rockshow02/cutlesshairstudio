@@ -4,15 +4,16 @@
  *    slug unik, gambar ada, penulis = nama Barber, layanan = nama kartu Layanan. Draf divalidasi tapi tidak di-build.
  * 2. Render Markdown → HTML (marked): H2 diberi id (daftar isi), HTML mentah ditampilkan sebagai teks (tidak
  *    dieksekusi), gambar di isi artikel lazy + ukuran asli (tanpa layout shift).
- * 3. Head, ringkasan statis (#root sebelum React), JSON-LD (BlogPosting, BreadcrumbList, CollectionPage + ItemList),
- *    entri sitemap & llms.txt. Ringkasan statis = teks yang sama dengan halaman React (e2e/static-content.spec.ts).
+ * 3. Head, ringkasan statis (#root sebelum React), JSON-LD (BlogPosting + author Person, FAQPage, BreadcrumbList,
+ *    CollectionPage + ItemList), halaman kategori /tips/kategori/<slug>/, entri sitemap & llms.txt. Ringkasan statis =
+ *    teks yang sama dengan halaman React (e2e/static-content.spec.ts).
  */
 import { readdir, readFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import path from 'node:path';
 import { Marked, type Tokens } from 'marked';
 import { parse as parseYaml } from 'yaml';
-import { tipSchema, type ContentBundle } from '../src/content/schema';
+import { tipSchema, type BarberEntry, type ContentBundle } from '../src/content/schema';
 import {
   RESERVED_TIP_SLUGS,
   TIPS_PATH,
@@ -20,7 +21,6 @@ import {
   TIP_CATEGORIES,
   TIP_SLUG,
   TOC_MIN_HEADINGS,
-  categorySlug,
   formatTipDate,
   readingMinutes,
   relatedTips,
@@ -31,6 +31,7 @@ import {
   tipsPageCount,
   tipsPagePath,
   type TipArticle,
+  type TipCategory,
   type TipHeading,
   type TipSummary,
 } from '../src/content/tipsSeo';
@@ -196,13 +197,15 @@ export function processTips(
       services: tipServices,
       html: rendered.html,
       headings: rendered.headings,
+      keyPoints: (t.keyPoints ?? []).filter(Boolean),
+      faq: (t.faq ?? []).map((q) => ({ question: q.question, answer: q.answer })),
     });
   }
   return { errors, published: sortTips(published), drafts };
 }
 
 /** Ringkasan (tanpa isi) untuk modul browser virtual:tips, kartu, & artikel terkait */
-export const summaryOf = ({ html: _html, headings: _headings, ...summary }: TipArticle): TipSummary => summary;
+export const summaryOf = ({ html: _html, headings: _headings, keyPoints: _k, faq: _f, ...summary }: TipArticle): TipSummary => summary;
 
 /* ---------- Head, JSON-LD, ringkasan statis ---------- */
 
@@ -226,7 +229,12 @@ const breadcrumbJsonLd = (site: Site, items: { name: string; path: string }[]) =
   itemListElement: items.map((it, i) => ({ '@type': 'ListItem', position: i + 1, name: it.name, item: `${site.siteUrl}${it.path}` })),
 });
 
-export function tipJsonLd(t: TipArticle, site: Site, barber?: { name: string; role?: string | null }) {
+/** Penulis artikel (Barber): kotak penulis & JSON-LD Person */
+export type TipAuthor = Pick<BarberEntry, 'name' | 'role' | 'photo' | 'specialty' | 'bio' | 'experience'>;
+
+const specialtiesOf = (a?: Pick<TipAuthor, 'specialty'>) => (a?.specialty ?? '').split(/[,\n]/).map((x) => x.trim()).filter(Boolean);
+
+export function tipJsonLd(t: TipArticle, site: Site, barber?: TipAuthor) {
   const url = `${site.siteUrl}${tipPath(t.slug)}`;
   return {
     '@context': 'https://schema.org',
@@ -242,22 +250,54 @@ export function tipJsonLd(t: TipArticle, site: Site, barber?: { name: string; ro
     articleSection: t.category,
     inLanguage: 'id-ID',
     author: t.author
-      ? { '@type': 'Person', name: t.author, ...(barber?.role ? { jobTitle: barber.role } : {}), url: `${site.siteUrl}/#hairstylist`, worksFor: { '@id': `${site.siteUrl}/#organization` } }
+      ? {
+          '@type': 'Person',
+          name: t.author,
+          ...(barber?.role ? { jobTitle: barber.role } : {}),
+          ...(barber?.photo ? { image: abs(site.siteUrl, toWebp(barber.photo)) } : {}),
+          ...(barber?.bio ? { description: barber.bio } : {}),
+          ...(specialtiesOf(barber).length ? { knowsAbout: specialtiesOf(barber) } : {}),
+          url: `${site.siteUrl}/#hairstylist`,
+          worksFor: { '@id': `${site.siteUrl}/#organization` },
+        }
       : { '@type': 'Organization', '@id': `${site.siteUrl}/#organization`, name: site.siteName },
     publisher: publisher(site),
   };
 }
 
-export function tipsCollectionJsonLd(tips: TipSummary[], site: Site, page = 1) {
-  const url = `${site.siteUrl}${tipsPagePath(page)}`;
+/** FAQPage satu artikel (FAQ artikel); undefined bila tanpa FAQ */
+export function tipFaqJsonLd(t: Pick<TipArticle, 'slug' | 'faq'>, site: Site) {
+  if (!t.faq.length) return undefined;
+  const url = `${site.siteUrl}${tipPath(t.slug)}`;
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    '@id': `${url}#faq`,
+    url,
+    mainEntity: t.faq.map((q) => ({ '@type': 'Question', name: q.question, acceptedAnswer: { '@type': 'Answer', text: q.answer } })),
+  };
+}
+
+/** Artikel satu kategori (atau semua) */
+const inCategory = <T extends Pick<TipSummary, 'category'>>(tips: T[], category?: TipCategory) => (category ? tips.filter((t) => t.category === category) : tips);
+
+/** Judul & deskripsi halaman daftar (semua / kategori) */
+const listHeading = (category?: TipCategory) =>
+  category
+    ? { kicker: tipsCopy.categoryKicker, title: category, intro: tipsCopy.categoryIntro[category] }
+    : { kicker: tipsCopy.heading.kicker, title: tipsCopy.heading.title, intro: tipsCopy.heading.intro };
+
+export function tipsCollectionJsonLd(all: TipSummary[], site: Site, page = 1, category?: TipCategory) {
+  const tips = inCategory(all, category);
+  const url = `${site.siteUrl}${tipsPagePath(page, category)}`;
   const start = (page - 1) * TIPS_PER_PAGE;
   return {
     '@context': 'https://schema.org',
     '@type': 'CollectionPage',
     '@id': `${url}#collection`,
     url,
-    name: `${tipsCopy.heading.title} | ${site.siteName}`,
-    description: tipsCopy.heading.intro,
+    name: category ? `${category} | ${tipsCopy.heading.title} | ${site.siteName}` : `${tipsCopy.heading.title} | ${site.siteName}`,
+    description: listHeading(category).intro,
     inLanguage: 'id-ID',
     isPartOf: { '@type': 'WebSite', url: `${site.siteUrl}/`, name: site.siteName },
     publisher: publisher(site),
@@ -274,15 +314,17 @@ export function tipsCollectionJsonLd(tips: TipSummary[], site: Site, page = 1) {
   };
 }
 
-const indexTitle = (siteName: string, page: number) =>
-  `${tipsCopy.heading.title}: Gaya Rambut, Perawatan & Grooming${page > 1 ? ` (Halaman ${page})` : ''} | ${siteName}`;
+const indexTitle = (siteName: string, page: number, category?: TipCategory) =>
+  `${category ? `${category}: ${tipsCopy.heading.title}` : `${tipsCopy.heading.title}: Gaya Rambut, Perawatan & Grooming`}${page > 1 ? ` (Halaman ${page})` : ''} | ${siteName}`;
 
-/** Head /tips/ & /tips/halaman/<n>/ */
-export function tipsIndexHead(tips: TipSummary[], site: Site, page = 1, ogImage = ''): string {
-  const url = `${site.siteUrl}${tipsPagePath(page)}`;
-  const title = indexTitle(site.siteName, page);
-  const description = tipsCopy.heading.intro;
+/** Head /tips/, /tips/halaman/<n>/, /tips/kategori/<slug>/(halaman/<n>/) */
+export function tipsIndexHead(all: TipSummary[], site: Site, page = 1, ogImage = '', category?: TipCategory): string {
+  const tips = inCategory(all, category);
+  const url = `${site.siteUrl}${tipsPagePath(page, category)}`;
+  const title = indexTitle(site.siteName, page, category);
+  const description = listHeading(category).intro;
   const image = tips[0] ? abs(site.siteUrl, tips[0].cover) : ogImage;
+  const crumbs = [{ name: tipsCopy.labels.home, path: '/' }, { name: tipsCopy.heading.title, path: TIPS_PATH }, ...(category ? [{ name: category, path: tipsPagePath(1, category) }] : [])];
   return [
     `<title>${esc(title)}</title>`,
     `<meta name="description" content="${esc(description)}" />`,
@@ -293,13 +335,13 @@ export function tipsIndexHead(tips: TipSummary[], site: Site, page = 1, ogImage 
     `<meta property="og:url" content="${url}" />`,
     `<meta property="og:image" content="${image}" />`,
     `<meta name="twitter:image" content="${image}" />`,
-    jsonLdTag(tipsCollectionJsonLd(tips, site, page)),
-    jsonLdTag(breadcrumbJsonLd(site, [{ name: tipsCopy.labels.home, path: '/' }, { name: tipsCopy.heading.title, path: TIPS_PATH }])),
+    jsonLdTag(tipsCollectionJsonLd(all, site, page, category)),
+    jsonLdTag(breadcrumbJsonLd(site, crumbs)),
   ].join('\n    ');
 }
 
 /** Head halaman artikel (+ preload sampul = LCP) */
-export function tipHead(t: TipArticle, site: Site, meta: ImageMeta = {}, barber?: { name: string; role?: string | null }): string {
+export function tipHead(t: TipArticle, site: Site, meta: ImageMeta = {}, barber?: TipAuthor): string {
   const url = `${site.siteUrl}${tipPath(t.slug)}`;
   const title = `${t.title} | ${site.siteName}`;
   const image = abs(site.siteUrl, t.cover);
@@ -320,6 +362,7 @@ export function tipHead(t: TipArticle, site: Site, meta: ImageMeta = {}, barber?
     `<meta name="twitter:image" content="${image}" />`,
     `<link rel="preload" as="image" href="${esc(t.cover)}"${srcset ? ` imagesrcset="${esc(srcset)}" imagesizes="(min-width: 768px) 48rem, 100vw"` : ''} fetchpriority="high" />`,
     jsonLdTag(tipJsonLd(t, site, barber)),
+    tipFaqJsonLd(t, site) ? jsonLdTag(tipFaqJsonLd(t, site)) : '',
     jsonLdTag(
       breadcrumbJsonLd(site, [
         { name: tipsCopy.labels.home, path: '/' },
@@ -327,7 +370,9 @@ export function tipHead(t: TipArticle, site: Site, meta: ImageMeta = {}, barber?
         { name: t.title, path: tipPath(t.slug) },
       ]),
     ),
-  ].join('\n    ');
+  ]
+    .filter(Boolean)
+    .join('\n    ');
 }
 
 /** Kategori yang punya artikel, urut pilihan CMS (chip filter) */
@@ -338,23 +383,27 @@ function cardHtml(t: TipSummary, heading: 'h2' | 'h3'): string {
   return `<li><p>${esc(t.category)}</p><${heading}><a href="${tipPath(t.slug)}">${esc(t.title)}</a></${heading}><p>${esc(t.summary)}</p><p><time datetime="${t.publishedAt}">${formatTipDate(t.publishedAt)}</time></p><p>${readingLabel(t.readingMinutes)}</p></li>`;
 }
 
-/** Ringkasan statis /tips/ (halaman `page`): judul, intro, kategori, kartu, paginasi */
-export function tipsIndexBody(tips: TipSummary[], page = 1): string {
+/**
+ * Ringkasan statis /tips/ atau /tips/kategori/<slug>/ (halaman `page`): judul, intro, chip kategori (link ke halaman
+ * kategori, jalan tanpa JavaScript), kartu, paginasi. `all` = semua artikel terbit (chip dari semua kategori).
+ */
+export function tipsIndexBody(all: TipSummary[], page = 1, category?: TipCategory): string {
+  const tips = inCategory(all, category);
   const pages = tipsPageCount(tips.length);
   const items = tips.slice((page - 1) * TIPS_PER_PAGE, page * TIPS_PER_PAGE);
   const l = tipsCopy.labels;
-  const categories = tipCategoriesOf(tips);
+  const heading = listHeading(category);
+  const categories = tipCategoriesOf(all);
+  const chip = (label: string, c?: TipCategory) => `<li><a href="${tipsPagePath(1, c)}"${c === category ? ' aria-current="page"' : ''}>${esc(label)}</a></li>`;
   return [
     '<div class="prerender">',
-    `<p>${esc(tipsCopy.heading.kicker)}</p>`,
-    `<h1>${esc(tipsCopy.heading.title)}</h1>`,
-    `<p>${esc(tipsCopy.heading.intro)}</p>`,
-    categories.length > 1
-      ? `<ul><li><a href="${TIPS_PATH}">${esc(l.filterAll)}</a></li>${categories.map((c) => `<li><a href="${TIPS_PATH}?kategori=${categorySlug(c)}">${esc(c)}</a></li>`).join('')}</ul>`
-      : '',
+    `<p>${esc(heading.kicker)}</p>`,
+    `<h1>${esc(heading.title)}</h1>`,
+    `<p>${esc(heading.intro)}</p>`,
+    categories.length > 1 ? `<ul>${chip(l.filterAll)}${categories.map((c) => chip(c, c)).join('')}</ul>` : '',
     `<ul>${items.map((t) => cardHtml(t, 'h2')).join('')}</ul>`,
     pages > 1
-      ? `<nav><p>${esc(l.pageOf.replace('{page}', String(page)).replace('{pages}', String(pages)))}</p>${page > 1 ? `<a href="${tipsPagePath(page - 1)}">${esc(l.previous)}</a>` : ''}${page < pages ? ` <a href="${tipsPagePath(page + 1)}">${esc(l.next)}</a>` : ''}</nav>`
+      ? `<nav><p>${esc(l.pageOf.replace('{page}', String(page)).replace('{pages}', String(pages)))}</p>${page > 1 ? `<a href="${tipsPagePath(page - 1, category)}">${esc(l.previous)}</a>` : ''}${page < pages ? ` <a href="${tipsPagePath(page + 1, category)}">${esc(l.next)}</a>` : ''}</nav>`
       : '',
     '</div>',
   ].join('');
@@ -364,9 +413,11 @@ export function tipsIndexBody(tips: TipSummary[], page = 1): string {
  * Ringkasan statis artikel: breadcrumb, kategori, H1, ringkasan, tanggal, penulis, waktu baca, daftar isi, isi, CTA,
  * layanan terkait, artikel terkait. Sampul tidak ditulis di sini (React menampilkannya; preload di head).
  */
-export function tipBody(t: TipArticle, all: TipSummary[]): string {
+export function tipBody(t: TipArticle, all: TipSummary[], author?: TipAuthor): string {
   const l = tipsCopy.labels;
+  const a = tipsCopy.authorBox;
   const related = relatedTips(all, summaryOf(t));
+  const specialties = specialtiesOf(author);
   return [
     '<div class="prerender">',
     `<nav><a href="/">${esc(l.home)}</a> <a href="${TIPS_PATH}">${esc(tipsCopy.heading.title)}</a> <span>${esc(t.title)}</span></nav>`,
@@ -377,8 +428,20 @@ export function tipBody(t: TipArticle, all: TipSummary[]): string {
     t.updatedAt && t.updatedAt > t.publishedAt ? `<p><span>${esc(l.updated)}</span> <time datetime="${t.updatedAt}">${formatTipDate(t.updatedAt)}</time></p>` : '',
     `<p>${readingLabel(t.readingMinutes)}</p>`,
     t.author ? `<p><span>${esc(l.author)}</span> <a href="/#hairstylist">${esc(t.author)}</a></p>` : '',
+    t.keyPoints.length ? `<h2>${esc(l.keyPoints)}</h2><ul>${t.keyPoints.map((k) => `<li>${esc(k)}</li>`).join('')}</ul>` : '',
     t.headings.length >= TOC_MIN_HEADINGS ? `<p>${esc(l.toc)}</p><ol>${t.headings.map((h) => `<li><a href="#${h.id}">${esc(h.text)}</a></li>`).join('')}</ol>` : '',
     `<article>${t.html}</article>`,
+    t.faq.length ? `<h2>${esc(l.faqTitle)}</h2><dl>${t.faq.map((q) => `<dt>${esc(q.question)}</dt><dd>${esc(q.answer)}</dd>`).join('')}</dl>` : '',
+    t.author
+      ? [
+          `<h2>${esc(a.title)}</h2>`,
+          author?.role ? `<p>${esc(author.role)}</p>` : '',
+          `<p><a href="/#hairstylist">${esc(t.author)}</a></p>`,
+          author?.experience ? `<p><span>${esc(a.experience)}</span> <span>${esc(author.experience)}</span></p>` : '',
+          specialties.length ? `<p>${esc(a.specialties)}</p><ul>${specialties.map((x) => `<li>${esc(x)}</li>`).join('')}</ul>` : '',
+          author?.bio ? `<p>${esc(author.bio)}</p>` : '',
+        ].join('')
+      : '',
     `<h2>${esc(tipsCopy.cta.title)}</h2><p>${esc(tipsCopy.cta.text)}</p>`,
     t.services.length ? `<h2>${esc(l.servicesTitle)}</h2><ul>${t.services.map((s) => `<li>${esc(s)}</li>`).join('')}</ul>` : '',
     related.length ? `<h2>${esc(l.relatedTitle)}</h2><ul>${related.map((r) => cardHtml(r, 'h3')).join('')}</ul>` : '',
@@ -393,9 +456,16 @@ export const tipDataTag = (t: TipArticle) => `<script type="application/json" id
 
 /** Entri sitemap: /tips/, halaman daftar berikutnya, & setiap artikel (lastmod = diperbarui/terbit) */
 export function tipsSitemapEntries(tips: TipSummary[]): { path: string; lastmod?: string }[] {
-  const newest = tips.map(tipLastModified).sort().pop();
-  const pages = Array.from({ length: tipsPageCount(tips.length) }, (_, i) => ({ path: tipsPagePath(i + 1), lastmod: newest }));
-  return [...pages, ...tips.map((t) => ({ path: tipPath(t.slug), lastmod: tipLastModified(t) }))];
+  const listPages = (list: TipSummary[], category?: TipCategory) => {
+    const newest = list.map(tipLastModified).sort().pop();
+    return Array.from({ length: tipsPageCount(list.length) }, (_, i) => ({ path: tipsPagePath(i + 1, category), lastmod: newest }));
+  };
+  return [
+    ...listPages(tips),
+    // Halaman kategori: hanya kategori yang punya artikel terbit
+    ...tipCategoriesOf(tips).flatMap((c) => listPages(inCategory(tips, c), c)),
+    ...tips.map((t) => ({ path: tipPath(t.slug), lastmod: tipLastModified(t) })),
+  ];
 }
 
 /** Bagian llms.txt: judul + link + ringkasan setiap artikel */

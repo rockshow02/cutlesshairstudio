@@ -20,6 +20,7 @@ export function TipsLatest() {
       <SectionTitle
         heading={tipsCopy.latest}
         id="tips-terbaru-title"
+        asideAlign="end"
         aside={
           <Button href={pageUrl(TIPS_PATH)} variant="ghost" iconEnd="arrow">
             {tipsCopy.latest.viewAll}

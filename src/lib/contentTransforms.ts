@@ -563,6 +563,8 @@ export function buildBarbers(entries: BarberEntry[], copy: BarbersCopy, branches
         name: b.name,
         role,
         specialties: splitList(b.specialty, /[,\n]/),
+        bio: text(b.bio),
+        experience: text(b.experience),
         photo: toImage(b.photo, role ? `Foto ${b.name}, ${role}` : `Foto ${b.name}`, { width: 600, height: 800 }),
         instagram: text(b.instagram),
         whatsappNumber: text(b.whatsappNumber),

@@ -46,7 +46,17 @@ export const E2E_BRANCHES = {
 } as const;
 
 export const E2E_BARBERS = [
-  { name: 'Barber Uji Satu', role: 'Hairstylist', branchSlug: 'bogor-bantarjati', whatsappNumber: '6281100000303', order: 10, isActive: true },
+  {
+    name: 'Barber Uji Satu',
+    role: 'Hairstylist',
+    branchSlug: 'bogor-bantarjati',
+    whatsappNumber: '6281100000303',
+    specialty: 'Fade uji, Crop uji',
+    bio: 'Bio singkat barber uji satu.',
+    experience: '8 tahun uji',
+    order: 10,
+    isActive: true,
+  },
   { name: 'Barber Uji Dua', role: 'Hairstylist', branchSlug: 'bogor-bantarjati', whatsappNumber: '', order: 20, isActive: true },
 ] as const;
 
@@ -232,11 +242,13 @@ export const E2E_HERO_CTA = 'Booking Hero Uji';
 export const E2E_TIP_COVER = '/uploads/tips/sampul-uji.webp';
 
 /**
- * Artikel Tips & Trik uji (src/content/tips/*.md diganti seluruhnya saat build E2E): 13 artikel Terbit (lebih dari
- * 12 → paginasi /tips/halaman/2/) + 1 Draf yang tidak boleh tampil. Tampil hanya di varian uniform (Tampilkan Tips &
- * Trik aktif); build bawaan: mati → /tips/ 301 ke beranda.
- * - `withToc`: 3 subjudul H2 (daftar isi), penulis Barber Uji Satu, layanan Haircut, gambar di isi artikel
- * - `noToc`: 2 subjudul (tanpa daftar isi), tanpa penulis
+ * Artikel Tips & Trik uji (src/content/tips/*.md diganti seluruhnya saat build E2E): 15 artikel Terbit (lebih dari
+ * 12 → paginasi /tips/halaman/2/; 13 di kategori Grooming → /tips/kategori/grooming/halaman/2/) + 1 Draf yang tidak
+ * boleh tampil (kategori Produk: tanpa artikel Terbit → tanpa halaman kategori). Tampil hanya di varian uniform
+ * (Tampilkan Tips & Trik aktif); build bawaan: mati → /tips/ 301 ke beranda.
+ * - `withToc`: 3 subjudul H2 (daftar isi), penulis Barber Uji Satu, layanan Haircut, gambar di isi artikel,
+ *   Poin penting & FAQ artikel
+ * - `noToc`: 2 subjudul (tanpa daftar isi), tanpa penulis, tanpa Poin penting & FAQ
  */
 export const E2E_TIPS = {
   withToc: {
@@ -247,11 +259,17 @@ export const E2E_TIPS = {
     author: 'Barber Uji Satu',
     headings: ['Langkah uji pertama', 'Langkah uji kedua', 'Langkah uji ketiga'],
     service: 'Haircut',
+    keyPoints: ['Poin uji pertama.', 'Poin uji kedua.'],
+    faq: [
+      { question: 'Pertanyaan artikel uji satu?', answer: 'Jawaban artikel uji satu.' },
+      { question: 'Pertanyaan artikel uji dua?', answer: 'Jawaban artikel uji dua.' },
+    ],
   },
   noToc: { slug: 'gaya-uji-tanpa-daftar-isi', title: 'Gaya Uji Tanpa Daftar Isi', summary: 'Ringkasan uji artikel tanpa daftar isi.', category: 'Hair Style' },
   draft: { slug: 'draf-uji-tidak-tampil', title: 'Draf Uji Tidak Tampil' },
-  /** Artikel Terbit seluruhnya (withToc + noToc + 11 artikel "Grooming") */
-  publishedCount: 13,
+  /** Artikel Terbit seluruhnya (withToc + noToc + 13 artikel "Grooming") */
+  publishedCount: 15,
+  groomingCount: 13,
 } as const;
 
 const tipFile = (fm: Record<string, unknown>, body: string) => ({
@@ -267,7 +285,7 @@ export function e2eTipFiles(): { file: string; source: string }[] {
   const words = (n: number) => Array.from({ length: n }, (_, i) => `kata${i}`).join(' ');
   return [
     tipFile(
-      { ...base, slug: t.withToc.slug, title: t.withToc.title, summary: t.withToc.summary, category: t.withToc.category, author: t.withToc.author, publishedAt: '2026-10-20', updatedAt: '2026-10-25', services: [t.withToc.service] },
+      { ...base, slug: t.withToc.slug, title: t.withToc.title, summary: t.withToc.summary, category: t.withToc.category, author: t.withToc.author, publishedAt: '2026-10-20', updatedAt: '2026-10-25', services: [t.withToc.service], keyPoints: [...t.withToc.keyPoints], faq: t.withToc.faq.map((q) => ({ ...q })) },
       // ±600 kata → 3 menit baca
       `Paragraf pembuka uji yang langsung menjawab. ${words(600)}\n\n${t.withToc.headings.map((h) => `## ${h}\n\nIsi ${h.toLowerCase()}.`).join('\n\n')}\n\n![Gambar isi uji](${E2E_TIP_COVER})\n\n<script>window.__tipXss = true</script>\n`,
     ),
@@ -275,7 +293,7 @@ export function e2eTipFiles(): { file: string; source: string }[] {
       { ...base, slug: t.noToc.slug, title: t.noToc.title, summary: t.noToc.summary, category: t.noToc.category, publishedAt: '2026-10-21' },
       `Paragraf pembuka uji.\n\n## Subjudul uji satu\n\nIsi satu.\n\n## Subjudul uji dua\n\nIsi dua.\n`,
     ),
-    ...Array.from({ length: t.publishedCount - 2 }, (_, i) =>
+    ...Array.from({ length: t.groomingCount }, (_, i) =>
       tipFile(
         { ...base, slug: `grooming-uji-${i + 1}`, title: `Grooming Uji ${i + 1}`, summary: `Ringkasan grooming uji ${i + 1}.`, category: 'Grooming', publishedAt: `2026-09-${String(i + 1).padStart(2, '0')}` },
         `Isi grooming uji ${i + 1}.\n`,

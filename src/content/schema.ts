@@ -208,6 +208,10 @@ export const barberSchema = z.object({
   /** Cabang tempat barber bekerja (wajib) */
   branchSlug: branchSlugRef,
   specialty: optionalText(120),
+  /** Bio singkat (kotak penulis artikel Tips & Trik) */
+  bio: optionalText(200),
+  /** Pengalaman, mis. "8 tahun sebagai hairstylist" (kotak penulis artikel Tips & Trik) */
+  experience: optionalText(60),
   /** Opsional; kosong = pakai nomor WA cabangnya */
   whatsappNumber: optionalWa,
   instagram: optionalUrl,
@@ -640,11 +644,19 @@ export const tipSchema = z
     updatedAt: z.union([tipDate, z.literal('')]).nullish(),
     status: z.enum(TIP_STATUSES, { error: `status harus ${TIP_STATUSES.join(' atau ')}` }),
     services: z.array(z.string().trim().min(1)).nullish(),
+    /** Poin penting (kotak di bawah sampul): kosong, atau 2–5 butir */
+    keyPoints: z.array(requiredText(140, 'poin penting')).max(5, 'maksimal 5 poin penting').nullish(),
+    /** FAQ artikel (akordeon di akhir artikel + JSON-LD FAQPage) */
+    faq: z
+      .array(z.object({ question: requiredText(120, 'pertanyaan'), answer: requiredText(400, 'jawaban') }))
+      .max(5, 'maksimal 5 pertanyaan')
+      .nullish(),
     body: z.string().nullish(),
   })
   .superRefine((t, ctx) => {
     if (t.status === 'Terbit' && !t.body?.trim()) ctx.addIssue({ code: 'custom', path: ['body'], message: 'isi artikel wajib diisi sebelum diterbitkan' });
     if (t.updatedAt && t.updatedAt < t.publishedAt) ctx.addIssue({ code: 'custom', path: ['updatedAt'], message: 'tanggal diperbarui tidak boleh sebelum tanggal terbit' });
+    if (t.keyPoints?.length === 1) ctx.addIssue({ code: 'custom', path: ['keyPoints'], message: 'isi minimal 2 poin penting, atau kosongkan' });
     if (t.slug && RESERVED_TIP_SLUGS.includes(t.slug)) ctx.addIssue({ code: 'custom', path: ['slug'], message: `slug "${t.slug}" dipakai halaman daftar, pilih slug lain` });
   });
 

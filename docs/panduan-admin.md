@@ -424,7 +424,7 @@ Produk tampil di halaman **/produk** dan 4 produk teratas juga tampil di halaman
 
 ## 6a. Tips & Trik (artikel di /tips/)
 
-Artikel seputar gaya rambut, perawatan, dan grooming. Tampil di halaman **/tips/**, menu **Tips**, dan bagian **Tips Terbaru** (3 artikel) di beranda, setelah **Pengaturan Situs → Tampilkan Tips & Trik** dinyalakan. Selama mati, halaman /tips/ dialihkan ke beranda dan tidak masuk Google.
+Artikel seputar gaya rambut, perawatan, dan grooming. Tampil di halaman **/tips/**, halaman per kategori (mis. **/tips/kategori/hair-care/**, dibuat otomatis untuk kategori yang punya artikel Terbit), menu **Tips**, dan bagian **Tips Terbaru** (3 artikel) di beranda, setelah **Pengaturan Situs → Tampilkan Tips & Trik** dinyalakan. Selama mati, halaman /tips/ dialihkan ke beranda dan tidak masuk Google.
 
 > **Selama fitur ini belum dirilis (sebelum versi 1.3.0):** tulis artikel di branch **staging** (app.pagescms.org → pilih branch *staging* di kiri atas), lalu cek hasilnya di URL staging. Setelah versi 1.3.0 dirilis, artikel cukup ditulis di branch **main** seperti konten lain. Dua artikel contoh berstatus **Draf** sudah tersedia untuk melihat formatnya.
 
@@ -444,6 +444,27 @@ Artikel seputar gaya rambut, perawatan, dan grooming. Tampil di halaman **/tips/
    - Gambar di dalam isi boleh ditambahkan lewat tombol gambar di editor (foto asli studio; dikompres otomatis).
 8. **Tanggal terbit**: tanggal artikel diterbitkan (artikel terbaru tampil paling atas). **Tanggal diperbarui**: isi hanya saat isinya diubah secara berarti.
 9. **Save**. Status awal **Draf**.
+
+### Poin penting (opsional)
+
+Kotak ringkasan di bawah foto sampul, untuk pembaca yang ingin intinya saja. Isi **2–5 butir** (atau kosongkan), masing-masing **satu kalimat pendek** (maks. 140 karakter) yang bisa langsung dipraktikkan, mis. *Keramas 2–3 kali seminggu dengan sampo tanpa sulfat.* Jangan mengulang judul; tulis kesimpulan dari isi artikel.
+
+### FAQ artikel (opsional)
+
+Tanya jawab di akhir artikel (bisa dibuka-tutup) dan ikut dibaca Google. Isi **maks. 5** pertanyaan yang **benar-benar sering ditanyakan klien** di studio soal topik itu.
+
+- **Pertanyaan** (maks. 120 karakter): tulis seperti klien bertanya, mis. *Berapa lama fade bertahan rapi?*
+- **Jawaban** (maks. 400 karakter): kalimat pertama langsung menjawab, lalu penjelasan singkat. Jangan mengulang isi artikel kata per kata.
+
+### Bio kapster (kotak penulis)
+
+Bila **Penulis / ditinjau oleh** diisi, di akhir artikel tampil kotak penulis: foto, nama (link ke kartu kapster), jabatan, pengalaman, keahlian, bio singkat, dan tombol **Booking dengan [nama]**. Datanya diambil dari menu **Barber**:
+
+- **Bio singkat** (maks. 200 karakter): 1–2 kalimat tentang keahlian & gaya kerja kapster, mis. *Spesialis fade & textured crop, senang membantu klien menemukan gaya yang mudah ditata sendiri.*
+- **Pengalaman** (maks. 60 karakter): mis. *8 tahun sebagai hairstylist*. Isi hanya yang benar.
+- **Spesialisasi**: dipakai sebagai daftar keahlian.
+
+Kolom yang kosong tidak ditampilkan. Kotak penulis membantu pembaca (dan Google) tahu artikel ditulis oleh orang yang berpengalaman.
 
 ### Memilih foto sampul
 
@@ -564,6 +585,10 @@ Form Pages CMS menolak isian yang melebihi batas, dan website memeriksa batas ya
 | Tips & Trik | Slug | 80 | opsional |
 | Tips & Trik | Ringkasan | 160 | wajib |
 | Tips & Trik | Deskripsi foto sampul | 150 | wajib |
+| Tips & Trik | Poin penting (per butir) | 140 | opsional, 2–5 butir |
+| Tips & Trik | FAQ artikel → Pertanyaan / Jawaban | 120 / 400 | opsional, maks. 5 |
+| Barber | Bio singkat | 200 | opsional |
+| Barber | Pengalaman | 60 | opsional |
 | Pengaturan Situs | Nama usaha | 80 | wajib |
 | Pengaturan Situs | Pesan booking default | 500 | opsional |
 | Pengaturan Situs | Template pesan booking kapster | 500 (emoji dihitung 2) | opsional |

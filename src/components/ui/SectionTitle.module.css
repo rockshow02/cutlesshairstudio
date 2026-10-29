@@ -70,4 +70,8 @@
     flex: 0 1 26rem;
     align-items: flex-start;
   }
+  .asideEnd {
+    flex: none;
+    align-items: flex-end;
+  }
 }

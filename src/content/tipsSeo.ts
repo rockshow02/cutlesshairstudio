@@ -16,7 +16,7 @@ export const TIP_STATUSES = ['Draf', 'Terbit'] as const;
 export const TIPS_PER_PAGE = 12;
 
 /** Segmen URL yang dipakai halaman daftar (tidak boleh jadi slug artikel) */
-export const RESERVED_TIP_SLUGS = ['halaman'];
+export const RESERVED_TIP_SLUGS = ['halaman', 'kategori'];
 
 export const TIP_SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
@@ -38,8 +38,11 @@ export function slugify(text: string): string {
     .replace(/^-+|-+$/g, '');
 }
 
-/** Kategori → bagian URL filter, mis. "Hair Care" → "hair-care" (/tips/?kategori=hair-care) */
+/** Kategori → bagian URL halaman kategori, mis. "Hair Care" → "hair-care" (/tips/kategori/hair-care/) */
 export const categorySlug = (category: string): string => slugify(category);
+
+/** "hair-care" → "Hair Care"; tidak dikenal → undefined */
+export const categoryFromSlug = (slug: string | null | undefined): TipCategory | undefined => TIP_CATEGORIES.find((c) => categorySlug(c) === slug);
 
 /** Menit baca (±200 kata/menit, dibulatkan ke atas, minimal 1) dari teks polos isi artikel */
 export function readingMinutes(text: string): number {
@@ -49,8 +52,29 @@ export function readingMinutes(text: string): number {
 
 export const tipPath = (slug: string): string => `${TIPS_PATH}${slug}/`;
 
-/** Halaman daftar ke-n: 1 → /tips/, 2 → /tips/halaman/2/ */
-export const tipsPagePath = (page: number): string => (page <= 1 ? TIPS_PATH : `${TIPS_PATH}halaman/${page}/`);
+/** Halaman daftar ke-n (semua, atau satu kategori): 1 → /tips/ | /tips/kategori/hair-care/, 2 → …/halaman/2/ */
+export const tipsPagePath = (page: number, category?: TipCategory): string => {
+  const base = category ? `${TIPS_PATH}kategori/${categorySlug(category)}/` : TIPS_PATH;
+  return page <= 1 ? base : `${base}halaman/${page}/`;
+};
+
+export type TipsRoute = { kind: 'index'; category?: TipCategory; page: number } | { kind: 'article'; slug: string };
+
+/**
+ * URL → halaman Tips: /tips/, /tips/halaman/2/, /tips/kategori/<slug>/(halaman/<n>/), /tips/<slug>/.
+ * Kategori tidak dikenal / bukan URL Tips → undefined. Dipakai plugin build (dev server) & browser.
+ */
+export function parseTipsPath(pathname: string): TipsRoute | undefined {
+  const path = pathname.replace(/index\.html$/, '').replace(/\/?$/, '/');
+  const index = path.match(/^\/tips\/(?:kategori\/([a-z0-9-]+)\/)?(?:halaman\/(\d+)\/)?$/);
+  if (index) {
+    const category = index[1] ? categoryFromSlug(index[1]) : undefined;
+    if (index[1] && !category) return undefined;
+    return { kind: 'index', ...(category ? { category } : {}), page: Math.max(1, Number(index[2] ?? 1)) };
+  }
+  const article = path.match(/^\/tips\/([a-z0-9-]+)\/$/);
+  return article && !RESERVED_TIP_SLUGS.includes(article[1]) ? { kind: 'article', slug: article[1] } : undefined;
+}
 
 export const tipsPageCount = (count: number): number => Math.max(1, Math.ceil(count / TIPS_PER_PAGE));
 
@@ -78,10 +102,19 @@ export interface TipHeading {
   text: string;
 }
 
+export interface TipFaq {
+  question: string;
+  answer: string;
+}
+
 /** Artikel lengkap (halaman artikel): isi sudah HTML hasil render Markdown saat build */
 export interface TipArticle extends TipSummary {
   html: string;
   headings: TipHeading[];
+  /** Poin penting (2–5) di bawah sampul; kosong = tidak tampil */
+  keyPoints: string[];
+  /** FAQ artikel (maks. 5) di akhir artikel + JSON-LD FAQPage */
+  faq: TipFaq[];
 }
 
 /** Daftar isi hanya bila artikel punya minimal 3 subjudul (H2) */

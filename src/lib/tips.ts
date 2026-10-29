@@ -5,7 +5,7 @@
  */
 import tips from 'virtual:tips';
 import { responsiveImage } from '@/lib/contentTransforms';
-import { categorySlug, TIP_CATEGORIES, type TipArticle, type TipSummary } from '@/content/tipsSeo';
+import type { TipArticle, TipSummary } from '@/content/tipsSeo';
 import type { ImageAsset } from '@/types';
 
 /** Artikel terbit, terbaru dulu */
@@ -22,20 +22,37 @@ export function getCurrentTip(): TipArticle | undefined {
   }
 }
 
-/** Slug artikel dari URL, mis. /tips/cara-merawat-rambut/ → "cara-merawat-rambut" (bukan /tips/halaman/2/) */
-export function tipSlugFromPath(pathname: string): string | undefined {
-  const m = pathname.match(/\/tips\/([a-z0-9-]+)\/?$/);
-  return m && m[1] !== 'halaman' ? m[1] : undefined;
+/** Link "Bagikan ke WhatsApp" (tanpa nomor: pengunjung memilih kontak di WhatsApp) */
+export const whatsappShareUrl = (title: string, url: string): string => `https://wa.me/?text=${encodeURIComponent(`${title} ${url}`)}`;
+
+/**
+ * Salin teks ke clipboard. Clipboard API ditolak/tidak ada (mis. bukan HTTPS, izin ditolak) → cara lama
+ * (textarea + execCommand). Keduanya gagal → false: tampilkan link agar disalin manual.
+ */
+export async function copyText(text: string): Promise<boolean> {
+  try {
+    if (navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(text);
+      return true;
+    }
+  } catch {
+    /* lanjut ke cara lama */
+  }
+  try {
+    const area = document.createElement('textarea');
+    area.value = text;
+    area.setAttribute('readonly', '');
+    area.style.position = 'fixed';
+    area.style.opacity = '0';
+    document.body.appendChild(area);
+    area.select();
+    const ok = document.execCommand('copy');
+    area.remove();
+    return ok;
+  } catch {
+    return false;
+  }
 }
-
-/** Nomor halaman daftar dari URL: /tips/halaman/2/ → 2, selain itu 1 */
-export const tipsPageFromPath = (pathname: string): number => Number(pathname.match(/\/tips\/halaman\/(\d+)\/?$/)?.[1] ?? 1);
-
-/** ?kategori=hair-care → "Hair Care" (tidak dikenal → undefined = semua) */
-export const categoryFromQuery = (search: string) => {
-  const value = new URLSearchParams(search).get('kategori');
-  return TIP_CATEGORIES.find((c) => categorySlug(c) === value);
-};
 
 /** Foto sampul (ukuran asli dari virtual:image-meta, srcset otomatis dari versi kecil) */
 export const tipCover = (t: Pick<TipSummary, 'cover' | 'coverAlt'>, sizes: string): ImageAsset => responsiveImage(t.cover, t.coverAlt, sizes, { width: 1600, height: 900 });
