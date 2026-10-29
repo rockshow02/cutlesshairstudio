@@ -48,7 +48,7 @@
     {
       "question": "Apakah bisa datang langsung tanpa booking (walk-in)?",
       "answer": "Bisa. Cutless Hair Studio menerima pelanggan walk-in di kedua cabang. Agar tidak perlu menunggu, terutama di akhir pekan, kamu bisa booking lebih dulu lewat WhatsApp.",
-      "isActive": false,
+      "isActive": true,
       "order": 80
     },
     {
