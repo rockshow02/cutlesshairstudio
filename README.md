@@ -357,7 +357,7 @@ Library: **Motion for React** (`motion`, LazyMotion + `domAnimation`) dan **Leni
 
 **Aturan:** hanya `transform` & `opacity`; animasi masuk viewport sekali (`once`); scroll snap `y proximity` hanya di hero, Tentang Kami, dan kartu studio; `prefers-reduced-motion` → tanpa preloader, parallax, marquee, scroll-linked, dan tirai (fade sederhana saja).
 
-**Performa (HP):** section di bawah hero dirender bertahap setelah hero tampil (`components/ui/Deferred.tsx`); semua `Reveal` memakai satu IntersectionObserver bersama + transisi CSS; parallax/kartu membesar memakai satu sumber scroll bersama (`useScrollProgress`) karena `useScroll({ target })` membuat ViewTimeline per elemen yang memaksa layout ulang. Google Fonts dimuat tanpa memblokir render; CSS digabung jadi satu file.
+**Performa (HP):** section di bawah hero dirender bertahap setelah hero tampil (`components/ui/Deferred.tsx`); semua `Reveal` memakai satu IntersectionObserver bersama + transisi CSS; parallax/kartu membesar memakai satu sumber scroll bersama (`useScrollProgress`) karena `useScroll({ target })` membuat ViewTimeline per elemen yang memaksa layout ulang. Font (Archivo & Plus Jakarta Sans) di-host sendiri di `public/fonts/` (`src/styles/fonts.css`), file latin di-preload, dan render pertama React menunggu font maks. 1,5 detik (`src/lib/fontsReady.ts`) agar teks tidak bergeser saat font berganti; CSS digabung jadi satu file.
 
 **Aset yang perlu disiapkan:** logo SVG (untuk animasi garis/stroke preloader), foto portrait studio resolusi tinggi (≥ 1200 × 1500 px) untuk Tentang Kami, foto lanskap studio (≥ 1920 px) untuk kartu membesar (upload sebagai foto cabang), dan opsional video preloader (MP4/WebM tanpa suara, ≤ 500 KB, ±1,5 detik).
 

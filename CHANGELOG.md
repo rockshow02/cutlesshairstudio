@@ -12,6 +12,12 @@ Cara menaikkan versi & merilis: [CONTRIBUTING.md → Rilis versi](CONTRIBUTING.m
 
 ## [Belum dirilis]
 
+## [1.2.1] - 2026-10-29
+
+### Diperbaiki
+- Teks tidak lagi bergeser saat font dimuat (layout shift; paling terasa di Android & Linux, yang tidak punya font cadangan Arial Black): font Archivo & Plus Jakarta Sans di-host sendiri (bukan Google Fonts yang dimuat async), file latin di-preload, dan render pertama menunggu font maks. 1,5 detik.
+- Tes e2e CLS halaman Cuci Sepatu tidak lagi flaky: menunggu `document.fonts.ready` & frame tergambar (bukan jeda waktu tetap), batas CLS diperketat ke < 0,005.
+
 ## [1.2.0] - 2026-10-29
 
 ### Ditambahkan
@@ -52,7 +58,8 @@ Launch https://cutlesshairstudio.com.
 - Halaman `/cuci-sepatu/` untuk partner cuci sepatu (layanan, harga, daftar menu PDF, galeri) dan teaser di beranda.
 - Validasi konten saat build (skema & aturan siap tayang), kompres gambar otomatis, SEO dasar (title/meta, JSON-LD, sitemap), staging terpisah, CI (typecheck, lint, tes, e2e).
 
-[Belum dirilis]: https://github.com/rockshow02/cutlesshairstudio/compare/v1.2.0...staging
+[Belum dirilis]: https://github.com/rockshow02/cutlesshairstudio/compare/v1.2.1...staging
+[1.2.1]: https://github.com/rockshow02/cutlesshairstudio/compare/v1.2.0...v1.2.1
 [1.2.0]: https://github.com/rockshow02/cutlesshairstudio/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/rockshow02/cutlesshairstudio/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/rockshow02/cutlesshairstudio/releases/tag/v1.0.0
