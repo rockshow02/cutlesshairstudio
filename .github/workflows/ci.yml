@@ -14,6 +14,7 @@ on:
     branches: [staging, main]
   workflow_dispatch:
 
+# Hanya membaca kode (checkout); tidak menulis apa pun ke repo. Yang tidak disebut = none.
 permissions:
   contents: read
 

@@ -186,7 +186,16 @@ Gratis untuk repo publik. **Settings → Rules → Rulesets → New ruleset → 
 
 PR ke `main` hanya diterima dari `staging` dan `hotfix/*` (dicek CI `verify`, yang wajib lolos). Commit Pages CMS ke `main` lewat bypass di atas tetap langsung masuk.
 
-Lalu **Settings → Actions → General → Workflow permissions** → pilih **Read and write permissions** dan centang **Allow GitHub Actions to create and approve pull requests** → Save. Dibutuhkan workflow **Sinkron main → staging** (membuat PR & push ke staging) dan **Rilis versi** (membuat tag & GitHub Release).
+Lalu **Settings → Actions → General → Workflow permissions**: **biarkan default "Read repository contents and packages permissions"** dan centang **Allow GitHub Actions to create and approve pull requests** → Save. Izin tulis tidak diberikan lewat default repo, melainkan eksplisit per workflow (blok `permissions`, minimum; yang tidak disebut = `none`):
+
+| Workflow | Izin `GITHUB_TOKEN` | Untuk |
+|---|---|---|
+| CI (`ci.yml`) | `contents: read` | checkout saja |
+| Sinkron konten (`optimize-images.yml`) | `contents: write` | commit WebP & dropdown cabang `.pages.yml` |
+| Sinkron main → staging (`sync-staging.yml`) | `contents: write`, `pull-requests: write` | push ke staging; PR, label `perlu-dicek`, komentar (endpoint label/komentar menerima izin *Pull requests*) |
+| Rilis versi (`release.yml`) | `contents: write` | push tag & GitHub Release |
+
+Workflow baru wajib menulis blok `permissions` sendiri (mulai dari `contents: read`).
 
 Bila `staging` juga diberi ruleset (opsional), tambahkan *GitHub Actions* ke bypass list-nya agar sinkron otomatis bisa push ke staging; tanpa itu PR sinkron tetap dibuat tetapi harus di-merge manual.
 
