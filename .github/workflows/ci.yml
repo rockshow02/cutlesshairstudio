@@ -1,14 +1,17 @@
-# CI untuk setiap Pull Request (gratis di repo publik).
+# CI (gratis di repo publik). Alur lengkap: CONTRIBUTING.md.
 # Job "verify" dan "e2e" adalah status check WAJIB untuk merge ke main (lihat CONTRIBUTING.md → Branch protection).
-#   PR ke main    : hanya dari branch staging; konten harus SIAP TAYANG (CONTENT_CHECK=strict) + build produksi
-#   PR ke staging : konten boleh belum lengkap (peringatan saja) + build staging
+#   PR ke main      : hanya dari staging (rilis versi) atau hotfix/* (perbaikan darurat); konten SIAP TAYANG
+#                     (CONTENT_CHECK=strict) + build produksi + versi package.json dinaikkan & ada di CHANGELOG.md
+#   PR ke staging   : konten boleh belum lengkap (peringatan saja) + build staging
+#   push ke main    : termasuk simpanan Pages CMS; verify ketat + build produksi (sama dengan Cloudflare Workers Builds).
+#                     Gagal = Cloudflare juga gagal build → tidak deploy, versi sebelumnya tetap tayang (lihat ringkasan run).
 name: CI
 
 on:
   pull_request:
     branches: [main, staging]
   push:
-    branches: [staging]
+    branches: [staging, main]
   workflow_dispatch:
 
 permissions:
@@ -27,17 +30,26 @@ jobs:
       # Ketat hanya untuk PR yang menuju produksi
       TARGET: ${{ github.event_name == 'pull_request' && github.base_ref || github.ref_name }}
     steps:
-      - name: Asal PR ke main harus staging
+      - name: Asal PR ke main harus staging atau hotfix/*
         if: github.event_name == 'pull_request' && github.base_ref == 'main'
         env:
           HEAD_REF: ${{ github.head_ref }}
         run: |
-          if [ "$HEAD_REF" != "staging" ]; then
-            echo "::error::PR ke main hanya boleh dari branch staging (PR ini dari \"$HEAD_REF\"). Merge dulu ke staging, uji di URL staging, lalu buat PR staging → main."
-            exit 1
-          fi
+          case "$HEAD_REF" in
+            staging|hotfix/*) echo "Asal PR: $HEAD_REF (diizinkan)" ;;
+            *)
+              msg="PR ke main hanya dari \"staging\" (rilis versi) atau \"hotfix/*\" (perbaikan darurat). PR ini dari \"$HEAD_REF\"."
+              msg="$msg Fitur: buat PR $HEAD_REF → staging, uji di URL staging, lalu rilis lewat PR staging → main."
+              msg="$msg Perbaikan darurat produksi: buat branch hotfix/<nama> dari main. Lihat CONTRIBUTING.md."
+              echo "::error title=Asal PR tidak diizinkan::$msg"
+              { echo "### ✗ Asal PR tidak diizinkan"; echo; echo "$msg"; } >> "$GITHUB_STEP_SUMMARY"
+              exit 1 ;;
+          esac
 
       - uses: actions/checkout@v7
+        with:
+          # Riwayat & tag lengkap untuk cek versi rilis (tag vX.Y.Z terakhir)
+          fetch-depth: 0
 
       - uses: actions/setup-node@v7
         with:
@@ -65,6 +77,24 @@ jobs:
         if: env.TARGET == 'main'
         run: npm run build
 
+      - name: Versi rilis dinaikkan & tercatat di CHANGELOG.md
+        if: github.event_name == 'pull_request' && github.base_ref == 'main'
+        run: node scripts/release.mjs check
+
+      - name: Ringkasan bila konten di main gagal
+        if: failure() && github.event_name == 'push' && github.ref_name == 'main'
+        run: |
+          {
+            echo "### ✗ Perubahan terakhir di main tidak lolos pemeriksaan"
+            echo
+            echo "**Website TIDAK berubah:** Cloudflare menjalankan pemeriksaan yang sama saat build produksi, jadi build gagal dan versi sebelumnya tetap tayang di https://cutlesshairstudio.com."
+            echo
+            echo "**Perbaiki:** buka langkah yang merah di atas (biasanya *Validasi konten*): pesannya menyebut file, entri, dan kolom, mis. \`faq.json: pertanyaan 3 …: aktif tetapi jawabannya kosong\`."
+            echo "Betulkan isian itu lewat Pages CMS (branch **main**) lalu Save. Setelah Save berikutnya lolos, website diperbarui otomatis (±3–5 menit)."
+            echo
+            echo "Commit: \`${GITHUB_SHA::7}\` oleh **${GITHUB_ACTOR}**. Panduan: docs/panduan-admin.md → *Jika website tidak berubah setelah Save*."
+          } >> "$GITHUB_STEP_SUMMARY"
+
       - name: Build staging
         if: env.TARGET != 'main'
         run: npm run build:staging
@@ -74,6 +104,8 @@ jobs:
   # (mis. status cabang) tidak membuat job ini gagal. Gratis di repo publik.
   e2e:
     name: e2e
+    # Push ke main = simpanan Pages CMS / merge PR yang e2e-nya sudah lolos; e2e memakai data uji (tidak bergantung konten)
+    if: github.event_name != 'push' || github.ref_name != 'main'
     runs-on: ubuntu-latest
     timeout-minutes: 25
     steps:
