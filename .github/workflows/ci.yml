@@ -78,6 +78,10 @@ jobs:
         if: env.TARGET == 'main'
         run: npm run build
 
+      - name: Web Analytics hanya di build produksi (beacon di semua halaman bila token diisi)
+        if: env.TARGET == 'main'
+        run: node scripts/check-analytics.mjs production
+
       - name: Versi rilis dinaikkan & tercatat di CHANGELOG.md
         if: github.event_name == 'pull_request' && github.base_ref == 'main'
         run: node scripts/release.mjs check
@@ -99,6 +103,10 @@ jobs:
       - name: Build staging
         if: env.TARGET != 'main'
         run: npm run build:staging
+
+      - name: Web Analytics tidak dipasang di staging
+        if: env.TARGET != 'main'
+        run: node scripts/check-analytics.mjs staging
 
   # E2E Playwright (360 px & desktop) terhadap Worker statis lokal (wrangler dev, tanpa akun Cloudflare).
   # Memakai build E2E dengan data uji tetap (e2e/fixtures/content.ts), jadi perubahan isi CMS

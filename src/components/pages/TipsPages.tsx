@@ -156,7 +156,7 @@ export function TipArticlePage() {
   }
 
   // Pesan menyebut judul artikel; cabang tetap dipilih pengunjung (pemilih cabang)
-  const target = book({ message: tipCtaMessage(tip.title) });
+  const target = book({ message: tipCtaMessage(tip.title), source: 'tips' });
   const related = relatedTips(getTips(), tip);
   const toc = tip.headings.length >= TOC_MIN_HEADINGS ? tip.headings : [];
   const author = tip.author && barbers.status === 'success' ? barbers.data.items.find((b) => b.name === tip.author) : undefined;

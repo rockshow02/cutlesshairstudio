@@ -43,8 +43,8 @@ function PromoCard({ item, labels }: { item: PromoItem; labels: PromoContent['la
   const book = useBooking();
   // Promo khusus cabang → pemilih cabang hanya menawarkan cabang yang berlaku
   const target = item.waMessage
-    ? book({ message: item.waMessage, vars: { promo: item.title }, allowedSlugs: item.branchSlugs })
-    : book({ kind: 'service', vars: { service: `promo "${item.title}"` }, allowedSlugs: item.branchSlugs });
+    ? book({ message: item.waMessage, vars: { promo: item.title }, allowedSlugs: item.branchSlugs, source: 'promo' })
+    : book({ kind: 'service', vars: { service: `promo "${item.title}"` }, allowedSlugs: item.branchSlugs, source: 'promo' });
 
   return (
     <article className={styles.card} data-has-image={item.image ? true : undefined}>

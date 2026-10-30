@@ -85,6 +85,7 @@ import { activeFaqItems } from '@/content/faqSeo';
 import { activeVideoItems } from '@/content/instagram';
 import { formatNumber, formatPhoneDisplay, formatPriceText } from './format';
 import { isActiveNow, parseWIB, toIsoWIB } from './dates';
+import { rememberWaClick } from './waClickTracking';
 import { fillTemplate, templateLink } from './whatsapp';
 
 /* ---------- Helper umum ---------- */
@@ -163,7 +164,7 @@ export function buildShoeCare(p: ShoeCareEntry | null | undefined, branches: Bra
   if (!branch || services.length === 0) return null;
   const number = text(p.whatsappNumber) ?? branch.whatsappNumber;
   const template = text(p.messageTemplate) ?? copy.defaultTemplate;
-  const link = (service: string) => templateLink(number, template, { partner: p.name, service, branch: branch.name });
+  const link = (service: string) => rememberWaClick(templateLink(number, template, { partner: p.name, service, branch: branch.name }), { kind: 'cuci-sepatu', branch: branch.slug });
   const logo = text(p.logo);
   const heroLogo = text(p.heroLogo);
   const photos = (p.photos ?? []).map((ph) => responsiveImage(ph.image, ph.alt, '(min-width: 1024px) 33vw, (min-width: 600px) 50vw, 100vw', { width: 1200, height: 900 }));

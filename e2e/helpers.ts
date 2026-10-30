@@ -8,7 +8,7 @@ const ACCESS_SECRET = process.env.E2E_CF_ACCESS_CLIENT_SECRET ?? '';
  * Konteks uji:
  *  - wa.me tidak benar-benar dibuka (dijawab halaman kosong), URL-nya tetap bisa diperiksa
  *  - header Access hanya ke origin situs (bila diisi)
- *  - setiap request ke /api/* dicatat (situs statis tidak boleh memanggil API)
+ *  - setiap request ke /api/* dicatat (situs statis tidak boleh memanggil API, kecuali hitungan klik /api/klik-wa)
  */
 export async function prepareContext(context: BrowserContext, baseURL: string | undefined) {
   await context.route('https://wa.me/**', (route) => route.fulfill({ contentType: 'text/plain', body: 'WhatsApp (uji)' }));
@@ -40,7 +40,8 @@ export const test = base.extend<{ apiCalls: string[] }>({
     const calls: string[] = [];
     context.on('request', (r) => {
       const url = new URL(r.url());
-      if (url.pathname.startsWith('/api/')) calls.push(url.pathname);
+      // Pengecualian: hitungan klik WhatsApp (sendBeacon, diuji di e2e/wa-clicks.spec.ts)
+      if (url.pathname.startsWith('/api/') && url.pathname !== '/api/klik-wa') calls.push(url.pathname);
     });
     await use(calls);
   },

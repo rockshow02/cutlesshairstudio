@@ -15,6 +15,7 @@
  * 7. Tips & Trik (scripts/tips.ts): validasi src/content/tips/*.md, modul `virtual:tips`, prerender /tips/,
  *    /tips/halaman/<n>/, /tips/kategori/<slug>/(halaman/<n>/) & /tips/<slug>/ (atau 301 ke beranda bila
  *    dimatikan), entri sitemap & llms.txt.
+ * 8. dist/klik-wa.json: cabang, kapster, & halaman yang boleh dicatat hitungan klik WhatsApp (worker/waClicks.ts).
  */
 import { cp, readdir, readFile, mkdir, rm, stat, writeFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
@@ -38,6 +39,7 @@ import { pricingCopy } from '../src/content/pricing';
 import { formatPhoneDisplay, formatThousandsK, formatTime } from '../src/lib/format';
 import { branchesCopy } from '../src/content/branches';
 import { shoeCareCopy } from '../src/content/shoeCare';
+import { barberKey, WA_CLICK_ALLOWLIST_PATH, type WaClickAllowlist } from '../src/content/waClicks';
 import { TIPS_PATH, parseTipsPath, tipsPageCount, tipsPagePath, tipsRedirects, tipsVisible, type TipSummary, type TipsRoute } from '../src/content/tipsSeo';
 import { processTips, readTipFiles, summaryOf, tipBody, tipCategoriesOf, tipDataTag, tipHead, tipsIndexBody, tipsIndexHead, tipsLlmsLines, tipsSitemapEntries, type TipsResult } from './tips';
 
@@ -622,10 +624,9 @@ function fillHtml(html: string, bundle: ContentBundle | undefined, meta: ImageMe
 
 const HEAD_REGION = /<!--cutless:head-start-->[\s\S]*?<!--cutless:head-end-->/;
 
-export function sitemap(bundle: ContentBundle, tips: TipSummary[] = []): string {
-  const { siteUrl } = bundle.settings;
-  const today = new Date().toISOString().slice(0, 10);
-  const urls: (string | { path: string; lastmod?: string })[] = [
+/** Semua halaman yang dibangun & diindeks (sitemap.xml, daftar halaman klik-wa.json) */
+function sitePages(bundle: ContentBundle, tips: TipSummary[]): (string | { path: string; lastmod?: string })[] {
+  return [
     '/',
     '/cabang/',
     ...bundle.branches.map((b) => `/cabang/${b.slug}/`),
@@ -635,11 +636,28 @@ export function sitemap(bundle: ContentBundle, tips: TipSummary[] = []): string 
     // Tips & Trik hanya saat aktif & ada artikel terbit; lastmod artikel = tanggal diperbarui/terbit
     ...(tipsVisible(bundle.settings) && tips.length ? tipsSitemapEntries(tips) : []),
   ];
-  const body = urls
+}
+
+export function sitemap(bundle: ContentBundle, tips: TipSummary[] = []): string {
+  const { siteUrl } = bundle.settings;
+  const today = new Date().toISOString().slice(0, 10);
+  const body = sitePages(bundle, tips)
     .map((u) => (typeof u === 'string' ? { path: u, lastmod: today } : u))
     .map((u) => `  <url><loc>${siteUrl}${u.path}</loc><lastmod>${u.lastmod ?? today}</lastmod></url>`)
     .join('\n');
   return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${body}\n</urlset>\n`;
+}
+
+/**
+ * dist/klik-wa.json: nilai yang boleh disimpan hitungan klik WhatsApp (Worker /api/klik-wa menolak cabang/kapster lain;
+ * halaman lain dicatat "lainnya"). Isinya hanya data yang memang tampil di situs (slug & nama cabang/kapster, path halaman).
+ */
+export function waClickAllowlist(bundle: ContentBundle, tips: TipSummary[] = []): WaClickAllowlist {
+  return {
+    branches: Object.fromEntries(bundle.branches.map((b) => [b.slug, b.name])),
+    barbers: Object.fromEntries(bundle.barbers.map((b) => [barberKey(b.name), b.name]).filter(([key]) => key)),
+    pages: [...new Set(sitePages(bundle, tips).map((u) => (typeof u === 'string' ? u : u.path)))],
+  };
 }
 
 export const robots = (bundle: ContentBundle, indexable: boolean) =>
@@ -649,16 +667,39 @@ export const robots = (bundle: ContentBundle, indexable: boolean) =>
 
 /* ---------- Environment ---------- */
 
-type AppEnv = 'development' | 'staging' | 'production';
+export type AppEnv = 'development' | 'staging' | 'production';
 const ENV_TAG: Record<AppEnv, string> = { development: '[DEV] ', staging: '[STAGING] ', production: '' };
 
+/** Token Cloudflare Web Analytics: 32 karakter heksadesimal (nilai lain diabaikan agar tidak menyisipkan HTML sembarang) */
+export const ANALYTICS_TOKEN = /^[0-9a-f]{32}$/i;
+
+/**
+ * Token yang dipakai build: hanya build produksi (bukan dev server, staging, atau E2E) dengan token valid.
+ * Selain itu '' = beacon tidak dipasang.
+ */
+export function analyticsTokenFor(env: AppEnv, isBuild: boolean, token: string | undefined): string {
+  const t = (token ?? '').trim();
+  return env === 'production' && isBuild && ANALYTICS_TOKEN.test(t) ? t : '';
+}
+
+export const ANALYTICS_BEACON_SRC = 'https://static.cloudflareinsights.com/beacon.min.js';
+
+/**
+ * Beacon Cloudflare Web Analytics (snippet manual: <script defer src=beacon.min.js data-cf-beacon>, tanpa cookie) sebelum
+ * </body>. Tag itu baru ditambahkan setelah event `load`: diukur di HP (360 px, 4G lambat), `defer` biasa berebut
+ * bandwidth dengan gambar hero & menunda LCP ±100 ms; setelah `load` LCP sama dengan tanpa beacon. Beacon tetap
+ * melaporkan kunjungan, LCP, & CLS (data performa browser tersimpan sejak awal). Tidak mengubah tata letak. Idempoten.
+ */
+export function withAnalytics(html: string, token: string): string {
+  if (!ANALYTICS_TOKEN.test(token) || html.includes('cloudflareinsights')) return html;
+  const config = JSON.stringify(JSON.stringify({ token }));
+  const beacon = `<script>addEventListener('load',function(){var s=document.createElement('script');s.defer=true;s.src='${ANALYTICS_BEACON_SRC}';s.setAttribute('data-cf-beacon',${config});document.body.appendChild(s)})</script>`;
+  return html.replace('</body>', `    ${beacon}\n  </body>`);
+}
+
 /** Penanda environment di HTML (idempoten: aman dipanggil dua kali pada halaman yang sama) */
-function applyEnv(html: string, env: AppEnv, analyticsToken: string): string {
-  if (env === 'production') {
-    if (!analyticsToken || html.includes('cloudflareinsights')) return html;
-    const beacon = `<script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='${JSON.stringify({ token: analyticsToken })}'></script>`;
-    return html.replace('</body>', `    ${beacon}\n  </body>`);
-  }
+export function applyEnv(html: string, env: AppEnv, analyticsToken: string): string {
+  if (env === 'production') return withAnalytics(html, analyticsToken);
   let out = html;
   if (!out.includes('name="robots"')) out = out.replace('<meta charset="UTF-8" />', '<meta charset="UTF-8" />\n    <meta name="robots" content="noindex, nofollow" />');
   if (!out.includes(`<title>${ENV_TAG[env]}`)) out = out.replace('<title>', `<title>${ENV_TAG[env]}`);
@@ -785,7 +826,10 @@ export function contentPlugin(): Plugin {
       appEnv = (['development', 'staging', 'production'] as const).find((e) => e === env.VITE_APP_ENV)
         ?? (config.mode === 'production' ? 'production' : 'development');
       siteUrlOverride = (env.VITE_SITE_URL ?? '').trim().replace(/\/+$/, '');
-      analyticsToken = (env.VITE_CF_ANALYTICS_TOKEN ?? '').trim();
+      analyticsToken = analyticsTokenFor(appEnv, isBuild, env.VITE_CF_ANALYTICS_TOKEN);
+      if (isBuild && appEnv === 'production' && (env.VITE_CF_ANALYTICS_TOKEN ?? '').trim() && !analyticsToken) {
+        console.warn('• VITE_CF_ANALYTICS_TOKEN bukan token Web Analytics (32 karakter heksadesimal): beacon tidak dipasang');
+      }
       // Build produksi SELALU ketat: konten belum siap tayang → build gagal → Workers Builds tidak menjalankan deploy,
       // versi yang tayang tetap versi sebelumnya. CONTENT_CHECK=warn (mis. terpasang di Cloudflare) diabaikan.
       if (isBuild && appEnv === 'production' && env.CONTENT_CHECK === 'warn') {
@@ -862,6 +906,7 @@ export function contentPlugin(): Plugin {
       this.emitFile({ type: 'asset', fileName: 'sitemap.xml', source: sitemap(bundle, shownTips()) });
       this.emitFile({ type: 'asset', fileName: 'robots.txt', source: robots(bundle, appEnv === 'production') });
       this.emitFile({ type: 'asset', fileName: 'llms.txt', source: llmsTxt(bundle, shownTips()) });
+      this.emitFile({ type: 'asset', fileName: WA_CLICK_ALLOWLIST_PATH.slice(1), source: JSON.stringify(waClickAllowlist(bundle, shownTips())) });
     },
 
     /** Prerender halaman per cabang dari dist/cabang/index.html */
@@ -886,6 +931,10 @@ export function contentPlugin(): Plugin {
       await disablePage('produk', productsRedirects(productsVisible(bundle.settings)), 'Halaman Produk mati (Pages CMS → Pengaturan Situs → Tampilkan Produk)');
       await disablePage('tips', tipsRedirects(tipsVisible(bundle.settings)), 'Halaman Tips & Trik mati (Pages CMS → Pengaturan Situs → Tampilkan Tips & Trik)');
       await prerenderTips();
+      // dist/404.html disalin apa adanya dari public/: beacon Web Analytics ditambahkan di sini (hanya produksi)
+      const notFound = path.join(outDir, '404.html');
+      if (analyticsToken && existsSync(notFound)) await writeFile(notFound, withAnalytics(await readFile(notFound, 'utf8'), analyticsToken));
+      if (analyticsToken) console.log('✓ Cloudflare Web Analytics dipasang (halaman prerender & 404)');
       const template = path.join(outDir, 'cabang', 'index.html');
       if (!existsSync(template)) return;
       const html = await readFile(template, 'utf8');
