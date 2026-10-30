@@ -23,6 +23,7 @@
   "showTestimonials": false,
   "showProducts": false,
   "showTips": false,
+  "showServicePages": true,
   "showBeforeAfter": false,
   "enablePreloader": true
 }
