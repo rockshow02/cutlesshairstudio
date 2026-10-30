@@ -710,12 +710,47 @@ Website utama mencatat statistik pengunjung lewat **Cloudflare Web Analytics** (
 
 - Angka muncul beberapa menit setelah kunjungan.
 - Angkanya sedikit lebih kecil dari jumlah pengunjung sebenarnya: pengunjung yang memakai pemblokir iklan, mematikan JavaScript, atau menutup halaman sebelum selesai terbuka tidak terhitung. Bandingkan dari minggu ke minggu, bukan angka persisnya.
-- Klik tombol WhatsApp **belum** dihitung di sini (hanya kunjungan halaman).
+- Klik tombol WhatsApp tidak dihitung di sini (hanya kunjungan halaman). Jumlah klik WhatsApp ada di halaman **/statistik/** (bagian berikut).
 - Untuk laporan jangka panjang, catat angka penting (Visits, halaman teratas, asal pengunjung) setiap awal bulan.
 
 **Memberi akses ke staf** *(Owner)*: Cloudflare → **Manage Account → Members → Invite**. Isi email staf dan pilih peran yang hanya bisa **melihat** analitik (mis. *Analytics*), bukan *Administrator*.
 
 **Pengaturan sekali saja** *(Owner/developer)*: token situs sudah terpasang di website (file `.env.production`). Bila di halaman situs Web Analytics Cloudflare menawarkan pemasangan otomatis (*automatic setup*), biarkan memakai **JS snippet manual** agar kunjungan tidak terhitung dua kali. Statistik baru terisi setelah website tayang di **cutlesshairstudio.com**.
+
+## Statistik klik WhatsApp (/statistik/)
+
+Setiap klik tombol WhatsApp di website dihitung: berapa calon pelanggan yang menekan tombol booking/pesan, dari cabang mana, tombol apa, halaman mana, dan dari mana mereka datang. Tidak ada data pribadi yang disimpan (tanpa nomor HP, isi pesan, IP, atau cookie).
+
+**Membuka:**
+
+1. Buka **https://cutlesshairstudio.com/statistik/**.
+2. Masukkan email Anda (harus sudah didaftarkan pemilik) → **Send me a code**.
+3. Buka email, salin kode 6 digit → tempel → masuk. Login berlaku 24 jam.
+
+Email belum terdaftar? Minta pemilik menambahkannya (docs/statistik-klik-wa.md → *Perawatan*). Muncul **Akses ditolak**: login ulang lewat alamat di atas.
+
+**Isi halaman:**
+
+| Bagian | Artinya |
+|---|---|
+| **Klik 7 hari / 30 hari terakhir** | Jumlah klik tombol WhatsApp sampai hari ini |
+| **Klik di rentang ini** | Jumlah klik pada tanggal yang dipilih |
+| **Klik per hari** | Grafik batang: makin tinggi = makin banyak klik hari itu. Sentuh/arahkan ke batang untuk melihat angkanya (di komputer) |
+| **Per cabang** | Cabang tujuan WhatsApp. *Nomor pusat (tanpa cabang)* = tombol ke WhatsApp pusat, mis. *Tanya* di footer |
+| **Per jenis tombol** | *Booking umum* (tombol Booking di menu, beranda, layanan, harga), *Tombol cabang* (halaman cabang), *Booking kapster* (kartu barber), *CTA artikel Tips*, *Partner Cuci Sepatu*, *Pesan produk*, *Promo* |
+| **Per kapster** | Klik tombol booking di kartu tiap barber |
+| **Per asal kunjungan** | Dari mana pengunjung datang sebelum klik: Google, Instagram, TikTok, dll. *Langsung / aplikasi* = mengetik alamat, bookmark, atau dari aplikasi chat |
+| **Per halaman asal** | Halaman tempat tombol diklik, mis. `/` = beranda, `/cabang/cibubur/`, `/tips/...` |
+
+**Memilih tanggal:** isi **Dari** & **Sampai** → **Terapkan**, atau tekan **7 hari**, **30 hari**, **90 hari**, **Bulan ini**. Maksimal 1 tahun sekali tampil. Tanggal memakai WIB.
+
+**Unduh CSV:** tombol **Unduh CSV** menyimpan rincian rentang yang dipilih (per tanggal, jenis tombol, cabang, kapster, halaman, asal) untuk dibuka di Excel / Google Sheets.
+
+**Perlu diketahui:**
+
+- Klik = pengunjung **menekan** tombol WhatsApp, bukan pasti mengirim pesan. Bandingkan dengan jumlah chat yang masuk.
+- Pengunjung yang mematikan JavaScript atau memakai pemblokir tertentu tidak terhitung; angkanya sedikit lebih kecil dari sebenarnya.
+- Angka hari ini terus bertambah sampai pukul 24.00 WIB.
 
 ## Bila ada masalah
 
