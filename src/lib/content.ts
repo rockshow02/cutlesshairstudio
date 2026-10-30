@@ -32,6 +32,7 @@ import servicesJson from '@/content/services.json';
 import faqJson from '@/content/faq.json';
 import videosJson from '@/content/videos.json';
 import { videosCopy } from '@/content/videos';
+import { getServicePages } from './servicePages';
 import type {
   AboutEntry,
   AnnouncementEntry,
@@ -152,6 +153,7 @@ function normalizeSettings(s: SettingsEntry): SettingsEntry {
     showTestimonials: Boolean(s.showTestimonials),
     showProducts: Boolean(s.showProducts),
     showTips: Boolean(s.showTips),
+    showServicePages: Boolean(s.showServicePages),
     showBeforeAfter: Boolean(s.showBeforeAfter),
     enablePreloader: s.enablePreloader !== false,
   };
@@ -183,7 +185,7 @@ export const getCitiesLabel = (): Promise<string> => resolve(() => joinIndonesia
 const shoeCare = () =>
   buildShoeCare(data.shoeCare, branchList(), local.shoeCareCopy, buildCtaBanner(data.cta, local.ctaBannerCopy).backgroundImage);
 export const getSite = (): Promise<SiteContent> =>
-  resolve(() => buildSite(data.settings, local.site, branchList(), { shoeCare: shoeCare() !== null }));
+  resolve(() => buildSite(data.settings, local.site, branchList(), { shoeCare: shoeCare() !== null, servicePages: getServicePages().length > 0 }));
 export const getSocials = (): Promise<SocialLink[]> => resolve(() => buildSocials(data.settings, local.socials));
 
 /* ---------- Per cabang (branchSlug opsional) ---------- */

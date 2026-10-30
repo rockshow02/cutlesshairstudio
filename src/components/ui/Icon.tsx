@@ -97,6 +97,55 @@ const ICONS: Record<IconName, IconDef> = {
   search: { body: <path d="M11 18a7 7 0 1 0 0-14 7 7 0 0 0 0 14zM21 21l-4.35-4.35" /> },
   plus: { body: <path d="M12 5v14M5 12h14" /> },
   gift: { body: <path d="M4 11h16v9a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1zM3 7h18v4H3zM12 7v14M12 7S10.5 3 8 3a2 2 0 0 0 0 4M12 7s1.5-4 4-4a2 2 0 0 1 0 4" /> },
+  // Fasilitas cabang (halaman cabang)
+  walk: { body: <path d="M13 4.5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3zM10 22l2-7 3 3v4M7 12l3-4 4 1 2 3M12 15l-1-6" /> },
+  motorbike: {
+    body: (
+      <>
+        <circle cx="5.5" cy="16.5" r="3" />
+        <circle cx="18.5" cy="16.5" r="3" />
+        <path d="M5.5 16.5h6l3-5h-4l-2-3H6M14.5 11.5l4 5M15 6h3l1.5 5" />
+      </>
+    ),
+  },
+  car: {
+    body: (
+      <>
+        <path d="M3 16v-3l2-5a2 2 0 0 1 1.9-1.4h10.2A2 2 0 0 1 19 8l2 5v3a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1zM3.5 12.5h17" />
+        <circle cx="7.5" cy="17" r="1.8" />
+        <circle cx="16.5" cy="17" r="1.8" />
+      </>
+    ),
+  },
+  snow: { body: <path d="M12 2v20M3.3 7l17.4 10M20.7 7L3.3 17M9 3.5l3 2 3-2M9 20.5l3-2 3 2" /> },
+  wifi: {
+    body: (
+      <>
+        <path d="M2 8.5a15 15 0 0 1 20 0M5 12a10 10 0 0 1 14 0M8.5 15.5a5 5 0 0 1 7 0" />
+        <circle cx="12" cy="19" r="1" fill="currentColor" stroke="none" />
+      </>
+    ),
+  },
+  seat: { body: <path d="M7 3v9h10M7 12v9M17 12v9M7 8h8a2 2 0 0 1 2 2v2M4 21h3M17 21h3" /> },
+  cash: {
+    body: (
+      <>
+        <rect x="2.5" y="6" width="19" height="12" rx="2" />
+        <circle cx="12" cy="12" r="2.5" />
+        <path d="M6 9.5v5M18 9.5v5" />
+      </>
+    ),
+  },
+  qr: { body: <path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h2v2h-2zM18 18h2v2h-2zM14 18h2M18 14h2M7 7h0M17 7h0M7 17h0" /> },
+  card: {
+    body: (
+      <>
+        <rect x="2.5" y="5" width="19" height="14" rx="2" />
+        <path d="M2.5 10h19M6 15h4" />
+      </>
+    ),
+  },
+  bank: { body: <path d="M3 10l9-6 9 6M5 10v8M9.5 10v8M14.5 10v8M19 10v8M3 20.5h18" /> },
   scissors: {
     body: (
       <>

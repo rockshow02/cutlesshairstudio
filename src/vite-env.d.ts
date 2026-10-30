@@ -32,3 +32,9 @@ declare module 'virtual:tips' {
   const tips: import('./content/tipsSeo').TipSummary[];
   export default tips;
 }
+
+/** Disediakan scripts/vite-content-plugin.ts: ringkasan halaman layanan terbit (kosong bila halaman dimatikan) */
+declare module 'virtual:layanan' {
+  const pages: import('./content/servicePages').ServicePageSummary[];
+  export default pages;
+}
