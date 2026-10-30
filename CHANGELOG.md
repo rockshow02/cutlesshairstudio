@@ -19,6 +19,9 @@ Cara menaikkan versi & merilis: [CONTRIBUTING.md → Rilis versi](CONTRIBUTING.m
 - Barber: kolom opsional **Bio singkat** & **Pengalaman** (kotak penulis artikel).
 - Tampilan Tips & Trik di HP: kartu ringkas (thumbnail di kiri), chip kategori satu baris yang bisa digeser, breadcrumb satu baris dengan judul terpotong.
 
+### Diperbaiki
+- Tombol berbentuk `<button>` (mis. *Salin link*) tidak lagi memakai latar abu-abu bawaan browser di bawah teks terang: gaya tombol me-reset latar, bingkai, & huruf bawaan. Tes e2e baru memeriksa kontras ≥ 4,5:1 semua tombol situs (normal, terpilih, fokus, hover) di 360 px & desktop.
+
 ## [1.2.3] - 2026-10-29
 
 ### Diperbaiki
