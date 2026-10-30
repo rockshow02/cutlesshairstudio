@@ -56,7 +56,20 @@
     ],
     "status": "Aktif",
     "photo": "/uploads/branches/img3998.webp",
-    "order": 10
+    "order": 10,
+    "serviceAreas": [
+      "Bantarjati",
+      "Bogor Utara"
+    ],
+    "facilities": [
+      "Walk-in diterima",
+      "Parkir motor",
+      "Parkir mobil",
+      "Tunai",
+      "QRIS",
+      "Kartu debit/kredit",
+      "Transfer bank"
+    ]
   },
   {
     "slug": "cibubur",
@@ -114,6 +127,20 @@
       }
     ],
     "status": "Aktif",
-    "order": 20
+    "order": 20,
+    "serviceAreas": [
+      "Harjamukti",
+      "Cimanggis",
+      "Depok"
+    ],
+    "facilities": [
+      "Walk-in diterima",
+      "Parkir motor",
+      "Parkir mobil",
+      "Tunai",
+      "QRIS",
+      "Kartu debit/kredit",
+      "Transfer bank"
+    ]
   }
 ]
