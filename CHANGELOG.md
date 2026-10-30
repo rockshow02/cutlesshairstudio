@@ -12,7 +12,10 @@ Cara menaikkan versi & merilis: [CONTRIBUTING.md → Rilis versi](CONTRIBUTING.m
 
 ## [Belum dirilis]
 
+## [1.3.0] - 2026-10-30
+
 ### Ditambahkan
+- **Ditahan di rilis ini:** Tips & Trik di bawah sudah ikut terpasang, tetapi *Pengaturan Situs → Tampilkan Tips & Trik* mati (`/tips/` dialihkan 301 ke beranda, tidak ada menu/bagian Tips). Tampil setelah toggle dinyalakan, tanpa rilis baru.
 - Halaman **Tips & Trik** (`/tips/`): artikel gaya rambut, perawatan, & grooming yang ditulis di Pages CMS (satu file Markdown per artikel, status Draf/Terbit). Daftar dengan filter kategori & paginasi, halaman artikel dengan daftar isi otomatis, penulis (kapster), waktu baca, CTA WhatsApp, layanan terkait, & artikel terkait; menu **Tips** dan bagian **Tips Terbaru** di beranda. SEO: title/meta/canonical/og per artikel, JSON-LD `BlogPosting`, `BreadcrumbList`, `CollectionPage` + `ItemList`, sitemap & llms.txt. Toggle **Pengaturan Situs → Tampilkan Tips & Trik** (default mati: halaman 301 ke beranda). 2 artikel contoh berstatus Draf.
 - Tips & Trik: halaman kategori statis `/tips/kategori/<slug>/` (berpaginasi, title/description/canonical sendiri, JSON-LD `CollectionPage` + `BreadcrumbList`, masuk sitemap; chip kategori = link, jalan tanpa JavaScript).
 - Artikel Tips & Trik: kotak **Poin penting** (2–5 butir), **FAQ artikel** (akordeon + JSON-LD `FAQPage`), kotak penulis (foto, keahlian, pengalaman, bio, tombol *Booking dengan [nama]*; JSON-LD `Person` lengkap), tombol **Bagikan ke WhatsApp** & **Salin link**, pesan CTA WhatsApp menyebut judul artikel.
@@ -24,6 +27,7 @@ Cara menaikkan versi & merilis: [CONTRIBUTING.md → Rilis versi](CONTRIBUTING.m
 
 ### Diperbaiki
 - Tombol berbentuk `<button>` (mis. *Salin link*) tidak lagi memakai latar abu-abu bawaan browser di bawah teks terang: gaya tombol me-reset latar, bingkai, & huruf bawaan. Tes e2e baru memeriksa kontras ≥ 4,5:1 semua tombol situs (normal, terpilih, fokus, hover) di 360 px & desktop.
+- Halaman `/cuci-sepatu/` sempat memiliki dua `<main>` (bersarang) selama data partner dimuat: placeholder loading kini `<div>`, bukan `<main>` kedua di dalam `<main>` SiteShell. Tes e2e baru memastikan setiap halaman hanya punya satu `<main>` sepanjang pemuatan (CPU dilambatkan 4×).
 
 ## [1.2.3] - 2026-10-29
 
@@ -84,7 +88,8 @@ Launch https://cutlesshairstudio.com.
 - Halaman `/cuci-sepatu/` untuk partner cuci sepatu (layanan, harga, daftar menu PDF, galeri) dan teaser di beranda.
 - Validasi konten saat build (skema & aturan siap tayang), kompres gambar otomatis, SEO dasar (title/meta, JSON-LD, sitemap), staging terpisah, CI (typecheck, lint, tes, e2e).
 
-[Belum dirilis]: https://github.com/rockshow02/cutlesshairstudio/compare/v1.2.3...staging
+[Belum dirilis]: https://github.com/rockshow02/cutlesshairstudio/compare/v1.3.0...staging
+[1.3.0]: https://github.com/rockshow02/cutlesshairstudio/compare/v1.2.3...v1.3.0
 [1.2.3]: https://github.com/rockshow02/cutlesshairstudio/compare/v1.2.2...v1.2.3
 [1.2.2]: https://github.com/rockshow02/cutlesshairstudio/compare/v1.2.1...v1.2.2
 [1.2.1]: https://github.com/rockshow02/cutlesshairstudio/compare/v1.2.0...v1.2.1
