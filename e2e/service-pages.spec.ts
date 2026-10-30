@@ -112,7 +112,7 @@ test('/layanan/: menu Layanan, grup per kategori Daftar Harga, harga mulai per c
   await (await mainNav(page, isMobile)).getByRole('link', { name: 'Layanan', exact: true }).click();
   await expect(page).toHaveURL(/\/layanan\/$/);
   await expect(page.getByRole('heading', { level: 1, name: 'Layanan Cutless Hair Studio' })).toBeVisible({ timeout: 20_000 });
-  await expect(page.locator('main h2')).toHaveText(['Haircut', 'Special Treatment', 'Layanan lainnya']);
+  await expect(page.locator('#layanan h2')).toHaveText(['Haircut', 'Special Treatment', 'Layanan lainnya']);
   const card = page.locator('main li', { has: page.getByRole('link', { name: haircut.title }) }).first();
   await expect(card).toContainText(haircut.summary);
   await expect(card).toContainText(`${E2E_BRANCHES.bogor.name} mulai ${k(priceOf('White Grooming Uji'))}`);
