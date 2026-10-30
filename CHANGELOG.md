@@ -12,6 +12,11 @@ Cara menaikkan versi & merilis: [CONTRIBUTING.md → Rilis versi](CONTRIBUTING.m
 
 ## [Belum dirilis]
 
+### Ditambahkan
+- **Halaman layanan** (`/layanan/` & `/layanan/<slug>/`) dari Pages CMS (*Halaman Layanan*, satu file Markdown per layanan, status Draf/Terbit): ringkasan pembuka, harga "mulai" per cabang & *Tersedia di cabang* yang **diambil dari Daftar Harga** (harga per cabang, tidak diketik ulang), cocok untuk, proses, durasi, foto, isi tambahan, FAQ (akordeon tanpa JavaScript), tombol booking WhatsApp lewat pemilih cabang (pesan menyebut nama layanan), link ke halaman cabang, layanan terkait, breadcrumb. `/layanan/` dikelompokkan per kategori Daftar Harga. SEO: JSON-LD `Service` (provider = `HairSalon` cabang, `areaServed`, `offers` per cabang dalam IDR), `FAQPage`, `BreadcrumbList`, `CollectionPage` + `ItemList`; sitemap (lastmod) & llms.txt (harga mulai per cabang). Link **Selengkapnya** di Daftar Harga & Kartu Layanan; menu **Layanan** mengarah ke `/layanan/` (jumlah menu tetap). Toggle **Pengaturan Situs → Tampilkan halaman layanan** (default mati: `/layanan*` 301 ke beranda, tanpa menu/sitemap/llms.txt/link). 4 halaman awal berstatus Draf (Haircut pria, Potong rambut wanita, Hair treatment, Potong rambut anak).
+- **Halaman cabang diperkaya** (Pages CMS → Cabang, opsional; tampil walau halaman layanan mati): deskripsi cabang, area yang dilayani, patokan & cara menuju, fasilitas & pembayaran (ikon), FAQ cabang, penanda jam buka *Buka sampai 21.00*, dan daftar layanan di cabang itu (bila halaman layanan aktif). JSON-LD `HairSalon` dilengkapi `description`, `areaServed`, `amenityFeature`, `paymentAccepted`, `hasOfferCatalog` (harga cabang), dan `FAQPage` cabang; llms.txt memuat area & fasilitas. Fasilitas & area yang sudah pasti diisi untuk kedua cabang.
+- Hitungan klik WhatsApp: jenis tombol baru *Halaman layanan*.
+
 ## [1.3.0] - 2026-10-30
 
 ### Ditambahkan
