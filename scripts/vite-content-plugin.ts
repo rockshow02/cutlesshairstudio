@@ -15,6 +15,7 @@
  * 7. Tips & Trik (scripts/tips.ts): validasi src/content/tips/*.md, modul `virtual:tips`, prerender /tips/,
  *    /tips/halaman/<n>/, /tips/kategori/<slug>/(halaman/<n>/) & /tips/<slug>/ (atau 301 ke beranda bila
  *    dimatikan), entri sitemap & llms.txt.
+ * 8. dist/klik-wa.json: cabang, kapster, & halaman yang boleh dicatat hitungan klik WhatsApp (worker/waClicks.ts).
  */
 import { cp, readdir, readFile, mkdir, rm, stat, writeFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
@@ -38,6 +39,7 @@ import { pricingCopy } from '../src/content/pricing';
 import { formatPhoneDisplay, formatThousandsK, formatTime } from '../src/lib/format';
 import { branchesCopy } from '../src/content/branches';
 import { shoeCareCopy } from '../src/content/shoeCare';
+import { barberKey, WA_CLICK_ALLOWLIST_PATH, type WaClickAllowlist } from '../src/content/waClicks';
 import { TIPS_PATH, parseTipsPath, tipsPageCount, tipsPagePath, tipsRedirects, tipsVisible, type TipSummary, type TipsRoute } from '../src/content/tipsSeo';
 import { processTips, readTipFiles, summaryOf, tipBody, tipCategoriesOf, tipDataTag, tipHead, tipsIndexBody, tipsIndexHead, tipsLlmsLines, tipsSitemapEntries, type TipsResult } from './tips';
 
@@ -622,10 +624,9 @@ function fillHtml(html: string, bundle: ContentBundle | undefined, meta: ImageMe
 
 const HEAD_REGION = /<!--cutless:head-start-->[\s\S]*?<!--cutless:head-end-->/;
 
-export function sitemap(bundle: ContentBundle, tips: TipSummary[] = []): string {
-  const { siteUrl } = bundle.settings;
-  const today = new Date().toISOString().slice(0, 10);
-  const urls: (string | { path: string; lastmod?: string })[] = [
+/** Semua halaman yang dibangun & diindeks (sitemap.xml, daftar halaman klik-wa.json) */
+function sitePages(bundle: ContentBundle, tips: TipSummary[]): (string | { path: string; lastmod?: string })[] {
+  return [
     '/',
     '/cabang/',
     ...bundle.branches.map((b) => `/cabang/${b.slug}/`),
@@ -635,11 +636,28 @@ export function sitemap(bundle: ContentBundle, tips: TipSummary[] = []): string 
     // Tips & Trik hanya saat aktif & ada artikel terbit; lastmod artikel = tanggal diperbarui/terbit
     ...(tipsVisible(bundle.settings) && tips.length ? tipsSitemapEntries(tips) : []),
   ];
-  const body = urls
+}
+
+export function sitemap(bundle: ContentBundle, tips: TipSummary[] = []): string {
+  const { siteUrl } = bundle.settings;
+  const today = new Date().toISOString().slice(0, 10);
+  const body = sitePages(bundle, tips)
     .map((u) => (typeof u === 'string' ? { path: u, lastmod: today } : u))
     .map((u) => `  <url><loc>${siteUrl}${u.path}</loc><lastmod>${u.lastmod ?? today}</lastmod></url>`)
     .join('\n');
   return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${body}\n</urlset>\n`;
+}
+
+/**
+ * dist/klik-wa.json: nilai yang boleh disimpan hitungan klik WhatsApp (Worker /api/klik-wa menolak cabang/kapster lain;
+ * halaman lain dicatat "lainnya"). Isinya hanya data yang memang tampil di situs (slug & nama cabang/kapster, path halaman).
+ */
+export function waClickAllowlist(bundle: ContentBundle, tips: TipSummary[] = []): WaClickAllowlist {
+  return {
+    branches: Object.fromEntries(bundle.branches.map((b) => [b.slug, b.name])),
+    barbers: Object.fromEntries(bundle.barbers.map((b) => [barberKey(b.name), b.name]).filter(([key]) => key)),
+    pages: [...new Set(sitePages(bundle, tips).map((u) => (typeof u === 'string' ? u : u.path)))],
+  };
 }
 
 export const robots = (bundle: ContentBundle, indexable: boolean) =>
@@ -888,6 +906,7 @@ export function contentPlugin(): Plugin {
       this.emitFile({ type: 'asset', fileName: 'sitemap.xml', source: sitemap(bundle, shownTips()) });
       this.emitFile({ type: 'asset', fileName: 'robots.txt', source: robots(bundle, appEnv === 'production') });
       this.emitFile({ type: 'asset', fileName: 'llms.txt', source: llmsTxt(bundle, shownTips()) });
+      this.emitFile({ type: 'asset', fileName: WA_CLICK_ALLOWLIST_PATH.slice(1), source: JSON.stringify(waClickAllowlist(bundle, shownTips())) });
     },
 
     /** Prerender halaman per cabang dari dist/cabang/index.html */

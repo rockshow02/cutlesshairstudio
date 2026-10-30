@@ -1,4 +1,4 @@
-import { lazy, Suspense, useCallback, useState, type ReactNode } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useState, type ReactNode } from 'react';
 import { getAnnouncements, getBranchCopy, getBranches, getSite, getSocials, FATAL_ERROR_MESSAGE } from '@/lib/content';
 import { useContent } from '@/lib/useContent';
 import { SiteProvider } from '@/lib/SiteContext';
@@ -13,6 +13,7 @@ import { Navbar } from './Navbar';
 import { Footer } from './Footer';
 import { FloatingWhatsApp } from './FloatingWhatsApp';
 import { Deferred } from '@/components/ui/Deferred';
+import { installWaClickTracking } from '@/lib/waClickTracking';
 
 /** Badge DEV/STAGING: syarat ini diganti konstanta saat build, jadi kodenya tidak ikut ke bundle produksi. */
 const EnvBadge = import.meta.env.VITE_APP_ENV !== 'production' ? lazy(() => import('./EnvBadge')) : null;
@@ -47,6 +48,8 @@ export function SiteShell({ children, pageBranchSlug }: SiteShellProps) {
   useScrollToHash(introDone && ready);
   // #cuci-sepatu (anchor section lama) → halaman /cuci-sepatu/
   useLegacyShoeCareAnchor(ready);
+  // Hitungan klik tombol WhatsApp (tanpa cookie/data pribadi; tidak menunda pembukaan WhatsApp)
+  useEffect(installWaClickTracking, []);
 
   return (
     <MotionProvider>
