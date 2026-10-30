@@ -40,9 +40,10 @@
   "vars": {
     // Origin yang boleh mengirim klik ke /api/klik-wa (dipisah koma)
     "ALLOWED_ORIGINS": "https://cutlesshairstudio.com,https://www.cutlesshairstudio.com",
-    // Cloudflare Access untuk /statistik/ (docs/statistik-klik-wa.md, langkah 3). Kosong = /statistik/ selalu 403.
-    "ACCESS_TEAM_DOMAIN": "",
-    "ACCESS_AUD": ""
+    // Cloudflare Access untuk /statistik/ (docs/statistik-klik-wa.md, langkah 3): team domain & AUD tag aplikasi
+    // "Statistik Cutless" (bukan rahasia; Worker memverifikasi JWT Access dengan keduanya). Kosong = /statistik/ selalu 403.
+    "ACCESS_TEAM_DOMAIN": "wild-voice-c787.cloudflareaccess.com",
+    "ACCESS_AUD": "9abaa8c9fda34bc7eb797cfebd3fa7d7132f25b15a42fe5518afbd25874bdcd6"
   },
   "env": {
     // Worker terpisah: URL, versi, database, dan pengaturan (mis. Cloudflare Access) tidak tercampur dengan produksi.
@@ -72,6 +73,7 @@
       ],
       "vars": {
         "ALLOWED_ORIGINS": "https://cutlesshairstudio-staging.adi-yansyaaah.workers.dev",
+        // Sengaja kosong: /statistik/ di staging selalu 403 (statistik hanya dilihat di website utama)
         "ACCESS_TEAM_DOMAIN": "",
         "ACCESS_AUD": ""
       },

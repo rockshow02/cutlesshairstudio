@@ -74,6 +74,8 @@ Di `wrangler.jsonc` (edit di GitHub seperti langkah 2):
 
 dan di bagian `"staging"` → `"vars"`: team domain yang sama + *AUD staging*. Commit.
 
+> **Sudah dikerjakan** (30 Okt 2026) untuk website utama: team domain `wild-voice-c787.cloudflareaccess.com` + AUD aplikasi *Statistik Cutless*. **Staging sengaja dibiarkan kosong**: `/statistik/` di staging selalu 403 (statistik dilihat di website utama saja); langkah 3c tidak perlu dikerjakan.
+
 Isi di **file ini**, bukan di dashboard Cloudflare (Variables): setiap deploy menimpa variabel dashboard dengan isi `wrangler.jsonc`.
 
 Selama kedua nilai kosong atau salah, `/statistik/` **selalu menjawab "Akses ditolak" (403)**, sengaja: website memeriksa sendiri tanda login Access, jadi data tetap aman walau aturan Access terhapus atau lupa dipasang.
