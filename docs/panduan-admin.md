@@ -681,6 +681,42 @@ Tidak menemukan penyebabnya? Hubungi developer dan sertakan tautan commit yang b
 2. Pada versi sebelumnya yang masih benar: **⋯ → Rollback** → konfirmasi. Website kembali ke versi itu dalam hitungan detik.
 3. **Penting:** rollback Cloudflare tidak mengubah isi GitHub. Save berikutnya di Pages CMS akan membangun ulang website dari isi GitHub, termasuk perubahan yang salah. Jadi segera betulkan isiannya lewat Pages CMS, atau minta developer membatalkan commit-nya (`git revert`, lihat CONTRIBUTING.md → *Rollback*), sebelum mengedit lagi.
 
+## Melihat statistik pengunjung (Cloudflare Web Analytics)
+
+Website utama mencatat statistik pengunjung lewat **Cloudflare Web Analytics** (gratis). Tidak memakai cookie dan tidak menyimpan data pribadi (nama, nomor HP, alamat IP), jadi tidak perlu pemberitahuan cookie. Yang dicatat hanya website utama; staging dan uji coba tidak ikut dihitung.
+
+**Membuka statistik:**
+
+1. Buka **https://dash.cloudflare.com** dan login dengan akun Cloudflare pemilik.
+2. Di menu kiri: **Analytics & Logs → Web Analytics**.
+3. Klik nama situs (**cutlesshairstudio.com**).
+4. Pilih rentang waktu di kanan atas (mis. **Last 7 days** atau **Last 30 days**).
+
+**Arti angka yang tampil:**
+
+| Di dashboard | Artinya |
+|---|---|
+| **Visits** | Jumlah kunjungan: satu orang membuka website (dari Google, Instagram, link WhatsApp, dll.) |
+| **Page views** | Jumlah halaman yang dibuka. Satu kunjungan bisa membuka beberapa halaman |
+| **Path** | Halaman yang paling sering dibuka, mis. `/` = beranda, `/cabang/cibubur/` = halaman cabang Cibubur, `/tips/...` = artikel |
+| **Referer** | Asal pengunjung, mis. `google.com`, `instagram.com`, `l.facebook.com`. Kosong = mengetik alamat langsung / dari aplikasi |
+| **Country** | Negara pengunjung |
+| **Device type**, **Browser** | HP atau komputer, dan browsernya |
+| **Core Web Vitals** | Kecepatan website di HP/komputer pengunjung. Hijau (*Good*) = baik |
+
+**Melihat satu halaman saja:** klik nama halaman di daftar **Path** (mis. `/cabang/cibubur/`) lalu pilih **Filter**: semua angka berubah hanya untuk halaman itu. Hapus filter dengan klik tanda **×** di atas grafik.
+
+**Perlu diketahui:**
+
+- Angka muncul beberapa menit setelah kunjungan.
+- Angkanya sedikit lebih kecil dari jumlah pengunjung sebenarnya: pengunjung yang memakai pemblokir iklan, mematikan JavaScript, atau menutup halaman sebelum selesai terbuka tidak terhitung. Bandingkan dari minggu ke minggu, bukan angka persisnya.
+- Klik tombol WhatsApp **belum** dihitung di sini (hanya kunjungan halaman).
+- Untuk laporan jangka panjang, catat angka penting (Visits, halaman teratas, asal pengunjung) setiap awal bulan.
+
+**Memberi akses ke staf** *(Owner)*: Cloudflare → **Manage Account → Members → Invite**. Isi email staf dan pilih peran yang hanya bisa **melihat** analitik (mis. *Analytics*), bukan *Administrator*.
+
+**Pengaturan sekali saja** *(Owner/developer)*: token situs sudah terpasang di website (file `.env.production`). Bila di halaman situs Web Analytics Cloudflare menawarkan pemasangan otomatis (*automatic setup*), biarkan memakai **JS snippet manual** agar kunjungan tidak terhitung dua kali. Statistik baru terisi setelah website tayang di **cutlesshairstudio.com**.
+
 ## Bila ada masalah
 
 | Masalah | Solusi |

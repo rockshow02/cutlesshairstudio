@@ -649,16 +649,39 @@ export const robots = (bundle: ContentBundle, indexable: boolean) =>
 
 /* ---------- Environment ---------- */
 
-type AppEnv = 'development' | 'staging' | 'production';
+export type AppEnv = 'development' | 'staging' | 'production';
 const ENV_TAG: Record<AppEnv, string> = { development: '[DEV] ', staging: '[STAGING] ', production: '' };
 
+/** Token Cloudflare Web Analytics: 32 karakter heksadesimal (nilai lain diabaikan agar tidak menyisipkan HTML sembarang) */
+export const ANALYTICS_TOKEN = /^[0-9a-f]{32}$/i;
+
+/**
+ * Token yang dipakai build: hanya build produksi (bukan dev server, staging, atau E2E) dengan token valid.
+ * Selain itu '' = beacon tidak dipasang.
+ */
+export function analyticsTokenFor(env: AppEnv, isBuild: boolean, token: string | undefined): string {
+  const t = (token ?? '').trim();
+  return env === 'production' && isBuild && ANALYTICS_TOKEN.test(t) ? t : '';
+}
+
+export const ANALYTICS_BEACON_SRC = 'https://static.cloudflareinsights.com/beacon.min.js';
+
+/**
+ * Beacon Cloudflare Web Analytics (snippet manual: <script defer src=beacon.min.js data-cf-beacon>, tanpa cookie) sebelum
+ * </body>. Tag itu baru ditambahkan setelah event `load`: diukur di HP (360 px, 4G lambat), `defer` biasa berebut
+ * bandwidth dengan gambar hero & menunda LCP ±100 ms; setelah `load` LCP sama dengan tanpa beacon. Beacon tetap
+ * melaporkan kunjungan, LCP, & CLS (data performa browser tersimpan sejak awal). Tidak mengubah tata letak. Idempoten.
+ */
+export function withAnalytics(html: string, token: string): string {
+  if (!ANALYTICS_TOKEN.test(token) || html.includes('cloudflareinsights')) return html;
+  const config = JSON.stringify(JSON.stringify({ token }));
+  const beacon = `<script>addEventListener('load',function(){var s=document.createElement('script');s.defer=true;s.src='${ANALYTICS_BEACON_SRC}';s.setAttribute('data-cf-beacon',${config});document.body.appendChild(s)})</script>`;
+  return html.replace('</body>', `    ${beacon}\n  </body>`);
+}
+
 /** Penanda environment di HTML (idempoten: aman dipanggil dua kali pada halaman yang sama) */
-function applyEnv(html: string, env: AppEnv, analyticsToken: string): string {
-  if (env === 'production') {
-    if (!analyticsToken || html.includes('cloudflareinsights')) return html;
-    const beacon = `<script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='${JSON.stringify({ token: analyticsToken })}'></script>`;
-    return html.replace('</body>', `    ${beacon}\n  </body>`);
-  }
+export function applyEnv(html: string, env: AppEnv, analyticsToken: string): string {
+  if (env === 'production') return withAnalytics(html, analyticsToken);
   let out = html;
   if (!out.includes('name="robots"')) out = out.replace('<meta charset="UTF-8" />', '<meta charset="UTF-8" />\n    <meta name="robots" content="noindex, nofollow" />');
   if (!out.includes(`<title>${ENV_TAG[env]}`)) out = out.replace('<title>', `<title>${ENV_TAG[env]}`);
@@ -785,7 +808,10 @@ export function contentPlugin(): Plugin {
       appEnv = (['development', 'staging', 'production'] as const).find((e) => e === env.VITE_APP_ENV)
         ?? (config.mode === 'production' ? 'production' : 'development');
       siteUrlOverride = (env.VITE_SITE_URL ?? '').trim().replace(/\/+$/, '');
-      analyticsToken = (env.VITE_CF_ANALYTICS_TOKEN ?? '').trim();
+      analyticsToken = analyticsTokenFor(appEnv, isBuild, env.VITE_CF_ANALYTICS_TOKEN);
+      if (isBuild && appEnv === 'production' && (env.VITE_CF_ANALYTICS_TOKEN ?? '').trim() && !analyticsToken) {
+        console.warn('• VITE_CF_ANALYTICS_TOKEN bukan token Web Analytics (32 karakter heksadesimal): beacon tidak dipasang');
+      }
       // Build produksi SELALU ketat: konten belum siap tayang → build gagal → Workers Builds tidak menjalankan deploy,
       // versi yang tayang tetap versi sebelumnya. CONTENT_CHECK=warn (mis. terpasang di Cloudflare) diabaikan.
       if (isBuild && appEnv === 'production' && env.CONTENT_CHECK === 'warn') {
@@ -886,6 +912,10 @@ export function contentPlugin(): Plugin {
       await disablePage('produk', productsRedirects(productsVisible(bundle.settings)), 'Halaman Produk mati (Pages CMS → Pengaturan Situs → Tampilkan Produk)');
       await disablePage('tips', tipsRedirects(tipsVisible(bundle.settings)), 'Halaman Tips & Trik mati (Pages CMS → Pengaturan Situs → Tampilkan Tips & Trik)');
       await prerenderTips();
+      // dist/404.html disalin apa adanya dari public/: beacon Web Analytics ditambahkan di sini (hanya produksi)
+      const notFound = path.join(outDir, '404.html');
+      if (analyticsToken && existsSync(notFound)) await writeFile(notFound, withAnalytics(await readFile(notFound, 'utf8'), analyticsToken));
+      if (analyticsToken) console.log('✓ Cloudflare Web Analytics dipasang (halaman prerender & 404)');
       const template = path.join(outDir, 'cabang', 'index.html');
       if (!existsSync(template)) return;
       const html = await readFile(template, 'utf8');

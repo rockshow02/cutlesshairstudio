@@ -18,6 +18,7 @@ Cara menaikkan versi & merilis: [CONTRIBUTING.md → Rilis versi](CONTRIBUTING.m
 - Artikel Tips & Trik: kotak **Poin penting** (2–5 butir), **FAQ artikel** (akordeon + JSON-LD `FAQPage`), kotak penulis (foto, keahlian, pengalaman, bio, tombol *Booking dengan [nama]*; JSON-LD `Person` lengkap), tombol **Bagikan ke WhatsApp** & **Salin link**, pesan CTA WhatsApp menyebut judul artikel.
 - Barber: kolom opsional **Bio singkat** & **Pengalaman** (kotak penulis artikel).
 - Tampilan Tips & Trik di HP: kartu ringkas (thumbnail di kiri), chip kategori satu baris yang bisa digeser, breadcrumb satu baris dengan judul terpotong.
+- **Cloudflare Web Analytics** (gratis, tanpa cookie, tanpa data pribadi) di semua halaman website utama termasuk 404, hanya di build produksi (staging, E2E, & dev tidak). Beacon dimuat `defer` setelah halaman selesai dimuat, jadi tidak menunda LCP & tidak menggeser tata letak. Token kosong/tidak valid = tidak dipasang; CI memeriksa hasil build produksi & staging. Panduan admin: *Melihat statistik pengunjung*.
 
 ### Diperbaiki
 - Tombol berbentuk `<button>` (mis. *Salin link*) tidak lagi memakai latar abu-abu bawaan browser di bawah teks terang: gaya tombol me-reset latar, bingkai, & huruf bawaan. Tes e2e baru memeriksa kontras ≥ 4,5:1 semua tombol situs (normal, terpilih, fokus, hover) di 360 px & desktop.
