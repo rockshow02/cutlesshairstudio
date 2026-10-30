@@ -1,11 +1,12 @@
 ---
 title: Cara Memilih Potongan Fade yang Cocok untuk Bentuk Wajah
-summary: Low, mid, atau high fade? Pilih dari bentuk wajah, jenis rambut, dan seberapa sering kamu sempat merapikan. Ini panduan singkatnya.
+summary: Low, mid, atau high fade? Pilih dari bentuk wajah, jenis rambut, dan
+  seberapa sering kamu sempat merapikan. Ini panduan singkatnya.
 category: Hair Style
 cover: /uploads/tips/contoh-memilih-potongan-fade.webp
 coverAlt: Hairstylist Cutless memotong taper fade dengan clipper
 publishedAt: 2026-10-29
-status: Draf
+status: Terbit
 services:
   - Haircut & Grooming
 ---
