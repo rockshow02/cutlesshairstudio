@@ -22,7 +22,7 @@
   },
   "showTestimonials": false,
   "showProducts": false,
-  "showTips": false,
+  "showTips": true,
   "showBeforeAfter": false,
   "enablePreloader": true
 }
