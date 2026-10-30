@@ -27,14 +27,13 @@
     // Hanya rute ini yang menjalankan Worker; file statis lain langsung dari CDN (tidak memakai kuota request)
     "run_worker_first": ["/api/*", "/statistik*", "/masuk*", "/profil*", "/booking*", "/admin*", "/kebijakan-privasi*"]
   },
-  // Hitungan klik WhatsApp. database_id: GANTI placeholder dengan ID dari Cloudflare → Storage & Databases → D1 →
-  // cutless-analytics (docs/statistik-klik-wa.md, langkah 1–2) SEBELUM merge ke staging/main; placeholder = deploy
-  // ditolak Cloudflare (versi yang tayang tetap versi sebelumnya). Lokal/e2e memakai D1 lokal, placeholder tidak masalah.
+  // Hitungan klik WhatsApp. database_id dari Cloudflare → Storage & Databases → D1 → cutless-analytics
+  // (docs/statistik-klik-wa.md, langkah 1–2; bukan rahasia). Lokal/e2e memakai D1 lokal (.wrangler/), bukan database ini.
   "d1_databases": [
     {
       "binding": "DB",
       "database_name": "cutless-analytics",
-      "database_id": "ISI-DATABASE-ID-cutless-analytics",
+      "database_id": "d38b4d4c-8b9f-4972-a026-4098c6fcfcdb",
       "migrations_dir": "migrations"
     }
   ],
@@ -67,7 +66,7 @@
         {
           "binding": "DB",
           "database_name": "cutless-analytics-staging",
-          "database_id": "ISI-DATABASE-ID-cutless-analytics-staging",
+          "database_id": "3adcc5b2-7523-42cb-b582-6cc722c408c3",
           "migrations_dir": "migrations"
         }
       ],

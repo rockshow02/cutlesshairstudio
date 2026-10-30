@@ -25,6 +25,8 @@ Satu untuk website utama, satu untuk staging (data uji coba tidak tercampur).
 
 ## Langkah 2. Mengisi database_id di wrangler.jsonc
 
+> **Sudah dikerjakan** (30 Okt 2026): `cutless-analytics` = `d38b4d4c-…fcfcdb`, `cutless-analytics-staging` = `3adcc5b2-…c408c3`. Langkah di bawah hanya untuk mengganti database kelak.
+
 1. Buka **https://github.com/rockshow02/cutlesshairstudio/blob/feat/analytics/wrangler.jsonc** → ikon pensil (**Edit**).
 2. Ganti `ISI-DATABASE-ID-cutless-analytics` dengan *ID produksi*.
 3. Ganti `ISI-DATABASE-ID-cutless-analytics-staging` dengan *ID staging*.
