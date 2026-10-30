@@ -14,7 +14,7 @@ export default defineConfig({
   build: {
     // Satu file CSS untuk semua halaman (lebih sedikit request yang memblokir render)
     cssCodeSplit: false,
-    // Multi-halaman statis: / (beranda), /produk/, /cuci-sepatu/, /cabang/ (+ /cabang/<slug>/ hasil prerender)
+    // Multi-halaman statis: / (beranda), /produk/, /cuci-sepatu/, /cabang/ (+ /cabang/<slug>/ hasil prerender), /tips/
     rollupOptions: {
       output: {
         // Library dipisah dari kode situs: chunk sendiri, bisa di-cache lama & tidak menumpuk di chunk section
@@ -33,6 +33,8 @@ export default defineConfig({
         cuciSepatu: fileURLToPath(new URL('./cuci-sepatu/index.html', import.meta.url)),
         // Template halaman cabang: diprerender per cabang ke /cabang/<slug>/ oleh contentPlugin
         cabang: fileURLToPath(new URL('./cabang/index.html', import.meta.url)),
+        // Template Tips & Trik: diprerender ke /tips/, /tips/halaman/<n>/, /tips/<slug>/ (dihapus bila dimatikan di CMS)
+        tips: fileURLToPath(new URL('./tips/index.html', import.meta.url)),
       },
     },
   },

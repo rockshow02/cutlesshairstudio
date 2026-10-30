@@ -11,6 +11,8 @@ import {
   type MessageKind,
   type MessageVars,
 } from './whatsapp';
+import { rememberWaClick, trackWaClick } from './waClickTracking';
+import { barberKey, type WaClickKind } from '@/content/waClicks';
 
 export interface BookingOptions {
   /** Template di site.ts (default: general / "Pesan booking default" dari Pengaturan Situs) */
@@ -24,6 +26,17 @@ export interface BookingOptions {
   number?: string;
   /** Hanya cabang ini yang boleh dipilih (mis. promo khusus cabang) */
   allowedSlugs?: string[];
+  /** Jenis tombol untuk hitungan klik (default: dari kind/vars/branchSlug, lihat sourceOf) */
+  source?: WaClickKind;
+}
+
+/** Jenis tombol untuk hitungan klik WhatsApp */
+function sourceOf(o: BookingOptions): WaClickKind {
+  if (o.source) return o.source;
+  if (o.kind === 'barber') return 'kapster';
+  if (o.kind === 'product' || o.kind === 'productRestock') return 'produk';
+  if (o.vars?.promo) return 'promo';
+  return o.branchSlug ? 'cabang' : 'umum';
 }
 
 export interface BookingTarget {
@@ -49,7 +62,8 @@ export function useBooking(): (options?: BookingOptions) => BookingTarget {
     const message = o.message
       ? fillTemplate(withBranchPlaceholder(o.message), { brand: site.brandName, ...vars })
       : bookingMessage(site, o.kind ?? 'general', vars);
-    return buildWhatsAppLink(o.number || branch.whatsappNumber, message);
+    const barber = o.kind === 'barber' && o.vars?.barber ? barberKey(o.vars.barber) : undefined;
+    return rememberWaClick(buildWhatsAppLink(o.number || branch.whatsappNumber, message), { kind: sourceOf(o), branch: branch.slug, barber });
   };
 
   return (options: BookingOptions = {}) => {
@@ -66,7 +80,11 @@ export function useBooking(): (options?: BookingOptions) => BookingTarget {
         event.preventDefault();
         openPicker({
           allowedSlugs: options.allowedSlugs,
-          onSelect: (branch) => window.open(linkFor(branch, options), '_blank', 'noopener,noreferrer'),
+          onSelect: (branch) => {
+            const href = linkFor(branch, options);
+            trackWaClick(href);
+            window.open(href, '_blank', 'noopener,noreferrer');
+          },
         });
       },
     };

@@ -1,7 +1,7 @@
 {
   "name": "cutless-hair-studio",
   "private": true,
-  "version": "1.2.3",
+  "version": "1.3.0",
   "type": "module",
   "scripts": {
     "dev": "vite --mode development",
@@ -17,9 +17,10 @@
     "favicons": "node scripts/make-favicons.mjs",
     "sync-cms": "node scripts/sync-pages-config.mjs",
     "test": "vitest run",
-    "dev:worker": "npm run build:staging && wrangler dev --env staging --port 8787",
+    "dev:worker": "npm run build:staging && wrangler d1 migrations apply DB --local --env staging && wrangler dev --env staging --port 8787 --var ALLOWED_ORIGINS:http://localhost:8787",
     "build:e2e": "node scripts/optimize-images.mjs && tsc -b && vite build --mode e2e",
-    "e2e:server": "npm run build:e2e && wrangler dev --env staging --port 8787",
+    "e2e:db": "node -e \"require('fs').rmSync('.wrangler/e2e',{recursive:true,force:true})\" && wrangler d1 migrations apply DB --local --env staging --persist-to .wrangler/e2e",
+    "e2e:server": "npm run build:e2e && npm run e2e:db && wrangler dev --env staging --port 8787 --persist-to .wrangler/e2e --var ALLOWED_ORIGINS:http://localhost:8787 --var ACCESS_TEAM_DOMAIN:http://127.0.0.1:8799 --var ACCESS_AUD:e2e-statistik",
     "e2e:server:uniform": "vite build --mode e2e-uniform --outDir dist-e2e-uniform && vite preview --mode e2e-uniform --outDir dist-e2e-uniform --port 8788 --strictPort",
     "preview:worker": "npm run dev:worker",
     "e2e": "playwright test"
@@ -42,6 +43,7 @@
     "eslint-plugin-react-hooks": "^7.1.1",
     "eslint-plugin-react-refresh": "^0.5.7",
     "globals": "^17.13.0",
+    "marked": "^16.4.2",
     "sharp": "^0.35.4",
     "typescript": "~5.8.3",
     "typescript-eslint": "^8.71.2",

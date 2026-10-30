@@ -13,8 +13,9 @@
  *   - partner-logos/ (pita Logo Partner): lebar maks. 400 px (latar transparan tetap)
  *   - shoe-care/ (Partner Cuci Sepatu)  : lebar maks. 1920 px (foto hero) + versi 1280 & 600 px (SVG logo tidak diubah)
  *   - video-covers/ (sampul 9:16 bagian Video): lebar maks. 800 px + versi 400 px
+ *   - tips/ (sampul & gambar artikel Tips & Trik): lebar maks. 1600 px + versi 600 px (kartu artikel)
  * Versi kecil dipakai otomatis sebagai srcset (src/lib/contentTransforms.ts → responsiveImage).
- * Lalu memperbarui path gambar di src/content/*.json (mis. foto.jpg → foto.webp).
+ * Lalu memperbarui path gambar di src/content/*.json & artikel src/content/tips/*.md (mis. foto.jpg → foto.webp).
  *
  * Aman dijalankan berulang: file .webp yang sudah tidak melebihi lebar maks. dilewati.
  * Dijalankan otomatis oleh GitHub Actions saat ada gambar baru di-commit, dan sebelum build.
@@ -30,10 +31,11 @@ sharp.cache(false);
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const UPLOADS = path.join(ROOT, 'public', 'uploads');
 const CONTENT = path.join(ROOT, 'src', 'content');
+const TIPS = path.join(CONTENT, 'tips');
 
-const MAX_WIDTH = { barbers: 800, site: 800, products: 1000, gallery: 1600, promos: 1600, about: 1200, hero: 1920, cta: 1920, 'partner-logos': 400, 'shoe-care': 1920, 'video-covers': 800 };
+const MAX_WIDTH = { barbers: 800, site: 800, products: 1000, gallery: 1600, promos: 1600, about: 1200, hero: 1920, cta: 1920, 'partner-logos': 400, 'shoe-care': 1920, 'video-covers': 800, tips: 1600 };
 /** Versi lebih kecil per folder: <nama>-<lebar>.webp (hanya bila foto aslinya lebih lebar) */
-const VARIANTS = { about: [600], hero: [1280], gallery: [600], cta: [1280], 'shoe-care': [600, 1280], 'video-covers': [400] };
+const VARIANTS = { about: [600], hero: [1280], gallery: [600], cta: [1280], 'shoe-care': [600, 1280], 'video-covers': [400], tips: [600] };
 const variantPattern = (folder) => (VARIANTS[folder] ? new RegExp(`-(${VARIANTS[folder].join('|')})\\.webp$`) : null);
 const DEFAULT_MAX_WIDTH = 1600;
 const QUALITY = 78;
@@ -125,15 +127,32 @@ async function optimize(file) {
   return { from: toPublicUrl(file), to: toPublicUrl(target), before, after };
 }
 
+/** File konten yang bisa merujuk gambar: src/content/*.json + artikel src/content/tips/*.md */
+async function contentFiles() {
+  const json = (await readdir(CONTENT)).filter((f) => f.endsWith('.json')).map((name) => ({ name, file: path.join(CONTENT, name) }));
+  const md = existsSync(TIPS) ? (await readdir(TIPS)).filter((f) => f.endsWith('.md')).map((f) => ({ name: `tips/${f}`, file: path.join(TIPS, f) })) : [];
+  return [...json, ...md];
+}
+
+/**
+ * Ganti path gambar lama → baru. JSON: "path" (bertanda kutip). Markdown (frontmatter tanpa kutip & ![alt](path)):
+ * path utuh saja (tidak diikuti huruf/angka/titik/strip lain), agar foto.jpg tidak mengenai foto.jpg-lama.jpg.
+ * Diuji tests/tips.test.ts.
+ */
+export function replaceImagePath(text, from, to, markdown = false) {
+  if (!markdown) return text.split(`"${from}"`).join(`"${to}"`);
+  const escaped = from.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return text.replace(new RegExp(`${escaped}(?![\\w.-])`, 'g'), to);
+}
+
 async function updateContentReferences(changes) {
   const renamed = changes.filter((c) => c.from !== c.to);
   if (renamed.length === 0) return [];
   const touched = [];
-  for (const name of (await readdir(CONTENT)).filter((f) => f.endsWith('.json'))) {
-    const file = path.join(CONTENT, name);
+  for (const { name, file } of await contentFiles()) {
     const original = await readFile(file, 'utf8');
     let next = original;
-    for (const { from, to } of renamed) next = next.split(`"${from}"`).join(`"${to}"`);
+    for (const { from, to } of renamed) next = replaceImagePath(next, from, to, name.endsWith('.md'));
     if (next !== original) {
       await writeFile(file, next);
       touched.push(name);
@@ -149,17 +168,19 @@ async function updateContentReferences(changes) {
  */
 async function repairContentReferences() {
   const touched = [];
-  const pattern = /"(\/uploads\/[^"]+?)\.(jpe?g|png|gif|tiff?|avif)"/gi;
-  for (const name of (await readdir(CONTENT)).filter((f) => f.endsWith('.json'))) {
-    const file = path.join(CONTENT, name);
+  const jsonPattern = /"(\/uploads\/[^"]+?)\.(jpe?g|png|gif|tiff?|avif)"/gi;
+  // Markdown: path tanpa tanda kutip (frontmatter) atau di dalam ![alt](...)
+  const mdPattern = /(\/uploads\/[^\s"')]+?)\.(jpe?g|png|gif|tiff?|avif)(?![\w.-])/gi;
+  for (const { name, file } of await contentFiles()) {
     const original = await readFile(file, 'utf8');
-    const next = original.replace(pattern, (match, base) => {
+    const markdown = name.endsWith('.md');
+    const next = original.replace(markdown ? mdPattern : jsonPattern, (match, base) => {
       const publicDir = path.join(ROOT, 'public');
       const exists = (url) => existsSync(path.join(publicDir, url));
-      const originalUrl = match.slice(1, -1);
+      const originalUrl = markdown ? match : match.slice(1, -1);
       if (exists(originalUrl) || !exists(`${base}.webp`)) return match;
       console.log(`✓ ${name}: ${originalUrl} → ${base}.webp (referensi diperbaiki)`);
-      return `"${base}.webp"`;
+      return markdown ? `${base}.webp` : `"${base}.webp"`;
     });
     if (next !== original) {
       await writeFile(file, next);

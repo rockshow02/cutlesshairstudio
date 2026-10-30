@@ -85,6 +85,7 @@ import { activeFaqItems } from '@/content/faqSeo';
 import { activeVideoItems } from '@/content/instagram';
 import { formatNumber, formatPhoneDisplay, formatPriceText } from './format';
 import { isActiveNow, parseWIB, toIsoWIB } from './dates';
+import { rememberWaClick } from './waClickTracking';
 import { fillTemplate, templateLink } from './whatsapp';
 
 /* ---------- Helper umum ---------- */
@@ -163,7 +164,7 @@ export function buildShoeCare(p: ShoeCareEntry | null | undefined, branches: Bra
   if (!branch || services.length === 0) return null;
   const number = text(p.whatsappNumber) ?? branch.whatsappNumber;
   const template = text(p.messageTemplate) ?? copy.defaultTemplate;
-  const link = (service: string) => templateLink(number, template, { partner: p.name, service, branch: branch.name });
+  const link = (service: string) => rememberWaClick(templateLink(number, template, { partner: p.name, service, branch: branch.name }), { kind: 'cuci-sepatu', branch: branch.slug });
   const logo = text(p.logo);
   const heroLogo = text(p.heroLogo);
   const photos = (p.photos ?? []).map((ph) => responsiveImage(ph.image, ph.alt, '(min-width: 1024px) 33vw, (min-width: 600px) 50vw, 100vw', { width: 1200, height: 900 }));
@@ -400,7 +401,7 @@ export function buildLocations(branches: Branch[], copy: BranchCopy): LocationsC
 export function buildSite(s: SettingsEntry, base: SiteContent, branches: Branch[], extra: { shoeCare?: boolean } = {}): SiteContent {
   const logo = text(s.logo);
   const vars = { brand: s.siteName, cities: joinIndonesian(operatingCities(branches)) };
-  const features = { testimonials: s.showTestimonials, products: s.showProducts, beforeAfter: s.showBeforeAfter, shoeCare: Boolean(extra.shoeCare) };
+  const features = { testimonials: s.showTestimonials, products: s.showProducts, beforeAfter: s.showBeforeAfter, shoeCare: Boolean(extra.shoeCare), tips: Boolean(s.showTips) };
   return {
     ...base,
     brandName: s.siteName,
@@ -409,7 +410,10 @@ export function buildSite(s: SettingsEntry, base: SiteContent, branches: Branch[
     intro: { enabled: s.enablePreloader !== false, video: text(s.preloaderVideo) },
     // Link menu ikut hilang bila section-nya dimatikan
     nav: base.nav.filter(
-      (item) => !(item.href?.startsWith('/produk') && !features.products) && !(item.href === SHOE_CARE_PAGE && !features.shoeCare),
+      (item) =>
+        !(item.href?.startsWith('/produk') && !features.products) &&
+        !(item.href === SHOE_CARE_PAGE && !features.shoeCare) &&
+        !(item.href?.startsWith('/tips') && !features.tips),
     ),
     logo: logo ? { ...base.logo, stacked: toImage(logo, s.siteName, base.logo.stacked) } : base.logo,
     whatsapp: {
@@ -560,6 +564,8 @@ export function buildBarbers(entries: BarberEntry[], copy: BarbersCopy, branches
         name: b.name,
         role,
         specialties: splitList(b.specialty, /[,\n]/),
+        bio: text(b.bio),
+        experience: text(b.experience),
         photo: toImage(b.photo, role ? `Foto ${b.name}, ${role}` : `Foto ${b.name}`, { width: 600, height: 800 }),
         instagram: text(b.instagram),
         whatsappNumber: text(b.whatsappNumber),

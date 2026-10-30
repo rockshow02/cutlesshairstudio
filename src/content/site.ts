@@ -24,6 +24,8 @@ export const site: SiteContent = {
     { label: 'Hairstylist', sectionId: 'hairstylist' },
     { label: 'Galeri', sectionId: 'galeri' },
     { label: 'Produk', href: '/produk/' },
+    // Halaman /tips/: hanya saat Tampilkan Tips & Trik aktif (buildSite)
+    { label: 'Tips', href: '/tips/' },
     { label: 'Lokasi', sectionId: 'lokasi' },
     { label: 'Kontak', sectionId: 'kontak' },
   ],
@@ -50,7 +52,7 @@ export const site: SiteContent = {
   email: '',
   // Diisi dari Pengaturan Situs (siteUrl & toggle section)
   siteUrl: '',
-  features: { testimonials: false, products: false, beforeAfter: false, shoeCare: false },
+  features: { testimonials: false, products: false, beforeAfter: false, shoeCare: false, tips: false },
   intro: { enabled: true },
   // TODO: sesuaikan dengan rentang harga asli
   priceRange: 'Rp60.000 - Rp450.000',

@@ -160,7 +160,7 @@ Konten tidak valid di dev (mis. commit Pages CMS yang salah) tampil sebagai **ov
 | Badge di layar | DEV | STAGING | tidak ada (kodenya tidak ikut ter-build) |
 | Judul tab | `[DEV] …` | `[STAGING] …` | normal |
 | Mesin pencari | – | `robots.txt` Disallow: /, `<meta name="robots" content="noindex">`, header `X-Robots-Tag: noindex, nofollow` | normal |
-| Cloudflare Web Analytics | mati | mati | aktif bila `VITE_CF_ANALYTICS_TOKEN` diisi |
+| Cloudflare Web Analytics | mati | mati | aktif (token di `.env.production`; kosong = mati) |
 | Konten belum siap tayang | peringatan + badge | peringatan + badge | **build gagal** |
 
 Tidak ada rahasia di file `.env.*` (semua `VITE_*` terbaca di browser). Override pribadi: `.env.local` / `.env.development.local` (di-ignore git).

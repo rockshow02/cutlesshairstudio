@@ -15,6 +15,7 @@ import { PRICE_CATEGORIES } from './priceCategories';
 import { itemsAt } from './branchPricing';
 import { INSTAGRAM_POST_URL, instagramUrlProblem, normalizeInstagramUrl } from './instagram';
 import { POSTAL_CODE } from './postalAddress';
+import { RESERVED_TIP_SLUGS, TIP_CATEGORIES, TIP_SLUG, TIP_STATUSES } from './tipsSeo';
 import type { IconName } from '../types/common';
 
 /* ---------- Helper ---------- */
@@ -207,6 +208,10 @@ export const barberSchema = z.object({
   /** Cabang tempat barber bekerja (wajib) */
   branchSlug: branchSlugRef,
   specialty: optionalText(120),
+  /** Bio singkat (kotak penulis artikel Tips & Trik) */
+  bio: optionalText(200),
+  /** Pengalaman, mis. "8 tahun sebagai hairstylist" (kotak penulis artikel Tips & Trik) */
+  experience: optionalText(60),
   /** Opsional; kosong = pakai nomor WA cabangnya */
   whatsappNumber: optionalWa,
   instagram: optionalUrl,
@@ -310,6 +315,8 @@ export const settingsSchema = z.object({
     .default({ showCustomers: false, showFoundedYear: false, rating: null, showRating: false, showReviewCount: false }),
   showTestimonials: z.boolean().default(false),
   showProducts: z.boolean().default(false),
+  /** Halaman /tips/ (artikel src/content/tips/*.md), menu Tips & bagian Tips Terbaru di beranda */
+  showTips: z.boolean().default(false),
   showBeforeAfter: z.boolean().default(false),
   /** Animasi pembuka (sekali per sesi; otomatis dilewati bila pengunjung memilih "kurangi gerakan") */
   enablePreloader: z.boolean().default(true),
@@ -606,6 +613,54 @@ export const videosSchema = z.object({
     .max(6, 'maksimal 6 video')
     .default([]),
 });
+
+/* ---------- Tips & Trik (src/content/tips/*.md: frontmatter + isi Markdown) ---------- */
+
+const tipDate = z
+  .union([z.string(), z.date()])
+  // YAML bisa membaca tanggal tanpa tanda kutip sebagai Date
+  .transform((v) => (v instanceof Date ? v.toISOString().slice(0, 10) : v.trim()))
+  .pipe(z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'format tanggal harus YYYY-MM-DD (mis. 2026-10-29)'));
+
+/**
+ * Frontmatter satu artikel. Slug kosong = nama file (dibuat Pages CMS dari judul saat artikel dibuat), jadi URL tidak
+ * berubah walau judul diedit. Relasi penulis (Barber) & layanan (kartu Layanan) diperiksa scripts/tips.ts.
+ */
+export const tipSchema = z
+  .object({
+    title: requiredText(70, 'judul'),
+    slug: z
+      .union([
+        z.string().trim().max(80, 'maksimal 80 karakter').regex(TIP_SLUG, 'slug hanya huruf kecil, angka, dan strip (mis. cara-merawat-rambut-ikal)'),
+        z.literal(''),
+      ])
+      .nullish(),
+    summary: requiredText(160, 'ringkasan'),
+    category: z.enum(TIP_CATEGORIES, { error: `kategori harus salah satu: ${TIP_CATEGORIES.join(', ')}` }),
+    cover: imageOf('photo', '/uploads/tips/', '/uploads/tips/...'),
+    coverAlt: requiredText(150, 'deskripsi foto sampul'),
+    author: optionalText(60),
+    publishedAt: tipDate,
+    updatedAt: z.union([tipDate, z.literal('')]).nullish(),
+    status: z.enum(TIP_STATUSES, { error: `status harus ${TIP_STATUSES.join(' atau ')}` }),
+    services: z.array(z.string().trim().min(1)).nullish(),
+    /** Poin penting (kotak di bawah sampul): kosong, atau 2–5 butir */
+    keyPoints: z.array(requiredText(140, 'poin penting')).max(5, 'maksimal 5 poin penting').nullish(),
+    /** FAQ artikel (akordeon di akhir artikel + JSON-LD FAQPage) */
+    faq: z
+      .array(z.object({ question: requiredText(120, 'pertanyaan'), answer: requiredText(400, 'jawaban') }))
+      .max(5, 'maksimal 5 pertanyaan')
+      .nullish(),
+    body: z.string().nullish(),
+  })
+  .superRefine((t, ctx) => {
+    if (t.status === 'Terbit' && !t.body?.trim()) ctx.addIssue({ code: 'custom', path: ['body'], message: 'isi artikel wajib diisi sebelum diterbitkan' });
+    if (t.updatedAt && t.updatedAt < t.publishedAt) ctx.addIssue({ code: 'custom', path: ['updatedAt'], message: 'tanggal diperbarui tidak boleh sebelum tanggal terbit' });
+    if (t.keyPoints?.length === 1) ctx.addIssue({ code: 'custom', path: ['keyPoints'], message: 'isi minimal 2 poin penting, atau kosongkan' });
+    if (t.slug && RESERVED_TIP_SLUGS.includes(t.slug)) ctx.addIssue({ code: 'custom', path: ['slug'], message: `slug "${t.slug}" dipakai halaman daftar, pilih slug lain` });
+  });
+
+export type TipEntry = z.output<typeof tipSchema>;
 
 /* ---------- CTA penutup ("Kursimu sudah siap.") ---------- */
 

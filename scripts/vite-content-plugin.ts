@@ -12,6 +12,10 @@
  * 6. Environment selain produksi: noindex (meta, robots.txt Disallow, header X-Robots-Tag), judul berawalan
  *    [DEV]/[STAGING], modul `virtual:content-status` untuk badge. Web Analytics hanya di produksi.
  * 5. Prerender /cabang/<slug>/index.html per cabang (title/meta unik + JSON-LD HairSalon + ringkasan statis).
+ * 7. Tips & Trik (scripts/tips.ts): validasi src/content/tips/*.md, modul `virtual:tips`, prerender /tips/,
+ *    /tips/halaman/<n>/, /tips/kategori/<slug>/(halaman/<n>/) & /tips/<slug>/ (atau 301 ke beranda bila
+ *    dimatikan), entri sitemap & llms.txt.
+ * 8. dist/klik-wa.json: cabang, kapster, & halaman yang boleh dicatat hitungan klik WhatsApp (worker/waClicks.ts).
  */
 import { cp, readdir, readFile, mkdir, rm, stat, writeFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
@@ -35,6 +39,9 @@ import { pricingCopy } from '../src/content/pricing';
 import { formatPhoneDisplay, formatThousandsK, formatTime } from '../src/lib/format';
 import { branchesCopy } from '../src/content/branches';
 import { shoeCareCopy } from '../src/content/shoeCare';
+import { barberKey, WA_CLICK_ALLOWLIST_PATH, type WaClickAllowlist } from '../src/content/waClicks';
+import { TIPS_PATH, parseTipsPath, tipsPageCount, tipsPagePath, tipsRedirects, tipsVisible, type TipSummary, type TipsRoute } from '../src/content/tipsSeo';
+import { processTips, readTipFiles, summaryOf, tipBody, tipCategoriesOf, tipDataTag, tipHead, tipsIndexBody, tipsIndexHead, tipsLlmsLines, tipsSitemapEntries, type TipsResult } from './tips';
 
 const VIRTUAL_ID = 'virtual:image-meta';
 const RESOLVED_ID = `\0${VIRTUAL_ID}`;
@@ -43,10 +50,19 @@ const RESOLVED_STATUS_ID = `\0${STATUS_ID}`;
 const IMAGE_KEYS = new Set(['photo', 'image', 'logo', 'heroLogo', 'mobileImage', 'src']);
 const OG_IMAGE = '/images/og/og-cutless.jpg';
 const BRANCH_ROUTE = /^\/cabang\/([a-z0-9-]+)\/?(?:index\.html)?(?:[?#].*)?$/;
+const TIPS_VIRTUAL_ID = 'virtual:tips';
+const RESOLVED_TIPS_ID = `\0${TIPS_VIRTUAL_ID}`;
 /** Build E2E: file uji (mis. PDF daftar menu) yang hanya disalin ke dist/ build E2E, tidak pernah ke public/ */
 const FIXTURE_PUBLIC = path.join('e2e', 'fixtures', 'public');
 
 /* ---------- Validasi ---------- */
+
+/** Gambar /uploads/... ada di public/ (+ e2e/fixtures/public di build E2E), atau versi .webp-nya */
+function imageExists(root: string, url: string, fixtures: boolean): boolean {
+  const dirs = [path.join(root, 'public'), ...(fixtures ? [path.join(root, FIXTURE_PUBLIC)] : [])];
+  const webp = url.replace(/\.(jpe?g|png|gif|tiff?|avif)$/i, '.webp');
+  return dirs.some((d) => existsSync(path.join(d, url)) || existsSync(path.join(d, webp)));
+}
 
 function collectImages(value: unknown, at: string, out: { path: string; at: string }[]) {
   if (Array.isArray(value)) {
@@ -143,7 +159,12 @@ export async function loadContent(root: string, { fixtures = false, variant }: {
     }
   }
 
-  if (Object.keys(parsed).length !== Object.keys(CONTENT_FILES).length) return { errors, launch: [] };
+  // Artikel Tips & Trik (src/content/tips/*.md): frontmatter, slug unik, gambar, penulis & layanan (Draf juga)
+  const complete = Object.keys(parsed).length === Object.keys(CONTENT_FILES).length;
+  const tipFiles = await readTipFiles(root, fixtures);
+  errors.push(...processTips(tipFiles, { exists: (url) => imageExists(root, url, fixtures), bundle: complete ? (parsed as unknown as ContentBundle) : undefined }).errors);
+
+  if (!complete) return { errors, launch: [] };
   const bundle = parsed as unknown as ContentBundle;
   const cross = crossCheck(bundle);
   return { errors: [...errors, ...formatCross(cross.errors)], launch: formatCross(cross.launch), bundle };
@@ -520,7 +541,7 @@ export function cabangIndexBody(bundle: ContentBundle): string {
  * /llms.txt (format llmstxt.org): ringkasan bisnis untuk asisten AI, dibangkitkan dari konten saat build. Manfaatnya
  * belum terbukti (belum dipakai resmi oleh mesin pencari), tetapi tanpa biaya.
  */
-export function llmsTxt(bundle: ContentBundle): string {
+export function llmsTxt(bundle: ContentBundle, tips: TipSummary[] = []): string {
   const { siteName, siteUrl } = bundle.settings;
   const lines: string[] = [];
   const shoe = shoeCareVisible(bundle.shoeCare, bundle.branches) ? bundle.branches.find((b) => b.slug === bundle.shoeCare.branchSlug) : undefined;
@@ -544,7 +565,10 @@ export function llmsTxt(bundle: ContentBundle): string {
   for (const b of shownBranches(bundle)) lines.push(`- [${siteName} ${b.name}](${siteUrl}/cabang/${b.slug}/)`);
   if (shoe) lines.push(`- [Cuci sepatu ${bundle.shoeCare.name} di Cutless ${shoe.name}](${siteUrl}${SHOE_CARE_PATH})`);
   if (productsVisible(bundle.settings)) lines.push(`- [Produk](${siteUrl}${PRODUCTS_PATH})`);
+  const shownTips = tipsVisible(bundle.settings) ? tips : [];
+  if (shownTips.length) lines.push(`- [Tips & Trik](${siteUrl}${TIPS_PATH})`);
   lines.push('');
+  lines.push(...tipsLlmsLines(shownTips, siteUrl));
   const faq = activeFaqItems(bundle.faq);
   if (faq.length) {
     lines.push('## FAQ', '');
@@ -600,19 +624,40 @@ function fillHtml(html: string, bundle: ContentBundle | undefined, meta: ImageMe
 
 const HEAD_REGION = /<!--cutless:head-start-->[\s\S]*?<!--cutless:head-end-->/;
 
-export function sitemap(bundle: ContentBundle): string {
-  const { siteUrl } = bundle.settings;
-  const today = new Date().toISOString().slice(0, 10);
-  const urls = [
+/** Semua halaman yang dibangun & diindeks (sitemap.xml, daftar halaman klik-wa.json) */
+function sitePages(bundle: ContentBundle, tips: TipSummary[]): (string | { path: string; lastmod?: string })[] {
+  return [
     '/',
     '/cabang/',
     ...bundle.branches.map((b) => `/cabang/${b.slug}/`),
     ...(productsVisible(bundle.settings) ? [PRODUCTS_PATH] : []),
     // Halaman Cuci Sepatu hanya saat aktif (mati → 301 ke beranda)
     ...(shoeCareVisible(bundle.shoeCare, bundle.branches) ? [SHOE_CARE_PATH] : []),
+    // Tips & Trik hanya saat aktif & ada artikel terbit; lastmod artikel = tanggal diperbarui/terbit
+    ...(tipsVisible(bundle.settings) && tips.length ? tipsSitemapEntries(tips) : []),
   ];
-  const body = urls.map((u) => `  <url><loc>${siteUrl}${u}</loc><lastmod>${today}</lastmod></url>`).join('\n');
+}
+
+export function sitemap(bundle: ContentBundle, tips: TipSummary[] = []): string {
+  const { siteUrl } = bundle.settings;
+  const today = new Date().toISOString().slice(0, 10);
+  const body = sitePages(bundle, tips)
+    .map((u) => (typeof u === 'string' ? { path: u, lastmod: today } : u))
+    .map((u) => `  <url><loc>${siteUrl}${u.path}</loc><lastmod>${u.lastmod ?? today}</lastmod></url>`)
+    .join('\n');
   return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${body}\n</urlset>\n`;
+}
+
+/**
+ * dist/klik-wa.json: nilai yang boleh disimpan hitungan klik WhatsApp (Worker /api/klik-wa menolak cabang/kapster lain;
+ * halaman lain dicatat "lainnya"). Isinya hanya data yang memang tampil di situs (slug & nama cabang/kapster, path halaman).
+ */
+export function waClickAllowlist(bundle: ContentBundle, tips: TipSummary[] = []): WaClickAllowlist {
+  return {
+    branches: Object.fromEntries(bundle.branches.map((b) => [b.slug, b.name])),
+    barbers: Object.fromEntries(bundle.barbers.map((b) => [barberKey(b.name), b.name]).filter(([key]) => key)),
+    pages: [...new Set(sitePages(bundle, tips).map((u) => (typeof u === 'string' ? u : u.path)))],
+  };
 }
 
 export const robots = (bundle: ContentBundle, indexable: boolean) =>
@@ -622,16 +667,39 @@ export const robots = (bundle: ContentBundle, indexable: boolean) =>
 
 /* ---------- Environment ---------- */
 
-type AppEnv = 'development' | 'staging' | 'production';
+export type AppEnv = 'development' | 'staging' | 'production';
 const ENV_TAG: Record<AppEnv, string> = { development: '[DEV] ', staging: '[STAGING] ', production: '' };
 
+/** Token Cloudflare Web Analytics: 32 karakter heksadesimal (nilai lain diabaikan agar tidak menyisipkan HTML sembarang) */
+export const ANALYTICS_TOKEN = /^[0-9a-f]{32}$/i;
+
+/**
+ * Token yang dipakai build: hanya build produksi (bukan dev server, staging, atau E2E) dengan token valid.
+ * Selain itu '' = beacon tidak dipasang.
+ */
+export function analyticsTokenFor(env: AppEnv, isBuild: boolean, token: string | undefined): string {
+  const t = (token ?? '').trim();
+  return env === 'production' && isBuild && ANALYTICS_TOKEN.test(t) ? t : '';
+}
+
+export const ANALYTICS_BEACON_SRC = 'https://static.cloudflareinsights.com/beacon.min.js';
+
+/**
+ * Beacon Cloudflare Web Analytics (snippet manual: <script defer src=beacon.min.js data-cf-beacon>, tanpa cookie) sebelum
+ * </body>. Tag itu baru ditambahkan setelah event `load`: diukur di HP (360 px, 4G lambat), `defer` biasa berebut
+ * bandwidth dengan gambar hero & menunda LCP ±100 ms; setelah `load` LCP sama dengan tanpa beacon. Beacon tetap
+ * melaporkan kunjungan, LCP, & CLS (data performa browser tersimpan sejak awal). Tidak mengubah tata letak. Idempoten.
+ */
+export function withAnalytics(html: string, token: string): string {
+  if (!ANALYTICS_TOKEN.test(token) || html.includes('cloudflareinsights')) return html;
+  const config = JSON.stringify(JSON.stringify({ token }));
+  const beacon = `<script>addEventListener('load',function(){var s=document.createElement('script');s.defer=true;s.src='${ANALYTICS_BEACON_SRC}';s.setAttribute('data-cf-beacon',${config});document.body.appendChild(s)})</script>`;
+  return html.replace('</body>', `    ${beacon}\n  </body>`);
+}
+
 /** Penanda environment di HTML (idempoten: aman dipanggil dua kali pada halaman yang sama) */
-function applyEnv(html: string, env: AppEnv, analyticsToken: string): string {
-  if (env === 'production') {
-    if (!analyticsToken || html.includes('cloudflareinsights')) return html;
-    const beacon = `<script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='${JSON.stringify({ token: analyticsToken })}'></script>`;
-    return html.replace('</body>', `    ${beacon}\n  </body>`);
-  }
+export function applyEnv(html: string, env: AppEnv, analyticsToken: string): string {
+  if (env === 'production') return withAnalytics(html, analyticsToken);
   let out = html;
   if (!out.includes('name="robots"')) out = out.replace('<meta charset="UTF-8" />', '<meta charset="UTF-8" />\n    <meta name="robots" content="noindex, nofollow" />');
   if (!out.includes(`<title>${ENV_TAG[env]}`)) out = out.replace('<title>', `<title>${ENV_TAG[env]}`);
@@ -663,6 +731,10 @@ export function contentPlugin(): Plugin {
   let devError: string | null = null;
   /** Ukuran gambar (untuk preload hero), dibaca ulang tiap konten/gambar berubah */
   let imageMeta: ImageMeta = {};
+  /** Artikel Tips & Trik (Terbit) terakhir yang lolos validasi */
+  let tips: TipsResult = { errors: [], published: [], drafts: 0 };
+  /** Artikel yang di-build: kosong bila Tampilkan Tips & Trik mati */
+  const shownTips = () => (bundle && tipsVisible(bundle.settings) ? tips.published : []);
 
   const refresh = async () => {
     const result = await loadContent(root, { fixtures, variant });
@@ -672,6 +744,9 @@ export function contentPlugin(): Plugin {
     }
     bundle = result.bundle ?? bundle;
     launchIssues = result.bundle ? result.launch : launchIssues;
+    // Tips & Trik dirender ulang dengan ukuran gambar (srcset, width/height); masalahnya sudah dilaporkan loadContent
+    const next = processTips(await readTipFiles(root, fixtures), { exists: (url) => imageExists(root, url, fixtures), meta: imageMeta, bundle: result.bundle });
+    if (!next.errors.length) tips = next;
     return result;
   };
 
@@ -693,6 +768,53 @@ export function contentPlugin(): Plugin {
     }
   };
 
+  /** Halaman Tips dari template: daftar (semua/kategori, halaman ke-n) atau artikel; undefined = tidak ada */
+  const tipsPage = (html: string, route: TipsRoute): string | undefined => {
+    if (!bundle) return undefined;
+    const list = shownTips().map(summaryOf);
+    const site = bundle.settings;
+    if (route.kind === 'article') {
+      const t = shownTips().find((a) => a.slug === route.slug);
+      if (!t) return undefined;
+      const barber = bundle.barbers.find((b) => b.name === t.author);
+      return html
+        .replace(HEAD_REGION, tipHead(t, site, imageMeta, barber))
+        .replace('<!--cutless:body-->', tipBody(t, list, barber))
+        .replace('<!--cutless:tip-data-->', tipDataTag(t));
+    }
+    const { page, category } = route;
+    const count = category ? list.filter((t) => t.category === category).length : list.length;
+    // Kategori tanpa artikel terbit tidak punya halaman
+    if ((category && !count) || page > tipsPageCount(count)) return undefined;
+    return html
+      .replace(HEAD_REGION, tipsIndexHead(list, site, page, `${site.siteUrl}${OG_IMAGE}`, category))
+      .replace('<!--cutless:body-->', tipsIndexBody(list, page, category))
+      .replace('<!--cutless:tip-data-->', '');
+  };
+
+  /** dist/tips/index.html (template) → /tips/, /tips/halaman/<n>/, /tips/<slug>/ */
+  const prerenderTips = async () => {
+    const template = path.join(outDir, 'tips', 'index.html');
+    if (!bundle || !tipsVisible(bundle.settings) || !existsSync(template)) return;
+    const html = await readFile(template, 'utf8');
+    const write = async (dir: string, page: string | undefined) => {
+      if (!page) return;
+      await mkdir(path.join(outDir, dir), { recursive: true });
+      await writeFile(path.join(outDir, dir, 'index.html'), applyEnv(page, appEnv, analyticsToken));
+    };
+    const list = shownTips().map(summaryOf);
+    const dirOf = (p: string) => p.split('/').filter(Boolean).join(path.sep);
+    // Daftar semua & per kategori (hanya kategori yang punya artikel terbit), lalu artikel; /tips/ terakhir (template)
+    const lists = [undefined, ...tipCategoriesOf(list)].flatMap((category) => {
+      const count = category ? list.filter((t) => t.category === category).length : list.length;
+      return Array.from({ length: tipsPageCount(count) }, (_, i) => ({ category, page: i + 1 }));
+    });
+    for (const r of lists.filter((x) => x.category || x.page > 1)) await write(dirOf(tipsPagePath(r.page, r.category)), tipsPage(html, { kind: 'index', ...r }));
+    for (const t of shownTips()) await write(path.join('tips', t.slug), tipsPage(html, { kind: 'article', slug: t.slug }));
+    await write('tips', tipsPage(html, { kind: 'index', page: 1 }));
+    console.log(`✓ Tips & Trik: ${shownTips().length} artikel, ${tipCategoriesOf(list).length} kategori diprerender (${tips.drafts} draf tidak di-build)`);
+  };
+
   return {
     name: 'cutless-content',
     configResolved(config) {
@@ -704,7 +826,10 @@ export function contentPlugin(): Plugin {
       appEnv = (['development', 'staging', 'production'] as const).find((e) => e === env.VITE_APP_ENV)
         ?? (config.mode === 'production' ? 'production' : 'development');
       siteUrlOverride = (env.VITE_SITE_URL ?? '').trim().replace(/\/+$/, '');
-      analyticsToken = (env.VITE_CF_ANALYTICS_TOKEN ?? '').trim();
+      analyticsToken = analyticsTokenFor(appEnv, isBuild, env.VITE_CF_ANALYTICS_TOKEN);
+      if (isBuild && appEnv === 'production' && (env.VITE_CF_ANALYTICS_TOKEN ?? '').trim() && !analyticsToken) {
+        console.warn('• VITE_CF_ANALYTICS_TOKEN bukan token Web Analytics (32 karakter heksadesimal): beacon tidak dipasang');
+      }
       // Build produksi SELALU ketat: konten belum siap tayang → build gagal → Workers Builds tidak menjalankan deploy,
       // versi yang tayang tetap versi sebelumnya. CONTENT_CHECK=warn (mis. terpasang di Cloudflare) diabaikan.
       if (isBuild && appEnv === 'production' && env.CONTENT_CHECK === 'warn') {
@@ -738,6 +863,7 @@ export function contentPlugin(): Plugin {
     resolveId(id) {
       if (id === VIRTUAL_ID) return RESOLVED_ID;
       if (id === STATUS_ID) return RESOLVED_STATUS_ID;
+      if (id === TIPS_VIRTUAL_ID) return RESOLVED_TIPS_ID;
       return null;
     },
     async load(id) {
@@ -752,6 +878,8 @@ export function contentPlugin(): Plugin {
       if (id === RESOLVED_STATUS_ID) {
         return `export default ${JSON.stringify({ issues: appEnv === 'production' ? [] : launchIssues })};`;
       }
+      // Ringkasan artikel terbit (tanpa isi): /tips/, Tips Terbaru di beranda, artikel terkait
+      if (id === RESOLVED_TIPS_ID) return `export default ${JSON.stringify(shownTips().map(summaryOf))};`;
       if (id !== RESOLVED_ID) return null;
       return `export default ${JSON.stringify(await readImageMeta(root, fixtures))};`;
     },
@@ -766,15 +894,19 @@ export function contentPlugin(): Plugin {
         if (branch && bundle) {
           out = out.replace(HEAD_REGION, branchHead(branch, bundle)).replace('<!--cutless:body-->', branchBody(branch, bundle));
         }
+        // Dev server: /tips/... memakai head & ringkasan halaman itu (build: closeBundle)
+        const tipsRoute = !isBuild && out.includes('<!--cutless:tip-data-->') ? parseTipsPath(ctx.originalUrl?.split(/[?#]/)[0] ?? '') : undefined;
+        if (tipsRoute && bundle) out = tipsPage(out, tipsRoute) ?? out;
         return applyEnv(out, appEnv, analyticsToken);
       },
     },
 
     generateBundle() {
       if (!bundle) return;
-      this.emitFile({ type: 'asset', fileName: 'sitemap.xml', source: sitemap(bundle) });
+      this.emitFile({ type: 'asset', fileName: 'sitemap.xml', source: sitemap(bundle, shownTips()) });
       this.emitFile({ type: 'asset', fileName: 'robots.txt', source: robots(bundle, appEnv === 'production') });
-      this.emitFile({ type: 'asset', fileName: 'llms.txt', source: llmsTxt(bundle) });
+      this.emitFile({ type: 'asset', fileName: 'llms.txt', source: llmsTxt(bundle, shownTips()) });
+      this.emitFile({ type: 'asset', fileName: WA_CLICK_ALLOWLIST_PATH.slice(1), source: JSON.stringify(waClickAllowlist(bundle, shownTips())) });
     },
 
     /** Prerender halaman per cabang dari dist/cabang/index.html */
@@ -797,6 +929,12 @@ export function contentPlugin(): Plugin {
       };
       await disablePage('cuci-sepatu', shoeCareRedirects(shoeCareVisible(bundle.shoeCare, bundle.branches)), 'Halaman Cuci Sepatu mati (Pages CMS → Partner Cuci Sepatu → Tampilkan halaman)');
       await disablePage('produk', productsRedirects(productsVisible(bundle.settings)), 'Halaman Produk mati (Pages CMS → Pengaturan Situs → Tampilkan Produk)');
+      await disablePage('tips', tipsRedirects(tipsVisible(bundle.settings)), 'Halaman Tips & Trik mati (Pages CMS → Pengaturan Situs → Tampilkan Tips & Trik)');
+      await prerenderTips();
+      // dist/404.html disalin apa adanya dari public/: beacon Web Analytics ditambahkan di sini (hanya produksi)
+      const notFound = path.join(outDir, '404.html');
+      if (analyticsToken && existsSync(notFound)) await writeFile(notFound, withAnalytics(await readFile(notFound, 'utf8'), analyticsToken));
+      if (analyticsToken) console.log('✓ Cloudflare Web Analytics dipasang (halaman prerender & 404)');
       const template = path.join(outDir, 'cabang', 'index.html');
       if (!existsSync(template)) return;
       const html = await readFile(template, 'utf8');
@@ -821,6 +959,7 @@ export function contentPlugin(): Plugin {
       // /cabang/<slug>/ → template cabang (dev server; di produksi file statis hasil prerender)
       server.middlewares.use((req, _res, next) => {
         if (req.url && BRANCH_ROUTE.test(req.url)) req.url = '/cabang/index.html';
+        else if (req.url && parseTipsPath(req.url.split(/[?#]/)[0]) && !req.url.startsWith('/tips/index.html')) req.url = '/tips/index.html';
         next();
       });
       server.watcher.add(uploadsDir);
@@ -833,7 +972,14 @@ export function contentPlugin(): Plugin {
           if (mod) server.moduleGraph.invalidateModule(mod);
           server.ws.send({ type: 'full-reload' });
         }
-        if (file.startsWith(contentDir) && file.endsWith('.json')) void revalidate(server);
+        if (file.startsWith(contentDir) && (file.endsWith('.json') || file.endsWith('.md'))) {
+          void revalidate(server);
+          const mod = server.moduleGraph.getModuleById(RESOLVED_TIPS_ID);
+          if (mod && file.endsWith('.md')) {
+            server.moduleGraph.invalidateModule(mod);
+            server.ws.send({ type: 'full-reload' });
+          }
+        }
       });
     },
   };

@@ -2,10 +2,12 @@
 //   Produksi: npm run build         && npx wrangler deploy               → Worker "cutlesshairstudio"
 //   Staging : npm run build:staging && npx wrangler deploy --env staging → Worker "cutlesshairstudio-staging"
 // "name" harus sama dengan nama Worker di dashboard Cloudflare (subdomain *.workers.dev).
-// Uji lokal: npm run dev:worker (build staging + wrangler dev di http://localhost:8787)
+// Uji lokal: npm run dev:worker (build staging + migrasi D1 lokal + wrangler dev di http://localhost:8787)
 //
-// Situs statis (booking lewat WhatsApp). Tanpa D1: fitur booking online yang memakai database diarsipkan di
-// branch archive/booking-online-dan-toko. Tanpa vars/secrets: daftar vars dan secrets fitur itu ada di README branch arsip.
+// Situs statis (booking lewat WhatsApp). Satu-satunya database: hitungan klik tombol WhatsApp (D1 cutless-analytics,
+// tabel migrations/0001_wa_clicks.sql) untuk POST /api/klik-wa & halaman /statistik/ (dikunci Cloudflare Access).
+// Fitur booking online lama (database cutless-prod) diarsipkan di branch archive/booking-online-dan-toko.
+// Tanpa secrets: semua vars di bawah tidak rahasia. Langkah pemasangan: docs/statistik-klik-wa.md.
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "cutlesshairstudio",
@@ -23,14 +25,32 @@
     // URL tak dikenal → dist/404.html (bukan beranda), agar mesin pencari tidak mengindeks halaman palsu
     "not_found_handling": "404-page",
     // Hanya rute ini yang menjalankan Worker; file statis lain langsung dari CDN (tidak memakai kuota request)
-    "run_worker_first": ["/api/*", "/masuk*", "/profil*", "/booking*", "/admin*", "/kebijakan-privasi*"]
+    "run_worker_first": ["/api/*", "/statistik*", "/masuk*", "/profil*", "/booking*", "/admin*", "/kebijakan-privasi*"]
+  },
+  // Hitungan klik WhatsApp. database_id dari Cloudflare → Storage & Databases → D1 → cutless-analytics
+  // (docs/statistik-klik-wa.md, langkah 1–2; bukan rahasia). Lokal/e2e memakai D1 lokal (.wrangler/), bukan database ini.
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "cutless-analytics",
+      "database_id": "d38b4d4c-8b9f-4972-a026-4098c6fcfcdb",
+      "migrations_dir": "migrations"
+    }
+  ],
+  "vars": {
+    // Origin yang boleh mengirim klik ke /api/klik-wa (dipisah koma)
+    "ALLOWED_ORIGINS": "https://cutlesshairstudio.com,https://www.cutlesshairstudio.com",
+    // Cloudflare Access untuk /statistik/ (docs/statistik-klik-wa.md, langkah 3): team domain & AUD tag aplikasi
+    // "Statistik Cutless" (bukan rahasia; Worker memverifikasi JWT Access dengan keduanya). Kosong = /statistik/ selalu 403.
+    "ACCESS_TEAM_DOMAIN": "wild-voice-c787.cloudflareaccess.com",
+    "ACCESS_AUD": "9abaa8c9fda34bc7eb797cfebd3fa7d7132f25b15a42fe5518afbd25874bdcd6"
   },
   "env": {
     // Worker terpisah: URL, versi, database, dan pengaturan (mis. Cloudflare Access) tidak tercampur dengan produksi.
     // dist/ hasil build staging sudah berisi robots.txt "Disallow: /" dan header X-Robots-Tag: noindex (dist/_headers).
     "staging": {
-      // Situs statis saja (booking lewat WhatsApp; fitur booking online, akun, & toko diarsipkan di branch
-      // archive/booking-online-dan-toko). Tanpa vars/secrets, tanpa Cron Trigger.
+      // Situs statis + hitungan klik WhatsApp (database staging terpisah). Fitur booking online, akun, & toko diarsipkan
+      // di branch archive/booking-online-dan-toko. Tanpa secrets, tanpa Cron Trigger.
       "name": "cutlesshairstudio-staging",
       // workers_dev & preview_urls diwarisi dari atas: staging tetap memakai cutlesshairstudio-staging.<subdomain>.workers.dev
       "workers_dev": true,
@@ -39,7 +59,23 @@
         "directory": "./dist",
         "binding": "ASSETS",
         "html_handling": "auto-trailing-slash",
-        "not_found_handling": "404-page"
+        "not_found_handling": "404-page",
+        "run_worker_first": ["/api/klik-wa", "/statistik*"]
+      },
+      // d1_databases & vars TIDAK diwarisi dari atas: database & origin staging sendiri
+      "d1_databases": [
+        {
+          "binding": "DB",
+          "database_name": "cutless-analytics-staging",
+          "database_id": "3adcc5b2-7523-42cb-b582-6cc722c408c3",
+          "migrations_dir": "migrations"
+        }
+      ],
+      "vars": {
+        "ALLOWED_ORIGINS": "https://cutlesshairstudio-staging.adi-yansyaaah.workers.dev",
+        // Sengaja kosong: /statistik/ di staging selalu 403 (statistik hanya dilihat di website utama)
+        "ACCESS_TEAM_DOMAIN": "",
+        "ACCESS_AUD": ""
       },
       // crons kosong = Cron Trigger lama (booking & loyalitas) dihapus saat deploy berikutnya
       "triggers": { "crons": [] }

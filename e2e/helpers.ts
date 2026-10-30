@@ -8,7 +8,7 @@ const ACCESS_SECRET = process.env.E2E_CF_ACCESS_CLIENT_SECRET ?? '';
  * Konteks uji:
  *  - wa.me tidak benar-benar dibuka (dijawab halaman kosong), URL-nya tetap bisa diperiksa
  *  - header Access hanya ke origin situs (bila diisi)
- *  - setiap request ke /api/* dicatat (situs statis tidak boleh memanggil API)
+ *  - setiap request ke /api/* dicatat (situs statis tidak boleh memanggil API, kecuali hitungan klik /api/klik-wa)
  */
 export async function prepareContext(context: BrowserContext, baseURL: string | undefined) {
   await context.route('https://wa.me/**', (route) => route.fulfill({ contentType: 'text/plain', body: 'WhatsApp (uji)' }));
@@ -40,7 +40,8 @@ export const test = base.extend<{ apiCalls: string[] }>({
     const calls: string[] = [];
     context.on('request', (r) => {
       const url = new URL(r.url());
-      if (url.pathname.startsWith('/api/')) calls.push(url.pathname);
+      // Pengecualian: hitungan klik WhatsApp (sendBeacon, diuji di e2e/wa-clicks.spec.ts)
+      if (url.pathname.startsWith('/api/') && url.pathname !== '/api/klik-wa') calls.push(url.pathname);
     });
     await use(calls);
   },
@@ -57,3 +58,23 @@ export async function expectNoHorizontalScroll(page: Page) {
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
   expect(overflow).toBeLessThanOrEqual(0);
 }
+
+/**
+ * CLS halaman sejak dimuat: menunggu font situs selesai (document.fonts.ready) dan dua frame, lalu menjumlahkan semua
+ * layout shift tanpa input (buffered + takeRecords). Tidak bergantung pada jeda waktu tetap.
+ */
+export const clsOf = (page: Page) =>
+  page.evaluate(async () => {
+    await document.fonts.ready;
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+    type Shift = { hadRecentInput: boolean; value: number };
+    let total = 0;
+    const add = (entries: PerformanceEntry[]) => entries.forEach((e) => { if (!(e as unknown as Shift).hadRecentInput) total += (e as unknown as Shift).value; });
+    const observer = new PerformanceObserver((list) => add(list.getEntries()));
+    observer.observe({ type: 'layout-shift', buffered: true });
+    // Entri buffered dikirim ke callback secara async: tunggu satu frame, lalu ambil sisanya
+    await new Promise((r) => requestAnimationFrame(r));
+    add(observer.takeRecords());
+    observer.disconnect();
+    return total;
+  });
