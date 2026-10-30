@@ -33,7 +33,8 @@ import styles from './ShoeCarePage.module.css';
 export function ShoeCarePage() {
   const state = useContent(getShoeCare);
   const { branches, selected } = useBranch();
-  if (state.status === 'loading') return <main aria-busy="true" />;
+  // Bukan <main>: halaman ini sudah berada di dalam <main id="main"> milik SiteShell (satu <main> per halaman)
+  if (state.status === 'loading') return <div aria-busy="true" />;
   const data = state.status === 'success' ? state.data : null;
   if (!data) {
     return (
