@@ -20,6 +20,21 @@ type Json = Record<string, unknown>;
 const DAYS = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'];
 const openEveryDay = DAYS.map((day) => ({ day, openTime: '09:00', closeTime: '21:00', isClosed: false }));
 
+/**
+ * Bagian baru halaman cabang (Pages CMS → Cabang): Bogor terisi lengkap, Cibubur sengaja kosong (bagiannya tidak tampil).
+ * Ditulis eksplisit agar isian cabang asli di CMS tidak ikut ke build uji.
+ */
+export const E2E_BRANCH_DETAILS = {
+  bogor: {
+    description: 'Deskripsi cabang uji Bogor dekat Area Uji Satu.',
+    serviceAreas: ['Area Uji Satu', 'Area Uji Dua'],
+    directions: 'Patokan uji: seberang taman uji.',
+    facilities: ['QRIS', 'Walk-in diterima', 'Parkir motor', 'Tunai'],
+    faq: [{ question: 'Pertanyaan cabang uji?', answer: 'Jawaban cabang uji.' }],
+  },
+  cibubur: { description: '', serviceAreas: [], directions: '', facilities: [], faq: [] },
+} as const;
+
 export const E2E_BRANCHES = {
   bogor: {
     slug: 'bogor-bantarjati',
@@ -31,6 +46,7 @@ export const E2E_BRANCHES = {
     openingHours: openEveryDay,
     status: 'Aktif',
     order: 10,
+    ...E2E_BRANCH_DETAILS.bogor,
   },
   cibubur: {
     slug: 'cibubur',
@@ -42,6 +58,7 @@ export const E2E_BRANCHES = {
     openingHours: openEveryDay,
     status: 'Aktif',
     order: 20,
+    ...E2E_BRANCH_DETAILS.cibubur,
   },
 } as const;
 
@@ -303,6 +320,74 @@ export function e2eTipFiles(): { file: string; source: string }[] {
   ];
 }
 
+/** Foto halaman layanan uji (e2e/fixtures/public, hanya disalin ke dist/ build E2E) */
+export const E2E_SERVICE_PHOTO = '/uploads/layanan/foto-uji.webp';
+
+/**
+ * Halaman Layanan uji (src/content/layanan/*.md diganti seluruhnya saat build E2E). Tampil hanya di varian uniform
+ * (Tampilkan halaman layanan aktif); build bawaan: mati → /layanan/ 301 ke beranda.
+ * - `haircut`: 2 item Daftar Harga (Haircut), Kartu Layanan "Haircut", lengkap (cocok untuk, proses, durasi, foto, isi,
+ *   FAQ, Tanggal diperbarui)
+ * - `coloring`: 1 item (Special Treatment), tanpa FAQ & foto
+ * - `kids`: tanpa item Daftar Harga, catatan harga → grup "Layanan lainnya", tersedia di semua cabang
+ * - `draft`: Draf, tidak boleh tampil
+ */
+export const E2E_SERVICE_PAGES = {
+  haircut: {
+    slug: 'haircut-uji',
+    title: 'Haircut Uji',
+    metaDescription: 'Meta description haircut uji.',
+    summary: 'Ringkasan pembuka haircut uji yang langsung menjawab.',
+    pricingItems: ['White Grooming Uji', 'Black Grooming Uji'],
+    serviceCard: 'Haircut',
+    suitableFor: ['Cocok uji satu', 'Cocok uji dua'],
+    steps: ['Langkah uji satu', 'Langkah uji dua', 'Langkah uji tiga'],
+    duration: '±45 menit uji',
+    faq: [
+      { question: 'Pertanyaan layanan uji satu?', answer: 'Jawaban layanan uji satu.' },
+      { question: 'Pertanyaan layanan uji dua?', answer: 'Jawaban layanan uji dua.' },
+    ],
+    updatedAt: '2026-10-26',
+    heading: 'Subjudul isi uji',
+  },
+  coloring: { slug: 'coloring-uji', title: 'Coloring Uji', metaDescription: 'Meta coloring uji.', summary: 'Ringkasan coloring uji.', pricingItems: ['Coloring Fashion Uji'] },
+  kids: { slug: 'anak-uji', title: 'Potong Anak Uji', metaDescription: 'Meta anak uji.', summary: 'Ringkasan anak uji.', priceNote: 'Harga menyesuaikan uji.' },
+  draft: { slug: 'draf-layanan-uji', title: 'Draf Layanan Uji' },
+} as const;
+
+export function e2eServicePageFiles(): { file: string; source: string }[] {
+  const { haircut, coloring, kids, draft } = E2E_SERVICE_PAGES;
+  const twoPoints = ['Butir uji satu', 'Butir uji dua'];
+  return [
+    tipFile(
+      {
+        slug: haircut.slug,
+        title: haircut.title,
+        metaDescription: haircut.metaDescription,
+        summary: haircut.summary,
+        pricingItems: [...haircut.pricingItems],
+        serviceCard: haircut.serviceCard,
+        suitableFor: [...haircut.suitableFor],
+        steps: [...haircut.steps],
+        duration: haircut.duration,
+        photos: [{ image: E2E_SERVICE_PHOTO, alt: 'Foto layanan uji' }],
+        faq: haircut.faq.map((q) => ({ ...q })),
+        updatedAt: haircut.updatedAt,
+        status: 'Terbit',
+      },
+      `## ${haircut.heading}
+
+Isi tambahan uji.
+
+<script>window.__serviceXss = true</script>
+`,
+    ),
+    tipFile({ slug: coloring.slug, title: coloring.title, metaDescription: coloring.metaDescription, summary: coloring.summary, pricingItems: [...coloring.pricingItems], suitableFor: twoPoints, status: 'Terbit' }, ''),
+    tipFile({ slug: kids.slug, title: kids.title, metaDescription: kids.metaDescription, summary: kids.summary, priceNote: kids.priceNote, suitableFor: twoPoints, status: 'Terbit' }, ''),
+    tipFile({ slug: draft.slug, title: draft.title, metaDescription: 'Meta draf.', summary: 'Draf uji.', pricingItems: ['Woman Haircut Uji'], status: 'Draf' }, ''),
+  ];
+}
+
 /** Daftar Harga tanpa harga per cabang & "Tersedia di cabang" (varian uniform) */
 const uniformPricing = () => E2E_PRICING.map(({ branchPrices: _bp, branchSlugs: _bs, ...p }: Json) => p);
 
@@ -339,7 +424,7 @@ export function applyE2EFixtures(file: string, data: unknown, variant?: string):
   if (file === 'hero.json') return { ...(data as Json), primaryCtaLabel: E2E_HERO_CTA };
   if (file === 'settings.json') {
     // Toggle & nama usaha tetap (tata letak beranda & selector tidak ikut berubah saat admin mengubahnya di CMS)
-    return { ...(data as Json), siteName: E2E_SITE_NAME, showProducts: variant === 'uniform', showTips: variant === 'uniform', showTestimonials: false, showBeforeAfter: false, enablePreloader: true, preloaderVideo: '' };
+    return { ...(data as Json), siteName: E2E_SITE_NAME, showProducts: variant === 'uniform', showTips: variant === 'uniform', showServicePages: variant === 'uniform', showTestimonials: false, showBeforeAfter: false, enablePreloader: true, preloaderVideo: '' };
   }
   // Promo bertanggal (tampil/tidak tergantung jam) → tidak ada di build uji. Pengumuman tanpa tanggal hanya di varian
   // uniform (e2e/announcement.spec.ts); build bawaan tanpa bar pengumuman.

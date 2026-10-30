@@ -129,6 +129,17 @@
   font-weight: 400;
   color: var(--c-ink-dim);
 }
+/* Link "Selengkapnya" ke halaman layanan (hanya item yang punya halaman terbit) */
+.more {
+  display: block;
+  width: fit-content;
+  margin-top: 2px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--c-ink);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
 .badge {
   display: inline-block;
   margin-left: var(--space-2);

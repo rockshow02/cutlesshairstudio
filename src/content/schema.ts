@@ -16,6 +16,7 @@ import { itemsAt } from './branchPricing';
 import { INSTAGRAM_POST_URL, instagramUrlProblem, normalizeInstagramUrl } from './instagram';
 import { POSTAL_CODE } from './postalAddress';
 import { RESERVED_TIP_SLUGS, TIP_CATEGORIES, TIP_SLUG, TIP_STATUSES } from './tipsSeo';
+import { BRANCH_FACILITIES, SERVICE_PAGE_SLUG, SERVICE_PAGE_STATUSES } from './servicePages';
 import type { IconName } from '../types/common';
 
 /* ---------- Helper ---------- */
@@ -174,6 +175,22 @@ export const branchSchema = z.object({
   status: z.enum(BRANCH_STATUSES, { error: `status harus salah satu: ${BRANCH_STATUSES.join(', ')}` }).default('Aktif'),
   photo: optionalImage,
   order,
+  /** Deskripsi cabang (halaman cabang & JSON-LD HairSalon description); kosong = tidak tampil */
+  description: optionalText(500),
+  /** Area sekitar yang dilayani, mis. Bantarjati, Bogor Utara (halaman cabang & JSON-LD areaServed) */
+  serviceAreas: z.array(requiredText(40, 'nama area')).max(12, 'maksimal 12 area').nullish(),
+  /** Patokan & cara menuju */
+  directions: optionalText(400),
+  /** Fasilitas & metode pembayaran (JSON-LD amenityFeature & paymentAccepted) */
+  facilities: z
+    .array(z.enum(BRANCH_FACILITIES, { error: `fasilitas harus salah satu: ${BRANCH_FACILITIES.join(', ')}` }))
+    .nullish()
+    .refine((rows) => !rows || new Set(rows).size === rows.length, 'ada fasilitas yang dipilih lebih dari sekali'),
+  /** FAQ cabang (akordeon di halaman cabang + JSON-LD FAQPage) */
+  faq: z
+    .array(z.object({ question: requiredText(120, 'pertanyaan'), answer: requiredText(400, 'jawaban') }))
+    .max(5, 'maksimal 5 pertanyaan')
+    .nullish(),
 });
 
 export const branchPriceSchema = z.object({
@@ -317,6 +334,8 @@ export const settingsSchema = z.object({
   showProducts: z.boolean().default(false),
   /** Halaman /tips/ (artikel src/content/tips/*.md), menu Tips & bagian Tips Terbaru di beranda */
   showTips: z.boolean().default(false),
+  /** Halaman /layanan/ & /layanan/<slug>/ (src/content/layanan/*.md), menu Layanan → /layanan/, link "Selengkapnya" */
+  showServicePages: z.boolean().default(false),
   showBeforeAfter: z.boolean().default(false),
   /** Animasi pembuka (sekali per sesi; otomatis dilewati bila pengunjung memilih "kurangi gerakan") */
   enablePreloader: z.boolean().default(true),
@@ -661,6 +680,56 @@ export const tipSchema = z
   });
 
 export type TipEntry = z.output<typeof tipSchema>;
+
+/* ---------- Halaman Layanan (src/content/layanan/*.md: frontmatter + isi tambahan Markdown) ---------- */
+
+/**
+ * Frontmatter satu halaman layanan. Slug kosong = nama file (dibuat Pages CMS dari judul saat halaman dibuat). Harga
+ * TIDAK diketik di sini: diambil dari item Daftar Harga terkait (pricingItems). Relasi item Daftar Harga & Kartu Layanan,
+ * slug unik, dan foto diperiksa scripts/layanan.ts. Draf divalidasi tapi tidak di-build.
+ */
+export const servicePageSchema = z
+  .object({
+    title: requiredText(70, 'judul halaman'),
+    slug: z
+      .union([
+        z.string().trim().max(80, 'maksimal 80 karakter').regex(SERVICE_PAGE_SLUG, 'slug hanya huruf kecil, angka, dan strip (mis. potong-rambut-pria)'),
+        z.literal(''),
+      ])
+      .nullish(),
+    metaDescription: requiredText(160, 'meta description'),
+    /** Nama item Daftar Harga (harga per cabang & "Tersedia di cabang" diambil dari sana) */
+    pricingItems: z.array(z.string().trim().min(1)).nullish(),
+    /** Catatan harga bila tanpa item Daftar Harga, mis. "Harga menyesuaikan, tanyakan via WhatsApp" */
+    priceNote: optionalText(120),
+    /** Kartu Layanan di beranda yang diberi link "Selengkapnya" ke halaman ini */
+    serviceCard: optionalText(40),
+    summary: requiredText(300, 'ringkasan pembuka'),
+    /** Cocok untuk: kosong (Draf), atau 2–6 butir */
+    suitableFor: z.array(requiredText(140, 'butir cocok untuk')).max(6, 'maksimal 6 butir').nullish(),
+    /** Proses / langkah: kosong, atau 2–8 butir */
+    steps: z.array(requiredText(160, 'langkah')).max(8, 'maksimal 8 langkah').nullish(),
+    duration: optionalText(60),
+    photos: z
+      .array(z.object({ image: imageOf('photo', '/uploads/layanan/', '/uploads/layanan/...'), alt: requiredText(150, 'deskripsi foto') }))
+      .max(6, 'maksimal 6 foto')
+      .nullish(),
+    faq: z
+      .array(z.object({ question: requiredText(120, 'pertanyaan'), answer: requiredText(400, 'jawaban') }))
+      .max(5, 'maksimal 5 pertanyaan')
+      .nullish(),
+    updatedAt: z.union([tipDate, z.literal('')]).nullish(),
+    status: z.enum(SERVICE_PAGE_STATUSES, { error: `status harus ${SERVICE_PAGE_STATUSES.join(' atau ')}` }),
+    body: z.string().nullish(),
+  })
+  .superRefine((p, ctx) => {
+    const published = p.status === 'Terbit';
+    if (published && (p.suitableFor?.length ?? 0) < 2) ctx.addIssue({ code: 'custom', path: ['suitableFor'], message: 'isi minimal 2 butir Cocok untuk sebelum diterbitkan' });
+    else if (p.suitableFor?.length === 1) ctx.addIssue({ code: 'custom', path: ['suitableFor'], message: 'isi minimal 2 butir Cocok untuk, atau kosongkan' });
+    if (p.steps?.length === 1) ctx.addIssue({ code: 'custom', path: ['steps'], message: 'isi minimal 2 langkah, atau kosongkan' });
+  });
+
+export type ServicePageEntry = z.output<typeof servicePageSchema>;
 
 /* ---------- CTA penutup ("Kursimu sudah siap.") ---------- */
 

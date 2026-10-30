@@ -5,8 +5,9 @@
 #
 # Skema field harus sama dengan src/content/schema.ts (validasi Zod saat build).
 # Pilihan cabang (blok "@branch-options") disinkronkan otomatis dari src/content/branches.json, pilihan penulis
-# (blok "@barber-options") dari barbers.json, dan pilihan layanan (blok "@service-options") dari services.json
-# oleh GitHub Actions (npm run sync-cms). Jangan diedit manual.
+# (blok "@barber-options") dari barbers.json, pilihan layanan (blok "@service-options") dari services.json, dan
+# pilihan item Daftar Harga (blok "@pricing-options") dari pricing.json oleh GitHub Actions (npm run sync-cms).
+# Jangan diedit manual.
 
 settings:
   commit:
@@ -111,6 +112,12 @@ media:
     label: Foto Tips & Trik
     input: public/uploads/tips
     output: /uploads/tips
+    categories: [image]
+    rename: safe
+  - name: layanan
+    label: Foto Halaman Layanan
+    input: public/uploads/layanan
+    output: /uploads/layanan
     categories: [image]
     rename: safe
 
@@ -256,6 +263,54 @@ content:
         description: "Angka kecil tampil lebih dulu (10, 20, 30, ...)."
         options:
           min: 0
+      - name: description
+        label: Deskripsi cabang
+        type: text
+        description: "Opsional. 2–3 kalimat tentang cabang ini untuk pengunjung & Google, sebutkan area sekitar secara alami (mis. dekat Bantarjati, Bogor Utara). Kosong = tidak tampil. Maksimal 500 karakter."
+        options:
+          maxlength: 500
+      - name: serviceAreas
+        label: Area yang dilayani
+        type: string
+        list:
+          max: 12
+        description: "Opsional. Kelurahan/kecamatan/kota di sekitar cabang, satu per baris, mis. Bantarjati, Bogor Utara, Tanah Sareal. Tulis hanya area yang memang dekat. Maksimal 40 karakter per area."
+        options:
+          maxlength: 40
+      - name: directions
+        label: Patokan & cara menuju
+        type: text
+        description: "Opsional. Patokan yang mudah dikenali & cara menuju, mis. Seberang minimarket X, masuk gang di samping masjid. Maksimal 400 karakter."
+        options:
+          maxlength: 400
+      - name: facilities
+        label: Fasilitas & pembayaran
+        type: select
+        description: "Opsional. Pilih semua yang memang tersedia di cabang ini (tampil dengan ikon di halaman cabang & untuk Google)."
+        options:
+          multiple: true
+          values: [Walk-in diterima, Parkir motor, Parkir mobil, AC, Wi-Fi, Toilet, Ruang tunggu, Tunai, QRIS, Kartu debit/kredit, Transfer bank]
+      - name: faq
+        label: FAQ cabang
+        type: object
+        list:
+          max: 5
+        description: "Opsional, maks. 5 pertanyaan khusus cabang ini (mis. parkir, patokan). Tampil sebagai tanya jawab di halaman cabang (juga untuk Google)."
+        fields:
+          - name: question
+            label: Pertanyaan
+            type: string
+            required: true
+            description: "Tulis seperti yang ditanyakan klien, mis. Apakah ada parkir mobil? Maksimal 120 karakter."
+            options:
+              maxlength: 120
+          - name: answer
+            label: Jawaban
+            type: text
+            required: true
+            description: "Jawaban langsung dan singkat. Maksimal 400 karakter."
+            options:
+              maxlength: 400
 
   # ------------------------------------------------------------------ Daftar Harga
   - name: pricing
@@ -1626,6 +1681,289 @@ content:
           media: tips
           extensions: [jpg, jpeg, png, webp]
 
+  # ------------------------------------------------------------------ Halaman Layanan
+  - name: layanan
+    label: Halaman Layanan
+    type: collection
+    path: src/content/layanan
+    format: yaml-frontmatter
+    filename:
+      template: "{title}.md"
+      field: create
+    exclude: [README.md]
+    view:
+      primary: title
+      fields: [title, status]
+      sort: title
+    fields:
+      - name: title
+        label: Judul halaman
+        type: string
+        required: true
+        description: "Sebut layanan & lokasi seperti dicari orang, mis. Potong Rambut Wanita di Bogor & Cibubur. Maksimal 70 karakter (tampil utuh di Google)."
+        options:
+          maxlength: 70
+      - name: slug
+        label: Slug (alamat halaman)
+        type: string
+        description: "Opsional. Kosongkan = otomatis dari judul saat halaman dibuat (nama file). Huruf kecil, angka, dan strip, mis. potong-rambut-wanita. Harus unik. Jangan diubah setelah terbit (link lama jadi mati). Maksimal 80 karakter."
+        pattern:
+          regex: "^([a-z0-9]+(-[a-z0-9]+)*)?$"
+          message: "Hanya huruf kecil, angka, dan strip, mis. potong-rambut-wanita"
+        options:
+          maxlength: 80
+      - name: metaDescription
+        label: Meta description
+        type: text
+        required: true
+        description: "1–2 kalimat untuk hasil Google: layanan, cabang, & cara booking. Jangan tulis harga (harga diambil otomatis dari Daftar Harga). Maksimal 160 karakter."
+        options:
+          maxlength: 160
+      - name: pricingItems
+        label: Layanan/harga terkait
+        type: select
+        description: "Pilih item Daftar Harga untuk layanan ini. Harga per cabang & Tersedia di cabang diambil otomatis dari Daftar Harga (tidak diketik ulang). Kosong = tanpa harga (isi Catatan harga) & tersedia di semua cabang."
+        options:
+          multiple: true
+          # @pricing-options-start (diisi otomatis dari pricing.json oleh scripts/sync-pages-config.mjs)
+          values:
+            - name: "White Grooming"
+              label: "White Grooming"
+            - name: "Signature Haircut"
+              label: "Signature Haircut"
+            - name: "Black Grooming"
+              label: "Black Grooming"
+            - name: "Haircut + Wash"
+              label: "Haircut + Wash"
+            - name: "Creambath"
+              label: "Creambath"
+            - name: "Skin Fade / Taper"
+              label: "Skin Fade / Taper"
+            - name: "Hair Wash"
+              label: "Hair Wash"
+            - name: "Kids Haircut"
+              label: "Kids Haircut"
+            - name: "Coloring Natural"
+              label: "Coloring Natural"
+            - name: "Hot Towel Shave"
+              label: "Hot Towel Shave"
+            - name: "Coloring Fashion"
+              label: "Coloring Fashion"
+            - name: "Beard Trim & Shape"
+              label: "Beard Trim & Shape"
+            - name: "Bleaching"
+              label: "Bleaching"
+            - name: "Haircut + Shave"
+              label: "Haircut + Shave"
+            - name: "Hair Perm"
+              label: "Hair Perm"
+            - name: "Hair Coloring"
+              label: "Hair Coloring"
+            - name: "Down Perming"
+              label: "Down Perming"
+            - name: "Highlight / Bleaching"
+              label: "Highlight / Bleaching"
+            - name: "Cornrow"
+              label: "Cornrow"
+            - name: "Perming"
+              label: "Perming"
+            - name: "Dreadlock"
+              label: "Dreadlock"
+            - name: "Hair Keratin Basic"
+              label: "Hair Keratin Basic"
+            - name: "Down Perm"
+              label: "Down Perm"
+            - name: "Braids Box"
+              label: "Braids Box"
+            - name: "Hair Keratin Middle"
+              label: "Hair Keratin Middle"
+            - name: "Hair Spa"
+              label: "Hair Spa"
+            - name: "Hair Keratin"
+              label: "Hair Keratin"
+            - name: "Dread Wash"
+              label: "Dread Wash"
+            - name: "Hair Tattoo"
+              label: "Hair Tattoo"
+            - name: "Woman Haircut"
+              label: "Woman Haircut"
+            - name: "Hair Wash & Styling"
+              label: "Hair Wash & Styling"
+            - name: "Woman Catok / Blow"
+              label: "Woman Catok / Blow"
+            - name: "Coloring Highlight"
+              label: "Coloring Highlight"
+            - name: "Student Deal"
+              label: "Student Deal"
+            - name: "Woman Creambath"
+              label: "Woman Creambath"
+            - name: "Coloring Fashion Basic"
+              label: "Coloring Fashion Basic"
+            - name: "Cutless Pass"
+              label: "Cutless Pass"
+            - name: "Woman Dry Wash"
+              label: "Woman Dry Wash"
+            - name: "Coloring Fashion Middle"
+              label: "Coloring Fashion Middle"
+            - name: "Groom Package"
+              label: "Groom Package"
+            - name: "Woman Haircut & Blow"
+              label: "Woman Haircut & Blow"
+            - name: "Coloring Fashion Premium"
+              label: "Coloring Fashion Premium"
+            - name: "Woman Wash & Styling"
+              label: "Woman Wash & Styling"
+            - name: "Cornrow Basic"
+              label: "Cornrow Basic"
+            - name: "Cornrow Middle"
+              label: "Cornrow Middle"
+            - name: "Cornrow Premium"
+              label: "Cornrow Premium"
+            - name: "Braids Box Basic"
+              label: "Braids Box Basic"
+            - name: "Braids Box Middle"
+              label: "Braids Box Middle"
+            - name: "Braids Box Premium"
+              label: "Braids Box Premium"
+            - name: "Dreadlock Basic"
+              label: "Dreadlock Basic"
+            - name: "Dreadlock Middle"
+              label: "Dreadlock Middle"
+            - name: "Dreadlock Premium"
+              label: "Dreadlock Premium"
+          # @pricing-options-end
+      - name: priceNote
+        label: Catatan harga
+        type: string
+        description: "Opsional, untuk layanan tanpa item Daftar Harga, mis. Harga menyesuaikan, tanyakan via WhatsApp cabang. Maksimal 120 karakter."
+        options:
+          maxlength: 120
+      - name: serviceCard
+        label: Kartu Layanan terkait
+        type: select
+        description: "Opsional. Kartu di bagian Layanan beranda yang diberi link Selengkapnya ke halaman ini."
+        options:
+          # @service-options-start (diisi otomatis dari services.json oleh scripts/sync-pages-config.mjs)
+          values:
+            - name: "Haircut & Grooming"
+              label: "Haircut & Grooming"
+            - name: "Wanita"
+              label: "Wanita"
+            - name: "Treatment"
+              label: "Treatment"
+            - name: "Coloring"
+              label: "Coloring"
+            - name: "Perming"
+              label: "Perming"
+            - name: "Braids & Dreadlock"
+              label: "Braids & Dreadlock"
+            - name: "Haircut + Wash"
+              label: "Haircut + Wash"
+            - name: "Shaving & Beard"
+              label: "Shaving & Beard"
+            - name: "Kids Haircut"
+              label: "Kids Haircut"
+            - name: "Hair Spa"
+              label: "Hair Spa"
+            - name: "Hair Tattoo"
+              label: "Hair Tattoo"
+          # @service-options-end
+      - name: summary
+        label: Ringkasan pembuka
+        type: text
+        required: true
+        description: "Paragraf pertama yang langsung menjawab: apa layanannya, di cabang mana, untuk siapa. Tampil di atas halaman & di daftar layanan. Maksimal 300 karakter."
+        options:
+          maxlength: 300
+      - name: suitableFor
+        label: Cocok untuk
+        type: string
+        list:
+          max: 6
+        description: "2–6 butir (wajib sebelum Terbit), mis. Rambut ikal yang susah diatur. Satu butir per baris. Maksimal 140 karakter per butir."
+        options:
+          maxlength: 140
+      - name: steps
+        label: Proses / langkah
+        type: string
+        list:
+          max: 8
+        description: "Opsional, 2–8 langkah berurutan, mis. Konsultasi gaya → Keramas → Potong → Styling. Maksimal 160 karakter per langkah."
+        options:
+          maxlength: 160
+      - name: duration
+        label: Durasi
+        type: string
+        description: "Opsional, mis. ±45 menit. Maksimal 60 karakter."
+        options:
+          maxlength: 60
+      - name: photos
+        label: Foto
+        type: object
+        list:
+          max: 6
+        description: "Opsional, 0–6 foto asli hasil layanan di studio (bukan dari internet)."
+        fields:
+          - name: image
+            label: Foto
+            type: image
+            required: true
+            description: "Foto 4:3, minimal 1200 × 900 px. Kompres di bawah 1 MB sebelum upload. Otomatis dikompres ke WebP. Format: JPG, PNG, atau WebP."
+            options:
+              media: layanan
+              extensions: [jpg, jpeg, png, webp]
+          - name: alt
+            label: Deskripsi foto
+            type: string
+            required: true
+            description: "Apa yang terlihat di foto, untuk pembaca layar & Google, mis. Hasil skin fade di cabang Bogor. Maksimal 150 karakter."
+            options:
+              maxlength: 150
+      - name: faq
+        label: FAQ
+        type: object
+        list:
+          max: 5
+        description: "Opsional, maks. 5 pertanyaan yang sering ditanyakan soal layanan ini. Tampil sebagai tanya jawab (juga untuk Google)."
+        fields:
+          - name: question
+            label: Pertanyaan
+            type: string
+            required: true
+            description: "Tulis seperti yang ditanyakan klien, mis. Berapa lama potong rambut wanita? Maksimal 120 karakter."
+            options:
+              maxlength: 120
+          - name: answer
+            label: Jawaban
+            type: text
+            required: true
+            description: "Jawaban langsung dan singkat. Maksimal 400 karakter."
+            options:
+              maxlength: 400
+      - name: updatedAt
+        label: Tanggal diperbarui
+        type: date
+        default: ""
+        description: "Opsional. Isi saat isi halaman diubah secara berarti (untuk Google/sitemap)."
+        options:
+          format: yyyy-MM-dd
+      - name: status
+        label: Status
+        type: select
+        required: true
+        default: Draf
+        description: "Draf = tersimpan, belum tampil di website. Terbit = tampil (bila Tampilkan halaman layanan aktif di Pengaturan Situs)."
+        options:
+          values: [Draf, Terbit]
+      - name: body
+        label: Isi tambahan
+        type: rich-text
+        description: "Opsional. Penjelasan lebih lengkap; pakai Heading 2 untuk subjudul. Ceritakan dari pengalaman di studio; jangan menyalin halaman lain."
+        options:
+          format: markdown
+          media: layanan
+          extensions: [jpg, jpeg, png, webp]
+
   # ------------------------------------------------------------------ Produk
   - name: products
     label: Produk
@@ -1864,6 +2202,11 @@ content:
         type: boolean
         default: false
         description: "Nyalakan setelah ada artikel berstatus Terbit di menu Tips & Trik. Mati = halaman /tips/, menu Tips, & bagian Tips Terbaru di beranda disembunyikan."
+      - name: showServicePages
+        label: Tampilkan halaman layanan
+        type: boolean
+        default: false
+        description: "Nyalakan setelah ada halaman berstatus Terbit di menu Halaman Layanan. Aktif = halaman /layanan/, menu Layanan ke /layanan/, & link Selengkapnya di Daftar Harga dan Kartu Layanan. Mati = semua itu disembunyikan (/layanan/ dialihkan ke beranda)."
       - name: showBeforeAfter
         label: Tampilkan Before / After
         type: boolean

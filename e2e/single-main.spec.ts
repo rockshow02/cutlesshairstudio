@@ -1,5 +1,5 @@
 import { expect } from '@playwright/test';
-import { E2E_BRANCHES, E2E_TIPS } from './fixtures/content';
+import { E2E_BRANCHES, E2E_SERVICE_PAGES, E2E_TIPS } from './fixtures/content';
 import { test } from './helpers';
 
 /**
@@ -20,6 +20,8 @@ const PAGES = [
   `${UNIFORM_URL}/produk/`,
   `${UNIFORM_URL}/tips/`,
   `${UNIFORM_URL}/tips/${E2E_TIPS.withToc.slug}/`,
+  `${UNIFORM_URL}/layanan/`,
+  `${UNIFORM_URL}/layanan/${E2E_SERVICE_PAGES.haircut.slug}/`,
 ];
 
 for (const url of PAGES) {

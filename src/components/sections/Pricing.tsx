@@ -7,6 +7,9 @@ import { categoryFromHash, PRICE_CATEGORY_EVENT } from '@/lib/priceCategoryEvent
 import { fillTemplate } from '@/lib/whatsapp';
 import { useBranch } from '@/lib/BranchContext';
 import { useBooking } from '@/lib/useBooking';
+import { pageUrl } from '@/lib/navigation';
+import { servicePageForItem } from '@/lib/servicePages';
+import { servicePagesCopy } from '@/content/servicePagesCopy';
 import { MOBILE_QUERY, useMediaQuery } from '@/lib/useMediaQuery';
 import type { PriceCategory } from '@/types';
 import { Section } from '@/components/ui/Section';
@@ -109,12 +112,21 @@ export function Pricing() {
 export function PriceRows({ category, priceFromLabel }: { category: PriceCategory; priceFromLabel: string }) {
   return (
     <ul>
-      {category.items.map((item) => (
+      {category.items.map((item) => {
+        // Item yang punya halaman layanan terbit (Tampilkan halaman layanan aktif): link "Selengkapnya"
+        const more = servicePageForItem(item.name);
+        return (
         <li key={item.id} className={styles.row}>
           <span className={styles.itemName}>
             {item.name}
             {item.badge && <span className={styles.badge}>{item.badge}</span>}
             {item.description && <small>{item.description}</small>}
+            {more && (
+              <a className={styles.more} href={pageUrl(more)}>
+                {servicePagesCopy.labels.readMore}
+                <span className="visually-hidden"> {item.name}</span>
+              </a>
+            )}
           </span>
           {/* Format "K" khusus Daftar Harga (100000 → 100K); "Start from" kecil sebelum harga item "mulai" */}
           <span className={styles.itemPrice}>
@@ -122,7 +134,8 @@ export function PriceRows({ category, priceFromLabel }: { category: PriceCategor
             {formatThousandsK(item.price)}
           </span>
         </li>
-      ))}
+        );
+      })}
     </ul>
   );
 }

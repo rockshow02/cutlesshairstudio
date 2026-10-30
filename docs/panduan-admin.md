@@ -95,6 +95,19 @@ Cabang baru muncul sebagai pilihan di menu Barber, Harga, Promo, dan Pengumuman 
 
 > Website menolak tayang bila ada cabang **Aktif** yang belum punya nomor WA, jam buka, atau alamat, atau bila masih ada tulisan `TODO`. Bila datanya belum lengkap, pakai status **Segera Dibuka** dulu.
 
+### Melengkapi halaman cabang (deskripsi, area, fasilitas, FAQ)
+
+Kolom di bawah ini opsional, tampil di halaman cabang (`/cabang/<slug>/`) walau halaman layanan dimatikan, dan dibaca Google & asisten AI. Membantu orang yang mencari *barbershop di Bantarjati*, *barbershop buka sampai malam*, *barbershop yang bisa QRIS*, dll. **Kolom kosong tidak ditampilkan. Isi hanya yang benar.**
+
+- **Deskripsi cabang** (maks. 500 karakter): 2–3 kalimat untuk pengunjung, sebut area sekitar secara alami, mis. *Cutless Bogor Bantarjati ada di Jl Pandawa Raya, dekat … Cocok untuk warga Bantarjati, Bogor Utara, dan Tanah Sareal.* Jangan menumpuk kata kunci.
+- **Area yang dilayani** (maks. 12 area, 40 karakter per area): kelurahan/kecamatan/kota yang memang dekat, satu per baris, mis. *Bantarjati*, *Bogor Utara*.
+- **Patokan & cara menuju** (maks. 400 karakter): patokan yang mudah dikenali, mis. *seberang minimarket X, masuk gang di samping masjid*.
+- **Fasilitas & pembayaran**: centang yang memang tersedia (walk-in, parkir motor/mobil, AC, Wi-Fi, toilet, ruang tunggu, tunai, QRIS, kartu debit/kredit, transfer bank). Tampil dengan ikon.
+- **FAQ cabang** (maks. 5; pertanyaan 120, jawaban 400 karakter): pertanyaan yang sering ditanyakan khusus cabang ini, mis. *Apakah ada parkir mobil?*
+- **Jam buka** tidak perlu diketik lagi: bila semua hari jamnya sama, halaman cabang otomatis menandai *Buka sampai 21.00* dan *Setiap hari 09.00–21.00*.
+
+Bila **Tampilkan halaman layanan** aktif, halaman cabang juga menampilkan **Layanan di cabang ini** (otomatis dari halaman layanan Terbit yang tersedia di cabang itu).
+
 ---
 
 ## 1. Mengubah harga
@@ -483,6 +496,41 @@ Bila Save berhasil tetapi website tidak berubah, lihat [Jika website tidak berub
 
 ---
 
+## 6b. Halaman layanan (/layanan/)
+
+Satu halaman per layanan (mis. *Potong Rambut Wanita di Bogor & Cibubur*) agar mudah ditemukan di Google & asisten AI. Tampil di **/layanan/** (dikelompokkan per kategori Daftar Harga), menu **Layanan** mengarah ke /layanan/, dan baris **Daftar Harga** serta **Kartu Layanan** yang punya halaman diberi link **Selengkapnya**, setelah **Pengaturan Situs → Tampilkan halaman layanan** dinyalakan. Selama mati, /layanan/ dialihkan ke beranda dan tidak masuk Google.
+
+> Empat halaman awal (Haircut pria, Potong rambut wanita, Hair treatment, Potong rambut anak) sudah tersedia berstatus **Draf**, ditulis hanya dari data yang sudah ada di website. Lengkapi bagian yang masih kosong, lalu terbitkan.
+
+**Harga tidak diketik di halaman layanan.** Pilih item di **Layanan/harga terkait**; harga per cabang, "Start from", dan *Tersedia di cabang* diambil otomatis dari menu **Daftar Harga**. Ubah harga cukup di Daftar Harga, semua halaman ikut berubah.
+
+### Menulis halaman layanan
+
+1. Klik **Halaman Layanan** → **Add an entry**.
+2. **Judul halaman** (maks. 70 karakter): sebut layanan & lokasi seperti dicari orang, mis. *Potong Rambut Wanita di Bogor & Cibubur*. Alamat halaman dibuat otomatis dari judul; **Slug** boleh dikosongkan. Jangan ubah slug setelah terbit.
+3. **Meta description** (maks. 160 karakter): kalimat untuk hasil Google. Jangan tulis harga (harga bisa berubah).
+4. **Layanan/harga terkait**: pilih item Daftar Harga. Kosong = tanpa harga & tersedia di semua cabang; isi **Catatan harga**, mis. *Harga menyesuaikan, tanyakan via WhatsApp cabang terdekat.*
+5. **Kartu Layanan terkait** (opsional): kartu di bagian Layanan beranda yang diberi link **Selengkapnya** ke halaman ini.
+6. **Ringkasan pembuka** (maks. 300 karakter): **langsung menjawab**: apa layanannya, di cabang mana, untuk siapa. Kalimat ini yang paling sering dikutip Google & AI.
+7. **Cocok untuk** (2–6 butir, wajib sebelum Terbit), **Proses / langkah** (opsional, 2–8 langkah), **Durasi** (opsional, mis. *±45 menit*).
+8. **Foto** (opsional, 0–6): foto asli hasil layanan di studio, 4:3, minimal 1200 × 900 px, dengan deskripsi foto.
+9. **Isi tambahan** (opsional): penjelasan lebih panjang, pakai Heading 2 untuk subjudul. Tulis dari pengalaman di studio, jangan menyalin website lain.
+10. **FAQ** (opsional, maks. 5): pertanyaan yang benar-benar sering ditanyakan klien soal layanan ini.
+11. **Tanggal diperbarui** (opsional): isi saat isi halaman diubah secara berarti.
+12. **Save**. Status awal **Draf** (belum tampil).
+
+Tombol **Booking [nama layanan]** di halaman membuka pemilih cabang (hanya cabang tempat layanan tersedia), lalu WhatsApp cabang itu dengan pesan yang menyebut nama layanan.
+
+### Menerbitkan (Draf → Terbit)
+
+1. Ubah **Status** menjadi **Terbit** → **Save** (Cocok untuk minimal 2 butir).
+2. Pastikan **Pengaturan Situs → Tampilkan halaman layanan** menyala (cukup sekali).
+3. Halaman tampil setelah website dibangun ulang (±2 menit).
+
+Pesan `layanan/…md: "…" tidak ada di Daftar Harga` berarti item yang dipilih sudah dihapus/diganti namanya di Daftar Harga; pilih ulang itemnya. Pesan `slug "…" sudah dipakai` berarti dua halaman memakai alamat yang sama.
+
+---
+
 ## 7. Testimoni
 
 1. Klik **Testimoni** → **Add an entry**.
@@ -510,6 +558,7 @@ Klik **Pengaturan Situs**. Menu ini hanya berisi data merek. Alamat dan jam buka
 | Angka statistik | Jumlah pelanggan, tahun berdiri, rating & jumlah ulasan Google. **Masing-masing punya tombol Tampilkan**; nyalakan hanya bila angkanya asli. Jumlah cabang dan hairstylist dihitung otomatis | |
 | Tampilkan section Testimoni / Produk / Before-After | Menyalakan atau menyembunyikan section itu (beserta menunya) | |
 | Tampilkan Tips & Trik | Halaman /tips/, menu Tips, & bagian Tips Terbaru di beranda (lihat [6a](#6a-tips--trik-artikel-di-tips)) | |
+| Tampilkan halaman layanan | Halaman /layanan/, menu Layanan → /layanan/, & link Selengkapnya di Daftar Harga dan Kartu Layanan (lihat [6b](#6b-halaman-layanan-layanan)) | |
 | Tampilkan animasi pembuka | Logo Cutless beranimasi saat website pertama kali dibuka (sekali per kunjungan). Matikan bila tidak diinginkan | |
 | Video animasi pembuka (opsional) | Video pendek pengganti animasi logo: MP4/WebM tanpa suara, ±1,5 detik. Kosongkan untuk memakai animasi logo | maks. 500 KB |
 
@@ -541,6 +590,10 @@ Form Pages CMS menolak isian yang melebihi batas, dan website memeriksa batas ya
 | Cabang | Provinsi | 60 | wajib |
 | Cabang | Alamat lengkap | 300 | opsional |
 | Cabang | Kode pos | 5 digit angka | opsional |
+| Cabang | Deskripsi cabang | 500 | opsional |
+| Cabang | Area yang dilayani (per area) | 40 | opsional, maks. 12 |
+| Cabang | Patokan & cara menuju | 400 | opsional |
+| Cabang | FAQ cabang → Pertanyaan / Jawaban | 120 / 400 | opsional, maks. 5 |
 | Daftar Harga | Nama layanan | 80 | wajib |
 | Daftar Harga | Keterangan | 300 | opsional |
 | Kartu Layanan | Judul kartu | 40 | wajib |
@@ -587,6 +640,16 @@ Form Pages CMS menolak isian yang melebihi batas, dan website memeriksa batas ya
 | Tips & Trik | Deskripsi foto sampul | 150 | wajib |
 | Tips & Trik | Poin penting (per butir) | 140 | opsional, 2–5 butir |
 | Tips & Trik | FAQ artikel → Pertanyaan / Jawaban | 120 / 400 | opsional, maks. 5 |
+| Halaman Layanan | Judul halaman | 70 | wajib |
+| Halaman Layanan | Slug | 80 | opsional |
+| Halaman Layanan | Meta description | 160 | wajib |
+| Halaman Layanan | Catatan harga | 120 | opsional |
+| Halaman Layanan | Ringkasan pembuka | 300 | wajib |
+| Halaman Layanan | Cocok untuk (per butir) | 140 | 2–6 butir sebelum Terbit |
+| Halaman Layanan | Proses / langkah (per langkah) | 160 | opsional, 2–8 langkah |
+| Halaman Layanan | Durasi | 60 | opsional |
+| Halaman Layanan | Foto → Deskripsi foto | 150 | wajib per foto, maks. 6 foto |
+| Halaman Layanan | FAQ → Pertanyaan / Jawaban | 120 / 400 | opsional, maks. 5 |
 | Barber | Bio singkat | 200 | opsional |
 | Barber | Pengalaman | 60 | opsional |
 | Pengaturan Situs | Nama usaha | 80 | wajib |
