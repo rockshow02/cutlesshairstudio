@@ -4,7 +4,8 @@
 # Setiap "Simpan" = 1 commit ke branch yang dipilih → Cloudflare build & deploy otomatis (±1–2 menit).
 #
 # Skema field harus sama dengan src/content/schema.ts (validasi Zod saat build).
-# Pilihan cabang (blok "@branch-options") disinkronkan otomatis dari src/content/branches.json
+# Pilihan cabang (blok "@branch-options") disinkronkan otomatis dari src/content/branches.json, pilihan penulis
+# (blok "@barber-options") dari barbers.json, dan pilihan layanan (blok "@service-options") dari services.json
 # oleh GitHub Actions (npm run sync-cms). Jangan diedit manual.
 
 settings:
@@ -105,6 +106,12 @@ media:
     input: public/uploads/videos
     output: /uploads/videos
     categories: [video]
+    rename: safe
+  - name: tips
+    label: Foto Tips & Trik
+    input: public/uploads/tips
+    output: /uploads/tips
+    categories: [image]
     rename: safe
 
 content:
@@ -844,6 +851,18 @@ content:
         description: "Pisahkan dengan koma. Contoh: Skin fade, Pompadour. Maksimal 120 karakter."
         options:
           maxlength: 120
+      - name: bio
+        label: Bio singkat
+        type: text
+        description: "Opsional. 1–2 kalimat tentang kapster, tampil di kotak penulis artikel Tips & Trik. Contoh: Spesialis fade & textured crop, senang membantu klien menemukan gaya yang mudah ditata sendiri. Maksimal 200 karakter."
+        options:
+          maxlength: 200
+      - name: experience
+        label: Pengalaman
+        type: string
+        description: "Opsional, tampil di kotak penulis artikel. Contoh: 8 tahun sebagai hairstylist. Maksimal 60 karakter."
+        options:
+          maxlength: 60
       - name: whatsappNumber
         label: WhatsApp pribadi
         type: string
@@ -1438,6 +1457,175 @@ content:
         type: boolean
         default: true
 
+  # ------------------------------------------------------------------ Tips & Trik
+  # Satu file Markdown per artikel di src/content/tips/ (frontmatter + isi). Nama file dibuat dari judul saat artikel
+  # dibuat = alamat artikel (/tips/<nama-file>/), jadi URL tidak berubah walau judul diedit. Panduan: docs/panduan-admin.md.
+  - name: tips
+    label: Tips & Trik
+    type: collection
+    path: src/content/tips
+    format: yaml-frontmatter
+    filename:
+      template: "{title}.md"
+      field: create
+    exclude: [README.md]
+    view:
+      primary: title
+      fields: [title, category, status, publishedAt]
+      sort: publishedAt
+      order: desc
+    fields:
+      - name: title
+        label: Judul
+        type: string
+        required: true
+        description: "Jelas & spesifik, mis. Cara Merawat Rambut Ikal agar Tidak Mengembang. Maksimal 70 karakter (tampil utuh di Google)."
+        options:
+          maxlength: 70
+      - name: slug
+        label: Slug (alamat artikel)
+        type: string
+        description: "Opsional. Kosongkan = otomatis dari judul saat artikel dibuat (nama file). Huruf kecil, angka, dan strip, mis. cara-merawat-rambut-ikal. Jangan diubah setelah terbit (link lama jadi mati). Maksimal 80 karakter."
+        pattern:
+          regex: "^([a-z0-9]+(-[a-z0-9]+)*)?$"
+          message: "Hanya huruf kecil, angka, dan strip, mis. cara-merawat-rambut-ikal"
+        options:
+          maxlength: 80
+      - name: summary
+        label: Ringkasan
+        type: text
+        required: true
+        description: "1–2 kalimat yang menjawab inti artikel. Tampil di kartu artikel & hasil Google (meta description). Maksimal 160 karakter."
+        options:
+          maxlength: 160
+      - name: category
+        label: Kategori
+        type: select
+        required: true
+        options:
+          values: [Hair Style, Hair Care, Grooming, Produk, Tips Barbershop]
+      - name: cover
+        label: Foto sampul
+        type: image
+        required: true
+        description: "Foto mendatar 16:9, minimal 1600 × 900 px, foto asli studio/klien (bukan dari internet). Kompres di bawah 1 MB sebelum upload. Otomatis dikompres ke WebP maks. 1600 px. Format: JPG, PNG, atau WebP."
+        options:
+          media: tips
+          extensions: [jpg, jpeg, png, webp]
+      - name: coverAlt
+        label: Deskripsi foto sampul
+        type: string
+        required: true
+        description: "Apa yang terlihat di foto, untuk pembaca layar & Google, mis. Hairstylist merapikan rambut ikal klien dengan diffuser. Maksimal 150 karakter."
+        options:
+          maxlength: 150
+      - name: author
+        label: Penulis / ditinjau oleh
+        type: select
+        description: "Opsional. Kapster yang menulis atau meninjau isi artikel (tampil dengan link ke kartu kapster)."
+        options:
+          # @barber-options-start (diisi otomatis dari barbers.json oleh scripts/sync-pages-config.mjs)
+          values:
+            - name: "Yasslaw"
+              label: "Yasslaw"
+            - name: "Agus"
+              label: "Agus"
+            - name: "Soemardi(erte)"
+              label: "Soemardi(erte)"
+            - name: "Nauval"
+              label: "Nauval"
+          # @barber-options-end
+      - name: publishedAt
+        label: Tanggal terbit
+        type: date
+        required: true
+        description: "Tanggal artikel diterbitkan (urutan artikel: terbaru di atas)."
+        options:
+          format: yyyy-MM-dd
+      - name: updatedAt
+        label: Tanggal diperbarui
+        type: date
+        default: ""
+        description: "Opsional. Isi saat isi artikel diperbarui secara berarti (tampil di artikel & untuk Google)."
+        options:
+          format: yyyy-MM-dd
+      - name: status
+        label: Status
+        type: select
+        required: true
+        default: Draf
+        description: "Draf = tersimpan, belum tampil di website. Terbit = tampil (bila Tampilkan Tips & Trik aktif di Pengaturan Situs)."
+        options:
+          values: [Draf, Terbit]
+      - name: services
+        label: Layanan terkait
+        type: select
+        description: "Opsional. Layanan yang dibahas artikel; tampil di bawah artikel dengan link ke Daftar Harga."
+        options:
+          multiple: true
+          # @service-options-start (diisi otomatis dari services.json oleh scripts/sync-pages-config.mjs)
+          values:
+            - name: "Haircut & Grooming"
+              label: "Haircut & Grooming"
+            - name: "Wanita"
+              label: "Wanita"
+            - name: "Treatment"
+              label: "Treatment"
+            - name: "Coloring"
+              label: "Coloring"
+            - name: "Perming"
+              label: "Perming"
+            - name: "Braids & Dreadlock"
+              label: "Braids & Dreadlock"
+            - name: "Haircut + Wash"
+              label: "Haircut + Wash"
+            - name: "Shaving & Beard"
+              label: "Shaving & Beard"
+            - name: "Kids Haircut"
+              label: "Kids Haircut"
+            - name: "Hair Spa"
+              label: "Hair Spa"
+            - name: "Hair Tattoo"
+              label: "Hair Tattoo"
+          # @service-options-end
+      - name: keyPoints
+        label: Poin penting
+        type: string
+        list:
+          max: 5
+        description: "Opsional, 2–5 butir ringkasan yang tampil di kotak di bawah foto sampul. Satu kalimat pendek per butir, mis. Keramas 2–3 kali seminggu dengan sampo tanpa sulfat. Maksimal 140 karakter per butir."
+        options:
+          maxlength: 140
+      - name: faq
+        label: FAQ artikel
+        type: object
+        list:
+          max: 5
+        description: "Opsional, maks. 5 pertanyaan yang sering ditanyakan klien soal topik ini. Tampil sebagai tanya jawab di akhir artikel (juga untuk Google)."
+        fields:
+          - name: question
+            label: Pertanyaan
+            type: string
+            required: true
+            description: "Tulis seperti yang ditanyakan klien, mis. Berapa lama fade bertahan rapi? Maksimal 120 karakter."
+            options:
+              maxlength: 120
+          - name: answer
+            label: Jawaban
+            type: text
+            required: true
+            description: "Jawaban langsung dan singkat. Maksimal 400 karakter."
+            options:
+              maxlength: 400
+      - name: body
+        label: Isi artikel
+        type: rich-text
+        description: "Paragraf pertama langsung menjawab judul. Pakai Heading 2 untuk tiap poin (≥ 3 subjudul → daftar isi otomatis). Ceritakan pengalaman kapster di studio; jangan menyalin artikel lain. Wajib diisi sebelum status Terbit."
+        options:
+          format: markdown
+          media: tips
+          extensions: [jpg, jpeg, png, webp]
+
   # ------------------------------------------------------------------ Produk
   - name: products
     label: Produk
@@ -1671,6 +1859,11 @@ content:
         type: boolean
         default: false
         description: "Nyalakan setelah data produk asli lengkap. Mati = section & menu Produk disembunyikan."
+      - name: showTips
+        label: Tampilkan Tips & Trik
+        type: boolean
+        default: false
+        description: "Nyalakan setelah ada artikel berstatus Terbit di menu Tips & Trik. Mati = halaman /tips/, menu Tips, & bagian Tips Terbaru di beranda disembunyikan."
       - name: showBeforeAfter
         label: Tampilkan Before / After
         type: boolean

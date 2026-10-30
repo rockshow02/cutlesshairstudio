@@ -151,6 +151,7 @@ function normalizeSettings(s: SettingsEntry): SettingsEntry {
     },
     showTestimonials: Boolean(s.showTestimonials),
     showProducts: Boolean(s.showProducts),
+    showTips: Boolean(s.showTips),
     showBeforeAfter: Boolean(s.showBeforeAfter),
     enablePreloader: s.enablePreloader !== false,
   };

@@ -3,11 +3,12 @@
  * (hanya field terdefinisi, field kosong/null/list kosong dihapus) harus lolos form CMS dan Zod, dan tidak boleh ada
  * data yang hilang atau berubah bentuk dibanding isi sekarang.
  */
-import { readFileSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { parse } from 'yaml';
 import type { z } from 'zod';
-import { CONTENT_FILES } from '../src/content/schema';
+import { CONTENT_FILES, tipSchema } from '../src/content/schema';
+import { splitFrontmatter } from '../scripts/tips';
 import { sanitizeObject, setMedia, simulateCmsSave, type CmsField, type CmsMedia } from './helpers/pagesCms';
 
 const config = parse(readFileSync('.pages.yml', 'utf8')) as { media: CmsMedia[]; content: { name: string; path: string; list?: boolean; fields: CmsField[] }[] };
@@ -52,9 +53,23 @@ describe('simulasi simpan dari Pages CMS (tanpa perubahan)', () => {
     );
   });
 
+  // Artikel Tips & Trik (Markdown): frontmatter + body dibuka & disimpan ulang tanpa perubahan
+  for (const name of readdirSync('src/content/tips').filter((f) => f.endsWith('.md'))) {
+    it(`tips/${name}`, () => {
+      const entry = config.content.find((c) => c.path === 'src/content/tips')!;
+      const { data, body } = splitFrontmatter(readFileSync(`src/content/tips/${name}`, 'utf8'));
+      const original = { ...(data as object), body };
+      const { saved, errors } = simulateCmsSave(entry, original);
+      expect(errors, 'Save akan ditolak form/server Pages CMS').toEqual([]);
+      const parsed = tipSchema.safeParse(saved);
+      expect(parsed.success ? [] : parsed.error.issues.map((i) => `${i.path.join('.')}: ${i.message}`), 'hasil simpan ditolak Zod (build gagal)').toEqual([]);
+      expect(normalized(tipSchema, saved)).toEqual(normalized(tipSchema, original));
+    });
+  }
+
   it('isian lama tanpa field baru tetap bisa disimpan (field list/teks baru tidak boleh membuat Save ditolak)', () => {
     for (const c of config.content) {
-      if (c.list) continue;
+      if (c.list || (c as { type?: string }).type === 'collection') continue;
       const original = JSON.parse(readFileSync(c.path, 'utf8')) as Record<string, unknown>;
       // Field wajib (non-list) memang harus ada; field list yang tidak wajib boleh tidak ada
       const optionalLists = c.fields.filter((f) => f.list && !f.required).map((f) => f.name);

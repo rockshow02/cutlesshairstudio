@@ -26,3 +26,9 @@ declare module 'virtual:content-status' {
   const status: { issues: string[] };
   export default status;
 }
+
+/** Disediakan scripts/vite-content-plugin.ts: ringkasan artikel Tips & Trik terbit (kosong bila halaman dimatikan) */
+declare module 'virtual:tips' {
+  const tips: import('./content/tipsSeo').TipSummary[];
+  export default tips;
+}

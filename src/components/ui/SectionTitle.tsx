@@ -10,9 +10,11 @@ interface SectionTitleProps {
   tone?: 'dark' | 'light';
   /** Elemen di sisi kanan (desktop), mis. rating atau link Instagram */
   aside?: ReactNode;
+  /** end = aside (mis. tombol "Lihat semua") rata kanan dengan tepi konten di desktop */
+  asideAlign?: 'start' | 'end';
 }
 
-export function SectionTitle({ heading, id, tone = 'dark', aside }: SectionTitleProps) {
+export function SectionTitle({ heading, id, tone = 'dark', aside, asideAlign = 'start' }: SectionTitleProps) {
   return (
     <div className={styles.head}>
       <Reveal className={styles.text}>
@@ -22,7 +24,7 @@ export function SectionTitle({ heading, id, tone = 'dark', aside }: SectionTitle
         </h2>
       </Reveal>
       {(heading.intro || aside) && (
-        <Reveal className={styles.aside} delay={0.08}>
+        <Reveal className={`${styles.aside} ${asideAlign === 'end' ? styles.asideEnd : ''}`} delay={0.08}>
           {heading.intro && <p className={`${styles.intro} ${tone === 'light' ? styles.introLight : ''}`}>{heading.intro}</p>}
           {aside}
         </Reveal>

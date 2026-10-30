@@ -57,3 +57,23 @@ export async function expectNoHorizontalScroll(page: Page) {
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
   expect(overflow).toBeLessThanOrEqual(0);
 }
+
+/**
+ * CLS halaman sejak dimuat: menunggu font situs selesai (document.fonts.ready) dan dua frame, lalu menjumlahkan semua
+ * layout shift tanpa input (buffered + takeRecords). Tidak bergantung pada jeda waktu tetap.
+ */
+export const clsOf = (page: Page) =>
+  page.evaluate(async () => {
+    await document.fonts.ready;
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+    type Shift = { hadRecentInput: boolean; value: number };
+    let total = 0;
+    const add = (entries: PerformanceEntry[]) => entries.forEach((e) => { if (!(e as unknown as Shift).hadRecentInput) total += (e as unknown as Shift).value; });
+    const observer = new PerformanceObserver((list) => add(list.getEntries()));
+    observer.observe({ type: 'layout-shift', buffered: true });
+    // Entri buffered dikirim ke callback secara async: tunggu satu frame, lalu ambil sisanya
+    await new Promise((r) => requestAnimationFrame(r));
+    add(observer.takeRecords());
+    observer.disconnect();
+    return total;
+  });

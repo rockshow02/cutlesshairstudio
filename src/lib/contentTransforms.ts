@@ -400,7 +400,7 @@ export function buildLocations(branches: Branch[], copy: BranchCopy): LocationsC
 export function buildSite(s: SettingsEntry, base: SiteContent, branches: Branch[], extra: { shoeCare?: boolean } = {}): SiteContent {
   const logo = text(s.logo);
   const vars = { brand: s.siteName, cities: joinIndonesian(operatingCities(branches)) };
-  const features = { testimonials: s.showTestimonials, products: s.showProducts, beforeAfter: s.showBeforeAfter, shoeCare: Boolean(extra.shoeCare) };
+  const features = { testimonials: s.showTestimonials, products: s.showProducts, beforeAfter: s.showBeforeAfter, shoeCare: Boolean(extra.shoeCare), tips: Boolean(s.showTips) };
   return {
     ...base,
     brandName: s.siteName,
@@ -409,7 +409,10 @@ export function buildSite(s: SettingsEntry, base: SiteContent, branches: Branch[
     intro: { enabled: s.enablePreloader !== false, video: text(s.preloaderVideo) },
     // Link menu ikut hilang bila section-nya dimatikan
     nav: base.nav.filter(
-      (item) => !(item.href?.startsWith('/produk') && !features.products) && !(item.href === SHOE_CARE_PAGE && !features.shoeCare),
+      (item) =>
+        !(item.href?.startsWith('/produk') && !features.products) &&
+        !(item.href === SHOE_CARE_PAGE && !features.shoeCare) &&
+        !(item.href?.startsWith('/tips') && !features.tips),
     ),
     logo: logo ? { ...base.logo, stacked: toImage(logo, s.siteName, base.logo.stacked) } : base.logo,
     whatsapp: {
@@ -560,6 +563,8 @@ export function buildBarbers(entries: BarberEntry[], copy: BarbersCopy, branches
         name: b.name,
         role,
         specialties: splitList(b.specialty, /[,\n]/),
+        bio: text(b.bio),
+        experience: text(b.experience),
         photo: toImage(b.photo, role ? `Foto ${b.name}, ${role}` : `Foto ${b.name}`, { width: 600, height: 800 }),
         instagram: text(b.instagram),
         whatsappNumber: text(b.whatsappNumber),

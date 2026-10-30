@@ -6,11 +6,13 @@
  *  - setiap field Zod ada di form CMS (kecuali yang diisi otomatis), setiap field CMS dikenal Zod
  *  - pilihan select (mis. kategori Daftar Harga) sama & berurutan dengan enum Zod
  */
-import { readFileSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import { parse } from 'yaml';
 import type { z } from 'zod';
 import { describe, expect, it } from 'vitest';
-import { CONTENT_FILES, IMAGE_EXTENSIONS } from '../src/content/schema';
+import { CONTENT_FILES, IMAGE_EXTENSIONS, tipSchema } from '../src/content/schema';
+import { TIP_CATEGORIES, TIP_STATUSES } from '../src/content/tipsSeo';
+import { splitFrontmatter } from '../scripts/tips';
 import { setMedia, validateCmsContent, type CmsField as FormField, type CmsMedia } from './helpers/pagesCms';
 
 interface ZInfo {
@@ -128,8 +130,21 @@ export function mismatches(yamlText = readFileSync('.pages.yml', 'utf8')): strin
     const fields = root.kind === 'array' ? root.item?.children : root.children;
     compare(file, entry.fields, fields ?? {}, out);
   }
+  // Koleksi Tips & Trik: satu file Markdown per artikel (frontmatter + body)
+  const tips = config.content.find((c) => c.path === 'src/content/tips');
+  if (!tips) out.push('tips: tidak ada koleksi src/content/tips di .pages.yml');
+  else compare('tips', tips.fields, info(tipSchema as z.ZodType).children ?? {}, out);
   return out;
 }
+
+/** Artikel di src/content/tips/*.md → isi seperti yang dibaca Pages CMS (frontmatter + body) */
+const tipEntries = () =>
+  readdirSync('src/content/tips')
+    .filter((f) => f.endsWith('.md'))
+    .map((f) => {
+      const { data, body } = splitFrontmatter(readFileSync(`src/content/tips/${f}`, 'utf8'));
+      return { file: f, content: { ...(data as object), body } };
+    });
 
 describe('.pages.yml sejalan dengan skema Zod', () => {
   it('batas karakter (maxlength), wajib/opsional, dan daftar field sama', () => {
@@ -139,8 +154,28 @@ describe('.pages.yml sejalan dengan skema Zod', () => {
   it('isi semua file konten lolos aturan form Pages CMS (admin tidak terkunci saat Save)', () => {
     const config = parse(readFileSync('.pages.yml', 'utf8')) as { media: CmsMedia[]; content: { name: string; path: string; list?: boolean; fields: FormField[] }[] };
     setMedia(config.media);
-    const problems = config.content.flatMap((c) => validateCmsContent(c, JSON.parse(readFileSync(c.path, 'utf8'))).map((e) => `${c.name} ${e}`));
+    const files = config.content.filter((c) => (c as { type?: string }).type !== 'collection');
+    const problems = files.flatMap((c) => validateCmsContent(c, JSON.parse(readFileSync(c.path, 'utf8'))).map((e) => `${c.name} ${e}`));
+    const tips = config.content.find((c) => c.name === 'tips')!;
+    problems.push(...tipEntries().flatMap((t) => validateCmsContent(tips, t.content).map((e) => `tips/${t.file} ${e}`)));
     expect(problems).toEqual([]);
+  });
+
+  it('Tips & Trik: koleksi Markdown (yaml-frontmatter), nama file dari judul, pilihan kategori/status = Zod, isi Markdown', () => {
+    type Collection = { name: string; type?: string; path: string; format?: string; filename?: { template: string; field: string }; fields: (CmsField & { options?: { format?: string; multiple?: boolean } })[] };
+    const config = parse(readFileSync('.pages.yml', 'utf8')) as { content: Collection[] };
+    const tips = config.content.find((c) => c.name === 'tips')!;
+    expect(tips).toMatchObject({ type: 'collection', path: 'src/content/tips', format: 'yaml-frontmatter', filename: { template: '{title}.md', field: 'create' } });
+    const field = (name: string) => tips.fields.find((f) => f.name === name)!;
+    expect(field('category').options?.values).toEqual([...TIP_CATEGORIES]);
+    expect(field('status').options?.values).toEqual([...TIP_STATUSES]);
+    expect(field('status').default).toBe('Draf');
+    expect(field('body')).toMatchObject({ type: 'rich-text', options: { format: 'markdown', media: 'tips' } });
+    expect(field('services').options?.multiple).toBe(true);
+    // Pilihan penulis & layanan disinkronkan dari barbers.json & services.json (npm run sync-cms)
+    const names = (f: CmsField) => (f.options?.values ?? []).map((v) => (typeof v === 'string' ? v : v.name));
+    expect(names(field('author')).sort()).toEqual([...new Set((JSON.parse(readFileSync('src/content/barbers.json', 'utf8')) as { name: string }[]).map((b) => b.name))].sort());
+    expect(names(field('services')).sort()).toEqual([...new Set((JSON.parse(readFileSync('src/content/services.json', 'utf8')) as { name: string }[]).map((s) => s.name))].sort());
   });
 
   it('tiruan form Pages CMS mendeteksi isian yang tidak bisa disimpan', () => {
@@ -184,6 +219,11 @@ describe('.pages.yml sejalan dengan skema Zod', () => {
     expect(mismatches(yamlText)).toContain('announcements.json.message: Zod max 160, CMS maxlength 170');
     const oldCategories = readFileSync('.pages.yml', 'utf8').replace('values: [Haircut, Special Treatment,', 'values: [Haircut, Treatment Spesial,');
     expect(mismatches(oldCategories).some((m) => m.startsWith('pricing.json.category: pilihan Zod'))).toBe(true);
+    // Koleksi Tips & Trik ikut diperiksa (batas judul & pilihan kategori)
+    const tipsTitle = readFileSync('.pages.yml', 'utf8').replace(/(tampil utuh di Google\)\."\n\s+options:\n\s+maxlength: )70/, '$171');
+    expect(mismatches(tipsTitle)).toContain('tips.title: Zod max 70, CMS maxlength 71');
+    const tipsCategories = readFileSync('.pages.yml', 'utf8').replace('values: [Hair Style, Hair Care,', 'values: [Gaya Rambut, Hair Care,');
+    expect(mismatches(tipsCategories).some((m) => m.startsWith('tips.category: pilihan Zod'))).toBe(true);
   });
 
   it('setiap field dengan batas karakter menyebut batasnya di deskripsi', () => {
@@ -231,7 +271,7 @@ describe('.pages.yml sejalan dengan skema Zod', () => {
     let checked = 0;
     for (const entry of config.content) {
       const file = entry.path.replace('src/content/', '') as keyof typeof CONTENT_FILES;
-      const root = CONTENT_FILES[file] as unknown as z.ZodType;
+      const root = (entry.path === 'src/content/tips' ? tipSchema : CONTENT_FILES[file]) as unknown as z.ZodType;
       if (!root) continue;
       const walk = (names: string[], fields: Field[]) =>
         fields.forEach((f) => {

@@ -7,6 +7,7 @@ export default defineConfig({
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),
       'virtual:image-meta': fileURLToPath(new URL('./tests/stubs/image-meta.ts', import.meta.url)),
+      'virtual:tips': fileURLToPath(new URL('./tests/stubs/tips.ts', import.meta.url)),
     },
   },
   test: {

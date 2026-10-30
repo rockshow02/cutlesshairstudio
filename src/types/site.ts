@@ -108,7 +108,7 @@ export interface SiteContent {
   /** Domain resmi tanpa garis miring akhir (settings.json → siteUrl) */
   siteUrl: string;
   /** Section yang bisa dimatikan dari Pengaturan Situs */
-  features: { testimonials: boolean; products: boolean; beforeAfter: boolean; shoeCare: boolean };
+  features: { testimonials: boolean; products: boolean; beforeAfter: boolean; shoeCare: boolean; tips: boolean };
   /** Preloader (Pengaturan Situs): aktif/tidak + video opsional */
   intro: { enabled: boolean; video?: string };
   priceRange: string;

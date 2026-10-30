@@ -1,4 +1,14 @@
+/*
+ * Reset <button>: tanpa ini <button> mewarisi latar/bingkai/huruf bawaan browser (mis. latar abu-abu rgb(239,239,239)
+ * di bawah teks terang varian ghost). Varian di bawah mengatur latar & warnanya sendiri. Diuji e2e/button-contrast.spec.ts.
+ */
 .btn {
+  appearance: none;
+  -webkit-appearance: none;
+  margin: 0;
+  background: transparent;
+  color: inherit;
+  text-decoration: none;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -64,7 +74,7 @@
 
 .light { background: var(--c-bone); color: var(--c-ink); --fill: var(--c-sand-light); --fill-ink: var(--c-ink); }
 
-.ghost { border-color: rgba(242, 239, 234, 0.45); color: var(--c-bone); --fill: var(--c-bone); --fill-ink: var(--c-ink); }
+.ghost { background: transparent; border-color: rgba(242, 239, 234, 0.45); color: var(--c-bone); --fill: var(--c-bone); --fill-ink: var(--c-ink); }
 
 .dark { background: var(--c-ink); color: var(--c-bone); --fill: var(--c-taupe-dark); --fill-ink: var(--c-bone); }
 
