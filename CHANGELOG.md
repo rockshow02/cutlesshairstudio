@@ -12,11 +12,22 @@ Cara menaikkan versi & merilis: [CONTRIBUTING.md → Rilis versi](CONTRIBUTING.m
 
 ## [Belum dirilis]
 
+## [1.4.0] - 2026-11-06
+
 ### Ditambahkan
-- **Balasan ulasan Google** (disiapkan dengan data tiruan; akses Google Business Profile API masih ditinjau Google): ulasan bintang 5 tanpa kata keluhan dibalas otomatis dari template, ulasan bintang 1–4 dan ulasan berkata keluhan **tidak pernah** terkirim otomatis: masuk antrean di halaman **/ulasan/** (dirender Worker, noindex, ramah HP, dikunci Cloudflare Access dan JWT diverifikasi Worker sendiri; tidak di sitemap/llms.txt) untuk disunting, **Kirim**, atau **Lewati**. Cron Trigger tiap jam mengambil ulasan baru lewat antarmuka `GbpClient` (`MockGbpClient` untuk staging & tes; klien Google sungguhan aktif setelah secret OAuth diisi), disimpan idempoten di D1 terpisah (`cutless-ulasan`, migrasi `migrations-ulasan/`); batas 10 kiriman otomatis per jam. Template di Pages CMS (*Template balasan ulasan*: 3–6 variasi per kategori, placeholder `{nama}`, `{cabang}`, `{salam_waktu}`, kalimat tambahan per kata kunci, daftar kata keluhan) divalidasi saat build. Toggle **Pengaturan Situs → Mode balasan ulasan Google** (Mati / Uji / Aktif, **default Mati**). Tanpa notifikasi email/chat: ringkasan antrean per cabang, ulasan tertua, penanda *Baru*, dan jumlah antrean di judul tab; antarmuka `Notifier` (bawaan no-op) disiapkan untuk penyedia nanti. Pemasangan: `docs/balasan-ulasan.md` (database D1 `cutless-ulasan` dan `cutless-ulasan-staging` dibuat pemilik; ID terisi di wrangler.jsonc); panduan admin: *Membalas ulasan Google*.
+- **Balasan ulasan Google** (akses Google Business Profile API sudah disetujui; staging memakai data tiruan, produksi memakai klien Google sungguhan setelah secret OAuth diisi): ulasan bintang 5 tanpa kata keluhan dibalas otomatis dari template, ulasan bintang 1–4 dan ulasan berkata keluhan **tidak pernah** terkirim otomatis: masuk antrean di halaman **/ulasan/** (dirender Worker, noindex, ramah HP, dikunci Cloudflare Access dan JWT diverifikasi Worker sendiri; tidak di sitemap/llms.txt) untuk disunting, **Kirim**, atau **Lewati**. Cron Trigger tiap jam mengambil ulasan baru lewat antarmuka `GbpClient` (`MockGbpClient` untuk staging & tes; klien Google sungguhan aktif setelah secret OAuth diisi), disimpan idempoten di D1 terpisah (`cutless-ulasan`, migrasi `migrations-ulasan/`); batas 10 kiriman otomatis per jam. Template di Pages CMS (*Template balasan ulasan*: 3–6 variasi per kategori, placeholder `{nama}`, `{cabang}`, `{salam_waktu}`, kalimat tambahan per kata kunci, daftar kata keluhan) divalidasi saat build. Toggle **Pengaturan Situs → Mode balasan ulasan Google** (Mati / Uji / Aktif, **default Mati**). Tanpa notifikasi email/chat: ringkasan antrean per cabang, ulasan tertua, penanda *Baru*, dan jumlah antrean di judul tab; antarmuka `Notifier` (bawaan no-op) disiapkan untuk penyedia nanti. Pemasangan: `docs/balasan-ulasan.md` (database D1 `cutless-ulasan` dan `cutless-ulasan-staging` dibuat pemilik; ID terisi di wrangler.jsonc); panduan admin: *Membalas ulasan Google*.
 - **Halaman layanan** (`/layanan/` & `/layanan/<slug>/`) dari Pages CMS (*Halaman Layanan*, satu file Markdown per layanan, status Draf/Terbit): ringkasan pembuka, harga "mulai" per cabang & *Tersedia di cabang* yang **diambil dari Daftar Harga** (harga per cabang, tidak diketik ulang), cocok untuk, proses, durasi, foto, isi tambahan, FAQ (akordeon tanpa JavaScript), tombol booking WhatsApp lewat pemilih cabang (pesan menyebut nama layanan), link ke halaman cabang, layanan terkait, breadcrumb. `/layanan/` dikelompokkan per kategori Daftar Harga. SEO: JSON-LD `Service` (provider = `HairSalon` cabang, `areaServed`, `offers` per cabang dalam IDR), `FAQPage`, `BreadcrumbList`, `CollectionPage` + `ItemList`; sitemap (lastmod) & llms.txt (harga mulai per cabang). Link **Selengkapnya** di Daftar Harga & Kartu Layanan; menu **Layanan** mengarah ke `/layanan/` (jumlah menu tetap). Toggle **Pengaturan Situs → Tampilkan halaman layanan** (default mati: `/layanan*` 301 ke beranda, tanpa menu/sitemap/llms.txt/link).
 - **Halaman cabang diperkaya** (Pages CMS → Cabang, opsional; tampil walau halaman layanan mati): deskripsi cabang, area yang dilayani, patokan & cara menuju, fasilitas & pembayaran (ikon), FAQ cabang, penanda jam buka *Buka sampai 21.00*, dan daftar layanan di cabang itu (bila halaman layanan aktif). JSON-LD `HairSalon` dilengkapi `description`, `areaServed`, `amenityFeature`, `paymentAccepted`, `hasOfferCatalog` (harga cabang), dan `FAQPage` cabang; llms.txt memuat area & fasilitas. Fasilitas & area yang sudah pasti diisi untuk kedua cabang.
 - Hitungan klik WhatsApp: jenis tombol baru *Halaman layanan*.
+- **Konfigurasi Google produksi**: `GBP_LOCATIONS` berisi lokasi Bogor Bantarjati & Cibubur (dijaga tes agar cocok dengan daftar cabang). Mode balasan ulasan tetap **Mati** sampai diubah di Pages CMS.
+
+## [1.3.1] - 2026-11-06
+
+### Ditambahkan
+- Halaman **Kebijakan Privasi** (`/kebijakan-privasi/`), dibutuhkan Google OAuth consent screen: statis, terprerender (terbaca tanpa JavaScript), masuk sitemap, tertaut di footer semua halaman. Isinya hanya fakta situs ini: Cloudflare Web Analytics, hitungan klik WhatsApp (kolom yang disimpan), percakapan WhatsApp, ulasan Google (dibaca lewat Google Business Profile API untuk membalas ulasan), embed Instagram setelah tombol putar, penyimpanan di Cloudflare, hak & cara meminta penghapusan data. Teksnya di `src/content/privacyPolicy.ts` (nomor WhatsApp, email, & cabang dari konten situs). Tanpa toggle CMS: halaman hukum yang harus selalu ada.
+
+### Diubah
+- `/kebijakan-privasi` tidak lagi 404 (dihapus dari daftar rute dicabut di `public/_redirects`).
 
 ## [1.3.0] - 2026-10-30
 
@@ -94,7 +105,8 @@ Launch https://cutlesshairstudio.com.
 - Halaman `/cuci-sepatu/` untuk partner cuci sepatu (layanan, harga, daftar menu PDF, galeri) dan teaser di beranda.
 - Validasi konten saat build (skema & aturan siap tayang), kompres gambar otomatis, SEO dasar (title/meta, JSON-LD, sitemap), staging terpisah, CI (typecheck, lint, tes, e2e).
 
-[Belum dirilis]: https://github.com/rockshow02/cutlesshairstudio/compare/v1.3.0...staging
+[Belum dirilis]: https://github.com/rockshow02/cutlesshairstudio/compare/v1.3.1...staging
+[1.3.1]: https://github.com/rockshow02/cutlesshairstudio/compare/v1.3.0...v1.3.1
 [1.3.0]: https://github.com/rockshow02/cutlesshairstudio/compare/v1.2.3...v1.3.0
 [1.2.3]: https://github.com/rockshow02/cutlesshairstudio/compare/v1.2.2...v1.2.3
 [1.2.2]: https://github.com/rockshow02/cutlesshairstudio/compare/v1.2.1...v1.2.2

@@ -11,7 +11,7 @@ import { test } from './helpers';
 test.skip(!!process.env.E2E_BASE_URL, 'butuh build E2E (data uji)');
 
 const UNIFORM_URL = 'http://localhost:8788';
-const PAGES = ['/', '/cabang/', ...Object.values(E2E_BRANCHES).map((b) => `/cabang/${b.slug}/`), '/cuci-sepatu/'];
+const PAGES = ['/', '/cabang/', ...Object.values(E2E_BRANCHES).map((b) => `/cabang/${b.slug}/`), '/cuci-sepatu/', '/kebijakan-privasi/'];
 /** Tips & Trik hanya aktif di varian uniform (build bawaan: 301 ke beranda) */
 /** Halaman layanan hanya aktif di varian uniform */
 const SERVICE_PAGES = ['/layanan/', ...[E2E_SERVICE_PAGES.haircut, E2E_SERVICE_PAGES.coloring, E2E_SERVICE_PAGES.kids].map((p) => `/layanan/${p.slug}/`)];

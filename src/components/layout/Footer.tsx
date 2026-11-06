@@ -4,6 +4,7 @@ import { useFabZone } from '@/lib/fabZones';
 import { asset } from '@/lib/asset';
 import { bookingLink, fillTemplate } from '@/lib/whatsapp';
 import { isHomePage, navHref, navKey, pageUrl } from '@/lib/navigation';
+import { PRIVACY_LABEL, PRIVACY_PATH } from '@/content/privacyPolicy';
 import { Container } from '@/components/ui/Container';
 import { Icon } from '@/components/ui/Icon';
 import styles from './Footer.module.css';
@@ -87,6 +88,9 @@ export function Footer() {
 
         <div className={styles.bottom}>
           <p>{fillTemplate(footer.copyright, { year: new Date().getFullYear(), brand: site.brandName })}</p>
+          <p>
+            <a href={pageUrl(PRIVACY_PATH)}>{PRIVACY_LABEL}</a>
+          </p>
           {/* Link back to Colorlib can't be removed. Template is licensed under CC BY 3.0. */}
           <p>
             {footer.credit.prefix}{' '}

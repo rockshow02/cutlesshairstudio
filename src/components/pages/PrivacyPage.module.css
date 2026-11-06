@@ -1,0 +1,43 @@
+/* ---------- Halaman /kebijakan-privasi/: ruang untuk navbar fixed di atas ---------- */
+.page {
+  padding-top: calc(var(--header-offset) + var(--nav-safe-top) + var(--space-8));
+}
+
+.article {
+  max-width: 44rem;
+}
+
+.title {
+  font-size: clamp(2rem, 1.2rem + 4vw, 4rem);
+  line-height: 1.02;
+  letter-spacing: -0.03em;
+  text-transform: uppercase;
+}
+
+.date {
+  margin-top: var(--space-3);
+  color: var(--c-bone-dim);
+}
+
+.block {
+  margin-top: var(--space-7);
+}
+.block h2 {
+  margin-bottom: var(--space-3);
+  font-size: clamp(1.25rem, 1rem + 1vw, 1.75rem);
+}
+.block p,
+.block li {
+  color: var(--c-bone-dim);
+  line-height: 1.7;
+}
+.block p + p,
+.block p + ul {
+  margin-top: var(--space-3);
+}
+.block ul {
+  display: grid;
+  gap: var(--space-3);
+  padding-left: 1.25rem;
+  list-style: disc;
+}
