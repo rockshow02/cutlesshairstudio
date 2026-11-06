@@ -120,7 +120,7 @@ test('rute fitur yang dicabut: /booking & /shop → beranda, lainnya 404', async
     expect(new URL(page.url()).pathname, path).toBe('/');
     expect(r?.status()).toBe(200);
   }
-  for (const path of ['/masuk', '/profil', '/pesanan', '/admin', '/kebijakan-privasi', '/api/health']) {
+  for (const path of ['/masuk', '/profil', '/pesanan', '/admin', '/api/health']) {
     const r = await page.goto(path, { waitUntil: 'domcontentloaded' });
     expect(r?.status(), path).toBe(404);
   }

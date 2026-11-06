@@ -12,6 +12,14 @@ Cara menaikkan versi & merilis: [CONTRIBUTING.md → Rilis versi](CONTRIBUTING.m
 
 ## [Belum dirilis]
 
+## [1.3.1] - 2026-11-06
+
+### Ditambahkan
+- Halaman **Kebijakan Privasi** (`/kebijakan-privasi/`), dibutuhkan Google OAuth consent screen: statis, terprerender (terbaca tanpa JavaScript), masuk sitemap, tertaut di footer semua halaman. Isinya hanya fakta situs ini: Cloudflare Web Analytics, hitungan klik WhatsApp (kolom yang disimpan), percakapan WhatsApp, ulasan Google (dibaca lewat Google Business Profile API untuk membalas ulasan), embed Instagram setelah tombol putar, penyimpanan di Cloudflare, hak & cara meminta penghapusan data. Teksnya di `src/content/privacyPolicy.ts` (nomor WhatsApp, email, & cabang dari konten situs). Tanpa toggle CMS: halaman hukum yang harus selalu ada.
+
+### Diubah
+- `/kebijakan-privasi` tidak lagi 404 (dihapus dari daftar rute dicabut di `public/_redirects`).
+
 ## [1.3.0] - 2026-10-30
 
 ### Ditambahkan
@@ -88,7 +96,8 @@ Launch https://cutlesshairstudio.com.
 - Halaman `/cuci-sepatu/` untuk partner cuci sepatu (layanan, harga, daftar menu PDF, galeri) dan teaser di beranda.
 - Validasi konten saat build (skema & aturan siap tayang), kompres gambar otomatis, SEO dasar (title/meta, JSON-LD, sitemap), staging terpisah, CI (typecheck, lint, tes, e2e).
 
-[Belum dirilis]: https://github.com/rockshow02/cutlesshairstudio/compare/v1.3.0...staging
+[Belum dirilis]: https://github.com/rockshow02/cutlesshairstudio/compare/v1.3.1...staging
+[1.3.1]: https://github.com/rockshow02/cutlesshairstudio/compare/v1.3.0...v1.3.1
 [1.3.0]: https://github.com/rockshow02/cutlesshairstudio/compare/v1.2.3...v1.3.0
 [1.2.3]: https://github.com/rockshow02/cutlesshairstudio/compare/v1.2.2...v1.2.3
 [1.2.2]: https://github.com/rockshow02/cutlesshairstudio/compare/v1.2.1...v1.2.2

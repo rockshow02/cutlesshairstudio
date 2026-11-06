@@ -33,8 +33,10 @@ export default defineConfig({
         cuciSepatu: fileURLToPath(new URL('./cuci-sepatu/index.html', import.meta.url)),
         // Template halaman cabang: diprerender per cabang ke /cabang/<slug>/ oleh contentPlugin
         cabang: fileURLToPath(new URL('./cabang/index.html', import.meta.url)),
-        // Template Tips & Trik: diprerender ke /tips/, /tips/halaman/<n>/, /tips/<slug>/ (dihapus bila dimatikan di CMS)
+        // Template Tips & Trik: diprerender ke /tips/, /tips/halaman/<n>/, /tips/<slug>/ (dihapus bila dimatikan di CMS), /kebijakan-privasi/
         tips: fileURLToPath(new URL('./tips/index.html', import.meta.url)),
+        // Kebijakan Privasi (wajib untuk Google OAuth consent screen): selalu tampil, tanpa toggle
+        kebijakanPrivasi: fileURLToPath(new URL('./kebijakan-privasi/index.html', import.meta.url)),
       },
     },
   },
