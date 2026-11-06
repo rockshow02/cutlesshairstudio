@@ -141,15 +141,13 @@ function byActiveOrder(a: KabarSummary, b: KabarSummary): number {
 
 /**
  * active: Promo/Acara belum berakhir (termasuk akan datang), news: Kabar biasa (terbaru dulu),
- * ended: Promo/Acara yang sudah berakhir (paling baru berakhir dulu).
+ * ended: Promo/Acara yang sudah berakhir (terbaru terbit dulu, seperti news).
  */
 export function groupKabar(list: KabarSummary[], now: number): { active: KabarSummary[]; news: KabarSummary[]; ended: KabarSummary[] } {
   const news = list.filter((k) => k.kind === 'Kabar').sort(byPublished);
   const timed = list.filter((k) => k.kind !== 'Kabar');
   const active = timed.filter((k) => isKabarActive(k, now)).sort(byActiveOrder);
-  const ended = timed
-    .filter((k) => isKabarEnded(k, now))
-    .sort((a, b) => (kabarEndMs(b) ?? 0) - (kabarEndMs(a) ?? 0) || byPublished(a, b));
+  const ended = timed.filter((k) => isKabarEnded(k, now)).sort(byPublished);
   return { active, news, ended };
 }
 

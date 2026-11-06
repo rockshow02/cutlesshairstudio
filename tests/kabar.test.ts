@@ -91,17 +91,17 @@ describe('pengelompokan & filter', () => {
   const promoA = mk({ slug: 'promo-a', kind: 'Promo', validUntil: '2026-12-31' });
   const promoB = mk({ slug: 'promo-b', kind: 'Promo', validFrom: '2026-12-18', validUntil: '2027-01-31', branches: ['bandung'] });
   const promoOld = mk({ slug: 'promo-old', kind: 'Promo', validUntil: '2026-12-01' });
-  const evOld = mk({ slug: 'ev-old', kind: 'Acara', startsAt: '2026-12-01T10:00', endsAt: '2026-12-01T12:00' });
+  const evOld = mk({ slug: 'ev-old', kind: 'Acara', publishedAt: '2026-11-20', startsAt: '2026-12-01T10:00', endsAt: '2026-12-01T12:00' });
   const newsNew = mk({ slug: 'news-new', kind: 'Kabar', publishedAt: '2026-12-10' });
   const newsOld = mk({ slug: 'news-old', kind: 'Kabar', publishedAt: '2026-10-10', branches: ['jakarta'] });
   const all = [promoOld, newsOld, promoB, evLate, newsNew, promoA, evSoon, evOld];
   const slugs = (l: KabarSummary[]) => l.map((k) => k.slug);
 
-  it('groupKabar: acara dulu, lalu promo; kabar terbaru dulu; lewat di ended', () => {
+  it('groupKabar: acara dulu, lalu promo; kabar terbaru dulu; lewat di ended (terbaru terbit dulu)', () => {
     const g = groupKabar(all, now);
     expect(slugs(g.active)).toEqual(['ev-soon', 'ev-late', 'promo-a', 'promo-b']);
     expect(slugs(g.news)).toEqual(['news-new', 'news-old']);
-    expect(slugs(g.ended)).toEqual(['promo-old', 'ev-old']);
+    expect(slugs(g.ended)).toEqual(['ev-old', 'promo-old']); // publishedAt turun, bukan waktu berakhir
   });
 
   it('kabarForBranch', () => {
