@@ -779,7 +779,7 @@ export const reviewRepliesSchema = z
       .array(z.object({ keyword: z.string().trim().min(1, 'kata kunci wajib diisi').max(40, 'maksimal 40 karakter'), sentence: replyText(SENTENCE_MAX_LENGTH, 'kalimat tambahan') }))
       .max(30, 'maksimal 30 aturan')
       .default([]),
-    complaintWords: z.array(z.string().trim().min(1, 'kata keluhan wajib diisi').max(30, 'maksimal 30 karakter')).min(1, 'minimal 1 kata keluhan').max(30, 'maksimal 30 kata keluhan'),
+    complaintWords: z.array(z.string().trim().min(1, 'kata keluhan wajib diisi').max(30, 'maksimal 30 karakter')).max(30, 'maksimal 30 kata keluhan').default([]),
   })
   .superRefine((cfg, ctx) => {
     const longest = worstCaseLength(cfg);

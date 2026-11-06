@@ -2,14 +2,14 @@
 
 Sistem ini membantu membalas ulasan Google kedua cabang dengan cepat dan konsisten:
 
-- **Bintang 5 tanpa kata keluhan** dibalas otomatis dari template (hanya saat mode **Aktif**).
-- **Bintang 1–4**, dan ulasan yang memuat *kata keluhan* (mis. lama, antri, kecewa, mahal, kotor) **tidak pernah terkirim otomatis**. Ulasan itu masuk antrean di halaman **https://cutlesshairstudio.com/ulasan/**, lalu admin meninjau, menyunting, dan menekan **Kirim**.
+- **Bintang 5** dibalas otomatis dari template (hanya saat mode **Aktif**). Bila daftar *kata keluhan* diisi, bintang 5 yang memuat salah satu kata itu (mis. lama, antri, kecewa, mahal, kotor) masuk antrean; bila daftar **dikosongkan**, SEMUA bintang 5 dibalas otomatis.
+- **Bintang 1–4** (dan bintang 5 berkata keluhan, bila daftar diisi) **tidak pernah terkirim otomatis**. Ulasan itu masuk antrean di halaman **https://cutlesshairstudio.com/ulasan/**, lalu admin meninjau, menyunting, dan menekan **Kirim**.
 - Tidak ada alamat publik yang bisa mengirim balasan. Satu-satunya jalan kirim adalah tombol **Kirim** di `/ulasan/` (dikunci Cloudflare Access) dan balasan otomatis bintang 5 dari pekerjaan terjadwal.
 - Batas pengaman: paling banyak **10 balasan otomatis per jam**, sisanya masuk antrean.
 
 Biaya berjalan **Rp0**: Cron Trigger, D1, dan Cloudflare Access (paket gratis).
 
-> **Status saat ini:** fitur disiapkan dengan **data tiruan**. Akses Google Business Profile API masih ditinjau Google (kasus 3-4799000042144). Sampai API disetujui dan rahasia OAuth diisi, tidak ada ulasan asli yang diambil dan tidak ada balasan yang terkirim ke Google. Mode bawaan **Mati**.
+> **Status saat ini:** fitur sudah **berjalan di produksi** dan terbukti pada 6 November 2026 (Google Business Profile API asli, OAuth, Cron Trigger produksi, dan kirim balasan manual). Mode bawaan tetap **Mati**; pemilik mengubahnya di Pages CMS.
 
 ## Tidak ada notifikasi email atau chat
 
@@ -96,7 +96,7 @@ Belum bisa dikerjakan sekarang.
 ## Langkah 6. Pindah mode Uji → Aktif
 
 1. **Mode Uji**: ulasan asli masuk antrean `/ulasan/`, **tidak ada** yang terkirim ke Google (termasuk bintang 5 dan tombol Kirim). Pakai beberapa hari untuk memeriksa draf dan kata keluhan.
-2. **Mode Aktif**: bintang 5 tanpa kata keluhan dibalas otomatis; yang lain tetap menunggu tombol **Kirim**.
+2. **Mode Aktif**: bintang 5 (tanpa kata keluhan dari daftar, bila daftar diisi) dibalas otomatis; yang lain tetap menunggu tombol **Kirim**.
 3. **Darurat**: pilih **Mati** (berlaku setelah build ±3–5 menit). Untuk menghentikan seketika: Cloudflare → Workers & Pages → `cutlesshairstudio` → **Settings → Triggers → Cron Triggers** → hapus jadwal, atau hapus secret `GBP_REFRESH_TOKEN`.
 
 ## Panduan admin: meninjau dan membalas ulasan
@@ -110,8 +110,23 @@ Belum bisa dikerjakan sekarang.
 4. Status **Gagal kirim**: Google menolak atau gagal menerima balasan; tekan **Kirim** lagi nanti.
 5. **Riwayat** menampilkan balasan yang sudah terkirim (otomatis atau disetujui oleh siapa dan kapan) dan yang dilewati.
 
+## Kata keluhan: mengosongkan daftar
+
+Pages CMS → **Template balasan ulasan** → **Kata keluhan**. Daftar ini **tidak wajib**.
+
+- **Dikosongkan** (hapus semua kata, lalu Save): SEMUA ulasan bintang 5 dibalas otomatis saat mode **Aktif**, termasuk yang berkeluhan (mis. "antri lama"): ulasan itu juga dibalas template bintang 5. Bintang 1–4 tetap masuk antrean.
+- **Diisi**: bintang 5 yang memuat salah satu kata masuk antrean untuk ditinjau admin.
+
+Catatan penting:
+
+1. **Keputusan "kirim otomatis atau antre" dibuat SEKALI**, saat ulasan pertama kali diambil. Ulasan yang masuk antrean saat mode **Uji** (atau sebelum kata keluhan dikosongkan) **tidak akan terkirim otomatis** kemudian: admin mengirimnya manual dengan tombol **Kirim** atau menekan **Lewati**.
+2. **Pencocokan berbasis potongan kata**, tanpa peduli huruf kapital: "lama" juga cocok di "se**lama**t". Pilih kata yang cukup spesifik.
+3. **Salam** (`{salam_waktu}`) diisi saat draf dibuat. Untuk ulasan di antrean yang dikirim belakangan, admin menyesuaikan salam (pagi/siang/sore/malam) sebelum menekan **Kirim**.
+
 ## Yang belum terbukti
 
-- Pemanggilan **Google Business Profile API sungguhan** (daftar ulasan, balasan, OAuth refresh token): hanya diuji dengan klien tiruan dan `fetch` palsu.
-- Jalur Cron Trigger di Cloudflare produksi: diuji lokal lewat `wrangler dev --test-scheduled`, bukan di Cloudflare.
+Pada 6 November 2026 sudah terbukti di produksi: GBP API asli, OAuth, Cron Trigger produksi, dan kirim manual. Yang belum:
+
+- Balasan **otomatis** bintang 5 ke Google dari Cron produksi dengan mode **Aktif** (belum pernah berjalan dengan ulasan nyata).
+- Perilaku daftar kata keluhan **kosong** di produksi: diuji dengan data uji, belum dengan ulasan nyata.
 - Notifikasi email/chat: tidak ada (lihat bagian atas).
