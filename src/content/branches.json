@@ -59,7 +59,10 @@
     "order": 10,
     "serviceAreas": [
       "Bantarjati",
-      "Bogor Utara"
+      "Bogor Utara",
+      "Bogor Kota",
+      "Tanah Sareal",
+      "Cibinong"
     ],
     "facilities": [
       "Walk-in diterima",
@@ -69,7 +72,8 @@
       "QRIS",
       "Kartu debit/kredit",
       "Transfer bank"
-    ]
+    ],
+    "description": "Cutless Hair Studio Bogor Bantarjati berada di Jl. Pandawa Raya, Bantarjati, Bogor Utara. Cabang ini melayani grooming dan perawatan rambut untuk pria, wanita, dan anak-anak dalam suasana yang nyaman, mulai dari haircut, skin fade, potong rambut wanita, sampai hair treatment. Pelanggan kami banyak datang dari Bogor Kota, Tanah Sareal, Cibinong, dan sekitarnya. Bisa walk-in dan buka setiap hari sampai pukul 21.00. Di cabang ini juga tersedia cuci sepatu oleh partner kami, Fotless."
   },
   {
     "slug": "cibubur",
@@ -131,7 +135,10 @@
     "serviceAreas": [
       "Harjamukti",
       "Cimanggis",
-      "Depok"
+      "Depok",
+      "Cibubur",
+      "Jakarta Timur",
+      "Jatisampurna"
     ],
     "facilities": [
       "Walk-in diterima",
@@ -141,6 +148,7 @@
       "QRIS",
       "Kartu debit/kredit",
       "Transfer bank"
-    ]
+    ],
+    "description": "Cutless Hair Studio Cibubur berada di Jl. Alternatif Cibubur No.87, Harjamukti, Cimanggis, Depok. Cabang ini melayani grooming dan perawatan rambut dengan pelayanan profesional dan suasana yang nyaman, untuk pelanggan dari Cibubur, Jakarta Timur, Jatisampurna, Depok, dan sekitarnya. Bisa walk-in, buka setiap hari sampai pukul 21.00, dan menerima pembayaran tunai, QRIS, transfer bank, maupun kartu."
   }
 ]
