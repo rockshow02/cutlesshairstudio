@@ -88,8 +88,7 @@ Belum bisa dikerjakan sekarang.
    npx wrangler secret put GBP_CLIENT_SECRET
    npx wrangler secret put GBP_REFRESH_TOKEN
    ```
-3. Isi `GBP_LOCATIONS` di `wrangler.jsonc` (bagian `vars` produksi): JSON slug cabang → lokasi Google, mis.
-   `{"cibubur":"accounts/<id akun>/locations/<id lokasi>","bogor-bantarjati":"accounts/<id akun>/locations/<id lokasi>"}`.
+3. `GBP_LOCATIONS` di `wrangler.jsonc` (bagian `vars` produksi) sudah terisi: JSON slug cabang → `accounts/<id akun>/locations/<id lokasi>` (lokasi tampil di akun PERSONAL; peran Manager cukup). Slug harus sama dengan `src/content/branches.json` (dijaga tes).
 4. Biarkan `GBP_CLIENT` kosong di produksi (kosong = klien Google sungguhan).
 
 > Alamat API (`mybusiness.googleapis.com/v4/…`) ditulis dari dokumentasi Google dan **belum pernah dicoba** terhadap Google sungguhan. Bila Google menyetujui versi API lain, bagian `HttpGbpClient` di `worker/ulasan/gbp.ts` mungkin perlu disesuaikan.
