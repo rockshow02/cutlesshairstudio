@@ -443,3 +443,8 @@ export function applyE2EFixtures(file: string, data: unknown, variant?: string):
   }
   return data;
 }
+
+/** Data uji build E2E untuk Kabar, Promo & Acara. Stub: Task 7 mengisinya. */
+export function e2eKabarFiles(): { file: string; source: string }[] {
+  return [];
+}
