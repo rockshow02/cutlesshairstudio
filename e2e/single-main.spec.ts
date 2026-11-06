@@ -16,6 +16,7 @@ const PAGES = [
   '/cabang/',
   `/cabang/${E2E_BRANCHES.bogor.slug}/`,
   '/cuci-sepatu/',
+  '/kebijakan-privasi/',
   '/halaman-tidak-ada-uji',
   `${UNIFORM_URL}/produk/`,
   `${UNIFORM_URL}/tips/`,

@@ -43,6 +43,7 @@ import { pricingCopy } from '../src/content/pricing';
 import { formatPhoneDisplay, formatThousandsK, formatTime } from '../src/lib/format';
 import { branchesCopy } from '../src/content/branches';
 import { shoeCareCopy } from '../src/content/shoeCare';
+import { PRIVACY_EFFECTIVE, PRIVACY_LABEL, PRIVACY_PATH, privacyDescription, privacySections, privacyTitle } from '../src/content/privacyPolicy';
 import { barberKey, WA_CLICK_ALLOWLIST_PATH, type WaClickAllowlist } from '../src/content/waClicks';
 import { REVIEW_CONFIG_PATH, type ReviewConfig } from '../src/content/reviewReplies';
 import { TIPS_PATH, parseTipsPath, tipsPageCount, tipsPagePath, tipsRedirects, tipsVisible, type TipSummary, type TipsRoute } from '../src/content/tipsSeo';
@@ -416,6 +417,31 @@ function shoeCareFill(html: string, bundle: ContentBundle): string {
     .replace('<!--cutless:shoe-body-->', body);
 }
 
+/** Head & isi statis /kebijakan-privasi/ (diganti React saat dimuat; teks sama dengan PrivacyPage) */
+function privacyFill(html: string, bundle: ContentBundle): string {
+  const { siteName, email, mainWhatsappNumber } = bundle.settings;
+  const sections = privacySections({
+    brand: siteName,
+    branches: bundle.branches.filter((b) => b.status !== 'Segera Dibuka').map((b) => b.name),
+    whatsapp: formatPhoneDisplay(mainWhatsappNumber),
+    email: email ?? '',
+  });
+  const body = [
+    '<div class="prerender">',
+    `<h1>${esc(PRIVACY_LABEL)}</h1>`,
+    `<p>Berlaku sejak ${esc(PRIVACY_EFFECTIVE.label)}</p>`,
+    ...sections.map(
+      (s) =>
+        `<h2>${esc(s.heading)}</h2>${s.paragraphs.map((p) => `<p>${esc(p)}</p>`).join('')}${s.items ? `<ul>${s.items.map((i) => `<li>${esc(i)}</li>`).join('')}</ul>` : ''}`,
+    ),
+    '</div>',
+  ].join('');
+  return html
+    .replaceAll('%PRIVACY_TITLE%', esc(privacyTitle(siteName)))
+    .replaceAll('%PRIVACY_DESCRIPTION%', esc(privacyDescription(siteName)))
+    .replace('<!--cutless:privacy-body-->', body);
+}
+
 function branchHead(b: BranchEntry, bundle: ContentBundle, services: ServicePageSummary[] = []): string {
   const { siteUrl, siteName } = bundle.settings;
   const url = `${siteUrl}/cabang/${b.slug}/`;
@@ -659,6 +685,7 @@ function fillHtml(html: string, bundle: ContentBundle | undefined, meta: ImageMe
     .replace('<!--cutless:home-body-->', homeBody(bundle))
     .replace('<!--cutless:hero-preload-->', heroPreload(bundle.hero, meta));
   // Halaman /cuci-sepatu/: title, meta, Open Graph & ringkasan dari Partner Cuci Sepatu
+  if (out.includes('%PRIVACY_TITLE%')) return privacyFill(out, bundle);
   return out.includes('%SHOE_TITLE%') ? shoeCareFill(out, bundle) : out;
 }
 
@@ -669,6 +696,7 @@ function sitePages(bundle: ContentBundle, tips: TipSummary[], services: ServiceP
   return [
     '/',
     '/cabang/',
+    PRIVACY_PATH,
     ...bundle.branches.map((b) => `/cabang/${b.slug}/`),
     ...(productsVisible(bundle.settings) ? [PRODUCTS_PATH] : []),
     // Halaman Cuci Sepatu hanya saat aktif (mati → 301 ke beranda)

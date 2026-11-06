@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#0c1014" />
+
+    <!-- SEO dasar (statis agar terbaca crawler tanpa JavaScript, termasuk peninjau Google OAuth).
+         %SITE_URL% / %PRIVACY_TITLE% / %PRIVACY_DESCRIPTION% / %OG_IMAGE% diisi saat build
+         (scripts/vite-content-plugin.ts); teks halaman dari src/content/privacyPolicy.ts. -->
+    <title>%PRIVACY_TITLE%</title>
+    <meta name="description" content="%PRIVACY_DESCRIPTION%" />
+    <link rel="canonical" href="%SITE_URL%/kebijakan-privasi/" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="id_ID" />
+    <meta property="og:site_name" content="%BRAND%" />
+    <meta property="og:title" content="%PRIVACY_TITLE%" />
+    <meta property="og:description" content="%PRIVACY_DESCRIPTION%" />
+    <meta property="og:url" content="%SITE_URL%/kebijakan-privasi/" />
+    <meta property="og:image" content="%OG_IMAGE%" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:image" content="%OG_IMAGE%" />
+
+    <!-- Favicon (scripts/make-favicons.mjs): URL tetap tanpa hash; Google memakai ukuran kelipatan 48 px -->
+    <link rel="icon" href="/favicon.ico" sizes="48x48" />
+    <link rel="icon" type="image/png" sizes="96x96" href="/favicon-96x96.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/favicon-192x192.png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+
+    <link rel="preload" as="font" type="font/woff2" href="/fonts/archivo-v1-latin.woff2" crossorigin />
+    <link rel="preload" as="font" type="font/woff2" href="/fonts/plus-jakarta-sans-v1-latin.woff2" crossorigin />
+  </head>
+  <body>
+    <div id="root"><!--cutless:privacy-body--></div>
+    <noscript>Aktifkan JavaScript untuk melihat website Cutless Hair Studio, atau hubungi kami via WhatsApp.</noscript>
+    <script type="module" src="/src/kebijakanPrivasi.tsx"></script>
+  </body>
+</html>
