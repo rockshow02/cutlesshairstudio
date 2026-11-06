@@ -31,3 +31,14 @@ Belum tertulis di CONTRIBUTING.md:
 - **Tes memakai fixture:** data uji di `e2e/fixtures/content.ts`, bukan isi CMS, yang bisa berubah kapan saja.
 - **Jangan mengarang data:** konten hanya dari fakta yang sudah dikonfirmasi klien. Bila belum pasti, kosongkan dan
   tanyakan.
+
+## Superpowers di proyek ini
+
+- **Worktree/branch:** fitur selalu dari `origin/staging`, hotfix dari `main`, sesuai alur di CONTRIBUTING.md.
+- **finishing-a-development-branch:** JANGAN merge ke `staging` atau `main`, dan jangan push ke `main`. Pilihan akhir
+  selalu "push branch + beri link PR (compare)", karena `gh` tidak terpasang dan merge dilakukan pemilik.
+- **Spesifikasi lengkap = desain disetujui:** bila prompt pemilik sudah berisi spesifikasi lengkap (bagian A/B/C, tes,
+  dokumentasi), lewati brainstorming dan langsung ke writing-plans.
+- **Tugas kecil** (konten, teks, satu file, perbaikan kecil): pakai executing-plans inline atau langsung kerjakan.
+  subagent-driven-development hanya untuk fitur besar.
+- **TDD** tetap memakai fixture, bukan data CMS asli.
