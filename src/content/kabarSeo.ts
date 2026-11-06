@@ -97,15 +97,16 @@ export function kabarEndMs(k: KabarSummary): number | undefined {
 
 /**
  * Epoch ms PERTAMA berstatus berakhir (batas eksklusif; atribut data-kabar-end untuk saringan pra-paint).
- * Promo/Acara tanpa endsAt: akhir hari inklusif → kabarEndMs + 1. Acara dengan endsAt: tepat pada endsAt.
+ * Promo/Acara tanpa endsAt: aktif sepanjang hari itu (sampai 23:59:59.999 WIB) → berakhir 00:00:00.000 WIB esok hari
+ * (kabarEndMs = 23:59:59.000 WIB, + 1000 ms). Acara dengan endsAt: tepat pada endsAt.
  */
 export function kabarEndedAtMs(k: KabarSummary): number | undefined {
   const end = kabarEndMs(k);
   if (end === undefined) return undefined;
-  return k.kind === 'Acara' && k.endsAt ? end : end + 1;
+  return k.kind === 'Acara' && k.endsAt ? end : end + 1000;
 }
 
-/** Promo: berakhir sesudah akhir hari validUntil (inklusif). Acara: berakhir tepat pada endsAt (eksklusif). */
+/** Promo: berakhir 00:00 WIB sesudah hari validUntil (hari itu inklusif). Acara: berakhir tepat pada endsAt (eksklusif). */
 export function kabarStatus(k: KabarSummary, now: number): KabarStatus {
   const start = kabarStartMs(k);
   if (start !== undefined && now < start) return 'akan-datang';

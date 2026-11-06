@@ -37,6 +37,14 @@ describe('kabarStatus', () => {
     expect(kabarStatus(promo, t('2027-01-01T00:00:00+07:00'))).toBe('berakhir');
   });
 
+  it('promo aktif sampai 23:59:59.999 WIB hari validUntil, berakhir 00:00:00.000 WIB esok hari', () => {
+    expect(kabarStatus(promo, t('2026-12-31T23:59:59.999+07:00'))).toBe('berlangsung');
+    expect(kabarStatus(promo, t('2027-01-01T00:00:00.000+07:00'))).toBe('berakhir');
+    const eDay = mk({ slug: 'e', kind: 'Acara', startsAt: '2026-12-20T10:00' });
+    expect(kabarStatus(eDay, t('2026-12-20T23:59:59.999+07:00'))).toBe('berlangsung');
+    expect(kabarStatus(eDay, t('2026-12-21T00:00:00.000+07:00'))).toBe('berakhir');
+  });
+
   it('batas hari WIB memakai UTC', () => {
     expect(kabarStatus(promo, t('2026-12-31T17:30:00Z'))).toBe('berakhir');
   });
@@ -82,11 +90,11 @@ describe('kabarStatus', () => {
     const e = mk({ slug: 'e', kind: 'Acara', startsAt: '2026-12-20T10:00', endsAt: '2026-12-20T15:00' });
     const eDay = mk({ slug: 'e2', kind: 'Acara', startsAt: '2026-12-20T10:00' });
     const upcoming = mk({ slug: 'u', kind: 'Promo', validFrom: '2026-12-10', validUntil: '2026-12-31' });
-    // Promo: inklusif sampai akhir hari validUntil (kabarEndMs) → berakhir 1 ms sesudahnya
-    expect(kabarEndedAtMs(promo)).toBe(t('2026-12-31T23:59:59+07:00') + 1);
+    // Promo: aktif sepanjang hari validUntil (sampai 23:59:59.999 WIB) → berakhir 00:00:00.000 WIB esok hari
+    expect(kabarEndedAtMs(promo)).toBe(t('2027-01-01T00:00:00+07:00'));
     // Acara: eksklusif, tepat pada endsAt
     expect(kabarEndedAtMs(e)).toBe(t('2026-12-20T15:00:00+07:00'));
-    expect(kabarEndedAtMs(eDay)).toBe(t('2026-12-20T23:59:59+07:00') + 1);
+    expect(kabarEndedAtMs(eDay)).toBe(t('2026-12-21T00:00:00+07:00'));
     expect(kabarEndedAtMs(mk({ slug: 'k', kind: 'Kabar', validUntil: '2020-01-01' }))).toBeUndefined();
     // Sama persis dengan kabarStatus di batas (1 ms sebelum: belum, tepat: berakhir)
     for (const k of [promo, e, eDay, upcoming]) {

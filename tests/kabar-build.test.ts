@@ -259,8 +259,8 @@ describe('head & body', () => {
     expect(html).toContain('Promo &amp; acara');
     expect(html).toContain(`data-kabar-start="${Date.parse('2026-12-01T00:00:00+07:00')}"`);
     expect(html).toContain('href="/kabar/promo-uji/"');
-    // data-kabar-end = ms pertama berstatus berakhir (Promo: akhir hari validUntil + 1 ms)
-    expect(html).toContain(`data-kabar-end="${Date.parse('2026-12-31T23:59:59+07:00') + 1}"`);
+    // data-kabar-end = ms pertama berstatus berakhir (Promo: 00:00:00.000 WIB sesudah hari validUntil)
+    expect(html).toContain(`data-kabar-end="${Date.parse('2027-01-01T00:00:00+07:00')}"`);
     // Saringan pra-paint langsung sesudah kotak (jalan saat parsing, sebelum paint pertama)
     expect(html.endsWith(`</section><script>${kabarPrepaintScript()}</script>`)).toBe(true);
   });
@@ -341,15 +341,18 @@ describe('kabarPrepaintScript', () => {
     expect([sebelum.hidden, k.hidden]).toEqual([false, false]);
   });
 
-  it('batas promo dari kabarEndedAtMs: hari terakhir 23:59:59 WIB tampil, 00:00 WIB esok hilang', () => {
+  it('batas promo dari kabarEndedAtMs: hari terakhir sampai 23:59:59.999 WIB tampil, 00:00:00.000 WIB esok hilang', () => {
     const promo = kabarSummaryOf(publish(PROMO));
     const end = kabarEndedAtMs(promo)!;
-    const a = li(end);
-    run(Date.parse('2026-12-31T23:59:59+07:00'), box(a));
-    expect(a.hidden).toBe(false);
-    const b = li(end);
-    run(Date.parse('2027-01-01T00:00:00+07:00'), box(b));
-    expect(b.hidden).toBe(true);
+    for (const [at, hidden] of [
+      ['2026-12-31T23:59:59.000+07:00', false],
+      ['2026-12-31T23:59:59.999+07:00', false],
+      ['2027-01-01T00:00:00.000+07:00', true],
+    ] as const) {
+      const item = li(end);
+      run(Date.parse(at), box(item));
+      expect(item.hidden, at).toBe(hidden);
+    }
   });
 
   it('banner (tanpa kotak) disembunyikan bila lewat', () => {
