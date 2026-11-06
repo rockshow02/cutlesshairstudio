@@ -1,7 +1,7 @@
 /**
  * Halaman Layanan & halaman cabang yang diperkaya: skema, harga per cabang dari Daftar Harga (harga per cabang &
  * "Tersedia di cabang"), validasi file Markdown, JSON-LD Service/FAQPage/HairSalon, ringkasan statis, sitemap &
- * llms.txt, toggle, menu navbar. Data uji saja (tidak membaca halaman/cabang CMS), kecuali tes isian awal di akhir.
+ * llms.txt, toggle, menu navbar. Data uji saja, kecuali simulasi Save Pages CMS (seperti tests/cms-save.test.ts).
  */
 import { readdirSync, readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
@@ -359,16 +359,7 @@ describe('Pages CMS', () => {
   }
 });
 
-describe('isian awal (src/content/layanan/*.md & branches.json)', () => {
-  it('semua halaman isian awal berstatus Draf, item Daftar Harga & Kartu Layanan terkait ada', () => {
-    const real = { pricing: JSON.parse(readFileSync('src/content/pricing.json', 'utf8')), services: JSON.parse(readFileSync('src/content/services.json', 'utf8')) };
-    const files = readdirSync('src/content/layanan').filter((f) => f.endsWith('.md')).map((file) => ({ file, source: readFileSync(`src/content/layanan/${file}`, 'utf8') }));
-    const result = processServicePages(files, { exists: () => true, bundle: real });
-    expect(result.errors).toEqual([]);
-    expect(result.published).toEqual([]);
-    expect(result.drafts).toBe(files.length);
-  });
-
+describe('data uji', () => {
   it('data uji E2E: 3 halaman Terbit + 1 Draf', () => {
     expect(e2eServicePageFiles()).toHaveLength(4);
     expect(E2E_SERVICE_PAGES.haircut.pricingItems).toHaveLength(2);
