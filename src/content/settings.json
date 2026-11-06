@@ -24,7 +24,7 @@
   "showProducts": false,
   "showTips": false,
   "showServicePages": true,
-  "reviewReplyMode": "Uji",
+  "reviewReplyMode": "Aktif",
   "showBeforeAfter": false,
   "enablePreloader": true
 }
