@@ -53,7 +53,7 @@ export const site: SiteContent = {
   email: '',
   // Diisi dari Pengaturan Situs (siteUrl & toggle section)
   siteUrl: '',
-  features: { testimonials: false, products: false, beforeAfter: false, shoeCare: false, tips: false, servicePages: false },
+  features: { testimonials: false, products: false, beforeAfter: false, shoeCare: false, tips: false, servicePages: false, kabar: false, kabarBanner: false },
   intro: { enabled: true },
   // TODO: sesuaikan dengan rentang harga asli
   priceRange: 'Rp60.000 - Rp450.000',

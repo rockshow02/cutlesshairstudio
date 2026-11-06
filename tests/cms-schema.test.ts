@@ -10,7 +10,8 @@ import { readdirSync, readFileSync } from 'node:fs';
 import { parse } from 'yaml';
 import type { z } from 'zod';
 import { describe, expect, it } from 'vitest';
-import { CONTENT_FILES, IMAGE_EXTENSIONS, servicePageSchema, tipSchema } from '../src/content/schema';
+import { CONTENT_FILES, IMAGE_EXTENSIONS, kabarSchema, servicePageSchema, tipSchema } from '../src/content/schema';
+import { KABAR_ALL_BRANCHES, KABAR_KINDS, KABAR_LOCATION_TYPES, KABAR_STATUSES } from '../src/content/kabarSeo';
 import { TIP_CATEGORIES, TIP_STATUSES } from '../src/content/tipsSeo';
 import { splitFrontmatter } from '../scripts/tips';
 import { setMedia, validateCmsContent, type CmsField as FormField, type CmsMedia } from './helpers/pagesCms';
@@ -134,6 +135,10 @@ export function mismatches(yamlText = readFileSync('.pages.yml', 'utf8')): strin
   const tips = config.content.find((c) => c.path === 'src/content/tips');
   if (!tips) out.push('tips: tidak ada koleksi src/content/tips di .pages.yml');
   else compare('tips', tips.fields, info(tipSchema as z.ZodType).children ?? {}, out);
+  // Koleksi Kabar, Promo & Acara: satu file Markdown per item (frontmatter + body)
+  const kabar = config.content.find((c) => c.path === 'src/content/kabar');
+  if (!kabar) out.push('kabar: tidak ada koleksi src/content/kabar di .pages.yml');
+  else compare('kabar', kabar.fields, info(kabarSchema as z.ZodType).children ?? {}, out);
   // Koleksi Halaman Layanan: satu file Markdown per halaman (frontmatter + isi tambahan)
   const layanan = config.content.find((c) => c.path === 'src/content/layanan');
   if (!layanan) out.push('layanan: tidak ada koleksi src/content/layanan di .pages.yml');
@@ -182,6 +187,36 @@ describe('.pages.yml sejalan dengan skema Zod', () => {
     expect(names(field('services')).sort()).toEqual([...new Set((JSON.parse(readFileSync('src/content/services.json', 'utf8')) as { name: string }[]).map((s) => s.name))].sort());
   });
 
+  it('Kabar, Promo & Acara: koleksi Markdown (yaml-frontmatter), pilihan jenis/status/lokasi = Zod, cabang punya opsi "semua", batas kolom jenis', () => {
+    type Collection = { name: string; type?: string; path: string; format?: string; filename?: { template: string; field: string }; fields: (CmsField & { options?: { format?: string; multiple?: boolean; media?: string; time?: boolean } })[] };
+    const config = parse(readFileSync('.pages.yml', 'utf8')) as { media: CmsMedia[]; content: Collection[] };
+    const kabar = config.content.find((c) => c.name === 'kabar')!;
+    expect(kabar).toMatchObject({ type: 'collection', path: 'src/content/kabar', format: 'yaml-frontmatter', filename: { template: '{title}.md', field: 'create' } });
+    expect(config.media.find((m) => m.name === 'kabar')).toMatchObject({ input: 'public/uploads/kabar', output: '/uploads/kabar' });
+    const field = (name: string) => kabar.fields.find((f) => f.name === name)!;
+    expect(field('kind').options?.values).toEqual([...KABAR_KINDS]);
+    expect(field('status').options?.values).toEqual([...KABAR_STATUSES]);
+    expect(field('status').default).toBe('Draf');
+    expect(field('locationType').options?.values).toEqual([...KABAR_LOCATION_TYPES]);
+    expect(field('body')).toMatchObject({ type: 'rich-text', options: { format: 'markdown', media: 'kabar' } });
+    // Kolom jenis lain tidak wajib di form (kolom WAJIB per jenis dijaga Zod), batas karakter sama dengan Zod
+    for (const name of ['validFrom', 'validUntil', 'startsAt', 'endsAt', 'locationType', 'venueName', 'venueAddress', 'linkUrl']) expect(field(name).required, name).not.toBe(true);
+    expect(field('venueName').options?.maxlength).toBe(80);
+    expect(field('venueAddress').options?.maxlength).toBe(200);
+    expect(field('startsAt').options).toMatchObject({ time: true, format: "yyyy-MM-dd'T'HH:mm" });
+    expect(field('endsAt').options).toMatchObject({ time: true, format: "yyyy-MM-dd'T'HH:mm" });
+    // Cabang: multi-pilih; "semua" + cabang dari branches.json (blok sinkron)
+    const names = (f: CmsField) => (f.options?.values ?? []).map((v) => (typeof v === 'string' ? v : v.name));
+    expect(field('branches').options?.multiple).toBe(true);
+    const slugs = (JSON.parse(readFileSync('src/content/branches.json', 'utf8')) as { slug: string }[]).map((b) => b.slug);
+    expect(names(field('branches')).sort()).toEqual([...slugs, KABAR_ALL_BRANCHES].sort());
+  });
+
+  it('Pengaturan Situs: showKabar & showKabarBanner default mati di form CMS', () => {
+    const settings = (parse(readFileSync('.pages.yml', 'utf8')) as { content: { path: string; fields: CmsField[] }[] }).content.find((c) => c.path === 'src/content/settings.json')!;
+    for (const name of ['showKabar', 'showKabarBanner']) expect(settings.fields.find((f) => f.name === name), name).toMatchObject({ type: 'boolean', default: false });
+  });
+
   it('tiruan form Pages CMS mendeteksi isian yang tidak bisa disimpan', () => {
     const config = parse(readFileSync('.pages.yml', 'utf8')) as { content: { name: string; list?: boolean; fields: FormField[] }[] };
     const pricing = config.content.find((c) => c.name === 'pricing')!;
@@ -228,6 +263,11 @@ describe('.pages.yml sejalan dengan skema Zod', () => {
     expect(mismatches(tipsTitle)).toContain('tips.title: Zod max 70, CMS maxlength 71');
     const tipsCategories = readFileSync('.pages.yml', 'utf8').replace('values: [Hair Style, Hair Care,', 'values: [Gaya Rambut, Hair Care,');
     expect(mismatches(tipsCategories).some((m) => m.startsWith('tips.category: pilihan Zod'))).toBe(true);
+    // Koleksi Kabar ikut diperiksa (batas judul, pilihan jenis)
+    const kabarTitle = readFileSync('.pages.yml', 'utf8').replace(/(Diskon Potong Rambut Akhir Tahun\. Maksimal 80 karakter\."\r?\n\s+options:\r?\n\s+maxlength: )80/, '$181');
+    expect(mismatches(kabarTitle)).toContain('kabar.title: Zod max 80, CMS maxlength 81');
+    const kabarKind = readFileSync('.pages.yml', 'utf8').replace('values: [Kabar, Promo, Acara]', 'values: [Kabar, Promo, Event]');
+    expect(mismatches(kabarKind).some((m) => m.startsWith('kabar.kind: pilihan Zod'))).toBe(true);
   });
 
   it('setiap field dengan batas karakter menyebut batasnya di deskripsi', () => {
@@ -275,7 +315,7 @@ describe('.pages.yml sejalan dengan skema Zod', () => {
     let checked = 0;
     for (const entry of config.content) {
       const file = entry.path.replace('src/content/', '') as keyof typeof CONTENT_FILES;
-      const root = (entry.path === 'src/content/tips' ? tipSchema : entry.path === 'src/content/layanan' ? servicePageSchema : CONTENT_FILES[file]) as unknown as z.ZodType;
+      const root = (entry.path === 'src/content/tips' ? tipSchema : entry.path === 'src/content/kabar' ? kabarSchema : entry.path === 'src/content/layanan' ? servicePageSchema : CONTENT_FILES[file]) as unknown as z.ZodType;
       if (!root) continue;
       const walk = (names: string[], fields: Field[]) =>
         fields.forEach((f) => {

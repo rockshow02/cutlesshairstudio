@@ -15,6 +15,7 @@ import { PRICE_CATEGORIES } from './priceCategories';
 import { itemsAt } from './branchPricing';
 import { INSTAGRAM_POST_URL, instagramUrlProblem, normalizeInstagramUrl } from './instagram';
 import { POSTAL_CODE } from './postalAddress';
+import { KABAR_ALL_BRANCHES, KABAR_KINDS, KABAR_LOCATION_TYPES, KABAR_SLUG, KABAR_STATUSES } from './kabarSeo';
 import { RESERVED_TIP_SLUGS, TIP_CATEGORIES, TIP_SLUG, TIP_STATUSES } from './tipsSeo';
 import { findUnknownPlaceholders, REPLY_MAX_LENGTH, REPLY_PLACEHOLDERS, SENTENCE_MAX_LENGTH, TEMPLATE_MAX_LENGTH, worstCaseLength } from './reviewReplies';
 import { BRANCH_FACILITIES, SERVICE_PAGE_SLUG, SERVICE_PAGE_STATUSES } from './servicePages';
@@ -335,6 +336,10 @@ export const settingsSchema = z.object({
   showProducts: z.boolean().default(false),
   /** Halaman /tips/ (artikel src/content/tips/*.md), menu Tips & bagian Tips Terbaru di beranda */
   showTips: z.boolean().default(false),
+  /** Halaman /kabar/ & /kabar/<slug>/ (src/content/kabar/*.md), kotak Kabar di halaman cabang */
+  showKabar: z.boolean().default(false),
+  /** Banner Kabar/Promo/Acara di beranda; hanya tampil bila showKabar juga aktif */
+  showKabarBanner: z.boolean().default(false),
   /** Halaman /layanan/ & /layanan/<slug>/ (src/content/layanan/*.md), menu Layanan → /layanan/, link "Selengkapnya" */
   showServicePages: z.boolean().default(false),
   /** Balasan ulasan Google (Worker /ulasan/). Mati = ulasan tidak diambil; Uji = semua masuk antrean, tidak ada yang terkirim ke Google; Aktif = bintang 5 tanpa kata keluhan dibalas otomatis */
@@ -683,6 +688,104 @@ export const tipSchema = z
   });
 
 export type TipEntry = z.output<typeof tipSchema>;
+
+/* ---------- Kabar, Promo & Acara (src/content/kabar/*.md: frontmatter + isi Markdown) ---------- */
+
+/** Tanggal + jam WIB tanpa zona waktu, mis. 2026-12-20T10:00 */
+const kabarStamp = z
+  .string()
+  .trim()
+  .regex(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/, 'format harus YYYY-MM-DDTHH:mm (mis. 2026-12-20T10:00)')
+  .refine((v) => Number.isFinite(parseWIB(v)), 'tanggal atau jam tidak valid');
+const kabarBranch = z.string().trim().regex(KABAR_SLUG, 'slug cabang hanya huruf kecil, angka, dan strip (atau "semua")');
+const kabarImage = imageOf('photo', '/uploads/kabar/', '/uploads/kabar/...');
+
+/** Kolom jenis lain tidak divalidasi sama sekali (diabaikan): lihat superRefine & transform di bawah */
+const foreign = z.unknown().optional();
+/** Nilai kosong (undefined, null, "") = tidak diisi */
+const filled = (v: unknown): v is string => typeof v === 'string' && v.trim() !== '';
+
+/** Aturan kolom WAJIB milik tiap jenis (dipakai superRefine & transform) */
+const promoFields = z.object({ validFrom: z.union([tipDate, z.literal('')]).nullish(), validUntil: tipDate });
+const eventFields = z.object({
+  startsAt: kabarStamp,
+  endsAt: kabarStamp,
+  locationType: z.enum(KABAR_LOCATION_TYPES, { error: `lokasi harus salah satu: ${KABAR_LOCATION_TYPES.join(', ')}` }),
+  linkUrl: optionalHttpsUrl,
+});
+const venueFields = z.object({ venueName: requiredText(80, 'nama tempat'), venueAddress: requiredText(200, 'alamat tempat') });
+
+/**
+ * Frontmatter satu item Kabar / Promo / Acara. Pages CMS menampilkan SEMUA kolom untuk semua jenis dan menyimpan
+ * langsung, jadi kolom milik jenis lain DIABAIKAN (tidak divalidasi, dibuang dari hasil), bukan ditolak: menolak
+ * berarti build produksi gagal tanpa admin tahu sebabnya. Hanya kolom WAJIB jenis yang dipilih yang diperiksa.
+ * Relasi cabang (branches.json) diperiksa scripts/kabar.ts.
+ */
+export const kabarSchema = z
+  .object({
+    title: requiredText(80, 'judul'),
+    slug: z
+      .union([
+        z.string().trim().max(80, 'maksimal 80 karakter').regex(KABAR_SLUG, 'slug hanya huruf kecil, angka, dan strip (mis. promo-akhir-tahun)'),
+        z.literal(''),
+      ])
+      .nullish(),
+    publishedAt: tipDate,
+    kind: z.enum(KABAR_KINDS, { error: `jenis harus salah satu: ${KABAR_KINDS.join(', ')}` }),
+    /** "semua" (sendirian) atau satu/lebih slug cabang */
+    branches: z.array(kabarBranch).min(1, 'pilih minimal satu cabang, atau "Semua cabang"'),
+    summary: requiredText(160, 'ringkasan'),
+    image: z.union([kabarImage, z.literal('')]).nullish(),
+    imageAlt: optionalText(150),
+    waLabel: optionalText(40),
+    status: z.enum(KABAR_STATUSES, { error: `status harus ${KABAR_STATUSES.join(' atau ')}` }),
+    validFrom: foreign,
+    validUntil: foreign,
+    startsAt: foreign,
+    endsAt: foreign,
+    locationType: foreign,
+    venueName: foreign,
+    venueAddress: foreign,
+    linkUrl: foreign,
+    body: z.string().nullish(),
+  })
+  .superRefine((k, ctx) => {
+    const check = (schema: z.ZodType, value: unknown, path: string[]) => {
+      const r = schema.safeParse(value);
+      if (!r.success) for (const i of r.error.issues) ctx.addIssue({ code: 'custom', path: [...path, ...i.path.map(String)], message: i.message });
+    };
+    if (k.status === 'Terbit' && !k.body?.trim()) ctx.addIssue({ code: 'custom', path: ['body'], message: 'isi wajib diisi sebelum diterbitkan' });
+    if (filled(k.image) && !k.imageAlt?.trim()) ctx.addIssue({ code: 'custom', path: ['imageAlt'], message: 'deskripsi gambar wajib diisi bila ada gambar' });
+    if (k.branches.includes(KABAR_ALL_BRANCHES) && k.branches.length > 1) ctx.addIssue({ code: 'custom', path: ['branches'], message: `"${KABAR_ALL_BRANCHES}" tidak boleh digabung dengan cabang lain` });
+    if (k.kind === 'Promo') {
+      check(promoFields, k, []);
+      if (filled(k.validFrom) && filled(k.validUntil) && String(k.validFrom) > String(k.validUntil)) ctx.addIssue({ code: 'custom', path: ['validFrom'], message: 'mulai berlaku tidak boleh sesudah berlaku sampai' });
+    }
+    if (k.kind === 'Acara') {
+      check(eventFields, k, []);
+      if (k.locationType === 'Tempat lain') check(venueFields, k, []);
+      if (eventFields.shape.startsAt.safeParse(k.startsAt).success && eventFields.shape.endsAt.safeParse(k.endsAt).success && parseWIB(String(k.endsAt)) < parseWIB(String(k.startsAt))) {
+        ctx.addIssue({ code: 'custom', path: ['endsAt'], message: 'selesai tidak boleh sebelum mulai' });
+      }
+    }
+  })
+  .transform((k) => {
+    const { validFrom, validUntil, startsAt, endsAt, locationType, venueName, venueAddress, linkUrl, ...common } = k;
+    // Sudah divalidasi superRefine; hanya kolom milik jenisnya yang dibawa
+    if (k.kind === 'Promo') return { ...common, validUntil: String(validUntil), ...(filled(validFrom) && { validFrom }) } as typeof common & { validFrom?: string; validUntil: string };
+    if (k.kind === 'Acara') {
+      const own = { startsAt: String(startsAt), endsAt: String(endsAt), locationType: locationType as (typeof KABAR_LOCATION_TYPES)[number] };
+      return {
+        ...common,
+        ...own,
+        ...(own.locationType === 'Tempat lain' && { venueName: String(venueName), venueAddress: String(venueAddress) }),
+        ...(filled(linkUrl) && { linkUrl }),
+      } as typeof common & typeof own & { venueName?: string; venueAddress?: string; linkUrl?: string };
+    }
+    return common;
+  });
+
+export type KabarEntry = z.output<typeof kabarSchema>;
 
 /* ---------- Halaman Layanan (src/content/layanan/*.md: frontmatter + isi tambahan Markdown) ---------- */
 

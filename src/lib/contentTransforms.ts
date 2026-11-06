@@ -82,6 +82,7 @@ import { srcSetOf } from './responsiveImage';
 import { PRICE_CATEGORIES, priceCategoryAnchor } from '@/content/priceCategories';
 import { availableAt, priceAt, samePricesEverywhere } from '@/content/branchPricing';
 import { SERVICES_PATH, sortFacilities } from '@/content/servicePages';
+import { kabarBannerVisible, kabarVisible } from '@/content/kabarSeo';
 import { activeFaqItems } from '@/content/faqSeo';
 import { activeVideoItems } from '@/content/instagram';
 import { formatNumber, formatPhoneDisplay, formatPriceText } from './format';
@@ -414,6 +415,8 @@ export function buildSite(s: SettingsEntry, base: SiteContent, branches: Branch[
     beforeAfter: s.showBeforeAfter,
     shoeCare: Boolean(extra.shoeCare),
     tips: Boolean(s.showTips),
+    kabar: kabarVisible(s),
+    kabarBanner: kabarBannerVisible(s),
     servicePages: Boolean(extra.servicePages),
   };
   return {
