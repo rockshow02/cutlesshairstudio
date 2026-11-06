@@ -2,6 +2,7 @@ import { REVIEWER_NAME_MAX, buildDraft, decideAction, type ReviewConfig } from '
 import type { Env } from '../env';
 import { countAutoSentSince, insertReview, type ReviewStatus } from './db';
 import type { GbpClient } from './gbp';
+import { noopNotifier, type Notifier, type QueuedReview } from './notify';
 import { sendReply } from './reply';
 
 /** Batas kiriman otomatis per jam: bila ada bug, paling banyak sebanyak ini yang terkirim, sisanya masuk antrean */
@@ -34,8 +35,9 @@ function locationsOf(env: Env): Record<string, string> {
  * decideAction == 'kirim' (mode Aktif, bintang 5, tanpa kata keluhan) dan kuota per jam belum habis.
  * Mode Mati: tidak melakukan apa pun. Log hanya berisi hitungan.
  */
-export async function runReviewSync(env: Env, deps: { client: GbpClient; config: ReviewConfig; now: number }): Promise<SyncResult> {
-  const { client, config, now } = deps;
+export async function runReviewSync(env: Env, deps: { client: GbpClient; config: ReviewConfig; now: number; notifier?: Notifier }): Promise<SyncResult> {
+  const { client, config, now, notifier = noopNotifier } = deps;
+  const queuedNow: QueuedReview[] = [];
   const result: SyncResult = { fetched: 0, inserted: 0, autoSent: 0, queued: 0 };
   const db = env.REVIEWS_DB;
   if (!db || config.mode === 'Mati') return result;
@@ -63,12 +65,22 @@ export async function runReviewSync(env: Env, deps: { client: GbpClient; config:
       const isNew = await insertReview(db, { id: r.id, branch: slug, reviewer, rating: r.rating, body, reviewedAt: r.createdAt, status, draft }, now);
       if (!isNew) continue;
       result.inserted += 1;
-      if (status === 'antre') result.queued += 1;
+      if (status === 'antre') {
+        result.queued += 1;
+        queuedNow.push({ id: r.id, branch: slug, branchName, rating: r.rating });
+      }
       if (auto) {
         quota -= 1;
         const sent = await sendReply(env, client, r.id, { kind: 'otomatis' }, now);
         if (sent.ok) result.autoSent += 1;
       }
+    }
+  }
+  if (queuedNow.length) {
+    try {
+      await notifier.queued(queuedNow);
+    } catch (error) {
+      console.error('ulasan: notifikasi gagal', error instanceof Error ? error.message : 'galat');
     }
   }
   console.log('ulasan: sinkron selesai', JSON.stringify(result));

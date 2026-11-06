@@ -20,10 +20,4 @@ describe('migrations-ulasan/0001_ulasan.sql', () => {
     await expect(d1.prepare(strictInsert).bind('r3', 6, 'baru').run()).rejects.toThrow();
     await expect(d1.prepare(strictInsert).bind('r4', 0, 'baru').run()).rejects.toThrow();
   });
-
-  it('tabel meta menyimpan pasangan kunci-nilai', async () => {
-    const { d1 } = testD1('migrations-ulasan');
-    await d1.prepare("INSERT INTO meta (key, value) VALUES ('digest_day', '2026-11-06')").run();
-    expect((await d1.prepare("SELECT value FROM meta WHERE key = 'digest_day'").all<{ value: string }>()).results[0].value).toBe('2026-11-06');
-  });
 });

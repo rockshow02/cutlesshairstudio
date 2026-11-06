@@ -13,11 +13,6 @@ CREATE TABLE IF NOT EXISTS reviews (
   approved_at TEXT,
   sent_auto INTEGER NOT NULL DEFAULT 0,
   sent_at TEXT,
-  emailed_at TEXT,
   created_at TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS reviews_status_time ON reviews (status, reviewed_at);
-CREATE TABLE IF NOT EXISTS meta (
-  key TEXT PRIMARY KEY,
-  value TEXT NOT NULL
-);

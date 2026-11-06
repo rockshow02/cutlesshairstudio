@@ -17,7 +17,6 @@ export interface ReviewRow {
   approved_at: string | null;
   sent_auto: number;
   sent_at: string | null;
-  emailed_at: string | null;
   created_at: string;
 }
 
