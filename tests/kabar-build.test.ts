@@ -127,9 +127,24 @@ describe('kabarJsonLd', () => {
     expect(requiredEventProps(e)).toEqual([]);
   });
 
-  it('Acara untuk "semua": satu Place per cabang beroperasi', () => {
-    const e = ld(publish({ ...ACARA, branches: ['semua'] }), [...bundle.branches, { ...bundle.branches[0], slug: 'baru', name: 'Baru', status: 'Segera Dibuka' }]);
-    expect(e.location).toHaveLength(2);
+  it('Acara untuk "semua": cabang beroperasi (bukan Segera Dibuka), Tutup Sementara ikut', () => {
+    const [a, b] = bundle.branches;
+    const br = (x: typeof a, slug: string, status: typeof a.status) => ({ ...x, slug, name: slug, status });
+    const semua = publish({ ...ACARA, branches: ['semua'] });
+    expect(ld(semua, [a, b, br(a, 'baru', 'Segera Dibuka')]).location).toHaveLength(2);
+    // Tutup Sementara tetap termasuk
+    expect(ld(semua, [br(a, 'x', 'Aktif'), br(b, 'y', 'Tutup Sementara'), br(a, 'z', 'Segera Dibuka')]).location).toHaveLength(2);
+    // Tanpa Aktif: Tutup Sementara + Segera Dibuka → hanya Tutup Sementara
+    expect(ld(semua, [br(a, 'y', 'Tutup Sementara'), br(b, 'z', 'Segera Dibuka')]).location).toHaveLength(1);
+    // Semua Segera Dibuka → jatuh ke semua cabang
+    expect(ld(semua, [br(a, 'y', 'Segera Dibuka'), br(b, 'z', 'Segera Dibuka')]).location).toHaveLength(2);
+  });
+
+  it('location Event tidak pernah kosong: slug tak dikenal → cabang beroperasi; tanpa cabang → BlogPosting', () => {
+    const e = ld(publish({ ...ACARA, branches: ['cibubur'] }), [bundle.branches[0]]);
+    expect(e.location).toHaveLength(1);
+    expect(requiredEventProps(e)).toEqual([]);
+    expect(ld(publish(ACARA), [])['@type']).toBe('BlogPosting');
   });
 
   it('Acara "Tempat lain": Place{name, PostalAddress{streetAddress}} tanpa kota/kode pos', () => {

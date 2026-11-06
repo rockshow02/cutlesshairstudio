@@ -189,10 +189,16 @@ export const kabarSummaryOf = (a: KabarSummary): KabarSummary => ({
 
 const wibIso = (v: string) => `${v.trim().replace(' ', 'T').slice(0, 16)}:00+07:00`;
 
-/** Cabang yang dituju item: slug tertentu, atau semua cabang yang beroperasi bila 'semua' */
+/**
+ * Cabang yang dituju item: slug tertentu, atau semua cabang yang beroperasi (bukan "Segera Dibuka") bila 'semua'.
+ * Hasil kosong (semua Segera Dibuka, slug tak dikenal) → semua cabang, supaya location Event tidak pernah kosong.
+ */
 function targetBranches(a: KabarArticle, branches: BranchInfo[]): BranchInfo[] {
-  if (a.branches.includes(KABAR_ALL_BRANCHES)) return branches.filter((b) => b.status === 'Aktif');
-  return a.branches.flatMap((slug) => branches.filter((b) => b.slug === slug));
+  const operating = branches.filter((b) => b.status !== 'Segera Dibuka');
+  const fallback = operating.length ? operating : branches;
+  if (a.branches.includes(KABAR_ALL_BRANCHES)) return fallback;
+  const chosen = a.branches.flatMap((slug) => branches.filter((b) => b.slug === slug));
+  return chosen.length ? chosen : fallback;
 }
 
 const branchPlace = (b: BranchInfo, site: Site) => ({
@@ -204,7 +210,9 @@ const branchPlace = (b: BranchInfo, site: Site) => ({
 export function kabarJsonLd(a: KabarArticle, site: Site, branches: BranchInfo[], meta: ImageMeta = {}) {
   const url = `${site.siteUrl}${kabarPath(a.slug)}`;
   const image = a.image ? { image: [abs(site.siteUrl, resolveImage(a.image, meta))] } : {};
-  if (a.kind === 'Acara' && a.startsAt && a.endsAt) {
+  const places = a.kind === 'Acara' && a.locationType !== 'Tempat lain' ? targetBranches(a, branches) : [];
+  // Tanpa cabang sama sekali, Event tidak valid untuk Google (location wajib): jatuh ke BlogPosting
+  if (a.kind === 'Acara' && a.startsAt && a.endsAt && (a.locationType === 'Tempat lain' || places.length)) {
     return {
       '@context': 'https://schema.org',
       '@type': 'Event',
@@ -219,7 +227,7 @@ export function kabarJsonLd(a: KabarArticle, site: Site, branches: BranchInfo[],
       location:
         a.locationType === 'Tempat lain'
           ? { '@type': 'Place', name: a.venueName, address: { '@type': 'PostalAddress', streetAddress: a.venueAddress } }
-          : targetBranches(a, branches).map((b) => branchPlace(b, site)),
+          : places.map((b) => branchPlace(b, site)),
       organizer: { '@type': 'Organization', '@id': `${site.siteUrl}/#organization`, name: site.siteName, url: `${site.siteUrl}/` },
       inLanguage: 'id-ID',
       ...image,
