@@ -10,6 +10,10 @@ export const REPLY_MAX_LENGTH = 4096;
 export const TEMPLATE_MAX_LENGTH = 400;
 /** Maksimal kalimat tambahan dari aturan kata kunci per balasan */
 export const MAX_KEYWORD_SENTENCES = 2;
+/** Batas nama pengulas yang dipakai balasan (Worker memotong di sini) dan nama cabang (branchSchema) */
+export const REVIEWER_NAME_MAX = 100;
+export const BRANCH_NAME_MAX = 60;
+export const SENTENCE_MAX_LENGTH = 200;
 /** Nama file konfigurasi hasil build yang dibaca Worker (lewat binding ASSETS) */
 export const REVIEW_CONFIG_PATH = '/ulasan-config.json';
 
@@ -87,4 +91,12 @@ export function buildDraft(review: ReviewInput, cfg: ReplyTemplates, now: number
 /** 'kirim' hanya bila mode Aktif, bintang 5, dan tanpa kata keluhan. Satu-satunya pintu kirim otomatis. */
 export function decideAction(input: { mode: ReplyMode; rating: number; text: string }, complaintWords: string[]): SendDecision {
   return input.mode === 'Aktif' && input.rating === 5 && !hasComplaint(input.text, complaintWords) ? 'kirim' : 'antre';
+}
+
+/** Panjang terburuk satu balasan: variasi terpanjang setelah diisi + kalimat tambahan terpanjang + spasi. Dipakai build. */
+export function worstCaseLength(cfg: ReplyTemplates): number {
+  const worst = (text: string) => fillPlaceholders(text, { nama: 'n'.repeat(REVIEWER_NAME_MAX), cabang: 'c'.repeat(BRANCH_NAME_MAX), salam_waktu: 'Selamat malam' }).length;
+  const templates = Object.values(cfg.templates).flat().map(worst);
+  const sentences = cfg.keywordRules.map((r) => worst(r.sentence)).sort((a, b) => b - a).slice(0, MAX_KEYWORD_SENTENCES);
+  return Math.max(0, ...templates) + sentences.reduce((sum, n) => sum + n + 1, 0);
 }

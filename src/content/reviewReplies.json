@@ -1,0 +1,42 @@
+{
+  "templates": {
+    "bintang5": [
+      "{salam_waktu} kak {nama}! Terima kasih banyak sudah mampir ke Cutless {cabang} dan memberi bintang 5. Kami senang kakak puas. Sampai ketemu lagi ya kak!",
+      "Halo kak {nama}, terima kasih atas ulasan bintang 5-nya untuk Cutless {cabang}. Dukungan kakak jadi semangat buat tim kami. Ditunggu kunjungan berikutnya ya kak!",
+      "{salam_waktu} kak {nama}. Terima kasih sudah mempercayakan rambutnya ke Cutless {cabang} dan sudah menuliskan ulasan yang baik. Semoga kakak selalu nyaman dengan hasilnya.",
+      "Terima kasih kak {nama} untuk ulasan dan bintang 5-nya! Tim Cutless {cabang} senang bisa melayani kakak. Sampai jumpa di kunjungan selanjutnya."
+    ],
+    "bintang4": [
+      "{salam_waktu} kak {nama}, terima kasih sudah memberi bintang 4 untuk Cutless {cabang}. Masukan kakak sangat berarti buat kami untuk terus berbenah. Sampai ketemu lagi ya kak!",
+      "Halo kak {nama}, terima kasih atas ulasannya untuk Cutless {cabang}. Kami senang kakak sudah berkunjung dan akan terus berusaha memberi pelayanan yang lebih baik.",
+      "Terima kasih kak {nama} sudah meluangkan waktu menulis ulasan. Tim Cutless {cabang} akan terus belajar dari masukan kakak. Ditunggu kunjungan berikutnya ya kak.",
+      "{salam_waktu} kak {nama}. Terima kasih atas bintang 4-nya untuk Cutless {cabang}. Bila ada yang bisa kami perbaiki, kakak boleh sampaikan kapan saja."
+    ],
+    "bintang3": [
+      "{salam_waktu} kak {nama}, terima kasih sudah menulis ulasan untuk Cutless {cabang}. Mohon maaf bila pengalaman kakak belum sepenuhnya nyaman. Masukan kakak kami catat untuk perbaikan.",
+      "Halo kak {nama}, terima kasih atas ulasan jujurnya. Kami mohon maaf bila ada hal yang kurang berkenan di Cutless {cabang}. Silakan ceritakan lebih lanjut agar kami bisa memperbaikinya.",
+      "Terima kasih kak {nama} sudah berbagi pengalaman di Cutless {cabang}. Kami menghargai masukan kakak dan akan menjadikannya bahan evaluasi tim.",
+      "{salam_waktu} kak {nama}. Terima kasih atas ulasannya. Kami mohon maaf bila belum memenuhi harapan kakak, dan kami terbuka untuk mendengar masukan kakak."
+    ],
+    "bintang12": [
+      "{salam_waktu} kak {nama}, mohon maaf atas pengalaman yang kurang menyenangkan di Cutless {cabang}. Kami ingin memahami kejadiannya lebih jauh. Boleh kakak hubungi kami lewat WhatsApp 0813-2220-932?",
+      "Halo kak {nama}, kami mohon maaf bila layanan Cutless {cabang} belum sesuai harapan kakak. Silakan hubungi kami di WhatsApp 0813-2220-932 agar kami bisa menindaklanjuti masukan kakak.",
+      "Terima kasih kak {nama} sudah menyampaikan ulasannya. Kami menyesal atas ketidaknyamanan yang kakak alami di Cutless {cabang}. Mohon kesediaan kakak menghubungi kami lewat WhatsApp 0813-2220-932.",
+      "{salam_waktu} kak {nama}. Masukan kakak sangat kami perhatikan, dan kami mohon maaf atas pengalaman di Cutless {cabang}. Kakak bisa menceritakan detailnya lewat WhatsApp 0813-2220-932."
+    ],
+    "tanpaTeks": [
+      "{salam_waktu} kak {nama}! Terima kasih sudah mampir ke Cutless {cabang} dan memberi penilaian. Sampai ketemu lagi ya kak!",
+      "Halo kak {nama}, terima kasih atas penilaiannya untuk Cutless {cabang}. Ditunggu kunjungan berikutnya ya kak.",
+      "Terima kasih kak {nama} sudah berkunjung ke Cutless {cabang} dan meluangkan waktu memberi bintang. Sampai jumpa lagi!",
+      "{salam_waktu} kak {nama}. Terima kasih atas dukungannya untuk Cutless {cabang}. Kami tunggu kedatangan kakak berikutnya."
+    ]
+  },
+  "keywordRules": [
+    { "keyword": "fade", "sentence": "Senang sekali hasil fade-nya sesuai selera kakak." },
+    { "keyword": "taper", "sentence": "Senang sekali hasil taper-nya sesuai selera kakak." },
+    { "keyword": "sepatu", "sentence": "Terima kasih juga sudah mencoba layanan perawatan sepatu kami." },
+    { "keyword": "fotless", "sentence": "Terima kasih juga sudah mencoba layanan perawatan sepatu kami." },
+    { "keyword": "Yasslaw", "sentence": "Terima kasih sudah mempercayakan rambut kakak kepada Yasslaw." }
+  ],
+  "complaintWords": ["lama", "antri", "antre", "kecewa", "mahal", "kotor", "jelek", "buruk", "tidak puas", "nunggu", "telat", "kasar"]
+}
