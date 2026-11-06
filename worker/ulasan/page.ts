@@ -57,6 +57,10 @@ textarea{width:100%;min-height:8rem;padding:.6rem .75rem;background:var(--ink);c
 .cards .card b{font-size:1.6rem}
 `;
 
+// same-origin (bukan no-referrer seperti /statistik/): dengan no-referrer browser mengirim 'Origin: null' pada form POST
+// dan pemeriksaan Origin di handleAction menolak admin yang sah
+const PAGE_HEADERS = { ...HEADERS, 'Referrer-Policy': 'same-origin' };
+
 const hashId = (id: string) => {
   let h = 2166136261;
   for (const c of id) h = Math.imul(h ^ c.charCodeAt(0), 16777619) >>> 0;
@@ -83,9 +87,9 @@ function layout(title: string, body: string): string {
 `;
 }
 
-const html = (status: number, body: string, extra: Record<string, string> = {}) => new Response(body, { status, headers: { ...HEADERS, ...extra, 'Content-Type': 'text/html; charset=utf-8' } });
+const html = (status: number, body: string, extra: Record<string, string> = {}) => new Response(body, { status, headers: { ...PAGE_HEADERS, ...extra, 'Content-Type': 'text/html; charset=utf-8' } });
 const message = (status: number, title: string, text: string) => html(status, layout(`${title} | Cutless Hair Studio`, `<p class="kicker">Cutless Hair Studio</p><h1>${esc(title)}</h1><p class="muted">${esc(text)}</p>`));
-const redirect = (location: string, status = 303) => new Response(null, { status, headers: { ...HEADERS, Location: location } });
+const redirect = (location: string, status = 303) => new Response(null, { status, headers: { ...PAGE_HEADERS, Location: location } });
 
 /** Email dari klaim JWT yang sudah diverifikasi; 'admin' bila tidak ada */
 function accessEmail(request: Request): string {
@@ -192,10 +196,10 @@ export async function handleReviews(request: Request, env: Env, options: HandleO
   if (url.pathname !== PATH && url.pathname !== ACTION_PATH) return message(404, 'Tidak ditemukan', 'Halaman tidak ada.');
   if (!env.REVIEWS_DB) return message(503, 'Balasan ulasan belum aktif', 'Database cutless-ulasan belum terhubung ke website (lihat docs/balasan-ulasan.md).');
   if (url.pathname === ACTION_PATH) {
-    if (request.method !== 'POST') return new Response(null, { status: 405, headers: { ...HEADERS, Allow: 'POST' } });
+    if (request.method !== 'POST') return new Response(null, { status: 405, headers: { ...PAGE_HEADERS, Allow: 'POST' } });
     return handleAction(request, env, options, now);
   }
-  if (request.method !== 'GET' && request.method !== 'HEAD') return new Response(null, { status: 405, headers: { ...HEADERS, Allow: 'GET, HEAD' } });
+  if (request.method !== 'GET' && request.method !== 'HEAD') return new Response(null, { status: 405, headers: { ...PAGE_HEADERS, Allow: 'GET, HEAD' } });
   const code = url.searchParams.get('s') ?? '';
   return listPage(request, env, now, 200, code in MESSAGES ? code : '');
 }

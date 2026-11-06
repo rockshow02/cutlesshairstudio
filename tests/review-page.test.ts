@@ -123,6 +123,8 @@ describe('/ulasan/: tampilan', () => {
     expect(res.headers.get('X-Robots-Tag')).toBe('noindex, nofollow');
     expect(res.headers.get('Cache-Control')).toBe('no-store');
     expect(res.headers.get('Content-Security-Policy')).toContain("default-src 'none'");
+    // no-referrer membuat browser mengirim 'Origin: null' pada form POST (admin sah ditolak pemeriksaan CSRF)
+    expect(res.headers.get('Referrer-Policy')).toBe('same-origin');
     const html = await res.text();
     expect(html).toContain('<meta name="robots" content="noindex');
     expect(html).not.toContain('<script');

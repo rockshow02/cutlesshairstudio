@@ -424,7 +424,7 @@ export function applyE2EFixtures(file: string, data: unknown, variant?: string):
   if (file === 'hero.json') return { ...(data as Json), primaryCtaLabel: E2E_HERO_CTA };
   if (file === 'settings.json') {
     // Toggle & nama usaha tetap (tata letak beranda & selector tidak ikut berubah saat admin mengubahnya di CMS)
-    return { ...(data as Json), siteName: E2E_SITE_NAME, showProducts: variant === 'uniform', showTips: variant === 'uniform', showServicePages: variant === 'uniform', showTestimonials: false, showBeforeAfter: false, enablePreloader: true, preloaderVideo: '' };
+    return { ...(data as Json), siteName: E2E_SITE_NAME, showProducts: variant === 'uniform', showTips: variant === 'uniform', showServicePages: variant === 'uniform', showTestimonials: false, showBeforeAfter: false, enablePreloader: true, preloaderVideo: '', reviewReplyMode: variant === 'uniform' ? 'Mati' : 'Aktif' };
   }
   // Promo bertanggal (tampil/tidak tergantung jam) → tidak ada di build uji. Pengumuman tanpa tanggal hanya di varian
   // uniform (e2e/announcement.spec.ts); build bawaan tanpa bar pengumuman.
