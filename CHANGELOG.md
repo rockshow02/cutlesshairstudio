@@ -12,6 +12,9 @@ Cara menaikkan versi & merilis: [CONTRIBUTING.md → Rilis versi](CONTRIBUTING.m
 
 ## [Belum dirilis]
 
+### Diubah
+- **Kata keluhan balasan ulasan boleh kosong** (Pages CMS → *Template balasan ulasan*; skema dan CMS tidak lagi mewajibkan minimal 1 kata, default daftar kosong). Daftar kosong + mode **Aktif** = SEMUA ulasan bintang 5 dibalas otomatis; bintang 1–4 tetap masuk antrean, mode Uji/Mati tidak mengirim apa pun. Isi `reviewReplies.json` tidak diubah (pemilik mengosongkan sendiri lewat CMS setelah rilis). Dokumentasi: `docs/balasan-ulasan.md` dan *Membalas ulasan Google* di panduan admin (keputusan kirim/antre dibuat sekali saat ulasan diambil; pencocokan berbasis potongan kata; salam diisi saat draf dibuat).
+
 ## [1.4.0] - 2026-11-06
 
 ### Ditambahkan

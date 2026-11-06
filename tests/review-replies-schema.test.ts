@@ -19,6 +19,12 @@ const issues = (v: unknown) => {
 describe('reviewRepliesSchema', () => {
   it('data dasar valid', () => expect(issues(base())).toEqual([]));
 
+  it('kata keluhan dihilangkan → default daftar kosong', () => {
+    const { complaintWords: _omit, ...rest } = base();
+    const r = schema.safeParse(rest);
+    expect(r.success && r.data.complaintWords).toEqual([]);
+  });
+
   it('3–6 variasi per kategori, tiap variasi 1–400 karakter', () => {
     for (const cat of ['bintang5', 'bintang4', 'bintang3', 'bintang12', 'tanpaTeks'] as const) {
       const few = base();
@@ -56,7 +62,7 @@ describe('reviewRepliesSchema', () => {
   it('kata keluhan & aturan: batas jumlah dan panjang', () => {
     const none = base();
     none.complaintWords = [];
-    expect(issues(none)).not.toEqual([]);
+    expect(issues(none)).toEqual([]);
     const longWord = base();
     longWord.complaintWords = ['x'.repeat(31)];
     expect(issues(longWord)).not.toEqual([]);

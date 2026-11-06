@@ -84,6 +84,21 @@ describe('decideAction', () => {
   });
 });
 
+describe('decideAction, daftar kata keluhan kosong', () => {
+  it('hasComplaint: daftar kosong atau hanya spasi tidak pernah cocok', () => {
+    expect(hasComplaint('antri lama', [])).toBe(false);
+    expect(hasComplaint('antri lama', ['  '])).toBe(false);
+  });
+  it('mode Aktif: semua bintang 5 dikirim, bintang 1–4 tetap antre', () => {
+    expect(decideAction({ mode: 'Aktif', rating: 5, text: 'antri lama' }, [])).toBe('kirim');
+    expect(decideAction({ mode: 'Aktif', rating: 4, text: 'antri lama' }, [])).toBe('antre');
+    for (const rating of [1, 2, 3]) expect(decideAction({ mode: 'Aktif', rating, text: 'mantap' }, [])).toBe('antre');
+  });
+  it('mode Uji & Mati: tetap antre', () => {
+    for (const mode of ['Uji', 'Mati'] as const) expect(decideAction({ mode, rating: 5, text: 'antri lama' }, [])).toBe('antre');
+  });
+});
+
 describe('buildDraft', () => {
   const base = { rating: 5, text: 'Potongan rapi', reviewer: 'Budi', branchName: 'Cibubur' };
   it('mengisi placeholder dari template terpilih', () => {
