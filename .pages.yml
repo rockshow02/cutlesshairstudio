@@ -573,11 +573,10 @@ content:
       - name: complaintWords
         label: Kata keluhan
         type: string
-        required: true
+        required: false
         list:
-          min: 1
           max: 30
-        description: "Ulasan yang memuat salah satu kata ini TIDAK PERNAH dibalas otomatis, walau bintang 5 (selalu masuk antrean untuk ditinjau admin). Contoh: lama, antri, kecewa, mahal, kotor. Maksimal 30 karakter per kata."
+        description: "Kosongkan daftar ini agar SEMUA ulasan bintang 5 dibalas otomatis. Bila diisi, ulasan bintang 5 yang memuat salah satu kata ini masuk antrean untuk ditinjau admin. Maksimal 30 karakter per kata."
         options:
           maxlength: 30
 
