@@ -115,15 +115,15 @@ export function statsCsv(records: ClickRecord[], allow: WaClickAllowlist | null)
 
 /* ---------- HTML ---------- */
 
-const esc = (s: string | number) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!);
+export const esc = (s: string | number) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!);
 const num = (n: number) => n.toLocaleString('id-ID');
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
-const dayLabel = (day: string, withYear = true) => {
+export const dayLabel = (day: string, withYear = true) => {
   const [y, m, d] = day.split('-').map(Number);
   return `${d} ${MONTHS[m - 1]}${withYear ? ` ${y}` : ''}`;
 };
 
-const STYLE = `
+export const STYLE = `
 @font-face{font-family:'Plus Jakarta Sans';font-weight:400 800;font-display:swap;src:url(/fonts/plus-jakarta-sans-v1-latin.woff2) format('woff2')}
 :root{color-scheme:dark;--ink:#0c1014;--charcoal:#1f1e1c;--bone:#f2efea;--dim:rgba(242,239,234,.7);--line:rgba(242,239,234,.14);--sand:#a59789;--wa:#25d366}
 *{box-sizing:border-box}
@@ -243,7 +243,7 @@ ${table('halaman', 'Per halaman asal', 'Halaman', s.byPage, s.total)}
   return page('Statistik klik WhatsApp', body);
 }
 
-const HEADERS = {
+export const HEADERS = {
   'Cache-Control': 'no-store',
   'X-Robots-Tag': 'noindex, nofollow',
   'Referrer-Policy': 'no-referrer',

@@ -66,3 +66,25 @@ export async function claimForSend(db: D1Database, id: string, from: ReviewStatu
 /** Panggilan Google gagal setelah klaim: tandai gagal (draf tetap, bisa dicoba lagi oleh admin) */
 export const markFailed = (db: D1Database, id: string) =>
   db.prepare("UPDATE reviews SET status = 'gagal', sent_at = NULL, sent_auto = 0 WHERE id = ? AND status = 'terkirim'").bind(id).run();
+
+const WAITING: ReviewStatus[] = ['baru', 'antre', 'gagal'];
+
+/** Antrean: menunggu admin. Yang tertua di atas. */
+export const listQueue = async (db: D1Database) =>
+  (await db.prepare("SELECT * FROM reviews WHERE status IN ('baru', 'antre', 'gagal') ORDER BY reviewed_at ASC, id ASC LIMIT 200").all<ReviewRow>()).results;
+
+/** Riwayat: sudah terkirim / dilewati, yang terbaru di atas */
+export const listHistory = async (db: D1Database, limit = 50) =>
+  (await db.prepare("SELECT * FROM reviews WHERE status IN ('terkirim', 'dilewati') ORDER BY reviewed_at DESC, id DESC LIMIT ?").bind(limit).all<ReviewRow>()).results;
+
+/** Simpan draf hanya untuk ulasan yang masih menunggu; true = tersimpan */
+export async function updateDraft(db: D1Database, id: string, draft: string): Promise<boolean> {
+  const res = await db.prepare(`UPDATE reviews SET draft = ? WHERE id = ? AND status IN (${WAITING.map(() => '?').join(', ')})`).bind(draft, id, ...WAITING).run();
+  return res.meta.changes === 1;
+}
+
+/** Lewati hanya ulasan yang masih menunggu; true = dilewati */
+export async function skipReview(db: D1Database, id: string): Promise<boolean> {
+  const res = await db.prepare(`UPDATE reviews SET status = 'dilewati' WHERE id = ? AND status IN (${WAITING.map(() => '?').join(', ')})`).bind(id, ...WAITING).run();
+  return res.meta.changes === 1;
+}
