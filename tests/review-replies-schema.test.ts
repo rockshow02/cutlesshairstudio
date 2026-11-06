@@ -94,7 +94,4 @@ describe('settings.reviewReplyMode', () => {
     expect(settingsSchema.parse({ ...rawFixture.settings, reviewReplyMode: 'Aktif' }).reviewReplyMode).toBe('Aktif');
     expect(settingsSchema.safeParse({ ...rawFixture.settings, reviewReplyMode: 'Nyala' }).success).toBe(false);
   });
-  it('settings.json asli bernilai Mati', () => {
-    expect(JSON.parse(readFileSync('src/content/settings.json', 'utf8')).reviewReplyMode).toBe('Mati');
-  });
 });

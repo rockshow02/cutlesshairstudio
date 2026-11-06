@@ -12,6 +12,8 @@ Cara menaikkan versi & merilis: [CONTRIBUTING.md → Rilis versi](CONTRIBUTING.m
 
 ## [Belum dirilis]
 
+## [1.4.1] - 2026-11-06
+
 ### Diubah
 - **Kata keluhan balasan ulasan boleh kosong** (Pages CMS → *Template balasan ulasan*; skema dan CMS tidak lagi mewajibkan minimal 1 kata, default daftar kosong). Daftar kosong + mode **Aktif** = SEMUA ulasan bintang 5 dibalas otomatis; bintang 1–4 tetap masuk antrean, mode Uji/Mati tidak mengirim apa pun. Isi `reviewReplies.json` tidak diubah (pemilik mengosongkan sendiri lewat CMS setelah rilis). Dokumentasi: `docs/balasan-ulasan.md` dan *Membalas ulasan Google* di panduan admin (keputusan kirim/antre dibuat sekali saat ulasan diambil; pencocokan berbasis potongan kata; salam diisi saat draf dibuat).
 
@@ -108,7 +110,9 @@ Launch https://cutlesshairstudio.com.
 - Halaman `/cuci-sepatu/` untuk partner cuci sepatu (layanan, harga, daftar menu PDF, galeri) dan teaser di beranda.
 - Validasi konten saat build (skema & aturan siap tayang), kompres gambar otomatis, SEO dasar (title/meta, JSON-LD, sitemap), staging terpisah, CI (typecheck, lint, tes, e2e).
 
-[Belum dirilis]: https://github.com/rockshow02/cutlesshairstudio/compare/v1.3.1...staging
+[Belum dirilis]: https://github.com/rockshow02/cutlesshairstudio/compare/v1.4.1...staging
+[1.4.1]: https://github.com/rockshow02/cutlesshairstudio/compare/v1.4.0...v1.4.1
+[1.4.0]: https://github.com/rockshow02/cutlesshairstudio/compare/v1.3.1...v1.4.0
 [1.3.1]: https://github.com/rockshow02/cutlesshairstudio/compare/v1.3.0...v1.3.1
 [1.3.0]: https://github.com/rockshow02/cutlesshairstudio/compare/v1.2.3...v1.3.0
 [1.2.3]: https://github.com/rockshow02/cutlesshairstudio/compare/v1.2.2...v1.2.3

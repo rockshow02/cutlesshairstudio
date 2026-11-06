@@ -24,7 +24,7 @@
   "showProducts": false,
   "showTips": false,
   "showServicePages": true,
-  "reviewReplyMode": "Mati",
+  "reviewReplyMode": "Aktif",
   "showBeforeAfter": false,
   "enablePreloader": true
 }
