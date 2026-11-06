@@ -834,7 +834,7 @@ Setiap perubahan tercatat atas nama akun GitHub Anda (siapa mengubah apa dan kap
 
 Ulasan Google kedua cabang dibalas lewat satu halaman: **https://cutlesshairstudio.com/ulasan/** (login seperti /statistik/: email terdaftar + kode 6 digit). Pemasangan awal oleh pemilik: `docs/balasan-ulasan.md`.
 
-**Aturan dasarnya:** ulasan **bintang 5 tanpa kata keluhan** dibalas otomatis dari template (hanya bila mode *Aktif*). Ulasan **bintang 1–4**, dan ulasan yang memuat kata keluhan (mis. lama, antri, kecewa, mahal, kotor) **tidak pernah dibalas otomatis**: masuk antrean untuk Anda tinjau.
+**Aturan dasarnya:** ulasan **bintang 5** dibalas otomatis dari template (hanya bila mode *Aktif*). Ulasan **bintang 1–4** **tidak pernah dibalas otomatis**: masuk antrean untuk Anda tinjau. Bila daftar *Kata keluhan* diisi (mis. lama, antri, kecewa, mahal, kotor), bintang 5 yang memuat salah satu kata itu juga masuk antrean; bila daftar dikosongkan, semua bintang 5 dibalas otomatis.
 
 **Cara tahu ada ulasan baru:** website ini **tidak mengirim email/chat**. Andalkan notifikasi bawaan Google (email atau aplikasi Google Business Profile) dan simpan `/ulasan/` sebagai bookmark di HP dan laptop. Judul tab menampilkan jumlah antrean, mis. *(3) Ulasan – Cutless*.
 
@@ -847,4 +847,10 @@ Ulasan Google kedua cabang dibalas lewat satu halaman: **https://cutlesshairstud
 5. Status **Gagal kirim**: Google menolak atau gagal menerima balasan. Tekan **Kirim** lagi nanti.
 6. **Riwayat** menampilkan balasan yang sudah terkirim (otomatis, atau disetujui oleh siapa dan kapan) dan yang dilewati.
 
-**Mengubah template balasan** *(Owner)*: Pages CMS → **Template balasan ulasan**. Tiap kategori (bintang 5, 4, 3, 1–2, dan bintang tanpa teks) punya 3–6 variasi (maksimal 400 karakter), dipilih acak. Placeholder yang boleh: `{nama}`, `{cabang}`, `{salam_waktu}` (Selamat pagi/siang/sore/malam). Kata kunci menambah kalimat (mis. *fade* → terima kasih untuk hasil fade-nya); **Kata keluhan** memaksa ulasan masuk antrean walau bintang 5. Placeholder lain ditolak saat Save.
+**Mengubah template balasan** *(Owner)*: Pages CMS → **Template balasan ulasan**. Tiap kategori (bintang 5, 4, 3, 1–2, dan bintang tanpa teks) punya 3–6 variasi (maksimal 400 karakter), dipilih acak. Placeholder yang boleh: `{nama}`, `{cabang}`, `{salam_waktu}` (Selamat pagi/siang/sore/malam). Kata kunci menambah kalimat (mis. *fade* → terima kasih untuk hasil fade-nya); **Kata keluhan** (tidak wajib) memaksa ulasan bintang 5 yang memuat kata itu masuk antrean. Placeholder lain ditolak saat Save.
+
+**Mengosongkan Kata keluhan** *(Owner)*: hapus semua kata di daftar lalu Save. Akibatnya SEMUA ulasan bintang 5 dibalas otomatis (mode *Aktif*), termasuk yang berkeluhan seperti "antri lama": ulasan itu juga dibalas template bintang 5. Bintang 1–4 tetap masuk antrean. Catatan penting:
+
+- Keputusan "kirim otomatis atau antre" dibuat **sekali**, saat ulasan pertama kali diambil. Ulasan yang sudah masuk antrean (saat mode *Uji*, atau sebelum daftar dikosongkan) **tidak akan terkirim otomatis** kemudian: kirim manual dengan tombol **Kirim**, atau tekan **Lewati**.
+- Pencocokan kata berbasis potongan kata: "lama" juga cocok di "selamat".
+- Salam (`{salam_waktu}`) diisi saat draf dibuat. Untuk ulasan di antrean yang dikirim belakangan, sesuaikan salam (pagi/siang/sore/malam) sebelum menekan **Kirim**.
