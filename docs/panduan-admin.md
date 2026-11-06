@@ -829,3 +829,22 @@ Email belum terdaftar? Minta pemilik menambahkannya (docs/statistik-klik-wa.md �
 | Tidak bisa login | Pastikan undangan kolaborator GitHub sudah di-*Accept* |
 
 Setiap perubahan tercatat atas nama akun GitHub Anda (siapa mengubah apa dan kapan).
+
+## Membalas ulasan Google (/ulasan/)
+
+Ulasan Google kedua cabang dibalas lewat satu halaman: **https://cutlesshairstudio.com/ulasan/** (login seperti /statistik/: email terdaftar + kode 6 digit). Pemasangan awal oleh pemilik: `docs/balasan-ulasan.md`.
+
+**Aturan dasarnya:** ulasan **bintang 5 tanpa kata keluhan** dibalas otomatis dari template (hanya bila mode *Aktif*). Ulasan **bintang 1–4**, dan ulasan yang memuat kata keluhan (mis. lama, antri, kecewa, mahal, kotor) **tidak pernah dibalas otomatis**: masuk antrean untuk Anda tinjau.
+
+**Cara tahu ada ulasan baru:** website ini **tidak mengirim email/chat**. Andalkan notifikasi bawaan Google (email atau aplikasi Google Business Profile) dan simpan `/ulasan/` sebagai bookmark di HP dan laptop. Judul tab menampilkan jumlah antrean, mis. *(3) Ulasan – Cutless*.
+
+**Meninjau dan membalas:**
+
+1. Buka `/ulasan/`. Bagian atas: jumlah ulasan menunggu per cabang, ulasan tertua yang belum dibalas, dan penanda **Baru** untuk ulasan sejak kunjungan terakhir Anda di browser itu.
+2. Pada tiap ulasan di **Antrean**, baca ulasannya, lalu periksa **Draf balasan** (sudah terisi dari template dan nama pengulas). Sunting bila perlu: sapaan "kak", jangan menjanjikan hal yang belum pasti, dan untuk bintang 1–2 arahkan ke WhatsApp 0813-2220-932.
+3. Tekan **Kirim** (balasan tampil di Google), **Simpan draf** (kirim nanti), atau **Lewati** (tidak dibalas).
+4. Muncul pesan *mode ... belum Aktif*: website sedang dalam mode **Mati** atau **Uji**, jadi tidak ada balasan yang dikirim ke Google. Mode diubah pemilik di **Pengaturan Situs → Mode balasan ulasan Google**.
+5. Status **Gagal kirim**: Google menolak atau gagal menerima balasan. Tekan **Kirim** lagi nanti.
+6. **Riwayat** menampilkan balasan yang sudah terkirim (otomatis, atau disetujui oleh siapa dan kapan) dan yang dilewati.
+
+**Mengubah template balasan** *(Owner)*: Pages CMS → **Template balasan ulasan**. Tiap kategori (bintang 5, 4, 3, 1–2, dan bintang tanpa teks) punya 3–6 variasi (maksimal 400 karakter), dipilih acak. Placeholder yang boleh: `{nama}`, `{cabang}`, `{salam_waktu}` (Selamat pagi/siang/sore/malam). Kata kunci menambah kalimat (mis. *fade* → terima kasih untuk hasil fade-nya); **Kata keluhan** memaksa ulasan masuk antrean walau bintang 5. Placeholder lain ditolak saat Save.

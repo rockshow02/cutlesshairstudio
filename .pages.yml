@@ -483,6 +483,104 @@ content:
             options:
               min: 0
 
+  # ------------------------------------------------------------------ Template balasan ulasan Google
+  - name: reviewReplies
+    label: Template balasan ulasan
+    type: file
+    path: src/content/reviewReplies.json
+    format: json
+    fields:
+      - name: templates
+        label: Template balasan
+        type: object
+        required: true
+        description: "Balasan ulasan Google. Tiap kategori 3–6 variasi (dipilih acak), maksimal 400 karakter. Placeholder yang boleh: {nama} (nama pengulas), {cabang} (nama cabang), {salam_waktu} (Selamat pagi/siang/sore/malam). Placeholder lain ditolak. Gunakan sapaan kak dan jangan menjanjikan hal yang belum pasti."
+        fields:
+          - name: bintang5
+            label: Bintang 5
+            type: text
+            required: true
+            list:
+              min: 3
+              max: 6
+            description: "Dikirim otomatis hanya bila Mode balasan ulasan = Aktif dan ulasan tanpa kata keluhan. Maksimal 400 karakter per variasi."
+            options:
+              maxlength: 400
+          - name: bintang4
+            label: Bintang 4
+            type: text
+            required: true
+            list:
+              min: 3
+              max: 6
+            description: "Menjadi draf; admin menyetujui di halaman /ulasan/. Maksimal 400 karakter per variasi."
+            options:
+              maxlength: 400
+          - name: bintang3
+            label: Bintang 3
+            type: text
+            required: true
+            list:
+              min: 3
+              max: 6
+            description: "Menjadi draf; admin menyetujui di halaman /ulasan/. Maksimal 400 karakter per variasi."
+            options:
+              maxlength: 400
+          - name: bintang12
+            label: Bintang 1–2
+            type: text
+            required: true
+            list:
+              min: 3
+              max: 6
+            description: "Menjadi draf; admin menyetujui di halaman /ulasan/. Arahkan ke WhatsApp 0813-2220-932. Maksimal 400 karakter per variasi."
+            options:
+              maxlength: 400
+          - name: tanpaTeks
+            label: Bintang tanpa teks (3–5)
+            type: text
+            required: true
+            list:
+              min: 3
+              max: 6
+            description: "Untuk ulasan bintang 3–5 yang hanya berisi bintang tanpa tulisan. Maksimal 400 karakter per variasi."
+            options:
+              maxlength: 400
+      - name: keywordRules
+        label: Kalimat tambahan berdasarkan kata kunci
+        type: object
+        list:
+          max: 30
+          collapsible:
+            collapsed: true
+            summary: "{keyword}"
+        description: "Bila isi ulasan memuat kata kunci (huruf besar/kecil tidak berpengaruh), kalimat ditambahkan ke balasan (maksimal 2 kalimat). Contoh: fade, taper, sepatu, atau nama kapster."
+        fields:
+          - name: keyword
+            label: Kata kunci
+            type: string
+            description: "Maksimal 40 karakter."
+            required: true
+            options:
+              maxlength: 40
+          - name: sentence
+            label: Kalimat tambahan
+            type: text
+            required: true
+            description: "Boleh memakai {nama}, {cabang}, {salam_waktu}. Maksimal 200 karakter."
+            options:
+              maxlength: 200
+      - name: complaintWords
+        label: Kata keluhan
+        type: string
+        required: true
+        list:
+          min: 1
+          max: 30
+        description: "Ulasan yang memuat salah satu kata ini TIDAK PERNAH dibalas otomatis, walau bintang 5 (selalu masuk antrean untuk ditinjau admin). Contoh: lama, antri, kecewa, mahal, kotor. Maksimal 30 karakter per kata."
+        options:
+          maxlength: 30
+
   # ------------------------------------------------------------------ FAQ
   - name: faq
     label: FAQ (tanya-jawab)
@@ -2207,6 +2305,13 @@ content:
         type: boolean
         default: false
         description: "Nyalakan setelah ada halaman berstatus Terbit di menu Halaman Layanan. Aktif = halaman /layanan/, menu Layanan ke /layanan/, & link Selengkapnya di Daftar Harga dan Kartu Layanan. Mati = semua itu disembunyikan (/layanan/ dialihkan ke beranda)."
+      - name: reviewReplyMode
+        label: Mode balasan ulasan Google
+        type: select
+        default: Mati
+        description: "Mati = ulasan tidak diambil. Uji = semua ulasan masuk antrean di /ulasan/ dan tidak ada yang terkirim ke Google (termasuk bintang 5 dan tombol Kirim admin). Aktif = bintang 5 tanpa kata keluhan dibalas otomatis; bintang 1–4 tetap menunggu persetujuan admin. Perubahan berlaku setelah website selesai dibangun (±3–5 menit)."
+        options:
+          values: [Mati, Uji, Aktif]
       - name: showBeforeAfter
         label: Tampilkan Before / After
         type: boolean

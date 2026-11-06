@@ -16,6 +16,7 @@ import { itemsAt } from './branchPricing';
 import { INSTAGRAM_POST_URL, instagramUrlProblem, normalizeInstagramUrl } from './instagram';
 import { POSTAL_CODE } from './postalAddress';
 import { RESERVED_TIP_SLUGS, TIP_CATEGORIES, TIP_SLUG, TIP_STATUSES } from './tipsSeo';
+import { findUnknownPlaceholders, REPLY_MAX_LENGTH, REPLY_PLACEHOLDERS, SENTENCE_MAX_LENGTH, TEMPLATE_MAX_LENGTH, worstCaseLength } from './reviewReplies';
 import { BRANCH_FACILITIES, SERVICE_PAGE_SLUG, SERVICE_PAGE_STATUSES } from './servicePages';
 import type { IconName } from '../types/common';
 
@@ -336,6 +337,8 @@ export const settingsSchema = z.object({
   showTips: z.boolean().default(false),
   /** Halaman /layanan/ & /layanan/<slug>/ (src/content/layanan/*.md), menu Layanan → /layanan/, link "Selengkapnya" */
   showServicePages: z.boolean().default(false),
+  /** Balasan ulasan Google (Worker /ulasan/). Mati = ulasan tidak diambil; Uji = semua masuk antrean, tidak ada yang terkirim ke Google; Aktif = bintang 5 tanpa kata keluhan dibalas otomatis */
+  reviewReplyMode: z.enum(['Mati', 'Uji', 'Aktif'], { error: 'mode balasan ulasan harus salah satu: Mati, Uji, Aktif' }).default('Mati'),
   showBeforeAfter: z.boolean().default(false),
   /** Animasi pembuka (sekali per sesi; otomatis dilewati bila pengunjung memilih "kurangi gerakan") */
   enablePreloader: z.boolean().default(true),
@@ -748,6 +751,43 @@ export const ctaSchema = z
     if (c.image && !c.imageAlt) ctx.addIssue({ code: 'custom', path: ['imageAlt'], message: 'deskripsi foto wajib diisi bila foto dipilih' });
   });
 
+/* ---------- Template balasan ulasan Google (Pages CMS → Template balasan ulasan) ---------- */
+
+const allowedPlaceholders = REPLY_PLACEHOLDERS.map((p) => `{${p}}`).join(', ');
+const replyText = (max: number, label: string) =>
+  z
+    .string()
+    .trim()
+    .min(1, `${label} wajib diisi`)
+    .max(max, `maksimal ${max} karakter`)
+    .superRefine((v, ctx) => {
+      const unknown = findUnknownPlaceholders(v);
+      if (unknown.length) ctx.addIssue({ code: 'custom', message: `placeholder ${unknown.map((u) => `{${u}}`).join(', ')} tidak dikenal; yang boleh hanya ${allowedPlaceholders} (huruf kecil)` });
+    });
+const templateVariants = z.array(replyText(TEMPLATE_MAX_LENGTH, 'variasi balasan')).min(3, 'minimal 3 variasi').max(6, 'maksimal 6 variasi');
+
+export const reviewRepliesSchema = z
+  .object({
+    templates: z.object({
+      bintang5: templateVariants,
+      bintang4: templateVariants,
+      bintang3: templateVariants,
+      bintang12: templateVariants,
+      tanpaTeks: templateVariants,
+    }),
+    keywordRules: z
+      .array(z.object({ keyword: z.string().trim().min(1, 'kata kunci wajib diisi').max(40, 'maksimal 40 karakter'), sentence: replyText(SENTENCE_MAX_LENGTH, 'kalimat tambahan') }))
+      .max(30, 'maksimal 30 aturan')
+      .default([]),
+    complaintWords: z.array(z.string().trim().min(1, 'kata keluhan wajib diisi').max(30, 'maksimal 30 karakter')).min(1, 'minimal 1 kata keluhan').max(30, 'maksimal 30 kata keluhan'),
+  })
+  .superRefine((cfg, ctx) => {
+    const longest = worstCaseLength(cfg);
+    if (longest > REPLY_MAX_LENGTH) {
+      ctx.addIssue({ code: 'custom', path: ['templates'], message: `balasan terpanjang setelah placeholder diisi bisa ${longest} karakter, melebihi batas Google ${REPLY_MAX_LENGTH}; pendekkan variasi atau kalimat tambahan` });
+    }
+  });
+
 export const CONTENT_FILES = {
   'branches.json': z.array(branchSchema).min(1, 'minimal satu cabang'),
   'pricing.json': z.array(pricingItemSchema),
@@ -767,6 +807,7 @@ export const CONTENT_FILES = {
   'services.json': z.array(serviceCardSchema),
   'faq.json': faqSchema,
   'videos.json': videosSchema,
+  'reviewReplies.json': reviewRepliesSchema,
 } as const;
 
 /* ---------- Tipe hasil (dipakai src/lib/content.ts) ---------- */
@@ -790,6 +831,7 @@ export type ShoeCareEntry = z.output<typeof shoeCareSchema>;
 export type ServiceCardEntry = z.output<typeof serviceCardSchema>;
 export type FaqEntry = z.output<typeof faqSchema>;
 export type VideosEntry = z.output<typeof videosSchema>;
+export type ReviewRepliesEntry = z.output<typeof reviewRepliesSchema>;
 
 /* ---------- Pemeriksaan lintas file ---------- */
 
@@ -812,6 +854,7 @@ export interface ContentBundle {
   services: ServiceCardEntry[];
   faq: FaqEntry;
   videos: VideosEntry;
+  reviewReplies: ReviewRepliesEntry;
 }
 
 export interface ContentIssue {
