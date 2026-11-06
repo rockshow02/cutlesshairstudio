@@ -52,6 +52,8 @@ Yang disimpan hanya: id ulasan, cabang, nama pengulas (seperti tampil di Google)
 
 ## Langkah 2. Mengisi database_id di wrangler.jsonc
 
+> **Sudah dikerjakan:** `cutless-ulasan` = `b7a5775e-…1fbedc35`, `cutless-ulasan-staging` = `33dad48e-…ebd0ce164652`. Langkah di bawah hanya untuk mengganti database kelak.
+
 1. Buka **https://github.com/rockshow02/cutlesshairstudio/blob/feat/balasan-ulasan/wrangler.jsonc** → ikon pensil (**Edit**).
 2. Ganti `ISI-DATABASE-ID-cutless-ulasan` dengan *ID produksi*.
 3. Ganti `ISI-DATABASE-ID-cutless-ulasan-staging` dengan *ID staging*.

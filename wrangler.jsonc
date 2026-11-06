@@ -41,8 +41,8 @@
     {
       "binding": "REVIEWS_DB",
       "database_name": "cutless-ulasan",
-      // WAJIB DIISI sebelum merge: ID database D1 cutless-ulasan (docs/balasan-ulasan.md, langkah 2). Selama masih placeholder, deploy gagal.
-      "database_id": "ISI-DATABASE-ID-cutless-ulasan",
+      // Antrean balasan ulasan Google (docs/balasan-ulasan.md). Bukan rahasia; migrasi di migrations-ulasan/.
+      "database_id": "b7a5775e-39f0-427a-824c-2a1f5fbedc35",
       "migrations_dir": "migrations-ulasan"
     }
   ],
@@ -86,8 +86,8 @@
         {
           "binding": "REVIEWS_DB",
           "database_name": "cutless-ulasan-staging",
-          // WAJIB DIISI sebelum merge: ID database D1 cutless-ulasan-staging (docs/balasan-ulasan.md, langkah 2). Selama masih placeholder, deploy staging gagal.
-          "database_id": "ISI-DATABASE-ID-cutless-ulasan-staging",
+          // Antrean balasan ulasan Google untuk staging (docs/balasan-ulasan.md).
+          "database_id": "33dad48e-965c-4e82-94f5-ebd0ce164652",
           "migrations_dir": "migrations-ulasan"
         }
       ],
