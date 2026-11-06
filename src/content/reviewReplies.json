@@ -32,11 +32,25 @@
     ]
   },
   "keywordRules": [
-    { "keyword": "fade", "sentence": "Senang sekali hasil fade-nya sesuai selera kakak." },
-    { "keyword": "taper", "sentence": "Senang sekali hasil taper-nya sesuai selera kakak." },
-    { "keyword": "sepatu", "sentence": "Terima kasih juga sudah mencoba layanan perawatan sepatu kami." },
-    { "keyword": "fotless", "sentence": "Terima kasih juga sudah mencoba layanan perawatan sepatu kami." },
-    { "keyword": "Yasslaw", "sentence": "Terima kasih sudah mempercayakan rambut kakak kepada Yasslaw." }
-  ],
-  "complaintWords": ["lama", "antri", "antre", "kecewa", "mahal", "kotor", "jelek", "buruk", "tidak puas", "nunggu", "telat", "kasar"]
+    {
+      "keyword": "fade",
+      "sentence": "Senang sekali hasil fade-nya sesuai selera kakak."
+    },
+    {
+      "keyword": "taper",
+      "sentence": "Senang sekali hasil taper-nya sesuai selera kakak."
+    },
+    {
+      "keyword": "sepatu",
+      "sentence": "Terima kasih juga sudah mencoba layanan perawatan sepatu kami."
+    },
+    {
+      "keyword": "fotless",
+      "sentence": "Terima kasih juga sudah mencoba layanan perawatan sepatu kami."
+    },
+    {
+      "keyword": "Yasslaw",
+      "sentence": "Terima kasih sudah mempercayakan rambut kakak kepada Yasslaw."
+    }
+  ]
 }
