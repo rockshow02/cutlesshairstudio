@@ -6,7 +6,7 @@
 
 **Architecture:** Logika murni (pilih template, isi placeholder, klasifikasi keluhan, keputusan kirim) di `src/content/reviewReplies.ts` tanpa dependensi, dipakai skema Zod, build, dan Worker. Worker: `scheduled` (cron per jam) → `GbpClient` → D1 terpisah `REVIEWS_DB` → email ke admin (Email Workers); halaman `/ulasan/` dirender Worker (pola `/statistik/`, JWT Access diverifikasi sendiri). Template + mode dibawa ke Worker lewat `dist/ulasan-config.json` yang dibuat saat build (pola `klik-wa.json`).
 
-**Tech Stack:** Cloudflare Workers (Cron Trigger, D1, `send_email`), Zod 4, Vitest (+`node:sqlite` untuk D1 tiruan), Playwright, Pages CMS.
+**Tech Stack:** Cloudflare Workers (Cron Trigger, D1), Zod 4, Vitest (+`node:sqlite` untuk D1 tiruan), Playwright, Pages CMS.
 
 **Spec:** prompt pemilik 2026-11-06 (bagian A/B/C), disetujui sebagai desain. Aturan repo: `CLAUDE.md`, `CONTRIBUTING.md`.
 
@@ -15,7 +15,7 @@
 - Branch `feat/balasan-ulasan` dari `origin/staging` → PR (compare link) ke `staging`. **Jangan** merge/push ke `main` atau `staging`.
 - CHANGELOG: tulis di `## [Belum dirilis]`. Versi tidak dinaikkan.
 - Toggle default **Mati**: `Pengaturan Situs → Mode balasan ulasan` = `Mati | Uji | Aktif`, default `Mati` (Zod `.default('Mati')`, `.pages.yml` `default: Mati`, `settings.json` nilai awal `"Mati"`).
-- Biaya Rp0: Cron Trigger, D1, Email Workers, Cloudflare Access saja. Cron **tiap 1 jam** (`0 * * * *`), tidak lebih sering.
+- Biaya Rp0: Cron Trigger, D1, Cloudflare Access saja (tanpa email/Telegram: lihat Task 6). Cron **tiap 1 jam** (`0 * * * *`), tidak lebih sering.
 - Bintang 1–4, ulasan berkata keluhan, mode Uji, dan mode Mati **tidak pernah** terkirim otomatis. Tidak ada endpoint publik pengirim balasan.
 - Template: kategori `bintang5`, `bintang4`, `bintang3`, `bintang12`, `tanpaTeks`; masing-masing **3–6 variasi, ≤400 karakter**. Placeholder hanya `{nama}`, `{cabang}`, `{salam_waktu}`; placeholder lain ditolak build. Hasil setelah diisi ≤ **4.096** karakter (batas balasan Google).
 - Status ulasan: `baru | antre | terkirim | dilewati | gagal`. Ulasan yang sudah punya balasan di Google → `dilewati`.
@@ -58,13 +58,13 @@ Masukan yang tidak disebut spec tetapi mungkin muncul; tiap baris punya tes di t
 | `scripts/vite-content-plugin.ts` (ubah) | Emit `dist/ulasan-config.json` (template, mode, nama cabang) |
 | `worker/ulasan/gbp.ts` (baru) | `GbpClient`, `MockGbpClient`, `HttpGbpClient` |
 | `worker/ulasan/db.ts` (baru) | Akses D1: simpan ulasan idempoten, klaim kirim, daftar, hitung kiriman otomatis per jam |
-| `worker/ulasan/sync.ts` (baru) | `runReviewSync(env, now)`: ambil, simpan, putuskan, kirim otomatis, email |
+| `worker/ulasan/sync.ts` (baru) | `runReviewSync(env, now)`: ambil, simpan, putuskan, kirim otomatis, panggil `Notifier` |
 | `worker/ulasan/reply.ts` (baru) | `sendReply(...)`: satu-satunya jalur ke `GbpClient.reply` |
-| `worker/ulasan/email.ts` (baru) | Susun & kirim email (Email Workers) + ringkasan harian |
+| `worker/ulasan/notify.ts`, `summary.ts` (baru) | `Notifier` (default no-op) + ringkasan antrean untuk halaman `/ulasan/` |
 | `worker/ulasan/page.ts` (baru) | HTML `/ulasan/` + handler aksi (Kirim/Lewati/simpan draf) |
 | `worker/env.ts`, `worker/index.ts` (ubah) | Binding baru, `scheduled`, rute `/ulasan*` |
 | `migrations-ulasan/0001_ulasan.sql` (baru) | Skema D1 ulasan |
-| `wrangler.jsonc` (ubah) | `REVIEWS_DB`, cron, `send_email`, vars, `run_worker_first` |
+| `wrangler.jsonc` (ubah) | `REVIEWS_DB`, cron, vars, `run_worker_first` |
 | `tests/helpers/d1.ts` (ubah) | Parameter direktori migrasi; `run()` mengembalikan `{ meta: { changes } }` |
 | `docs/balasan-ulasan.md` (baru), `docs/panduan-admin.md`, `CHANGELOG.md`, `README`? (ubah) | Dokumentasi |
 
@@ -157,15 +157,15 @@ export const decideAction: (input: { mode: ReplyMode; rating: number; text: stri
 
 **Interfaces:**
 - Consumes: Task 1–2 (`ReplyTemplates`, `ReplyMode`).
-- Produces: `reviewConfig(bundle: ContentBundle): ReviewConfig`; `Env` baru: `REVIEWS_DB?: D1Database; REVIEW_MAIL?: { send(message: unknown): Promise<void> }; ADMIN_EMAIL?: string; MAIL_FROM?: string; GBP_CLIENT?: string; GBP_LOCATIONS?: string; GBP_CLIENT_ID?: string; GBP_CLIENT_SECRET?: string; GBP_REFRESH_TOKEN?: string;`; `D1PreparedStatement.run(): Promise<{ meta: { changes: number } }>`; `testD1(dir = 'migrations')`.
-- Skema tabel `reviews` (kolom): `id TEXT PRIMARY KEY` (nama resource ulasan Google), `branch TEXT NOT NULL`, `reviewer TEXT NOT NULL`, `rating INTEGER NOT NULL CHECK (rating BETWEEN 1 AND 5)`, `body TEXT NOT NULL DEFAULT ''`, `reviewed_at TEXT NOT NULL` (ISO UTC), `status TEXT NOT NULL CHECK (status IN ('baru','antre','terkirim','dilewati','gagal'))`, `draft TEXT NOT NULL DEFAULT ''`, `approved_by TEXT`, `approved_at TEXT`, `sent_auto INTEGER NOT NULL DEFAULT 0`, `sent_at TEXT`, `emailed_at TEXT`, `created_at TEXT NOT NULL`; indeks `(status, reviewed_at)`. Tabel kedua `meta (key TEXT PRIMARY KEY, value TEXT NOT NULL)` (dipakai Task 6).
+- Produces: `reviewConfig(bundle: ContentBundle): ReviewConfig`; `Env` baru: `REVIEWS_DB?: D1Database; GBP_CLIENT?: string; GBP_LOCATIONS?: string; GBP_CLIENT_ID?: string; GBP_CLIENT_SECRET?: string; GBP_REFRESH_TOKEN?: string;`; `D1PreparedStatement.run(): Promise<{ meta: { changes: number } }>`; `testD1(dir = 'migrations')`.
+- Skema tabel `reviews` (kolom): `id TEXT PRIMARY KEY` (nama resource ulasan Google), `branch TEXT NOT NULL`, `reviewer TEXT NOT NULL`, `rating INTEGER NOT NULL CHECK (rating BETWEEN 1 AND 5)`, `body TEXT NOT NULL DEFAULT ''`, `reviewed_at TEXT NOT NULL` (ISO UTC), `status TEXT NOT NULL CHECK (status IN ('baru','antre','terkirim','dilewati','gagal'))`, `draft TEXT NOT NULL DEFAULT ''`, `approved_by TEXT`, `approved_at TEXT`, `sent_auto INTEGER NOT NULL DEFAULT 0`, `sent_at TEXT`, `created_at TEXT NOT NULL`; indeks `(status, reviewed_at)`. 
 
 - [ ] **Step 1: Write failing tests:**
   - `review-config.test.ts`: `reviewConfig(contentFixture())` memuat `mode: 'Mati'`, `branches` sama dengan slug→nama cabang fixture, `reply` = template fixture; dengan `settings.reviewReplyMode='Uji'` → `'Uji'`. Tes build-output: `generateBundle` memancarkan `ulasan-config.json` (ikuti cara tes yang sudah ada untuk `klik-wa.json`; bila tak ada, cukup uji fungsi).
   - `review-migration.test.ts`: dengan `testD1('migrations-ulasan')` sisipkan ulasan sah; `status='aneh'` ditolak; `rating=6` ditolak; PRIMARY KEY ganda ditolak (`INSERT OR IGNORE` mengubah 0 baris, `meta.changes === 0`).
   - `wrangler-config.test.ts`: `REVIEWS_DB` ada di produksi & staging dengan nama `cutless-ulasan` / `cutless-ulasan-staging`, `migrations_dir: 'migrations-ulasan'`, `database_id` berbeda; cron `0 * * * *` di keduanya (satu entri persis); `/ulasan*` ada di `run_worker_first` produksi & staging; staging `GBP_CLIENT === 'mock'`, produksi `GBP_CLIENT` kosong ('' = klien sungguhan); `ADMIN_EMAIL` & `MAIL_FROM` ada sebagai var; tidak ada `GBP_CLIENT_SECRET`/`REFRESH_TOKEN` di file (hanya secret).
 - [ ] **Step 2: Run** tiga file tes di atas → FAIL.
-- [ ] **Step 3: Implement.** SQL sesuai skema di atas (komentar Indonesia). `wrangler.jsonc`: binding `d1_databases` kedua `REVIEWS_DB` (placeholder `ISI-DATABASE-ID-cutless-ulasan` / `-staging`, komentar jelas "wajib diisi sebelum merge"), `send_email: [{ name: 'REVIEW_MAIL', destination_address }]`? — **Email Workers `send_email` dengan `destination_address` tetap di config**; karena alamat harus "dari variabel", pakai binding `send_email` **tanpa** `destination_address` (boleh ke semua alamat terverifikasi) dan alamat tujuan dari var `ADMIN_EMAIL`. `triggers.crons: ["0 * * * *"]` produksi dan staging (staging sebelumnya `[]`). Vars baru: `ADMIN_EMAIL` & `MAIL_FROM` (`ulasan@cutlesshairstudio.com`, domain pengirim sama dengan zona), `GBP_LOCATIONS: ""`, `GBP_CLIENT` (`""` prod, `"mock"` staging). `tests/helpers/d1.ts`: parameter direktori + `run` → `{ meta: { changes: Number(r.changes) } }` (periksa pemakai lama `testD1()` tetap lolos).
+- [ ] **Step 3: Implement.** SQL sesuai skema di atas (komentar Indonesia). `wrangler.jsonc`: binding `d1_databases` kedua `REVIEWS_DB` (placeholder `ISI-DATABASE-ID-cutless-ulasan` / `-staging`, komentar jelas "wajib diisi sebelum merge"), `triggers.crons: ["0 * * * *"]` produksi dan staging (staging sebelumnya `[]`). Vars baru: `GBP_LOCATIONS: ""`, `GBP_CLIENT` (`""` prod, `"mock"` staging). `tests/helpers/d1.ts`: parameter direktori + `run` → `{ meta: { changes: Number(r.changes) } }` (periksa pemakai lama `testD1()` tetap lolos).
 - [ ] **Step 4: Run** tes Step 1 + `tests/wa-clicks.test.ts tests/wa-stats.test.ts` (pemakai `testD1` lama) → PASS.
 - [ ] **Step 5: Commit** `feat(ulasan): konfigurasi build, skema D1 ulasan, binding wrangler`
 
@@ -252,36 +252,38 @@ Alur `sendReply`: validasi draf (tidak kosong setelah trim, ≤4096, tanpa place
 
 ---
 
-### Task 6: Email ke admin (Email Workers) + ringkasan harian
+### Task 6: Notifier (default no-op) + ringkasan antrean
+
+Diputuskan pemilik setelah pemeriksaan dokumentasi Cloudflare (subdomain-only Email Routing tidak terbukti, MX domain utama di Rumahweb tidak boleh disentuh; Email Sending bukan Rp0 untuk penerima bebas): **tanpa notifikasi eksternal**. Admin mengandalkan notifikasi bawaan Google (email/aplikasi Google Business Profile untuk ulasan baru) dan bookmark `/ulasan/`. Email Workers/Telegram **tidak** dibangun; antarmuka disisakan agar penyedia (mis. Brevo) bisa ditambah tanpa mengubah logika sinkron.
 
 **Files:**
-- Create: `worker/ulasan/email.ts`
-- Modify: `worker/ulasan/sync.ts` (panggil), `worker/index.ts` (cron harian: pada jam 01 UTC = 08.00 WIB, kirim ringkasan bila antrean >5)
-- Test: `tests/review-email.test.ts`
+- Create: `worker/ulasan/notify.ts`, `worker/ulasan/summary.ts`
+- Modify: `worker/ulasan/sync.ts` (panggil `notifier.queued`), `worker/index.ts` (beri `noopNotifier`), `migrations-ulasan/0001_ulasan.sql` (hapus kolom `emailed_at` dan tabel `meta`, tak dipakai), `tests/review-migration.test.ts` (hapus tes `meta`)
+- Test: `tests/review-notify.test.ts`, `tests/review-summary.test.ts`
 
 **Interfaces:**
 - Produces:
 ```ts
-export interface Mailer { send(msg: { to: string; from: string; subject: string; text: string; html: string }): Promise<void> }
-export const createMailer: (env: Env) => Mailer | null; // null bila REVIEW_MAIL/ADMIN_EMAIL/MAIL_FROM kosong; memakai kelas EmailMessage dari "cloudflare:email" dimuat dinamis agar tes Node tidak gagal
-export const reviewSubject: (rating: number, branchName: string) => string; // `⭐${rating} Ulasan baru – Cutless ${branchName} – perlu balasan`
-export const notifyQueued: (env: Env, mailer: Mailer | null, cfg: ReviewConfig, now: number) => Promise<number>; // satu email per ulasan antre yang emailed_at NULL; set emailed_at; kembalikan jumlah terkirim
-export const sendDailyDigest: (env: Env, mailer: Mailer | null, cfg: ReviewConfig, now: number) => Promise<boolean>; // hanya bila antrean 'antre' > 5; satu email ringkasan, tidak mengirim ulang di hari yang sama (WIB)
+export interface QueuedReview { id: string; branch: string; branchName: string; rating: number }
+export interface Notifier { queued(reviews: QueuedReview[]): Promise<void> }
+export const noopNotifier: Notifier; // tidak mengirim apa pun
+// summary.ts
+export interface QueueSummary { total: number; perBranch: { branch: string; name: string; count: number }[]; oldest: { id: string; branchName: string; reviewedAt: string; rating: number } | null }
+export const summarizeQueue: (db: D1Database, branches: Record<string, string>) => Promise<QueueSummary>; // hitung status IN ('antre','baru','gagal'); cabang tanpa antrean tetap tampil dengan 0
+export const queueTitle: (count: number) => string; // 0 → "Ulasan – Cutless"; n>0 → `(${n}) Ulasan – Cutless`
+export const isNewSince: (createdAtIso: string, sinceMs: number | null) => boolean; // sinceMs null (kunjungan pertama) → false
 ```
-Isi email: bintang, cabang, nama pengulas, isi ulasan, draf balasan, tombol "Tinjau" (tautan `https://<host>/ulasan/#<id>`; host dari `siteUrl` hanya bila ada → gunakan `ALLOWED_ORIGINS` pertama? **pakai var `REVIEW_PAGE_URL`** bila diisi, default `https://cutlesshairstudio.com/ulasan/`). Semua nilai di-escape di HTML; nilai di header/subjek tanpa CR/LF.
+- `runReviewSync` menerima `notifier` (default `noopNotifier`) dan memanggil `notifier.queued(ulasan antre baru)` sekali per sinkron bila ada; galat notifier ditangkap dan tidak menggagalkan sinkron.
 
-- [ ] **Step 1: Write failing tests** (Mailer palsu merekam pesan):
-  - subjek tepat `⭐3 Ulasan baru – Cutless Cibubur – perlu balasan`.
-  - 3 ulasan antre baru → 3 email; panggilan kedua tidak mengirim ulang (`emailed_at` terisi).
-  - isi email memuat bintang, nama, isi, draf, dan tautan "Tinjau"; nama `<img onerror>` di-escape di HTML; nama berisi `\r\nBcc: x` tidak lolos ke subjek/header.
-  - email gagal (Mailer melempar) → `emailed_at` tetap NULL (dicoba lagi pada jam berikutnya), `notifyQueued` tidak melempar.
-  - `createMailer` null bila var kosong → `notifyQueued` mengembalikan 0 tanpa error.
-  - ringkasan harian: 5 antre → tidak kirim; 6 antre → kirim 1 email berisi jumlah; dipanggil lagi di hari WIB sama → tidak kirim lagi.
-  - ulasan `terkirim`/`dilewati` tidak pernah diemail.
-- [ ] **Step 2: Run** `npx vitest run tests/review-email.test.ts` → FAIL.
-- [ ] **Step 3: Implement.** Penanda ringkasan harian disimpan di tabel `meta (key TEXT PRIMARY KEY, value TEXT)` dengan kunci `digest_day`; tabel ini sudah termasuk di `0001_ulasan.sql` sejak Task 3 (tambahkan di sana, beserta tes migrasinya). Satu cron `0 * * * *` cukup: di handler `scheduled`, bila jam WIB = 8 jalankan `sendDailyDigest` setelah sinkron.
-- [ ] **Step 4: Run** `tests/review-email.test.ts tests/review-migration.test.ts tests/review-sync.test.ts` → PASS.
-- [ ] **Step 5: Commit** `feat(ulasan): email admin per ulasan & ringkasan harian`
+- [ ] **Step 1: Write failing tests:**
+  - `noopNotifier.queued([...])` selesai tanpa efek; `runReviewSync` dengan notifier palsu menerima hanya ulasan `antre` baru (bukan `dilewati`/`terkirim`), satu panggilan per sinkron, tidak dipanggil bila tidak ada yang baru; notifier yang melempar tidak menggagalkan sinkron; sinkron kedua (tanpa ulasan baru) tidak memanggil lagi.
+  - `summarizeQueue`: antre per cabang (cabang tanpa antrean = 0), `oldest` = `reviewed_at` terkecil di antara belum dibalas, status `terkirim`/`dilewati` tidak dihitung, tabel kosong → `total 0, oldest null`.
+  - `queueTitle(0)` = `Ulasan – Cutless`, `queueTitle(3)` = `(3) Ulasan – Cutless`.
+  - `isNewSince`: `null` → false; ulasan dibuat setelah `sinceMs` → true; sebelum/sama → false.
+- [ ] **Step 2: Run** `npx vitest run tests/review-notify.test.ts tests/review-summary.test.ts tests/review-sync.test.ts` → FAIL.
+- [ ] **Step 3: Implement** modul di atas.
+- [ ] **Step 4: Run** tes yang sama + `tests/review-migration.test.ts` → PASS.
+- [ ] **Step 5: Commit** `feat(ulasan): Notifier no-op dan ringkasan antrean`
 
 ---
 
@@ -299,11 +301,14 @@ Isi email: bintang, cabang, nama pengulas, isi ulasan, draf balasan, tombol "Tin
 Rute (semua di bawah `/ulasan/`, JWT Access wajib → selain itu 403 `Akses ditolak`, tanpa membaca D1):
 - `GET /ulasan/` → antrean (status `antre`/`gagal`/`baru`) lalu riwayat 50 terakhir; tiap ulasan punya anchor `id` aman (`r-<angka indeks>`/hash dari id), bintang, cabang, nama, isi, `<textarea name="draf">`, tombol *Simpan draf*, *Kirim*, *Lewati*; kartu `data-review`, `data-status`. Banner mode (`Mati`/`Uji`/`Aktif`) dan catatan "Mode Uji: tidak ada balasan terkirim ke Google" di atasnya.
 - `POST /ulasan/aksi` body form (`id`, `aksi` = `kirim|lewati|simpan`, `draf`); wajib `Origin` sama dengan origin permintaan (selain itu 403), JWT valid, `Content-Length` ≤ 16 KB; sukses → redirect 303 ke `/ulasan/#…`. `kirim` memanggil `sendReply(by: {kind:'admin', email})` (email dari klaim JWT payload `email`; kosong → `admin`); mode `Mati` atau `Uji` → *Kirim* **ditolak** dengan pesan (mode Uji: tidak ada yang terkirim ke Google, termasuk dari admin). `lewati` hanya dari `antre|baru|gagal` → `dilewati`. `simpan` memvalidasi draf (≤4096, tidak kosong, tanpa placeholder).
+- Ringkasan di atas daftar (dari `summarizeQueue`, Task 6): jumlah antre per cabang, ulasan tertua yang belum dibalas (cabang, bintang, tanggal), dan penanda **Baru** pada ulasan yang `created_at`-nya setelah kunjungan terakhir. Kunjungan terakhir = cookie `ulasan_terakhir` (epoch ms, `Path=/ulasan/`, `HttpOnly`, `Secure`, `SameSite=Lax`, `Max-Age` 1 tahun) yang diperbarui tiap `GET /ulasan/`; tanpa cookie (kunjungan pertama) tidak ada penanda. `<title>` = `queueTitle(total)` (mis. `(3) Ulasan – Cutless`) agar terlihat di tab browser.
 - Header sama seperti `/statistik/` (noindex, `no-store`, CSP tanpa script, `form-action 'self'`). Tanpa JavaScript. Semua nilai di-escape.
 
 - [ ] **Step 1: Write failing tests** (memakai pasangan kunci RSA dibuat di tes + `accessFetcher` palsu, pola `tests/wa-stats.test.ts`; baca tes itu dulu untuk helper JWT yang ada dan pakai ulang):
   - tanpa JWT / JWT aud salah / token kedaluwarsa → 403 untuk GET dan POST, `REVIEWS_DB` tidak diakses (spy `prepare` tidak dipanggil).
   - JWT valid GET → 200, `X-Robots-Tag: noindex, nofollow`, `Cache-Control: no-store`, `<meta name="robots" content="noindex`, tanpa `<script`; nama pengulas `<script>alert(1)</script>` ter-escape; urutan: antrean sebelum riwayat.
+  - ringkasan: dua ulasan antre di cabang berbeda + satu `terkirim` → halaman menampilkan hitungan per cabang yang benar, ulasan tertua, dan `<title>` `(2) Ulasan – Cutless`; tanpa antrean `<title>` = `Ulasan – Cutless`.
+  - penanda **Baru**: tanpa cookie tidak ada penanda dan respons memasang cookie `ulasan_terakhir`; dengan cookie bernilai lebih tua dari `created_at` satu ulasan, hanya ulasan itu bertanda **Baru**; cookie bukan angka diabaikan.
   - POST `kirim` mode `Aktif` → ulasan `terkirim`, `approved_by` = email dari JWT, `Mock.replies.length===1`; mode `Uji` → tidak ada panggilan klien, ulasan tetap `antre`, halaman menampilkan alasan.
   - POST dari `Origin: https://evil.example` → 403 tanpa efek; tanpa header `Origin` → 403.
   - POST `kirim` dua kali → balasan hanya satu.
@@ -347,12 +352,12 @@ Rute (semua di bawah `/ulasan/`, JWT Access wajib → selain itu 403 `Akses dito
 - Create: `docs/balasan-ulasan.md`
 - Modify: `docs/panduan-admin.md` (bagian *Membalas ulasan Google*), `CHANGELOG.md` (`### Ditambahkan` di `[Belum dirilis]`), `CONTRIBUTING.md` bagian perintah lokal hanya bila ada perintah baru (tidak ada → jangan sentuh)
 
-- [ ] **Step 1: Tulis `docs/balasan-ulasan.md`** (untuk pemilik, gaya `docs/statistik-klik-wa.md`, langkah bernomor): (1) Email Routing → verifikasi alamat tujuan admin + pastikan domain pengirim `MAIL_FROM` di Email Routing; (2) buat D1 `cutless-ulasan` & `cutless-ulasan-staging`, isi `database_id` di `wrangler.jsonc` (**sebelum merge**) dan jalankan migrasi lewat Console memakai **SQL satu baris tanpa komentar** (blok kode berisi `CREATE TABLE …; CREATE INDEX …; CREATE TABLE meta …;` dibuat dari `migrations-ulasan/0001_ulasan.sql` dan diuji `tests/review-docs.test.ts` agar selalu sama dengan migrasi); (3) tambah path `/ulasan*` ke aplikasi Access yang sama dengan `/statistik/` (Worker memakai satu `ACCESS_AUD`; aplikasi Access baru berarti AUD berbeda dan butuh var baru, di luar cakupan); (4) isi `GBP_LOCATIONS` dan secret OAuth (`wrangler secret put GBP_CLIENT_ID|GBP_CLIENT_SECRET|GBP_REFRESH_TOKEN`) setelah API disetujui; (5) pindah mode Uji → Aktif (Pengaturan Situs) dan cek hasil bertahap; (6) batas otomatis 10/jam, cara menonaktifkan darurat (mode Mati); (7) batas yang belum terbukti. Tambah panduan admin cara meninjau, mengedit, mengirim, dan melewati.
+- [ ] **Step 1: Tulis `docs/balasan-ulasan.md`** (untuk pemilik, gaya `docs/statistik-klik-wa.md`, langkah bernomor): (1) bagian pembuka: tanpa notifikasi eksternal (tidak ada email/Telegram; Email Routing **tidak** diaktifkan di domain utama karena MX email `halo@` ada di Rumahweb); admin mengandalkan notifikasi bawaan Google (Google Business Profile) + bookmark `/ulasan/`, dan opsi menambah penyedia lewat antarmuka `Notifier` kelak; (2) buat D1 `cutless-ulasan` & `cutless-ulasan-staging`, isi `database_id` di `wrangler.jsonc` (**sebelum merge**) dan jalankan migrasi lewat Console memakai **SQL satu baris tanpa komentar** (blok kode berisi `CREATE TABLE …; CREATE INDEX …;` dibuat dari `migrations-ulasan/0001_ulasan.sql` dan diuji `tests/review-docs.test.ts` agar selalu sama dengan migrasi); (3) tambah path `/ulasan*` ke aplikasi Access yang sama dengan `/statistik/` (Worker memakai satu `ACCESS_AUD`; aplikasi Access baru berarti AUD berbeda dan butuh var baru, di luar cakupan); (4) isi `GBP_LOCATIONS` dan secret OAuth (`wrangler secret put GBP_CLIENT_ID|GBP_CLIENT_SECRET|GBP_REFRESH_TOKEN`) setelah API disetujui; (5) pindah mode Uji → Aktif (Pengaturan Situs) dan cek hasil bertahap; (6) batas otomatis 10/jam, cara menonaktifkan darurat (mode Mati); (7) batas yang belum terbukti. Tambah panduan admin cara meninjau, mengedit, mengirim, dan melewati.
 - [ ] **Step 2: Tes dokumentasi** `tests/review-docs.test.ts`: SQL satu baris di dokumen = isi migrasi tanpa komentar/baris kosong, satu baris, tanpa `--`; dokumen menyebut `/ulasan*`, `0813-2220-932` tidak wajib. Run → PASS.
 - [ ] **Step 3: CHANGELOG** satu butir *Ditambahkan* di `[Belum dirilis]`: sistem balasan ulasan (mode default Mati, data tiruan, tidak aktif sampai API Google disetujui).
 - [ ] **Step 4: Verifikasi penuh sekali:** `npm run typecheck && npm run lint && npm test && npm run check:content` lalu `npm run e2e` (sekali). Catat hasil apa adanya.
 - [ ] **Step 5: Commit & push:** `docs(ulasan): panduan pemasangan, panduan admin, CHANGELOG`; `git push -u origin feat/balasan-ulasan`; berikan link compare `https://github.com/rockshow02/cutlesshairstudio/compare/staging...feat/balasan-ulasan` (`gh` tidak terpasang; jangan merge).
-- [ ] **Step 6: Laporan** berisi: branch & commit, link compare, hasil tes, langkah dashboard pemilik (verifikasi alamat Email Routing, `/ulasan*` di Access, buat D1 + isi `database_id`, secret OAuth, pindah mode), daftar **belum terbukti** (pemanggilan API Google sungguhan, pengiriman email sungguhan, endpoint cron lokal, path cron produksi), dan tanda "template perlu ditinjau klien".
+- [ ] **Step 6: Laporan** berisi: branch & commit, link compare, hasil tes, langkah dashboard pemilik (`/ulasan*` di Access, buat D1 + isi `database_id`, secret OAuth, pindah mode), daftar **belum terbukti** (pemanggilan API Google sungguhan, endpoint cron lokal, path cron produksi), dan tanda "template perlu ditinjau klien".
 
 ---
 
