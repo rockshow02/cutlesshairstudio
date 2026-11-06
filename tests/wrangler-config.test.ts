@@ -35,3 +35,60 @@ describe('wrangler.jsonc', () => {
     expect(prod.database_id).not.toBe(staging.database_id);
   });
 });
+
+describe('wrangler.jsonc: balasan ulasan Google', () => {
+  type Review = Config & { triggers: { crons: string[] }; assets: { run_worker_first: string[] }; vars: Vars & Record<string, string>; env: { staging: Config['env']['staging'] & { triggers: { crons: string[] }; assets: { run_worker_first: string[] }; vars: Vars & Record<string, string> } } };
+  const c = config as unknown as Review;
+  const reviewsDb = (list: Db[]) => list.find((d) => d.binding === 'REVIEWS_DB') as (Db & { migrations_dir: string }) | undefined;
+
+  it('database D1 ulasan terpisah (produksi & staging) dengan migrasi di migrations-ulasan', () => {
+    const prod = reviewsDb(c.d1_databases);
+    const staging = reviewsDb(c.env.staging.d1_databases);
+    expect(prod).toMatchObject({ database_name: 'cutless-ulasan', migrations_dir: 'migrations-ulasan' });
+    expect(staging).toMatchObject({ database_name: 'cutless-ulasan-staging', migrations_dir: 'migrations-ulasan' });
+    expect(prod!.database_id).not.toBe(staging!.database_id);
+    // Tidak ikut database hitungan klik
+    expect(c.d1_databases[0].database_name).toBe('cutless-analytics');
+  });
+
+  it('database_id ulasan: placeholder jelas ATAU UUID (pemilik mengisi sebelum merge)', () => {
+    for (const db of [reviewsDb(c.d1_databases)!, reviewsDb(c.env.staging.d1_databases)!]) {
+      expect(db.database_id, db.database_name).toMatch(new RegExp(`^(${UUID.source.slice(1, -1)}|ISI-DATABASE-ID-${db.database_name})$`));
+    }
+  });
+
+  it('Cron Trigger tepat sekali per jam (tidak lebih sering), produksi & staging', () => {
+    expect(c.triggers.crons).toEqual(['0 * * * *']);
+    expect(c.env.staging.triggers.crons).toEqual(['0 * * * *']);
+  });
+
+  it('/ulasan* dijalankan Worker (bukan file statis)', () => {
+    expect(c.assets.run_worker_first).toContain('/ulasan*');
+    expect(c.env.staging.assets.run_worker_first).toContain('/ulasan*');
+  });
+
+  it('staging memakai data contoh (mock); produksi memakai klien sungguhan', () => {
+    expect(c.env.staging.vars.GBP_CLIENT).toBe('mock');
+    expect(c.vars.GBP_CLIENT).toBe('');
+  });
+
+  it('GBP_LOCATIONS produksi: JSON valid, tepat cabang di branches.json, format accounts/{akun}/locations/{lokasi}', () => {
+    const locations = JSON.parse(c.vars.GBP_LOCATIONS) as Record<string, string>;
+    const slugs = (JSON.parse(readFileSync('src/content/branches.json', 'utf8')) as { slug: string }[]).map((b) => b.slug);
+    expect(Object.keys(locations).sort()).toEqual([...slugs].sort());
+    for (const value of Object.values(locations)) expect(value).toMatch(/^accounts\/\d+\/locations\/\d+$/);
+    expect(new Set(Object.values(locations)).size).toBe(slugs.length);
+  });
+
+  it('GBP_LOCATIONS staging tetap data contoh dan cocok dengan branches.json', () => {
+    const locations = JSON.parse(c.env.staging.vars.GBP_LOCATIONS) as Record<string, string>;
+    const slugs = (JSON.parse(readFileSync('src/content/branches.json', 'utf8')) as { slug: string }[]).map((b) => b.slug);
+    expect(Object.keys(locations).sort()).toEqual([...slugs].sort());
+    for (const value of Object.values(locations)) expect(value).toMatch(/^mock\//);
+  });
+
+  it('tidak ada secret OAuth di file', () => {
+    const text = readFileSync('wrangler.jsonc', 'utf8');
+    expect(text).not.toMatch(/GBP_CLIENT_SECRET|GBP_REFRESH_TOKEN|GBP_CLIENT_ID/);
+  });
+});

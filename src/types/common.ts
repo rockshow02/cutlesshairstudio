@@ -43,4 +43,6 @@ export type IconName =
   | 'info' | 'alert' | 'tag' | 'play' | 'pause'
   | 'scissors' | 'wash' | 'kids' | 'shave' | 'color' | 'perm' | 'spa' | 'tattoo'
   // Aplikasi booking & admin (tidak dipakai di CMS)
-  | 'calendar' | 'user' | 'filter' | 'logout' | 'search' | 'plus' | 'gift';
+  | 'calendar' | 'user' | 'filter' | 'logout' | 'search' | 'plus' | 'gift'
+  // Fasilitas cabang
+  | 'walk' | 'motorbike' | 'car' | 'snow' | 'wifi' | 'seat' | 'cash' | 'qr' | 'card' | 'bank';

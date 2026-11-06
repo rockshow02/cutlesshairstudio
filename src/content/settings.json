@@ -23,6 +23,8 @@
   "showTestimonials": false,
   "showProducts": false,
   "showTips": false,
+  "showServicePages": true,
+  "reviewReplyMode": "Mati",
   "showBeforeAfter": false,
   "enablePreloader": true
 }

@@ -6,7 +6,7 @@ export interface D1Result<T = Record<string, unknown>> {
 
 export interface D1PreparedStatement {
   bind(...values: (string | number | null)[]): D1PreparedStatement;
-  run(): Promise<unknown>;
+  run(): Promise<{ meta: { changes: number } }>;
   all<T = Record<string, unknown>>(): Promise<D1Result<T>>;
 }
 
@@ -23,4 +23,14 @@ export interface Env {
   /** Cloudflare Access: team domain (mis. "cutless.cloudflareaccess.com") & Application Audience (AUD) tag /statistik/ */
   ACCESS_TEAM_DOMAIN?: string;
   ACCESS_AUD?: string;
+  /** D1 cutless-ulasan (produksi) / cutless-ulasan-staging: antrean balasan ulasan Google. Tidak ada = /ulasan/ 503 & cron tidak berbuat apa-apa. */
+  REVIEWS_DB?: D1Database;
+  /** Klien Google Business Profile: "mock" = data contoh (staging & tes); kosong = klien sungguhan bila secret OAuth terisi */
+  GBP_CLIENT?: string;
+  /** JSON slug cabang → nama lokasi Google, mis. {"cibubur":"locations/123"}; kosong = tidak ada ulasan yang diambil */
+  GBP_LOCATIONS?: string;
+  /** Secret OAuth Google (wrangler secret put): sampai terisi, klien sungguhan tidak aktif */
+  GBP_CLIENT_ID?: string;
+  GBP_CLIENT_SECRET?: string;
+  GBP_REFRESH_TOKEN?: string;
 }

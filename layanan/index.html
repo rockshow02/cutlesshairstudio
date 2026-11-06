@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#0c1014" />
+
+    <!-- Template halaman layanan: saat build diprerender (scripts/vite-content-plugin.ts → scripts/layanan.ts) menjadi
+         /layanan/ dan /layanan/<slug>/ dengan title, meta, Open Graph, JSON-LD, & ringkasan statis masing-masing.
+         Tampilkan halaman layanan mati (Pengaturan Situs) → folder ini dihapus dari dist/ & /layanan/* dialihkan 301 ke beranda. -->
+    <!--cutless:head-start-->
+    <title>Layanan | %BRAND%</title>
+    <meta name="description" content="Layanan %BRAND%: harga mulai per cabang & booking via WhatsApp." />
+    <link rel="canonical" href="%SITE_URL%/layanan/" />
+    <meta property="og:title" content="Layanan %BRAND%" />
+    <meta property="og:url" content="%SITE_URL%/layanan/" />
+    <meta property="og:image" content="%OG_IMAGE%" />
+    <meta name="twitter:image" content="%OG_IMAGE%" />
+    <!--cutless:head-end-->
+
+    <meta property="og:locale" content="id_ID" />
+    <meta property="og:site_name" content="%BRAND%" />
+    <meta name="twitter:card" content="summary_large_image" />
+
+    <!-- Favicon (scripts/make-favicons.mjs): URL tetap tanpa hash; Google memakai ukuran kelipatan 48 px -->
+    <link rel="icon" href="/favicon.ico" sizes="48x48" />
+    <link rel="icon" type="image/png" sizes="96x96" href="/favicon-96x96.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/favicon-192x192.png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+
+    <!-- Font di-host sendiri (src/styles/fonts.css, public/fonts/): Archivo (display, expanded) + Plus Jakarta Sans (body).
+         File latin di-preload agar sudah ada saat teks pertama kali tergambar (tanpa layout shift karena ganti font). -->
+    <link rel="preload" as="font" type="font/woff2" href="/fonts/archivo-v1-latin.woff2" crossorigin />
+    <link rel="preload" as="font" type="font/woff2" href="/fonts/plus-jakarta-sans-v1-latin.woff2" crossorigin />
+  </head>
+  <body>
+    <div id="root"><!--cutless:body--></div>
+    <!--cutless:service-data-->
+    <noscript>Aktifkan JavaScript untuk melihat website Cutless Hair Studio, atau hubungi kami via WhatsApp.</noscript>
+    <script type="module" src="/src/layanan.tsx"></script>
+  </body>
+</html>

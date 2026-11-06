@@ -14,8 +14,10 @@
  *   - shoe-care/ (Partner Cuci Sepatu)  : lebar maks. 1920 px (foto hero) + versi 1280 & 600 px (SVG logo tidak diubah)
  *   - video-covers/ (sampul 9:16 bagian Video): lebar maks. 800 px + versi 400 px
  *   - tips/ (sampul & gambar artikel Tips & Trik): lebar maks. 1600 px + versi 600 px (kartu artikel)
+ *   - layanan/ (foto Halaman Layanan): lebar maks. 1200 px + versi 600 px
  * Versi kecil dipakai otomatis sebagai srcset (src/lib/contentTransforms.ts → responsiveImage).
- * Lalu memperbarui path gambar di src/content/*.json & artikel src/content/tips/*.md (mis. foto.jpg → foto.webp).
+ * Lalu memperbarui path gambar di src/content/*.json, artikel src/content/tips/*.md & halaman src/content/layanan/*.md
+ * (mis. foto.jpg → foto.webp).
  *
  * Aman dijalankan berulang: file .webp yang sudah tidak melebihi lebar maks. dilewati.
  * Dijalankan otomatis oleh GitHub Actions saat ada gambar baru di-commit, dan sebelum build.
@@ -32,10 +34,11 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const UPLOADS = path.join(ROOT, 'public', 'uploads');
 const CONTENT = path.join(ROOT, 'src', 'content');
 const TIPS = path.join(CONTENT, 'tips');
+const SERVICE_PAGES = path.join(CONTENT, 'layanan');
 
-const MAX_WIDTH = { barbers: 800, site: 800, products: 1000, gallery: 1600, promos: 1600, about: 1200, hero: 1920, cta: 1920, 'partner-logos': 400, 'shoe-care': 1920, 'video-covers': 800, tips: 1600 };
+const MAX_WIDTH = { barbers: 800, site: 800, products: 1000, gallery: 1600, promos: 1600, about: 1200, hero: 1920, cta: 1920, 'partner-logos': 400, 'shoe-care': 1920, 'video-covers': 800, tips: 1600, layanan: 1200 };
 /** Versi lebih kecil per folder: <nama>-<lebar>.webp (hanya bila foto aslinya lebih lebar) */
-const VARIANTS = { about: [600], hero: [1280], gallery: [600], cta: [1280], 'shoe-care': [600, 1280], 'video-covers': [400], tips: [600] };
+const VARIANTS = { about: [600], hero: [1280], gallery: [600], cta: [1280], 'shoe-care': [600, 1280], 'video-covers': [400], tips: [600], layanan: [600] };
 const variantPattern = (folder) => (VARIANTS[folder] ? new RegExp(`-(${VARIANTS[folder].join('|')})\\.webp$`) : null);
 const DEFAULT_MAX_WIDTH = 1600;
 const QUALITY = 78;
@@ -127,11 +130,12 @@ async function optimize(file) {
   return { from: toPublicUrl(file), to: toPublicUrl(target), before, after };
 }
 
-/** File konten yang bisa merujuk gambar: src/content/*.json + artikel src/content/tips/*.md */
+/** File konten yang bisa merujuk gambar: src/content/*.json + artikel src/content/tips/*.md + src/content/layanan/*.md */
 async function contentFiles() {
   const json = (await readdir(CONTENT)).filter((f) => f.endsWith('.json')).map((name) => ({ name, file: path.join(CONTENT, name) }));
-  const md = existsSync(TIPS) ? (await readdir(TIPS)).filter((f) => f.endsWith('.md')).map((f) => ({ name: `tips/${f}`, file: path.join(TIPS, f) })) : [];
-  return [...json, ...md];
+  const markdown = async (dir, prefix) =>
+    existsSync(dir) ? (await readdir(dir)).filter((f) => f.endsWith('.md')).map((f) => ({ name: `${prefix}/${f}`, file: path.join(dir, f) })) : [];
+  return [...json, ...(await markdown(TIPS, 'tips')), ...(await markdown(SERVICE_PAGES, 'layanan'))];
 }
 
 /**

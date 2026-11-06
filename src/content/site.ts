@@ -17,6 +17,7 @@ export const site: SiteContent = {
     mark: { src: '/images/brand/cutless-mark-white.png', alt: '', width: 206, height: 240 },
   },
   nav: [
+    // Tampilkan halaman layanan aktif → menu ini ke /layanan/ (buildSite); jumlah menu desktop tetap
     { label: 'Layanan', sectionId: 'layanan' },
     { label: 'Harga', sectionId: 'harga' },
     // Halaman /cuci-sepatu/: hanya menu HP & footer (navbar desktop sudah penuh), dan hanya saat halaman aktif (buildSite)
@@ -52,7 +53,7 @@ export const site: SiteContent = {
   email: '',
   // Diisi dari Pengaturan Situs (siteUrl & toggle section)
   siteUrl: '',
-  features: { testimonials: false, products: false, beforeAfter: false, shoeCare: false, tips: false },
+  features: { testimonials: false, products: false, beforeAfter: false, shoeCare: false, tips: false, servicePages: false },
   intro: { enabled: true },
   // TODO: sesuaikan dengan rentang harga asli
   priceRange: 'Rp60.000 - Rp450.000',

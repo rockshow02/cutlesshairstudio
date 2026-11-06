@@ -10,7 +10,7 @@ import { readdirSync, readFileSync } from 'node:fs';
 import { parse } from 'yaml';
 import type { z } from 'zod';
 import { describe, expect, it } from 'vitest';
-import { CONTENT_FILES, IMAGE_EXTENSIONS, tipSchema } from '../src/content/schema';
+import { CONTENT_FILES, IMAGE_EXTENSIONS, servicePageSchema, tipSchema } from '../src/content/schema';
 import { TIP_CATEGORIES, TIP_STATUSES } from '../src/content/tipsSeo';
 import { splitFrontmatter } from '../scripts/tips';
 import { setMedia, validateCmsContent, type CmsField as FormField, type CmsMedia } from './helpers/pagesCms';
@@ -134,6 +134,10 @@ export function mismatches(yamlText = readFileSync('.pages.yml', 'utf8')): strin
   const tips = config.content.find((c) => c.path === 'src/content/tips');
   if (!tips) out.push('tips: tidak ada koleksi src/content/tips di .pages.yml');
   else compare('tips', tips.fields, info(tipSchema as z.ZodType).children ?? {}, out);
+  // Koleksi Halaman Layanan: satu file Markdown per halaman (frontmatter + isi tambahan)
+  const layanan = config.content.find((c) => c.path === 'src/content/layanan');
+  if (!layanan) out.push('layanan: tidak ada koleksi src/content/layanan di .pages.yml');
+  else compare('layanan', layanan.fields, info(servicePageSchema as z.ZodType).children ?? {}, out);
   return out;
 }
 
@@ -271,7 +275,7 @@ describe('.pages.yml sejalan dengan skema Zod', () => {
     let checked = 0;
     for (const entry of config.content) {
       const file = entry.path.replace('src/content/', '') as keyof typeof CONTENT_FILES;
-      const root = (entry.path === 'src/content/tips' ? tipSchema : CONTENT_FILES[file]) as unknown as z.ZodType;
+      const root = (entry.path === 'src/content/tips' ? tipSchema : entry.path === 'src/content/layanan' ? servicePageSchema : CONTENT_FILES[file]) as unknown as z.ZodType;
       if (!root) continue;
       const walk = (names: string[], fields: Field[]) =>
         fields.forEach((f) => {

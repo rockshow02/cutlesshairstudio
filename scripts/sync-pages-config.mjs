@@ -7,7 +7,8 @@
  * (blok di antara "# @branch-options-start" dan "# @branch-options-end"), sehingga cabang baru
  * otomatis muncul di dropdown Barber / Harga / Promo / Pengumuman.
  * Juga: nama Barber → pilihan "Penulis" Tips & Trik (blok @barber-options) dan nama kartu Layanan → pilihan
- * "Layanan terkait" (blok @service-options).
+ * "Layanan terkait" (blok @service-options), nama item Daftar Harga → pilihan "Layanan/harga terkait" Halaman Layanan
+ * (blok @pricing-options).
  *
  * Dijalankan otomatis oleh GitHub Actions setiap kali konten berubah (lihat .github/workflows).
  */
@@ -20,6 +21,7 @@ const CONFIG = path.join(ROOT, '.pages.yml');
 const BRANCHES = path.join(ROOT, 'src', 'content', 'branches.json');
 const BARBERS = path.join(ROOT, 'src', 'content', 'barbers.json');
 const SERVICES = path.join(ROOT, 'src', 'content', 'services.json');
+const PRICING = path.join(ROOT, 'src', 'content', 'pricing.json');
 
 const START = /^(\s*)# @branch-options-start.*$/;
 const END = /^\s*# @branch-options-end/;
@@ -92,8 +94,9 @@ async function main() {
   const branchesResult = syncBranchOptions(current, await read(BRANCHES));
   const barbersResult = syncNameOptions(branchesResult.text, 'barber', await read(BARBERS));
   const servicesResult = syncNameOptions(barbersResult.text, 'service', await read(SERVICES));
-  const next = servicesResult.text;
-  const summary = `${branchesResult.branches} cabang di ${branchesResult.blocks} dropdown, ${barbersResult.count} barber, ${servicesResult.count} layanan`;
+  const pricingResult = syncNameOptions(servicesResult.text, 'pricing', await read(PRICING));
+  const next = pricingResult.text;
+  const summary = `${branchesResult.branches} cabang di ${branchesResult.blocks} dropdown, ${barbersResult.count} barber, ${servicesResult.count} layanan, ${pricingResult.count} item harga`;
   if (next.replace(/\r\n/g, '\n') === current.replace(/\r\n/g, '\n')) {
     console.log(`Pilihan di .pages.yml sudah sesuai (${summary}).`);
     return;

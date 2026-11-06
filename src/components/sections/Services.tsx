@@ -5,6 +5,9 @@ import { useSite } from '@/lib/SiteContext';
 import { useBranch } from '@/lib/BranchContext';
 import { useBooking } from '@/lib/useBooking';
 import { selectPriceCategory } from '@/lib/priceCategoryEvent';
+import { pageUrl } from '@/lib/navigation';
+import { servicePageForCard } from '@/lib/servicePages';
+import { servicePagesCopy } from '@/content/servicePagesCopy';
 import type { Service } from '@/types';
 import { Section } from '@/components/ui/Section';
 import { SectionState } from '@/components/ui/SectionState';
@@ -43,10 +46,12 @@ function ServiceCard({ service, index }: { service: Service; index: number }) {
   const { site } = useSite();
   const book = useBooking();
   const target = book({ kind: 'service', vars: { service: service.name } });
+  const more = servicePageForCard(service.name);
   return (
     <ServiceCardView
       service={service}
       index={index}
+      moreHref={more ? pageUrl(more) : undefined}
       bookHref={target.href}
       bookExternal={target.external}
       onBook={target.onClick}
@@ -64,10 +69,12 @@ interface ServiceCardViewProps {
   onBook?: (event: MouseEvent<HTMLElement>) => void;
   viewPriceLabel: string;
   bookLabel: string;
+  /** Halaman layanan terbit untuk kartu ini (link "Selengkapnya") */
+  moreHref?: string;
 }
 
 /** Kartu deskriptif tanpa harga; harga ada di Daftar Harga (tautan "Lihat harga" bila kategori diatur & aktif) */
-export function ServiceCardView({ service, index, bookHref, bookExternal = true, onBook, viewPriceLabel, bookLabel }: ServiceCardViewProps) {
+export function ServiceCardView({ service, index, bookHref, bookExternal = true, onBook, viewPriceLabel, bookLabel, moreHref }: ServiceCardViewProps) {
   return (
     <Card className={styles.card}>
       {service.image && <ResponsiveImage image={service.image} className={styles.photo} />}
@@ -80,6 +87,12 @@ export function ServiceCardView({ service, index, bookHref, bookExternal = true,
       <h3 className={styles.name}>{service.name}</h3>
       <p className={styles.desc}>{service.description}</p>
       <CardFooter className={styles.foot}>
+        {moreHref && (
+          <a className={styles.priceLink} href={moreHref}>
+            {servicePagesCopy.labels.readMore}
+            <span className="visually-hidden"> {service.name}</span>
+          </a>
+        )}
         {service.priceHref && service.pricingCategory && (
           <a className={styles.priceLink} href={service.priceHref} onClick={() => selectPriceCategory(service.pricingCategory!)}>
             {viewPriceLabel}

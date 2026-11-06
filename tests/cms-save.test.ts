@@ -49,7 +49,7 @@ describe('simulasi simpan dari Pages CMS (tanpa perubahan)', () => {
     config.content.forEach((c) => walk(c.name, c.fields));
     // Field baru sebaiknya opsional (default [] di Zod). Ubah daftar ini hanya bila semua isian sudah punya nilainya.
     expect(required.sort()).toEqual(
-      ['about.images', 'about.paragraphs', 'hero.marquee', 'hero.titleLines', 'shoeCare.advantages', 'shoeCare.services', 'studio.taglines'].sort(),
+      ['about.images', 'about.paragraphs', 'hero.marquee', 'hero.titleLines', 'reviewReplies.complaintWords', 'reviewReplies.templates.bintang12', 'reviewReplies.templates.bintang3', 'reviewReplies.templates.bintang4', 'reviewReplies.templates.bintang5', 'reviewReplies.templates.tanpaTeks', 'shoeCare.advantages', 'shoeCare.services', 'studio.taglines'].sort(),
     );
   });
 

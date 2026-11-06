@@ -21,6 +21,7 @@ export const WA_CLICK_KINDS = {
   'cuci-sepatu': 'Partner Cuci Sepatu',
   produk: 'Pesan produk',
   promo: 'Promo',
+  layanan: 'Halaman layanan',
 } as const;
 export type WaClickKind = keyof typeof WA_CLICK_KINDS;
 

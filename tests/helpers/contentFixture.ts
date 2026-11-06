@@ -68,6 +68,17 @@ export const rawFixture = {
   services: [{ name: 'Haircut', description: 'Potong rambut uji.', pricingCategory: 'Haircut' }],
   faq: { enabled: false, title: 'FAQ uji', items: [] },
   videos: { enabled: false, title: 'Video uji', items: [] },
+  reviewReplies: {
+    templates: {
+      bintang5: ['{salam_waktu} kak {nama}, terima kasih di Cutless {cabang}.', 'B5 dua', 'B5 tiga'],
+      bintang4: ['B4 satu', 'B4 dua', 'B4 tiga'],
+      bintang3: ['B3 satu', 'B3 dua', 'B3 tiga'],
+      bintang12: ['B12 satu', 'B12 dua', 'B12 tiga'],
+      tanpaTeks: ['TT satu', 'TT dua', 'TT tiga'],
+    },
+    keywordRules: [{ keyword: 'fade', sentence: 'Senang fade-nya cocok.' }],
+    complaintWords: ['lama', 'antri', 'kecewa'],
+  },
 } satisfies Record<keyof ContentBundle, unknown>;
 
 /** Bundle konten uji (hasil parse skema, seperti saat build), dengan bagian yang ditimpa */

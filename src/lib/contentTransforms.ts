@@ -81,6 +81,7 @@ import type {
 import { srcSetOf } from './responsiveImage';
 import { PRICE_CATEGORIES, priceCategoryAnchor } from '@/content/priceCategories';
 import { availableAt, priceAt, samePricesEverywhere } from '@/content/branchPricing';
+import { SERVICES_PATH, sortFacilities } from '@/content/servicePages';
 import { activeFaqItems } from '@/content/faqSeo';
 import { activeVideoItems } from '@/content/instagram';
 import { formatNumber, formatPhoneDisplay, formatPriceText } from './format';
@@ -382,6 +383,11 @@ export function buildBranches(entries: BranchEntry[], brand: string): Branch[] {
         mapEmbedUrl: `https://www.google.com/maps?q=${encodeURIComponent(place)}&z=16&output=embed`,
         directionsUrl:
           text(b.googleMapsUrl) ?? `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(place)}`,
+        description: text(b.description),
+        serviceAreas: (b.serviceAreas ?? []).map((a) => a.trim()).filter(Boolean),
+        landmark: text(b.directions),
+        facilities: sortFacilities(b.facilities),
+        faq: (b.faq ?? []).filter((q) => q.question?.trim() && q.answer?.trim()),
       };
     });
 }
@@ -398,10 +404,18 @@ export function buildLocations(branches: Branch[], copy: BranchCopy): LocationsC
 
 /* ---------- Pengaturan situs ---------- */
 
-export function buildSite(s: SettingsEntry, base: SiteContent, branches: Branch[], extra: { shoeCare?: boolean } = {}): SiteContent {
+/** extra.servicePages: Tampilkan halaman layanan aktif DAN ada halaman terbit (menu Layanan → /layanan/) */
+export function buildSite(s: SettingsEntry, base: SiteContent, branches: Branch[], extra: { shoeCare?: boolean; servicePages?: boolean } = {}): SiteContent {
   const logo = text(s.logo);
   const vars = { brand: s.siteName, cities: joinIndonesian(operatingCities(branches)) };
-  const features = { testimonials: s.showTestimonials, products: s.showProducts, beforeAfter: s.showBeforeAfter, shoeCare: Boolean(extra.shoeCare), tips: Boolean(s.showTips) };
+  const features = {
+    testimonials: s.showTestimonials,
+    products: s.showProducts,
+    beforeAfter: s.showBeforeAfter,
+    shoeCare: Boolean(extra.shoeCare),
+    tips: Boolean(s.showTips),
+    servicePages: Boolean(extra.servicePages),
+  };
   return {
     ...base,
     brandName: s.siteName,
@@ -409,12 +423,15 @@ export function buildSite(s: SettingsEntry, base: SiteContent, branches: Branch[
     features,
     intro: { enabled: s.enablePreloader !== false, video: text(s.preloaderVideo) },
     // Link menu ikut hilang bila section-nya dimatikan
-    nav: base.nav.filter(
-      (item) =>
-        !(item.href?.startsWith('/produk') && !features.products) &&
-        !(item.href === SHOE_CARE_PAGE && !features.shoeCare) &&
-        !(item.href?.startsWith('/tips') && !features.tips),
-    ),
+    nav: base.nav
+      .filter(
+        (item) =>
+          !(item.href?.startsWith('/produk') && !features.products) &&
+          !(item.href === SHOE_CARE_PAGE && !features.shoeCare) &&
+          !(item.href?.startsWith('/tips') && !features.tips),
+      )
+      // Menu "Layanan" (section #layanan) → halaman /layanan/ bila aktif: jumlah menu desktop tidak bertambah
+      .map((item) => (item.sectionId === 'layanan' && features.servicePages ? { label: item.label, href: SERVICES_PATH } : item)),
     logo: logo ? { ...base.logo, stacked: toImage(logo, s.siteName, base.logo.stacked) } : base.logo,
     whatsapp: {
       ...base.whatsapp,

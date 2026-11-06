@@ -1,5 +1,6 @@
 import type { ImageAsset, SectionHeading } from './common';
 import type { OpeningHour } from './locations';
+import type { BranchFacility } from '../content/servicePages';
 
 /** Sama dengan enum di src/content/schema.ts & .pages.yml */
 export type BranchStatus = 'Aktif' | 'Segera Dibuka' | 'Tutup Sementara';
@@ -31,6 +32,13 @@ export interface Branch {
   pageUrl: string;
   mapEmbedUrl: string;
   directionsUrl: string;
+  /** Halaman cabang (Pages CMS, opsional; kosong = bagiannya tidak tampil) */
+  description?: string;
+  serviceAreas: string[];
+  /** Patokan & cara menuju */
+  landmark?: string;
+  facilities: BranchFacility[];
+  faq: { question: string; answer: string }[];
 }
 
 /** Status buka cabang saat ini (dihitung di zona waktu cabang) */
