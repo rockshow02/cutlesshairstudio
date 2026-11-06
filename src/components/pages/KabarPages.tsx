@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useBooking } from '@/lib/useBooking';
 import { useBranch } from '@/lib/BranchContext';
 import { pageUrl } from '@/lib/navigation';
-import { getKabar, kabarImage } from '@/lib/kabar';
+import { getKabar, kabarImage, useNow } from '@/lib/kabar';
 import {
   KABAR_ALL_BRANCHES,
   KABAR_KINDS,
@@ -28,12 +28,9 @@ import styles from './KabarPages.module.css';
 
 const l = kabarCopy.labels;
 
-/** Jam pengunjung, sekali per halaman: item yang berakhir sesudah build terakhir langsung masuk "Sudah berakhir" */
-const useNow = () => useState(Date.now)[0];
-
 /* ---------- Kartu (teks sama dengan cardHtml di scripts/kabar.ts) ---------- */
 
-function KabarCard({ item, now, hidden }: { item: KabarSummary; now: number; hidden: boolean }) {
+export function KabarCard({ item, now, hidden = false }: { item: KabarSummary; now: number; hidden?: boolean }) {
   const image = kabarImage(item, '(min-width: 1024px) 24rem, (min-width: 601px) 50vw, 96px');
   const period = kabarPeriodLabel(item);
   const status = kabarStatusLabel(item, now);

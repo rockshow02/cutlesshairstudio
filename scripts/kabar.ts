@@ -19,7 +19,7 @@ import {
   formatKabarDate,
   groupKabar,
   isKabarActive,
-  kabarEndMs,
+  kabarEndedAtMs,
   kabarPath,
   kabarStartMs,
   mapsUrl,
@@ -333,10 +333,10 @@ export function kabarHead(a: KabarArticle, site: Site, branches: BranchInfo[], m
 
 /* ---------- Ringkasan statis ---------- */
 
-/** Atribut waktu untuk saringan pra-paint (epoch ms; tidak ditulis bila tidak ada) */
+/** Atribut waktu untuk saringan pra-paint (epoch ms; end = ms pertama berstatus berakhir; tidak ditulis bila tidak ada) */
 function timeAttrs(k: KabarSummary): string {
   const start = kabarStartMs(k);
-  const end = kabarEndMs(k);
+  const end = kabarEndedAtMs(k);
   return `${start !== undefined ? ` data-kabar-start="${start}"` : ''}${end !== undefined ? ` data-kabar-end="${end}"` : ''}`;
 }
 
@@ -390,10 +390,31 @@ export function kabarBody(a: KabarArticle, branches: Pick<BranchInfo, 'slug' | '
   ].join('');
 }
 
-/** Fragmen statis kotak "Promo & acara" di halaman cabang; '' bila tidak ada item. `items` = hasil branchBoxItems */
+/**
+ * Saringan pra-paint (JS inline tanpa dependensi, tanpa eval/innerHTML): dijalankan sinkron saat parsing, tepat
+ * sesudah kotak/banner statis, jadi item yang berakhir sesudah build terakhir tidak pernah tergambar (tanpa kedip &
+ * tanpa layout shift). Setiap [data-kabar-end] dengan Date.now() >= nilai (ms pertama berstatus berakhir,
+ * kabarEndedAtMs) diberi `hidden`; lalu setiap [data-kabar-box] yang semua <li>-nya hidden ikut diberi `hidden`.
+ * Item akan datang tetap tampil (data-kabar-start tidak dipakai). Tidak memuat "<" (tidak bisa menutup tag script).
+ */
+export const kabarPrepaintScript = (): string =>
+  "(function(){var d=document,n=Date.now(),e=d.querySelectorAll('[data-kabar-end]'),b=d.querySelectorAll('[data-kabar-box]'),i,j,l,h;" +
+  "for(i=0;i!==e.length;i++)if(n>=Number(e[i].getAttribute('data-kabar-end')))e[i].setAttribute('hidden','');" +
+  "for(i=0;i!==b.length;i++){l=b[i].querySelectorAll('li');for(h=0,j=0;j!==l.length;j++)if(l[j].hasAttribute('hidden'))h++;if(h===l.length)b[i].setAttribute('hidden','')}})()";
+
+const prepaintTag = () => `<script>${kabarPrepaintScript()}</script>`;
+
+/** Fragmen statis kotak "Promo & acara" di halaman cabang (+ saringan pra-paint); '' bila tidak ada item. `items` = hasil branchBoxItems */
 export function branchBoxBody(items: KabarSummary[], now: number): string {
   if (!items.length) return '';
-  return `<section data-kabar-box><h2>${esc(kabarCopy.box.title)}</h2><ul>${items.map((k) => cardHtml(k, 'h3', now)).join('')}</ul></section>`;
+  return `<section data-kabar-box><h2>${esc(kabarCopy.box.title)}</h2><ul>${items.map((k) => cardHtml(k, 'h3', now)).join('')}</ul></section>${prepaintTag()}`;
+}
+
+/** Fragmen statis banner beranda (+ saringan pra-paint): jenis, judul, label "Mulai …" bila akan datang; '' bila tidak ada item. `item` = hasil bannerItem */
+export function kabarBannerBody(item: KabarSummary | undefined, now: number): string {
+  if (!item) return '';
+  const status = kabarStatusLabel(item, now);
+  return `<p data-kabar-banner${timeAttrs(item)}><a href="${kabarPath(item.slug)}"><span>${esc(item.kind)}</span> <span>${esc(item.title)}</span>${status ? ` <span>${esc(status)}</span>` : ''}</a></p>${prepaintTag()}`;
 }
 
 /** Data item untuk React (dibaca src/lib/kabar.ts), di dalam HTML halaman detail */

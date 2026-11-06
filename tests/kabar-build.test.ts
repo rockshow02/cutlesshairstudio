@@ -3,8 +3,8 @@
  * Data uji saja (file ditulis di sini), tidak membaca src/content/kabar/ maupun data CMS.
  */
 import { describe, expect, it } from 'vitest';
-import { branchBoxBody, kabarBody, kabarDataTag, kabarHead, kabarIndexBody, kabarIndexHead, kabarJsonLd, kabarLlmsLines, kabarSitemapEntries, kabarSummaryOf, processKabar, readKabarFiles, type KabarFile } from '../scripts/kabar';
-import type { KabarArticle } from '../src/content/kabarSeo';
+import { branchBoxBody, kabarBannerBody, kabarBody, kabarDataTag, kabarHead, kabarIndexBody, kabarIndexHead, kabarJsonLd, kabarLlmsLines, kabarPrepaintScript, kabarSitemapEntries, kabarSummaryOf, processKabar, readKabarFiles, type KabarFile } from '../scripts/kabar';
+import { kabarEndedAtMs, type KabarArticle } from '../src/content/kabarSeo';
 import { contentFixture } from './helpers/contentFixture';
 
 const SITE = { siteUrl: 'https://cutlesshairstudio.com', siteName: 'Cutless Hair Studio' };
@@ -259,11 +259,109 @@ describe('head & body', () => {
     expect(html).toContain('Promo &amp; acara');
     expect(html).toContain(`data-kabar-start="${Date.parse('2026-12-01T00:00:00+07:00')}"`);
     expect(html).toContain('href="/kabar/promo-uji/"');
+    // data-kabar-end = ms pertama berstatus berakhir (Promo: akhir hari validUntil + 1 ms)
+    expect(html).toContain(`data-kabar-end="${Date.parse('2026-12-31T23:59:59+07:00') + 1}"`);
+    // Saringan pra-paint langsung sesudah kotak (jalan saat parsing, sebelum paint pertama)
+    expect(html.endsWith(`</section><script>${kabarPrepaintScript()}</script>`)).toBe(true);
+  });
+
+  it('kabarBannerBody: satu tautan ke detail, atribut pra-paint, label "Mulai" bila akan datang; tanpa item = ""', () => {
+    expect(kabarBannerBody(undefined, NOW)).toBe('');
+    const promo = list.find((k) => k.kind === 'Promo')!;
+    const html = kabarBannerBody(promo, NOW);
+    expect(html).toContain('data-kabar-banner');
+    expect(html).toContain('href="/kabar/promo-uji/"');
+    expect(html).toContain('Promo Uji');
+    expect(html).toContain('Mulai 1 Desember 2026');
+    expect(html).toContain(`data-kabar-end="${kabarEndedAtMs(promo)}"`);
+    expect(html.match(/<a /g)).toHaveLength(1);
+    expect(html.endsWith(`<script>${kabarPrepaintScript()}</script>`)).toBe(true);
+    expect(kabarBannerBody(promo, Date.parse('2026-12-05T10:00:00+07:00'))).not.toContain('Mulai');
   });
 
   it('kabarDataTag: JSON aman', () => {
     const tag = kabarDataTag(publish(KABAR, 'x </script> y'));
     expect(tag).toContain('id="kabar-item"');
     expect(tag.match(/<\/script>/g)).toHaveLength(1);
+  });
+});
+
+/**
+ * Saringan pra-paint dijalankan pada DOM tiruan kecil (tanpa jsdom/happy-dom di devDependencies): hanya
+ * querySelectorAll ([atribut] / nama tag), getAttribute, setAttribute, hasAttribute yang dipakai skrip.
+ */
+describe('kabarPrepaintScript', () => {
+  class El {
+    attrs = new Map<string, string>();
+    constructor(public tag: string, attrs: Record<string, string | number> = {}, public children: El[] = []) {
+      for (const [k, v] of Object.entries(attrs)) this.attrs.set(k, String(v));
+    }
+    getAttribute(n: string) { return this.attrs.get(n) ?? null; }
+    setAttribute(n: string, v: string) { this.attrs.set(n, v); }
+    hasAttribute(n: string) { return this.attrs.has(n); }
+    get hidden() { return this.attrs.has('hidden'); }
+    all(): El[] { return this.children.flatMap((c) => [c, ...c.all()]); }
+    querySelectorAll(sel: string): El[] {
+      const attr = sel.match(/^\[([a-z-]+)\]$/)?.[1];
+      return this.all().filter((e) => (attr ? e.attrs.has(attr) : e.tag === sel));
+    }
+  }
+  const END = Date.parse('2026-11-06T15:00:00+07:00');
+  const li = (end?: number, start?: number) => new El('li', { ...(end !== undefined ? { 'data-kabar-end': end } : {}), ...(start !== undefined ? { 'data-kabar-start': start } : {}) });
+  const box = (...items: El[]) => new El('section', { 'data-kabar-box': '' }, [new El('h2'), new El('ul', {}, items)]);
+  const run = (now: number, ...nodes: El[]) => {
+    const doc = new El('#document', {}, nodes);
+    new Function('document', 'Date', kabarPrepaintScript())(doc, { now: () => now });
+  };
+
+  it('item lewat disembunyikan, aktif & akan datang tetap tampil; kotak campuran tetap', () => {
+    const lewat = li(END - 1000);
+    const aktif = li(END + 1000);
+    const akanDatang = li(END + 10_000, END + 5000);
+    const b = box(lewat, aktif, akanDatang);
+    run(END, b);
+    expect([lewat.hidden, aktif.hidden, akanDatang.hidden, b.hidden]).toEqual([true, false, false, false]);
+  });
+
+  it('semua item lewat → kotak disembunyikan', () => {
+    const a = li(END - 1);
+    const b = li(END - 5000);
+    const k = box(a, b);
+    run(END, k);
+    expect([a.hidden, b.hidden, k.hidden]).toEqual([true, true, true]);
+  });
+
+  it('batas: tepat pada data-kabar-end hilang, 1 ms sebelumnya tampil', () => {
+    const tepat = li(END);
+    run(END, box(tepat));
+    expect(tepat.hidden).toBe(true);
+    const sebelum = li(END);
+    const k = box(sebelum);
+    run(END - 1, k);
+    expect([sebelum.hidden, k.hidden]).toEqual([false, false]);
+  });
+
+  it('batas promo dari kabarEndedAtMs: hari terakhir 23:59:59 WIB tampil, 00:00 WIB esok hilang', () => {
+    const promo = kabarSummaryOf(publish(PROMO));
+    const end = kabarEndedAtMs(promo)!;
+    const a = li(end);
+    run(Date.parse('2026-12-31T23:59:59+07:00'), box(a));
+    expect(a.hidden).toBe(false);
+    const b = li(end);
+    run(Date.parse('2027-01-01T00:00:00+07:00'), box(b));
+    expect(b.hidden).toBe(true);
+  });
+
+  it('banner (tanpa kotak) disembunyikan bila lewat', () => {
+    const banner = new El('p', { 'data-kabar-banner': '', 'data-kabar-end': END });
+    run(END, banner);
+    expect(banner.hidden).toBe(true);
+  });
+
+  it('kecil & aman: tanpa eval, innerHTML, Function, atau "<" (tidak bisa menutup tag script)', () => {
+    const js = kabarPrepaintScript();
+    expect(js).toContain('data-kabar-end');
+    expect(js).not.toMatch(/eval|innerHTML|Function|</);
+    expect(js.length).toBeLessThan(600);
   });
 });

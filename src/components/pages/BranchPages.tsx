@@ -15,6 +15,7 @@ import { Icon } from '@/components/ui/Icon';
 import { ResponsiveImage } from '@/components/ui/ResponsiveImage';
 import { BranchPanel } from '@/components/sections/Location';
 import { Promo } from '@/components/sections/Promo';
+import { KabarBranchBox } from '@/components/sections/KabarBranchBox';
 import { Pricing } from '@/components/sections/Pricing';
 import { ShoeCareTeaser } from '@/components/sections/ShoeCareTeaser';
 import { Barbers } from '@/components/sections/Barbers';
@@ -47,6 +48,8 @@ export function BranchPage() {
   return (
     <>
       <BranchHero branch={b} brand={site.brandName} />
+      {/* Promo & acara aktif untuk cabang ini (posisi sama dengan ringkasan statis); tidak dirender bila kosong/mati */}
+      <KabarBranchBox branchSlug={b.slug} />
       <Deferred>
         <BranchDetails branch={b} />
         <Section id="lokasi" tone="light" labelledBy="lokasi-detail">

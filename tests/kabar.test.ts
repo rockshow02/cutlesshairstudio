@@ -12,6 +12,7 @@ import {
   isKabarEnded,
   kabarBannerVisible,
   kabarEndMs,
+  kabarEndedAtMs,
   kabarForBranch,
   kabarPath,
   kabarRedirects,
@@ -75,6 +76,24 @@ describe('kabarStatus', () => {
     const p = mk({ slug: 'p', kind: 'Promo', validUntil: '2026-12-31', startsAt: '2026-01-01T10:00', endsAt: '2026-01-01T11:00' });
     expect(kabarStatus(p, t('2026-06-01T00:00:00+07:00'))).toBe('berlangsung');
     expect(kabarStartMs(p)).toBeUndefined();
+  });
+
+  it('kabarEndedAtMs: ms pertama berstatus berakhir (batas data-kabar-end saringan pra-paint)', () => {
+    const e = mk({ slug: 'e', kind: 'Acara', startsAt: '2026-12-20T10:00', endsAt: '2026-12-20T15:00' });
+    const eDay = mk({ slug: 'e2', kind: 'Acara', startsAt: '2026-12-20T10:00' });
+    const upcoming = mk({ slug: 'u', kind: 'Promo', validFrom: '2026-12-10', validUntil: '2026-12-31' });
+    // Promo: inklusif sampai akhir hari validUntil (kabarEndMs) → berakhir 1 ms sesudahnya
+    expect(kabarEndedAtMs(promo)).toBe(t('2026-12-31T23:59:59+07:00') + 1);
+    // Acara: eksklusif, tepat pada endsAt
+    expect(kabarEndedAtMs(e)).toBe(t('2026-12-20T15:00:00+07:00'));
+    expect(kabarEndedAtMs(eDay)).toBe(t('2026-12-20T23:59:59+07:00') + 1);
+    expect(kabarEndedAtMs(mk({ slug: 'k', kind: 'Kabar', validUntil: '2020-01-01' }))).toBeUndefined();
+    // Sama persis dengan kabarStatus di batas (1 ms sebelum: belum, tepat: berakhir)
+    for (const k of [promo, e, eDay, upcoming]) {
+      const at = kabarEndedAtMs(k)!;
+      expect(kabarStatus(k, at - 1)).not.toBe('berakhir');
+      expect(kabarStatus(k, at)).toBe('berakhir');
+    }
   });
 
   it('kabar tidak pernah lewat', () => {

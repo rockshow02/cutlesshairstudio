@@ -34,7 +34,8 @@ async function staticVsRendered(page: Page, url: string) {
     const texts: string[] = [];
     if (block) {
       const walker = document.createTreeWalker(block, NodeFilter.SHOW_TEXT);
-      for (let n = walker.nextNode(); n; n = walker.nextNode()) if (n.textContent?.trim()) texts.push(n.textContent);
+      // Isi <script> (saringan pra-paint Kabar) bukan teks halaman
+      for (let n = walker.nextNode(); n; n = walker.nextNode()) if (n.textContent?.trim() && n.parentElement?.tagName !== 'SCRIPT') texts.push(n.textContent);
     }
     const rendered = [document.body.innerText, ...[...document.querySelectorAll('details')].map((d) => d.textContent ?? '')].join('\n');
     return { texts, rendered };

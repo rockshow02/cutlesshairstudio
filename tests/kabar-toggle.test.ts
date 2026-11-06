@@ -4,7 +4,7 @@
  * ringkasan statis halaman cabang. Data uji saja (contentFixture + item ditulis di sini), bukan isi CMS.
  */
 import { describe, expect, it } from 'vitest';
-import { branchBody, llmsTxt, sitemap, waClickAllowlist, withDisabledRedirects } from '../scripts/vite-content-plugin';
+import { branchBody, homeBody, llmsTxt, sitemap, waClickAllowlist, withDisabledRedirects } from '../scripts/vite-content-plugin';
 import { kabarRedirects, type KabarSummary } from '../src/content/kabarSeo';
 import { settingsSchema } from '../src/content/schema';
 import { site as baseSite } from '../src/content/site';
@@ -27,7 +27,7 @@ const PROMO_BOGOR = item({ slug: 'promo-bogor', kind: 'Promo', branches: ['bogor
 const PROMO_LEWAT = item({ slug: 'promo-lewat', kind: 'Promo', branches: ['cibubur'], validUntil: '2026-10-01' });
 const KABAR_CIBUBUR = item({ slug: 'kabar-cibubur', kind: 'Kabar', branches: ['cibubur'] });
 
-const bundleWith = (showKabar: boolean) => contentFixture({ settings: { ...contentFixture().settings, showKabar } });
+const bundleWith = (showKabar: boolean, showKabarBanner = false) => contentFixture({ settings: { ...contentFixture().settings, showKabar, showKabarBanner } });
 const cibubur = contentFixture().branches.find((b) => b.slug === 'cibubur')!;
 
 describe('Kabar mati (default)', () => {
@@ -106,5 +106,40 @@ describe('kotak "Promo & acara" di ringkasan statis halaman cabang', () => {
   it('tidak ada item aktif → tanpa kotak; tanpa argumen kabar sama dengan sebelumnya', () => {
     expect(branchBody(cibubur, bundle, [], [PROMO_BOGOR, PROMO_LEWAT], NOW)).not.toContain('data-kabar-box');
     expect(branchBody(cibubur, bundle, [], [], NOW)).toBe(branchBody(cibubur, bundle));
+    expect(branchBody(cibubur, bundle, [], [PROMO_BOGOR, PROMO_LEWAT], NOW)).not.toContain('<script>');
+  });
+
+  it('saringan pra-paint tepat sesudah kotak, di dalam ringkasan statis', () => {
+    const html = branchBody(cibubur, bundle, [], [PROMO_CIBUBUR], NOW);
+    expect(html).toMatch(/<\/section><script>[^<]+<\/script>/);
+    expect(html.match(/<script>/g)).toHaveLength(1);
+  });
+});
+
+describe('banner beranda di ringkasan statis (Tampilkan Kabar + Tampilkan banner)', () => {
+  const items = [PROMO_BOGOR, PROMO_LEWAT];
+
+  it('Kabar mati atau banner mati → tidak ada markup banner sama sekali', () => {
+    for (const bundle of [bundleWith(false, true), bundleWith(true, false), bundleWith(false, false)]) {
+      const html = homeBody(bundle, items, NOW);
+      expect(html).not.toContain('data-kabar');
+      expect(html).not.toContain('<script>');
+      expect(html).toBe(homeBody(bundle));
+    }
+  });
+
+  it('banner aktif tetapi tidak ada promo/acara aktif → tidak ada apa-apa', () => {
+    const bundle = bundleWith(true, true);
+    expect(homeBody(bundle, [PROMO_LEWAT, KABAR_CIBUBUR], NOW)).toBe(homeBody(bundle));
+  });
+
+  it('banner aktif: satu banner (item aktif pertama, tanpa saringan cabang) + saringan pra-paint, sesudah hero', () => {
+    const bundle = bundleWith(true, true);
+    const html = homeBody(bundle, items, NOW);
+    expect(html).toContain('data-kabar-banner');
+    expect(html).toContain('href="/kabar/promo-bogor/"');
+    expect(html).not.toContain('promo-lewat');
+    expect(html.match(/data-kabar-banner/g)).toHaveLength(1);
+    expect(html).toMatch(/<\/h1>(<p>[^<]*<\/p>)?<p data-kabar-banner[^>]*>.*?<\/p><script>[^<]+<\/script>/);
   });
 });

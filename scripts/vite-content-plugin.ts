@@ -22,7 +22,8 @@
  *    cabang (deskripsi, area, patokan, fasilitas, FAQ) & JSON-LD HairSalon tambahan selalu ikut (kosong = tidak tampil).
  * 10. Kabar, Promo & Acara (scripts/kabar.ts): validasi src/content/kabar/*.md, modul `virtual:kabar`, prerender /kabar/
  *    & /kabar/<slug>/ (atau 301 ke beranda bila dimatikan), entri sitemap & llms.txt, kotak "Promo & acara" di ringkasan
- *    statis halaman cabang. Status (aktif/berakhir) dihitung dari satu `now` per build.
+ *    statis halaman cabang dan banner di ringkasan statis beranda (keduanya + saringan pra-paint inline). Status
+ *    (aktif/berakhir) dihitung dari satu `now` per build.
  */
 import { cp, readdir, readFile, mkdir, rm, stat, writeFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
@@ -68,9 +69,9 @@ import {
   servicesSitemapEntries,
   type ServicePagesResult,
 } from './layanan';
-import { KABAR_PATH, branchBoxItems, kabarRedirects, kabarVisible, parseKabarPath, type KabarRoute, type KabarSummary } from '../src/content/kabarSeo';
+import { KABAR_PATH, bannerItem, branchBoxItems, kabarBannerVisible, kabarRedirects, kabarVisible, parseKabarPath, type KabarRoute, type KabarSummary } from '../src/content/kabarSeo';
 import { kabarCopy } from '../src/content/kabarCopy';
-import { branchBoxBody, kabarBody, kabarDataTag, kabarHead, kabarIndexBody, kabarIndexHead, kabarLlmsLines, kabarSitemapEntries, kabarSummaryOf, processKabar, readKabarFiles, type KabarResult } from './kabar';
+import { branchBoxBody, kabarBannerBody, kabarBody, kabarDataTag, kabarHead, kabarIndexBody, kabarIndexHead, kabarLlmsLines, kabarSitemapEntries, kabarSummaryOf, processKabar, readKabarFiles, type KabarResult } from './kabar';
 
 const VIRTUAL_ID = 'virtual:image-meta';
 const RESOLVED_ID = `\0${VIRTUAL_ID}`;
@@ -566,8 +567,10 @@ const shownBranches = (bundle: Pick<ContentBundle, 'branches'>) => bundle.branch
  * Ringkasan statis beranda: hero, Daftar Harga (cabang Aktif pertama, seperti tampilan awal), teaser Cuci Sepatu, Video
  * (judul & keterangan, hanya bila bagian Video tampil), FAQ,
  * Lokasi (tab cabang + kartu cabang pertama yang tampil awal), dan footer (tagline, cabang, kontak).
+ * Banner Kabar (Tampilkan Kabar + Tampilkan banner, item aktif pertama pada `now`) tepat sesudah hero, dengan saringan
+ * pra-paint; `kabar` kosong / toggle mati → tanpa markup banner sama sekali.
  */
-export function homeBody(bundle: ContentBundle): string {
+export function homeBody(bundle: ContentBundle, kabar: KabarSummary[] = [], now = Date.now()): string {
   const { settings, hero } = bundle;
   const cities = citiesOf(bundle);
   const branches = sortedBranches(bundle);
@@ -582,6 +585,7 @@ export function homeBody(bundle: ContentBundle): string {
     hero.kicker ? `<p>${esc(fill(hero.kicker))}</p>` : '',
     `<h1>${hero.titleLines.map(esc).join('<br />')}</h1>`,
     hero.subtitle ? `<p>${esc(hero.subtitle)}</p>` : '',
+    kabarBannerVisible(settings) ? kabarBannerBody(bannerItem(kabar, now), now) : '',
     active[0] ? `<h2>${esc(pricingCopy.heading.title)}</h2>${branchPriceList(active[0], bundle, uniform ? branchesCopy.labels.priceAllBranches : undefined)}` : '',
     shoeTeaser(bundle),
     videos.length
@@ -690,7 +694,7 @@ function heroPreload(hero: HeroEntry, meta: ImageMeta): string {
   ].join('\n    ');
 }
 
-function fillHtml(html: string, bundle: ContentBundle | undefined, meta: ImageMeta = {}, services: ServicePageSummary[] = []): string {
+function fillHtml(html: string, bundle: ContentBundle | undefined, meta: ImageMeta = {}, services: ServicePageSummary[] = [], kabar: KabarSummary[] = [], now = Date.now()): string {
   if (!bundle) return html;
   const { siteUrl, siteName } = bundle.settings;
   const allBranches = jsonLdTag(bundle.branches.map((b) => branchJsonLd(b, bundle, services)));
@@ -704,7 +708,7 @@ function fillHtml(html: string, bundle: ContentBundle | undefined, meta: ImageMe
     .replace('<!--cutless:jsonld-->', allBranches)
     .replace('<!--cutless:org-jsonld-->', jsonLdTag(organizationJsonLd(bundle.settings)))
     .replace('<!--cutless:faq-jsonld-->', faqPageJsonLd(bundle.faq, `${siteUrl}/`) ? jsonLdTag(faqPageJsonLd(bundle.faq, `${siteUrl}/`)) : '')
-    .replace('<!--cutless:home-body-->', homeBody(bundle))
+    .replace('<!--cutless:home-body-->', homeBody(bundle, kabar, now))
     .replace('<!--cutless:hero-preload-->', heroPreload(bundle.hero, meta));
   // Halaman /cuci-sepatu/: title, meta, Open Graph & ringkasan dari Partner Cuci Sepatu
   if (out.includes('%PRIVACY_TITLE%')) return privacyFill(out, bundle);
@@ -1093,7 +1097,7 @@ export function contentPlugin(): Plugin {
     transformIndexHtml: {
       order: 'pre',
       handler(html, ctx) {
-        let out = fillHtml(html, bundle, imageMeta, serviceList());
+        let out = fillHtml(html, bundle, imageMeta, serviceList(), kabarList(), now());
         // Dev server: /cabang/<slug>/ memakai head cabang tersebut
         const slug = ctx.originalUrl?.match(BRANCH_ROUTE)?.[1];
         const branch = slug && bundle?.branches.find((b) => b.slug === slug);

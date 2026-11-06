@@ -3,6 +3,7 @@
  * build oleh scripts/vite-content-plugin.ts, termasuk yang sudah berakhir; kosong bila Tampilkan Kabar mati), dan item
  * yang sedang dibuka dari <script id="kabar-item"> di HTML halaman detail.
  */
+import { useState } from 'react';
 import kabar from 'virtual:kabar';
 import { responsiveImage } from '@/lib/contentTransforms';
 import type { KabarArticle, KabarSummary } from '@/content/kabarSeo';
@@ -10,6 +11,9 @@ import type { ImageAsset } from '@/types';
 
 /** Item terbit, terbaru dulu (status berlangsung/berakhir dihitung dari jam pengunjung, lihat groupKabar) */
 export const getKabar = (): KabarSummary[] => kabar;
+
+/** Jam pengunjung, sekali per komponen: item yang berakhir sesudah build terakhir langsung tersaring (sama dengan saringan pra-paint) */
+export const useNow = (): number => useState(Date.now)[0];
 
 /** Item halaman ini (/kabar/<slug>/); undefined di halaman daftar */
 export function getCurrentKabar(): KabarArticle | undefined {
