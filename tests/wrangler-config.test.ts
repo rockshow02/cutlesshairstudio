@@ -70,7 +70,21 @@ describe('wrangler.jsonc: balasan ulasan Google', () => {
   it('staging memakai data contoh (mock); produksi memakai klien sungguhan', () => {
     expect(c.env.staging.vars.GBP_CLIENT).toBe('mock');
     expect(c.vars.GBP_CLIENT).toBe('');
-    expect(c.vars.GBP_LOCATIONS).toBe('');
+  });
+
+  it('GBP_LOCATIONS produksi: JSON valid, tepat cabang di branches.json, format accounts/{akun}/locations/{lokasi}', () => {
+    const locations = JSON.parse(c.vars.GBP_LOCATIONS) as Record<string, string>;
+    const slugs = (JSON.parse(readFileSync('src/content/branches.json', 'utf8')) as { slug: string }[]).map((b) => b.slug);
+    expect(Object.keys(locations).sort()).toEqual([...slugs].sort());
+    for (const value of Object.values(locations)) expect(value).toMatch(/^accounts\/\d+\/locations\/\d+$/);
+    expect(new Set(Object.values(locations)).size).toBe(slugs.length);
+  });
+
+  it('GBP_LOCATIONS staging tetap data contoh dan cocok dengan branches.json', () => {
+    const locations = JSON.parse(c.env.staging.vars.GBP_LOCATIONS) as Record<string, string>;
+    const slugs = (JSON.parse(readFileSync('src/content/branches.json', 'utf8')) as { slug: string }[]).map((b) => b.slug);
+    expect(Object.keys(locations).sort()).toEqual([...slugs].sort());
+    for (const value of Object.values(locations)) expect(value).toMatch(/^mock\//);
   });
 
   it('tidak ada secret OAuth di file', () => {

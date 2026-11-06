@@ -55,8 +55,8 @@
     "ACCESS_AUD": "9abaa8c9fda34bc7eb797cfebd3fa7d7132f25b15a42fe5518afbd25874bdcd6",
     // Balasan ulasan Google (docs/balasan-ulasan.md): "" = klien sungguhan (aktif setelah secret OAuth terisi); /ulasan* memakai Access yang sama
     "GBP_CLIENT": "",
-    // JSON slug cabang → lokasi Google, mis. {"cibubur":"locations/123"}; diisi pemilik setelah API disetujui
-    "GBP_LOCATIONS": ""
+    // JSON slug cabang (src/content/branches.json) → accounts/{akun}/locations/{lokasi} (bukan rahasia; lokasi tampil di akun PERSONAL)
+    "GBP_LOCATIONS": "{\"bogor-bantarjati\":\"accounts/111264566557039159499/locations/8573175113621142214\",\"cibubur\":\"accounts/111264566557039159499/locations/527301418497643001\"}"
   },
   "env": {
     // Worker terpisah: URL, versi, database, dan pengaturan (mis. Cloudflare Access) tidak tercampur dengan produksi.
