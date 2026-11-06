@@ -1,8 +1,8 @@
 ---
 title: Haircut Pria di Bogor & Cibubur
 slug: haircut-pria
-metaDescription: Haircut pria di Cutless Hair Studio Bogor Bantarjati & Cibubur,
-  sudah termasuk hair wash. Bisa walk-in atau booking lewat WhatsApp.
+metaDescription: Haircut pria di Cutless Hair Studio Bogor & Cibubur. Konsultasi
+  gaya, potong rapi sekitar 45 menit oleh hairstylist profesional. Bisa walk-in.
 pricingItems:
   - White Grooming
   - Black Grooming
@@ -23,5 +23,9 @@ faq:
   - question: Metode pembayaran apa saja yang diterima?
     answer: Kami menerima pembayaran tunai, QRIS, transfer bank, dan kartu
       debit/kredit di kedua cabang.
+suitableFor:
+  - Yang ingin potongan rapi untuk kerja, kuliah, atau acara
+  - Yang ingin ganti model dengan konsultasi lebih dulu
+  - Yang terbiasa merapikan rambut rutin
 status: Terbit
 ---

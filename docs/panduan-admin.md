@@ -500,7 +500,7 @@ Bila Save berhasil tetapi website tidak berubah, lihat [Jika website tidak berub
 
 Satu halaman per layanan (mis. *Potong Rambut Wanita di Bogor & Cibubur*) agar mudah ditemukan di Google & asisten AI. Tampil di **/layanan/** (dikelompokkan per kategori Daftar Harga), menu **Layanan** mengarah ke /layanan/, dan baris **Daftar Harga** serta **Kartu Layanan** yang punya halaman diberi link **Selengkapnya**, setelah **Pengaturan Situs → Tampilkan halaman layanan** dinyalakan. Selama mati, /layanan/ dialihkan ke beranda dan tidak masuk Google.
 
-> Empat halaman awal (Haircut pria, Potong rambut wanita, Hair treatment, Potong rambut anak) sudah tersedia berstatus **Draf**, ditulis hanya dari data yang sudah ada di website. Lengkapi bagian yang masih kosong, lalu terbitkan.
+> Halaman Potong rambut anak masih berstatus **Draf** sampai data dari klien lengkap. Lengkapi bagian yang masih kosong, lalu terbitkan.
 
 **Harga tidak diketik di halaman layanan.** Pilih item di **Layanan/harga terkait**; harga per cabang, "Start from", dan *Tersedia di cabang* diambil otomatis dari menu **Daftar Harga**. Ubah harga cukup di Daftar Harga, semua halaman ikut berubah.
 
