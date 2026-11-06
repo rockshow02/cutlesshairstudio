@@ -33,6 +33,12 @@ declare module 'virtual:tips' {
   export default tips;
 }
 
+/** Disediakan scripts/vite-content-plugin.ts: ringkasan Kabar, Promo & Acara terbit, termasuk yang sudah berakhir (kosong bila halaman dimatikan) */
+declare module 'virtual:kabar' {
+  const kabar: import('./content/kabarSeo').KabarSummary[];
+  export default kabar;
+}
+
 /** Disediakan scripts/vite-content-plugin.ts: ringkasan halaman layanan terbit (kosong bila halaman dimatikan) */
 declare module 'virtual:layanan' {
   const pages: import('./content/servicePages').ServicePageSummary[];

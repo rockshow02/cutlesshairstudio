@@ -20,6 +20,9 @@
  * 9. Halaman Layanan (scripts/layanan.ts): validasi src/content/layanan/*.md, modul `virtual:layanan`, prerender
  *    /layanan/ & /layanan/<slug>/ (atau 301 ke beranda bila dimatikan), entri sitemap & llms.txt. Bagian baru halaman
  *    cabang (deskripsi, area, patokan, fasilitas, FAQ) & JSON-LD HairSalon tambahan selalu ikut (kosong = tidak tampil).
+ * 10. Kabar, Promo & Acara (scripts/kabar.ts): validasi src/content/kabar/*.md, modul `virtual:kabar`, prerender /kabar/
+ *    & /kabar/<slug>/ (atau 301 ke beranda bila dimatikan), entri sitemap & llms.txt, kotak "Promo & acara" di ringkasan
+ *    statis halaman cabang. Status (aktif/berakhir) dihitung dari satu `now` per build.
  */
 import { cp, readdir, readFile, mkdir, rm, stat, writeFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
@@ -65,6 +68,9 @@ import {
   servicesSitemapEntries,
   type ServicePagesResult,
 } from './layanan';
+import { KABAR_PATH, branchBoxItems, kabarRedirects, kabarVisible, parseKabarPath, type KabarRoute, type KabarSummary } from '../src/content/kabarSeo';
+import { kabarCopy } from '../src/content/kabarCopy';
+import { branchBoxBody, kabarBody, kabarDataTag, kabarHead, kabarIndexBody, kabarIndexHead, kabarLlmsLines, kabarSitemapEntries, kabarSummaryOf, processKabar, readKabarFiles, type KabarResult } from './kabar';
 
 const VIRTUAL_ID = 'virtual:image-meta';
 const RESOLVED_ID = `\0${VIRTUAL_ID}`;
@@ -77,6 +83,8 @@ const TIPS_VIRTUAL_ID = 'virtual:tips';
 const RESOLVED_TIPS_ID = `\0${TIPS_VIRTUAL_ID}`;
 const SERVICES_VIRTUAL_ID = 'virtual:layanan';
 const RESOLVED_SERVICES_ID = `\0${SERVICES_VIRTUAL_ID}`;
+const KABAR_VIRTUAL_ID = 'virtual:kabar';
+const RESOLVED_KABAR_ID = `\0${KABAR_VIRTUAL_ID}`;
 /** Build E2E: file uji (mis. PDF daftar menu) yang hanya disalin ke dist/ build E2E, tidak pernah ke public/ */
 const FIXTURE_PUBLIC = path.join('e2e', 'fixtures', 'public');
 
@@ -191,6 +199,9 @@ export async function loadContent(root: string, { fixtures = false, variant }: {
   // Halaman Layanan (src/content/layanan/*.md): frontmatter, slug unik, foto, item Daftar Harga & Kartu Layanan (Draf juga)
   const serviceFiles = await readServicePageFiles(root, fixtures);
   errors.push(...processServicePages(serviceFiles, { exists: (url) => imageExists(root, url, fixtures), bundle: complete ? (parsed as unknown as ContentBundle) : undefined }).errors);
+  // Kabar, Promo & Acara (src/content/kabar/*.md): frontmatter, kolom wajib per jenis, slug unik, gambar, cabang (Draf juga)
+  const kabarFiles = await readKabarFiles(root, fixtures);
+  errors.push(...processKabar(kabarFiles, { exists: (url) => imageExists(root, url, fixtures), bundle: complete ? (parsed as unknown as ContentBundle) : undefined }).errors);
 
   if (!complete) return { errors, launch: [] };
   const bundle = parsed as unknown as ContentBundle;
@@ -506,13 +517,19 @@ function shoeTeaser(bundle: ContentBundle): string {
 
 const sortedBranches = (bundle: Pick<ContentBundle, 'branches'>) => [...bundle.branches].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
 
-function branchBody(b: BranchEntry, bundle: ContentBundle, services: ServicePageSummary[] = []): string {
+/**
+ * `kabar`: ringkasan Kabar terbit yang di-build (kosong bila Tampilkan Kabar mati), `now`: waktu build. Kotak
+ * "Promo & acara" (promo/acara aktif untuk cabang ini atau semua cabang) tepat setelah kepala cabang (nama, alamat,
+ * WhatsApp, jam), sebelum detail cabang; posisi kotak di halaman React sama (sesudah BranchHero).
+ */
+export function branchBody(b: BranchEntry, bundle: ContentBundle, services: ServicePageSummary[] = [], kabar: KabarSummary[] = [], now = Date.now()): string {
   return [
     '<div class="prerender">',
     `<p><a href="/cabang/">${esc(branchesCopy.labels.allBranches)}</a></p>`,
     `<p>${esc(b.city)}</p>`,
     `<h1>${esc(bundle.settings.siteName)} ${esc(b.name)}</h1>`,
     locationCard(b, null),
+    branchBoxBody(branchBoxItems(kabar, b.slug, now), now),
     // Jam buka ringkas, deskripsi, area, patokan, fasilitas, layanan, FAQ cabang (kosong = tidak tampil)
     branchDetailsBody(b, services, bundle),
     branchPriceList(b, bundle),
@@ -601,8 +618,9 @@ export function cabangIndexBody(bundle: ContentBundle): string {
 /**
  * /llms.txt (format llmstxt.org): ringkasan bisnis untuk asisten AI, dibangkitkan dari konten saat build. Manfaatnya
  * belum terbukti (belum dipakai resmi oleh mesin pencari), tetapi tanpa biaya.
+ * `kabar`: ringkasan Kabar terbit (diabaikan bila Tampilkan Kabar mati), `now`: waktu build (promo/acara aktif).
  */
-export function llmsTxt(bundle: ContentBundle, tips: TipSummary[] = [], services: ServicePageSummary[] = []): string {
+export function llmsTxt(bundle: ContentBundle, tips: TipSummary[] = [], services: ServicePageSummary[] = [], kabar: KabarSummary[] = [], now = Date.now()): string {
   const { siteName, siteUrl } = bundle.settings;
   const lines: string[] = [];
   const shoe = shoeCareVisible(bundle.shoeCare, bundle.branches) ? bundle.branches.find((b) => b.slug === bundle.shoeCare.branchSlug) : undefined;
@@ -632,9 +650,13 @@ export function llmsTxt(bundle: ContentBundle, tips: TipSummary[] = [], services
   if (shownServices.length) lines.push(`- [Semua layanan](${siteUrl}${SERVICES_PATH})`);
   const shownTips = tipsVisible(bundle.settings) ? tips : [];
   if (shownTips.length) lines.push(`- [Tips & Trik](${siteUrl}${TIPS_PATH})`);
+  // /kabar/ tetap halaman 200 walau koleksi kosong (pesan kosong), jadi link selalu ada saat aktif
+  const showKabar = kabarVisible(bundle.settings);
+  if (showKabar) lines.push(`- [${kabarCopy.heading.title}](${siteUrl}${KABAR_PATH})`);
   lines.push('');
   lines.push(...servicesLlmsLines(shownServices, bundle));
   lines.push(...tipsLlmsLines(shownTips, siteUrl));
+  if (showKabar) lines.push(...kabarLlmsLines(kabar, siteUrl, now));
   const faq = activeFaqItems(bundle.faq);
   if (faq.length) {
     lines.push('## FAQ', '');
@@ -692,7 +714,7 @@ function fillHtml(html: string, bundle: ContentBundle | undefined, meta: ImageMe
 const HEAD_REGION = /<!--cutless:head-start-->[\s\S]*?<!--cutless:head-end-->/;
 
 /** Semua halaman yang dibangun & diindeks (sitemap.xml, daftar halaman klik-wa.json) */
-function sitePages(bundle: ContentBundle, tips: TipSummary[], services: ServicePageSummary[] = []): (string | { path: string; lastmod?: string })[] {
+function sitePages(bundle: ContentBundle, tips: TipSummary[], services: ServicePageSummary[] = [], kabar: KabarSummary[] = []): (string | { path: string; lastmod?: string })[] {
   return [
     '/',
     '/cabang/',
@@ -705,13 +727,15 @@ function sitePages(bundle: ContentBundle, tips: TipSummary[], services: ServiceP
     ...(tipsVisible(bundle.settings) && tips.length ? tipsSitemapEntries(tips) : []),
     // Halaman layanan hanya saat aktif & ada halaman terbit; lastmod = Tanggal diperbarui (kosong = hari build)
     ...(servicePagesVisible(bundle.settings) ? servicesSitemapEntries(services) : []),
+    // Kabar hanya saat aktif: /kabar/ (juga saat kosong) & setiap item terbit, termasuk yang sudah berakhir
+    ...(kabarVisible(bundle.settings) ? kabarSitemapEntries(kabar) : []),
   ];
 }
 
-export function sitemap(bundle: ContentBundle, tips: TipSummary[] = [], services: ServicePageSummary[] = []): string {
+export function sitemap(bundle: ContentBundle, tips: TipSummary[] = [], services: ServicePageSummary[] = [], kabar: KabarSummary[] = []): string {
   const { siteUrl } = bundle.settings;
   const today = new Date().toISOString().slice(0, 10);
-  const body = sitePages(bundle, tips, services)
+  const body = sitePages(bundle, tips, services, kabar)
     .map((u) => (typeof u === 'string' ? { path: u, lastmod: today } : u))
     .map((u) => `  <url><loc>${siteUrl}${u.path}</loc><lastmod>${u.lastmod ?? today}</lastmod></url>`)
     .join('\n');
@@ -722,12 +746,32 @@ export function sitemap(bundle: ContentBundle, tips: TipSummary[] = [], services
  * dist/klik-wa.json: nilai yang boleh disimpan hitungan klik WhatsApp (Worker /api/klik-wa menolak cabang/kapster lain;
  * halaman lain dicatat "lainnya"). Isinya hanya data yang memang tampil di situs (slug & nama cabang/kapster, path halaman).
  */
-export function waClickAllowlist(bundle: ContentBundle, tips: TipSummary[] = [], services: ServicePageSummary[] = []): WaClickAllowlist {
+export function waClickAllowlist(bundle: ContentBundle, tips: TipSummary[] = [], services: ServicePageSummary[] = [], kabar: KabarSummary[] = []): WaClickAllowlist {
   return {
     branches: Object.fromEntries(bundle.branches.map((b) => [b.slug, b.name])),
     barbers: Object.fromEntries(bundle.barbers.map((b) => [barberKey(b.name), b.name]).filter(([key]) => key)),
-    pages: [...new Set(sitePages(bundle, tips, services).map((u) => (typeof u === 'string' ? u : u.path)))],
+    pages: [...new Set(sitePages(bundle, tips, services, kabar).map((u) => (typeof u === 'string' ? u : u.path)))],
   };
+}
+
+/** Halaman bertoggle di CMS: `rules` = aturan 301 saat mati (kosong = halaman aktif), `dir` = folder di dist/ */
+function toggledPages(bundle: ContentBundle): { dir: string; rules: string[]; note: string }[] {
+  return [
+    { dir: 'cuci-sepatu', rules: shoeCareRedirects(shoeCareVisible(bundle.shoeCare, bundle.branches)), note: 'Halaman Cuci Sepatu mati (Pages CMS → Partner Cuci Sepatu → Tampilkan halaman)' },
+    { dir: 'produk', rules: productsRedirects(productsVisible(bundle.settings)), note: 'Halaman Produk mati (Pages CMS → Pengaturan Situs → Tampilkan Produk)' },
+    { dir: 'tips', rules: tipsRedirects(tipsVisible(bundle.settings)), note: 'Halaman Tips & Trik mati (Pages CMS → Pengaturan Situs → Tampilkan Tips & Trik)' },
+    { dir: 'layanan', rules: servicePagesRedirects(servicePagesVisible(bundle.settings)), note: 'Halaman layanan mati (Pages CMS → Pengaturan Situs → Tampilkan halaman layanan)' },
+    { dir: 'kabar', rules: kabarRedirects(kabarVisible(bundle.settings)), note: 'Halaman Kabar mati (Pages CMS → Pengaturan Situs → Tampilkan Kabar)' },
+  ];
+}
+
+/** Isi dist/_redirects: aturan 301 halaman yang dimatikan ditambahkan setelah isi `current` (idempoten) */
+export function withDisabledRedirects(current: string, bundle: ContentBundle): string {
+  let out = current;
+  for (const p of toggledPages(bundle)) {
+    if (p.rules.length && !out.includes(`/${p.dir}`)) out = `${out.trimEnd()}\n# ${p.note}\n${p.rules.join('\n')}\n`;
+  }
+  return out;
 }
 
 /**
@@ -818,6 +862,14 @@ export function contentPlugin(): Plugin {
   /** Halaman layanan yang di-build: kosong bila Tampilkan halaman layanan mati */
   const shownServices = () => (bundle && servicePagesVisible(bundle.settings) ? services.published : []);
   const serviceList = () => shownServices().map(serviceSummaryOf);
+  /** Kabar, Promo & Acara (Terbit) terakhir yang lolos validasi */
+  let kabar: KabarResult = { errors: [], published: [], drafts: 0 };
+  /** Item yang di-build: kosong bila Tampilkan Kabar mati */
+  const shownKabar = () => (bundle && kabarVisible(bundle.settings) ? kabar.published : []);
+  const kabarList = () => shownKabar().map(kabarSummaryOf);
+  /** Waktu build: diambil SEKALI per build (buildStart) untuk semua status aktif/berakhir; dev server memakai jam saat itu */
+  let buildNow = Date.now();
+  const now = () => (isBuild ? buildNow : Date.now());
 
   const refresh = async () => {
     const result = await loadContent(root, { fixtures, variant });
@@ -832,6 +884,8 @@ export function contentPlugin(): Plugin {
     if (!next.errors.length) tips = next;
     const nextServices = processServicePages(await readServicePageFiles(root, fixtures), { exists: (url) => imageExists(root, url, fixtures), meta: imageMeta, bundle: result.bundle });
     if (!nextServices.errors.length) services = nextServices;
+    const nextKabar = processKabar(await readKabarFiles(root, fixtures), { exists: (url) => imageExists(root, url, fixtures), meta: imageMeta, bundle: result.bundle });
+    if (!nextKabar.errors.length) kabar = nextKabar;
     return result;
   };
 
@@ -896,18 +950,39 @@ export function contentPlugin(): Plugin {
       .replace('<!--cutless:service-data-->', servicePageDataTag(p));
   };
 
+  /** Halaman Kabar dari template: daftar /kabar/ (juga saat kosong) atau /kabar/<slug>/; undefined = tidak ada */
+  const kabarPage = (html: string, route: KabarRoute): string | undefined => {
+    if (!bundle) return undefined;
+    const site = bundle.settings;
+    if (route.kind === 'index') {
+      const list = kabarList();
+      return html
+        .replace(HEAD_REGION, kabarIndexHead(list, site, `${site.siteUrl}${OG_IMAGE}`))
+        .replace('<!--cutless:body-->', kabarIndexBody(list, now()))
+        .replace('<!--cutless:kabar-data-->', '');
+    }
+    const a = shownKabar().find((x) => x.slug === route.slug);
+    if (!a) return undefined;
+    return html
+      .replace(HEAD_REGION, kabarHead(a, site, bundle.branches, imageMeta))
+      .replace('<!--cutless:body-->', kabarBody(a, bundle.branches, now()))
+      .replace('<!--cutless:kabar-data-->', kabarDataTag(a));
+  };
+
+  /** Tulis dist/<dir>/index.html hasil prerender (undefined = halaman tidak ada, dilewati) */
+  const writePage = async (dir: string, page: string | undefined) => {
+    if (!page) return;
+    await mkdir(path.join(outDir, dir), { recursive: true });
+    await writeFile(path.join(outDir, dir, 'index.html'), applyEnv(page, appEnv, analyticsToken));
+  };
+
   /** dist/layanan/index.html (template) → /layanan/<slug>/, lalu /layanan/ */
   const prerenderServices = async () => {
     const template = path.join(outDir, 'layanan', 'index.html');
     if (!bundle || !servicePagesVisible(bundle.settings) || !existsSync(template)) return;
     const html = await readFile(template, 'utf8');
-    const write = async (dir: string, page: string | undefined) => {
-      if (!page) return;
-      await mkdir(path.join(outDir, dir), { recursive: true });
-      await writeFile(path.join(outDir, dir, 'index.html'), applyEnv(page, appEnv, analyticsToken));
-    };
-    for (const p of shownServices()) await write(path.join('layanan', p.slug), servicesPage(html, { kind: 'page', slug: p.slug }));
-    await write('layanan', servicesPage(html, { kind: 'index' }));
+    for (const p of shownServices()) await writePage(path.join('layanan', p.slug), servicesPage(html, { kind: 'page', slug: p.slug }));
+    await writePage('layanan', servicesPage(html, { kind: 'index' }));
     console.log(`✓ Halaman layanan: ${shownServices().length} halaman diprerender (${services.drafts} draf tidak di-build)`);
   };
 
@@ -916,11 +991,6 @@ export function contentPlugin(): Plugin {
     const template = path.join(outDir, 'tips', 'index.html');
     if (!bundle || !tipsVisible(bundle.settings) || !existsSync(template)) return;
     const html = await readFile(template, 'utf8');
-    const write = async (dir: string, page: string | undefined) => {
-      if (!page) return;
-      await mkdir(path.join(outDir, dir), { recursive: true });
-      await writeFile(path.join(outDir, dir, 'index.html'), applyEnv(page, appEnv, analyticsToken));
-    };
     const list = shownTips().map(summaryOf);
     const dirOf = (p: string) => p.split('/').filter(Boolean).join(path.sep);
     // Daftar semua & per kategori (hanya kategori yang punya artikel terbit), lalu artikel; /tips/ terakhir (template)
@@ -928,10 +998,20 @@ export function contentPlugin(): Plugin {
       const count = category ? list.filter((t) => t.category === category).length : list.length;
       return Array.from({ length: tipsPageCount(count) }, (_, i) => ({ category, page: i + 1 }));
     });
-    for (const r of lists.filter((x) => x.category || x.page > 1)) await write(dirOf(tipsPagePath(r.page, r.category)), tipsPage(html, { kind: 'index', ...r }));
-    for (const t of shownTips()) await write(path.join('tips', t.slug), tipsPage(html, { kind: 'article', slug: t.slug }));
-    await write('tips', tipsPage(html, { kind: 'index', page: 1 }));
+    for (const r of lists.filter((x) => x.category || x.page > 1)) await writePage(dirOf(tipsPagePath(r.page, r.category)), tipsPage(html, { kind: 'index', ...r }));
+    for (const t of shownTips()) await writePage(path.join('tips', t.slug), tipsPage(html, { kind: 'article', slug: t.slug }));
+    await writePage('tips', tipsPage(html, { kind: 'index', page: 1 }));
     console.log(`✓ Tips & Trik: ${shownTips().length} artikel, ${tipCategoriesOf(list).length} kategori diprerender (${tips.drafts} draf tidak di-build)`);
+  };
+
+  /** dist/kabar/index.html (template) → /kabar/<slug>/, lalu /kabar/ (tanpa paginasi) */
+  const prerenderKabar = async () => {
+    const template = path.join(outDir, 'kabar', 'index.html');
+    if (!bundle || !kabarVisible(bundle.settings) || !existsSync(template)) return;
+    const html = await readFile(template, 'utf8');
+    for (const a of shownKabar()) await writePage(path.join('kabar', a.slug), kabarPage(html, { kind: 'item', slug: a.slug }));
+    await writePage('kabar', kabarPage(html, { kind: 'index' }));
+    console.log(`✓ Kabar, Promo & Acara: ${shownKabar().length} item diprerender (${kabar.drafts} draf tidak di-build)`);
   };
 
   return {
@@ -962,6 +1042,7 @@ export function contentPlugin(): Plugin {
     },
 
     async buildStart() {
+      buildNow = Date.now();
       const { errors, launch } = await refresh();
       if (errors.length) {
         const message = header('Konten tidak valid', errors.length) + errors.join('\n');
@@ -984,6 +1065,7 @@ export function contentPlugin(): Plugin {
       if (id === STATUS_ID) return RESOLVED_STATUS_ID;
       if (id === TIPS_VIRTUAL_ID) return RESOLVED_TIPS_ID;
       if (id === SERVICES_VIRTUAL_ID) return RESOLVED_SERVICES_ID;
+      if (id === KABAR_VIRTUAL_ID) return RESOLVED_KABAR_ID;
       return null;
     },
     async load(id) {
@@ -1002,6 +1084,8 @@ export function contentPlugin(): Plugin {
       if (id === RESOLVED_TIPS_ID) return `export default ${JSON.stringify(shownTips().map(summaryOf))};`;
       // Ringkasan halaman layanan terbit (tanpa isi): /layanan/, link "Selengkapnya", layanan di halaman cabang
       if (id === RESOLVED_SERVICES_ID) return `export default ${JSON.stringify(serviceList())};`;
+      // Ringkasan Kabar terbit (tanpa isi), termasuk yang sudah berakhir: browser menyaring dengan jam pengunjung
+      if (id === RESOLVED_KABAR_ID) return `export default ${JSON.stringify(kabarList())};`;
       if (id !== RESOLVED_ID) return null;
       return `export default ${JSON.stringify(await readImageMeta(root, fixtures))};`;
     },
@@ -1014,7 +1098,7 @@ export function contentPlugin(): Plugin {
         const slug = ctx.originalUrl?.match(BRANCH_ROUTE)?.[1];
         const branch = slug && bundle?.branches.find((b) => b.slug === slug);
         if (branch && bundle) {
-          out = out.replace(HEAD_REGION, branchHead(branch, bundle, serviceList())).replace('<!--cutless:body-->', branchBody(branch, bundle, serviceList()));
+          out = out.replace(HEAD_REGION, branchHead(branch, bundle, serviceList())).replace('<!--cutless:body-->', branchBody(branch, bundle, serviceList(), kabarList(), now()));
         }
         // Dev server: /layanan/... memakai head & ringkasan halaman itu (build: closeBundle)
         const servicesRoute = !isBuild && out.includes('<!--cutless:service-data-->') ? parseServicesPath(ctx.originalUrl?.split(/[?#]/)[0] ?? '') : undefined;
@@ -1022,16 +1106,19 @@ export function contentPlugin(): Plugin {
         // Dev server: /tips/... memakai head & ringkasan halaman itu (build: closeBundle)
         const tipsRoute = !isBuild && out.includes('<!--cutless:tip-data-->') ? parseTipsPath(ctx.originalUrl?.split(/[?#]/)[0] ?? '') : undefined;
         if (tipsRoute && bundle) out = tipsPage(out, tipsRoute) ?? out;
+        // Dev server: /kabar/... memakai head & ringkasan halaman itu (build: closeBundle)
+        const kabarRoute = !isBuild && out.includes('<!--cutless:kabar-data-->') ? parseKabarPath(ctx.originalUrl?.split(/[?#]/)[0] ?? '') : undefined;
+        if (kabarRoute && bundle) out = kabarPage(out, kabarRoute) ?? out;
         return applyEnv(out, appEnv, analyticsToken);
       },
     },
 
     generateBundle() {
       if (!bundle) return;
-      this.emitFile({ type: 'asset', fileName: 'sitemap.xml', source: sitemap(bundle, shownTips(), serviceList()) });
+      this.emitFile({ type: 'asset', fileName: 'sitemap.xml', source: sitemap(bundle, shownTips(), serviceList(), kabarList()) });
       this.emitFile({ type: 'asset', fileName: 'robots.txt', source: robots(bundle, appEnv === 'production') });
-      this.emitFile({ type: 'asset', fileName: 'llms.txt', source: llmsTxt(bundle, shownTips(), serviceList()) });
-      this.emitFile({ type: 'asset', fileName: WA_CLICK_ALLOWLIST_PATH.slice(1), source: JSON.stringify(waClickAllowlist(bundle, shownTips(), serviceList())) });
+      this.emitFile({ type: 'asset', fileName: 'llms.txt', source: llmsTxt(bundle, shownTips(), serviceList(), kabarList(), now()) });
+      this.emitFile({ type: 'asset', fileName: WA_CLICK_ALLOWLIST_PATH.slice(1), source: JSON.stringify(waClickAllowlist(bundle, shownTips(), serviceList(), kabarList())) });
       this.emitFile({ type: 'asset', fileName: REVIEW_CONFIG_PATH.slice(1), source: JSON.stringify(reviewConfig(bundle)) });
     },
 
@@ -1046,19 +1133,14 @@ export function contentPlugin(): Plugin {
         if (!current.includes('X-Robots-Tag')) await writeFile(headersFile, current.trimEnd() + '\n' + NOINDEX_HEADERS);
       }
       // Halaman yang dimatikan di CMS: HTML-nya dihapus dari dist/ & URL-nya dialihkan 301 ke beranda
-      const disablePage = async (dir: string, rules: string[], note: string) => {
-        if (!rules.length) return;
-        await rm(path.join(outDir, dir), { recursive: true, force: true });
-        const redirectsFile = path.join(outDir, '_redirects');
-        const current = existsSync(redirectsFile) ? await readFile(redirectsFile, 'utf8') : '';
-        if (!current.includes(`/${dir}`)) await writeFile(redirectsFile, `${current.trimEnd()}\n# ${note}\n${rules.join('\n')}\n`);
-      };
-      await disablePage('cuci-sepatu', shoeCareRedirects(shoeCareVisible(bundle.shoeCare, bundle.branches)), 'Halaman Cuci Sepatu mati (Pages CMS → Partner Cuci Sepatu → Tampilkan halaman)');
-      await disablePage('produk', productsRedirects(productsVisible(bundle.settings)), 'Halaman Produk mati (Pages CMS → Pengaturan Situs → Tampilkan Produk)');
-      await disablePage('tips', tipsRedirects(tipsVisible(bundle.settings)), 'Halaman Tips & Trik mati (Pages CMS → Pengaturan Situs → Tampilkan Tips & Trik)');
-      await disablePage('layanan', servicePagesRedirects(servicePagesVisible(bundle.settings)), 'Halaman layanan mati (Pages CMS → Pengaturan Situs → Tampilkan halaman layanan)');
+      for (const p of toggledPages(bundle)) if (p.rules.length) await rm(path.join(outDir, p.dir), { recursive: true, force: true });
+      const redirectsFile = path.join(outDir, '_redirects');
+      const current = existsSync(redirectsFile) ? await readFile(redirectsFile, 'utf8') : '';
+      const redirects = withDisabledRedirects(current, bundle);
+      if (redirects !== current) await writeFile(redirectsFile, redirects);
       await prerenderTips();
       await prerenderServices();
+      await prerenderKabar();
       // dist/404.html disalin apa adanya dari public/: beacon Web Analytics ditambahkan di sini (hanya produksi)
       const notFound = path.join(outDir, '404.html');
       if (analyticsToken && existsSync(notFound)) await writeFile(notFound, withAnalytics(await readFile(notFound, 'utf8'), analyticsToken));
@@ -1070,7 +1152,7 @@ export function contentPlugin(): Plugin {
         const dir = path.join(outDir, 'cabang', branch.slug);
         await mkdir(dir, { recursive: true });
         const page = applyEnv(
-          html.replace(HEAD_REGION, branchHead(branch, bundle, serviceList())).replace('<!--cutless:body-->', branchBody(branch, bundle, serviceList())),
+          html.replace(HEAD_REGION, branchHead(branch, bundle, serviceList())).replace('<!--cutless:body-->', branchBody(branch, bundle, serviceList(), kabarList(), now())),
           appEnv,
           analyticsToken,
         );
@@ -1089,6 +1171,7 @@ export function contentPlugin(): Plugin {
         if (req.url && BRANCH_ROUTE.test(req.url)) req.url = '/cabang/index.html';
         else if (req.url && parseTipsPath(req.url.split(/[?#]/)[0]) && !req.url.startsWith('/tips/index.html')) req.url = '/tips/index.html';
         else if (req.url && parseServicesPath(req.url.split(/[?#]/)[0]) && !req.url.startsWith('/layanan/index.html')) req.url = '/layanan/index.html';
+        else if (req.url && parseKabarPath(req.url.split(/[?#]/)[0]) && !req.url.startsWith('/kabar/index.html')) req.url = '/kabar/index.html';
         next();
       });
       server.watcher.add(uploadsDir);
@@ -1103,7 +1186,7 @@ export function contentPlugin(): Plugin {
         }
         if (file.startsWith(contentDir) && (file.endsWith('.json') || file.endsWith('.md'))) {
           void revalidate(server);
-          const mods = [RESOLVED_TIPS_ID, RESOLVED_SERVICES_ID].map((id) => server.moduleGraph.getModuleById(id)).filter((m) => m !== undefined);
+          const mods = [RESOLVED_TIPS_ID, RESOLVED_SERVICES_ID, RESOLVED_KABAR_ID].map((id) => server.moduleGraph.getModuleById(id)).filter((m) => m !== undefined);
           if (mods.length && file.endsWith('.md')) {
             for (const mod of mods) server.moduleGraph.invalidateModule(mod);
             server.ws.send({ type: 'full-reload' });

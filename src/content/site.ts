@@ -27,6 +27,8 @@ export const site: SiteContent = {
     { label: 'Produk', href: '/produk/' },
     // Halaman /tips/: hanya saat Tampilkan Tips & Trik aktif (buildSite)
     { label: 'Tips', href: '/tips/' },
+    // Halaman /kabar/: hanya saat Tampilkan Kabar aktif (buildSite)
+    { label: 'Kabar', href: '/kabar/' },
     { label: 'Lokasi', sectionId: 'lokasi' },
     { label: 'Kontak', sectionId: 'kontak' },
   ],
