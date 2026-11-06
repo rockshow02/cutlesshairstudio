@@ -168,19 +168,7 @@ export function TipArticlePage() {
   return (
     <Section id="tips" tone="dark" labelledBy="tips-title" className={styles.page}>
       <article className={styles.article}>
-        <nav className={styles.breadcrumb} aria-label={l.breadcrumb}>
-          <ol>
-            <li>
-              <a href={pageUrl('/')}>{l.home}</a>
-            </li>
-            <li>
-              <a href={pageUrl(TIPS_PATH)}>{tipsCopy.heading.title}</a>
-            </li>
-            <li aria-current="page" title={tip.title}>
-              {tip.title}
-            </li>
-          </ol>
-        </nav>
+        <Breadcrumb label={l.breadcrumb} home={l.home} parent={{ href: pageUrl(TIPS_PATH), label: tipsCopy.heading.title }} current={tip.title} />
 
         <header className={styles.articleHead}>
           <p className={styles.category}>
@@ -287,6 +275,25 @@ export function TipArticlePage() {
         </section>
       )}
     </Section>
+  );
+}
+
+/** Breadcrumb artikel: Beranda / halaman induk / judul (dipakai juga halaman detail Kabar) */
+export function Breadcrumb({ label, home, parent, current }: { label: string; home: string; parent: { href: string; label: string }; current: string }) {
+  return (
+    <nav className={styles.breadcrumb} aria-label={label}>
+      <ol>
+        <li>
+          <a href={pageUrl('/')}>{home}</a>
+        </li>
+        <li>
+          <a href={parent.href}>{parent.label}</a>
+        </li>
+        <li aria-current="page" title={current}>
+          {current}
+        </li>
+      </ol>
+    </nav>
   );
 }
 
