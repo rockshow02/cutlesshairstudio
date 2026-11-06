@@ -14,6 +14,8 @@
   "main": "worker/index.ts",
   // Produksi hanya di custom domain cutlesshairstudio.com (+ www → apex): alamat *.workers.dev & Preview URLs mati
   // agar Google tidak mengindeks salinan situs di alamat lain. Staging (env.staging) menyalakan workers.dev-nya sendiri.
+  // Sinkron ulasan Google tiap jam; Worker tidak berbuat apa-apa selama Mode balasan ulasan = Mati
+  "triggers": { "crons": ["0 * * * *"] },
   "workers_dev": false,
   "preview_urls": false,
   "compatibility_date": "2026-05-01",
@@ -25,7 +27,7 @@
     // URL tak dikenal → dist/404.html (bukan beranda), agar mesin pencari tidak mengindeks halaman palsu
     "not_found_handling": "404-page",
     // Hanya rute ini yang menjalankan Worker; file statis lain langsung dari CDN (tidak memakai kuota request)
-    "run_worker_first": ["/api/*", "/statistik*", "/masuk*", "/profil*", "/booking*", "/admin*", "/kebijakan-privasi*"]
+    "run_worker_first": ["/api/*", "/statistik*", "/ulasan*", "/masuk*", "/profil*", "/booking*", "/admin*", "/kebijakan-privasi*"]
   },
   // Hitungan klik WhatsApp. database_id dari Cloudflare → Storage & Databases → D1 → cutless-analytics
   // (docs/statistik-klik-wa.md, langkah 1–2; bukan rahasia). Lokal/e2e memakai D1 lokal (.wrangler/), bukan database ini.
@@ -35,6 +37,13 @@
       "database_name": "cutless-analytics",
       "database_id": "d38b4d4c-8b9f-4972-a026-4098c6fcfcdb",
       "migrations_dir": "migrations"
+    },
+    {
+      "binding": "REVIEWS_DB",
+      "database_name": "cutless-ulasan",
+      // WAJIB DIISI sebelum merge: ID database D1 cutless-ulasan (docs/balasan-ulasan.md, langkah 2). Selama masih placeholder, deploy gagal.
+      "database_id": "ISI-DATABASE-ID-cutless-ulasan",
+      "migrations_dir": "migrations-ulasan"
     }
   ],
   "vars": {
@@ -43,7 +52,11 @@
     // Cloudflare Access untuk /statistik/ (docs/statistik-klik-wa.md, langkah 3): team domain & AUD tag aplikasi
     // "Statistik Cutless" (bukan rahasia; Worker memverifikasi JWT Access dengan keduanya). Kosong = /statistik/ selalu 403.
     "ACCESS_TEAM_DOMAIN": "wild-voice-c787.cloudflareaccess.com",
-    "ACCESS_AUD": "9abaa8c9fda34bc7eb797cfebd3fa7d7132f25b15a42fe5518afbd25874bdcd6"
+    "ACCESS_AUD": "9abaa8c9fda34bc7eb797cfebd3fa7d7132f25b15a42fe5518afbd25874bdcd6",
+    // Balasan ulasan Google (docs/balasan-ulasan.md): "" = klien sungguhan (aktif setelah secret OAuth terisi); /ulasan* memakai Access yang sama
+    "GBP_CLIENT": "",
+    // JSON slug cabang → lokasi Google, mis. {"cibubur":"locations/123"}; diisi pemilik setelah API disetujui
+    "GBP_LOCATIONS": ""
   },
   "env": {
     // Worker terpisah: URL, versi, database, dan pengaturan (mis. Cloudflare Access) tidak tercampur dengan produksi.
@@ -60,7 +73,7 @@
         "binding": "ASSETS",
         "html_handling": "auto-trailing-slash",
         "not_found_handling": "404-page",
-        "run_worker_first": ["/api/klik-wa", "/statistik*"]
+        "run_worker_first": ["/api/klik-wa", "/statistik*", "/ulasan*"]
       },
       // d1_databases & vars TIDAK diwarisi dari atas: database & origin staging sendiri
       "d1_databases": [
@@ -69,16 +82,26 @@
           "database_name": "cutless-analytics-staging",
           "database_id": "3adcc5b2-7523-42cb-b582-6cc722c408c3",
           "migrations_dir": "migrations"
+        },
+        {
+          "binding": "REVIEWS_DB",
+          "database_name": "cutless-ulasan-staging",
+          // WAJIB DIISI sebelum merge: ID database D1 cutless-ulasan-staging (docs/balasan-ulasan.md, langkah 2). Selama masih placeholder, deploy staging gagal.
+          "database_id": "ISI-DATABASE-ID-cutless-ulasan-staging",
+          "migrations_dir": "migrations-ulasan"
         }
       ],
       "vars": {
         "ALLOWED_ORIGINS": "https://cutlesshairstudio-staging.adi-yansyaaah.workers.dev",
         // Sengaja kosong: /statistik/ di staging selalu 403 (statistik hanya dilihat di website utama)
         "ACCESS_TEAM_DOMAIN": "",
-        "ACCESS_AUD": ""
+        "ACCESS_AUD": "",
+        // Data contoh (MockGbpClient): staging tidak pernah menghubungi Google
+        "GBP_CLIENT": "mock",
+        "GBP_LOCATIONS": "{\"cibubur\":\"mock/cibubur\",\"bogor-bantarjati\":\"mock/bogor\"}"
       },
-      // crons kosong = Cron Trigger lama (booking & loyalitas) dihapus saat deploy berikutnya
-      "triggers": { "crons": [] }
+      // Sinkron ulasan Google tiap jam (tidak lebih sering); Cron Trigger lama (booking & loyalitas) sudah dihapus
+      "triggers": { "crons": ["0 * * * *"] }
     }
   }
 }

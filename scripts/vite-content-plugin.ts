@@ -16,6 +16,7 @@
  *    /tips/halaman/<n>/, /tips/kategori/<slug>/(halaman/<n>/) & /tips/<slug>/ (atau 301 ke beranda bila
  *    dimatikan), entri sitemap & llms.txt.
  * 8. dist/klik-wa.json: cabang, kapster, & halaman yang boleh dicatat hitungan klik WhatsApp (worker/waClicks.ts).
+ *    dist/ulasan-config.json: mode, nama cabang, & template balasan ulasan Google (worker/ulasan/).
  * 9. Halaman Layanan (scripts/layanan.ts): validasi src/content/layanan/*.md, modul `virtual:layanan`, prerender
  *    /layanan/ & /layanan/<slug>/ (atau 301 ke beranda bila dimatikan), entri sitemap & llms.txt. Bagian baru halaman
  *    cabang (deskripsi, area, patokan, fasilitas, FAQ) & JSON-LD HairSalon tambahan selalu ikut (kosong = tidak tampil).
@@ -43,6 +44,7 @@ import { formatPhoneDisplay, formatThousandsK, formatTime } from '../src/lib/for
 import { branchesCopy } from '../src/content/branches';
 import { shoeCareCopy } from '../src/content/shoeCare';
 import { barberKey, WA_CLICK_ALLOWLIST_PATH, type WaClickAllowlist } from '../src/content/waClicks';
+import { REVIEW_CONFIG_PATH, type ReviewConfig } from '../src/content/reviewReplies';
 import { TIPS_PATH, parseTipsPath, tipsPageCount, tipsPagePath, tipsRedirects, tipsVisible, type TipSummary, type TipsRoute } from '../src/content/tipsSeo';
 import { processTips, readTipFiles, summaryOf, tipBody, tipCategoriesOf, tipDataTag, tipHead, tipsIndexBody, tipsIndexHead, tipsLlmsLines, tipsSitemapEntries, type TipsResult } from './tips';
 import { SERVICES_PATH, parseServicesPath, servicePagesRedirects, servicePagesVisible, sortFacilities, type ServicePageSummary, type ServicesRoute } from '../src/content/servicePages';
@@ -700,6 +702,14 @@ export function waClickAllowlist(bundle: ContentBundle, tips: TipSummary[] = [],
   };
 }
 
+/**
+ * dist/ulasan-config.json: mode balasan ulasan, nama cabang, dan template untuk Worker (worker/ulasan/). Mengubah mode
+ * atau template di Pages CMS berlaku setelah build berikutnya.
+ */
+export function reviewConfig(bundle: ContentBundle): ReviewConfig {
+  return { mode: bundle.settings.reviewReplyMode, branches: Object.fromEntries(bundle.branches.map((b) => [b.slug, b.name])), reply: bundle.reviewReplies };
+}
+
 export const robots = (bundle: ContentBundle, indexable: boolean) =>
   indexable
     ? `User-agent: *\nAllow: /\n\nSitemap: ${bundle.settings.siteUrl}/sitemap.xml\n`
@@ -994,6 +1004,7 @@ export function contentPlugin(): Plugin {
       this.emitFile({ type: 'asset', fileName: 'robots.txt', source: robots(bundle, appEnv === 'production') });
       this.emitFile({ type: 'asset', fileName: 'llms.txt', source: llmsTxt(bundle, shownTips(), serviceList()) });
       this.emitFile({ type: 'asset', fileName: WA_CLICK_ALLOWLIST_PATH.slice(1), source: JSON.stringify(waClickAllowlist(bundle, shownTips(), serviceList())) });
+      this.emitFile({ type: 'asset', fileName: REVIEW_CONFIG_PATH.slice(1), source: JSON.stringify(reviewConfig(bundle)) });
     },
 
     /** Prerender halaman per cabang dari dist/cabang/index.html */
