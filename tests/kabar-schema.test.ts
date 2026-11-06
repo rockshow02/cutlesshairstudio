@@ -80,6 +80,34 @@ describe('kabarSchema: jenis valid', () => {
   });
 });
 
+describe('kabarSchema: pesan kolom wajib per jenis (bahasa Indonesia, label CMS)', () => {
+  const kosong = [undefined, null, ''];
+  it.each(kosong)('Promo tanpa validUntil (%s)', (v) => {
+    expect(messages({ ...promo(), validUntil: v })).toEqual(['validUntil: Berlaku sampai wajib diisi untuk jenis Promo']);
+  });
+  it.each(kosong)('Acara tanpa startsAt / endsAt / locationType (%s)', (v) => {
+    expect(messages({ ...acara(), startsAt: v })).toEqual(['startsAt: Mulai wajib diisi untuk jenis Acara']);
+    expect(messages({ ...acara(), endsAt: v })).toEqual(['endsAt: Selesai wajib diisi untuk jenis Acara']);
+    expect(messages({ ...acara(), locationType: v })).toEqual(['locationType: Lokasi wajib diisi untuk jenis Acara']);
+  });
+  it.each(kosong)('Tempat lain tanpa venueName / venueAddress (%s)', (v) => {
+    expect(messages({ ...tempatLain(), venueName: v })).toEqual(['venueName: Nama tempat wajib diisi untuk lokasi Tempat lain']);
+    expect(messages({ ...tempatLain(), venueAddress: v })).toEqual(['venueAddress: Alamat tempat wajib diisi untuk lokasi Tempat lain']);
+  });
+  it('beberapa kolom kosong sekaligus dilaporkan semuanya', () => {
+    expect(messages({ ...acara(), startsAt: undefined, endsAt: undefined })).toEqual([
+      'startsAt: Mulai wajib diisi untuk jenis Acara',
+      'endsAt: Selesai wajib diisi untuk jenis Acara',
+    ]);
+  });
+  it('tanggal YAML tanpa tanda kutip (Date) diterima dan dinormalkan; nilai output di-trim', () => {
+    const r = kabarSchema.parse({ ...promo(), validFrom: new Date('2026-12-01'), validUntil: new Date('2026-12-31') });
+    expect(r).toMatchObject({ validFrom: '2026-12-01', validUntil: '2026-12-31' });
+    expect(kabarSchema.parse({ ...acara(), linkUrl: '  https://contoh.id  ' }).linkUrl).toBe('https://contoh.id');
+    expect(kabarSchema.parse({ ...promo(), validFrom: ' 2026-12-01 ' })).toMatchObject({ validFrom: '2026-12-01' });
+  });
+});
+
 describe('kabarSchema: kolom jenis lain diabaikan', () => {
   const EVENT = ['startsAt', 'endsAt', 'locationType', 'venueName', 'venueAddress', 'linkUrl'];
   const PROMO = ['validFrom', 'validUntil'];
