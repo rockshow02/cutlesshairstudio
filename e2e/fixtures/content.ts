@@ -394,9 +394,27 @@ Isi tambahan uji.
 /** Daftar Harga tanpa harga per cabang & "Tersedia di cabang" (varian uniform) */
 const uniformPricing = () => E2E_PRICING.map(({ branchPrices: _bp, branchSlugs: _bs, ...p }: Json) => p);
 
+/**
+ * Template balasan ulasan uji (menggantikan src/content/reviewReplies.json di build E2E). Tetap, jadi e2e/review-replies.spec.ts
+ * tidak bergantung pada isi CMS: pemilik bebas mengosongkan kata keluhan atau mengubah template. "Contoh Dua" (bintang 5,
+ * "Bagus, tapi antrinya lama sekali.") harus masuk antrean karena kata keluhan "antri"/"lama".
+ */
+export const E2E_REVIEW_REPLIES = {
+  templates: {
+    bintang5: ['{salam_waktu} kak {nama}, terima kasih di Cutless {cabang}.', 'Uji B5 dua {nama}', 'Uji B5 tiga {nama}'],
+    bintang4: ['Uji B4 satu {nama}', 'Uji B4 dua {nama}', 'Uji B4 tiga {nama}'],
+    bintang3: ['Uji B3 satu {nama}', 'Uji B3 dua {nama}', 'Uji B3 tiga {nama}'],
+    bintang12: ['Uji B12 satu {nama}', 'Uji B12 dua {nama}', 'Uji B12 tiga {nama}'],
+    tanpaTeks: ['Uji TT satu {nama}', 'Uji TT dua {nama}', 'Uji TT tiga {nama}'],
+  },
+  keywordRules: [{ keyword: 'fade', sentence: 'Senang fade-nya cocok.' }],
+  complaintWords: ['antri', 'lama', 'kecewa'],
+};
+
 /** Terapkan data uji pada isi satu file src/content/<file>. variant "uniform" = Daftar Harga sama di semua cabang */
 export function applyE2EFixtures(file: string, data: unknown, variant?: string): unknown {
   if (file === 'branches.json') return fixtureBranches(data);
+  if (file === 'reviewReplies.json') return structuredClone(E2E_REVIEW_REPLIES);
   if (file === 'barbers.json') return E2E_BARBERS.map((b) => ({ ...b, photo: existingPhoto() }));
   if (file === 'shoeCare.json') return shoeCareFixture(variant);
   if (file === 'faq.json') {

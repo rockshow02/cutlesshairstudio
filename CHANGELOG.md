@@ -19,6 +19,11 @@ Cara menaikkan versi & merilis: [CONTRIBUTING.md → Rilis versi](CONTRIBUTING.m
 - **Toggle default mati** di Pengaturan Situs: *Tampilkan Kabar, Promo & Acara* (mati → `/kabar*` 301 ke beranda, tanpa menu/sitemap/llms.txt/kotak cabang) dan *Tampilkan banner Kabar di beranda* (hanya berlaku bila yang pertama menyala). Menu **Kabar** ada di menu HP dan footer, tidak di menu atas desktop (tidak muat).
 - Hitungan klik WhatsApp: klik tombol dari halaman Kabar/Promo/Acara dicatat sebagai jenis *promo* (`docs/statistik-klik-wa.md`).
 
+## [1.4.2] - 2026-11-07
+
+### Diperbaiki
+- **Tes e2e balasan ulasan tidak lagi bergantung pada isi CMS.** `e2e/review-replies.spec.ts` mengandalkan "Contoh Dua" (bintang 5, "Bagus, tapi antrinya lama sekali.") masuk antrean karena kata keluhan; sejak pemilik mengosongkan kata keluhan di Pages CMS, ulasan itu terkirim otomatis, tombol *Lewati* tidak pernah muncul, dan CI merah. Build E2E kini menimpa `reviewReplies.json` dengan template dan kata keluhan tetap milik tes (`E2E_REVIEW_REPLIES` di `e2e/fixtures/content.ts`, seperti `settings.json`). Hanya sumber data tes yang berubah: isi `src/content/` (kata keluhan yang sengaja dikosongkan pemilik), `worker/`, logika, dan ekspektasi tes tidak diubah. Tes unit baru: `tests/e2e-review-replies-fixture.test.ts`.
+
 ## [1.4.1] - 2026-11-06
 
 ### Diubah
@@ -117,7 +122,8 @@ Launch https://cutlesshairstudio.com.
 - Halaman `/cuci-sepatu/` untuk partner cuci sepatu (layanan, harga, daftar menu PDF, galeri) dan teaser di beranda.
 - Validasi konten saat build (skema & aturan siap tayang), kompres gambar otomatis, SEO dasar (title/meta, JSON-LD, sitemap), staging terpisah, CI (typecheck, lint, tes, e2e).
 
-[Belum dirilis]: https://github.com/rockshow02/cutlesshairstudio/compare/v1.4.1...staging
+[Belum dirilis]: https://github.com/rockshow02/cutlesshairstudio/compare/v1.4.2...staging
+[1.4.2]: https://github.com/rockshow02/cutlesshairstudio/compare/v1.4.1...v1.4.2
 [1.4.1]: https://github.com/rockshow02/cutlesshairstudio/compare/v1.4.0...v1.4.1
 [1.4.0]: https://github.com/rockshow02/cutlesshairstudio/compare/v1.3.1...v1.4.0
 [1.3.1]: https://github.com/rockshow02/cutlesshairstudio/compare/v1.3.0...v1.3.1
