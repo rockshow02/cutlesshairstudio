@@ -31,3 +31,4 @@ seed/
 # Playwright
 playwright-report/
 test-results/
+.playwright-cli/
