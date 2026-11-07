@@ -102,3 +102,24 @@
   max-width: 65ch;
   margin-top: var(--space-7);
 }
+
+/*
+ * Gambar di halaman detail: tampil UTUH sesuai rasio aslinya (poster tegak tidak dipotong), selebar kolom, tinggi dibatasi
+ * 80vh. Tanpa layout shift: width/height asli dari pipeline gambar sudah di atribut <img> (rasio terpasang sebelum
+ * gambar termuat), dan batas tinggi berlaku sejak CSS dimuat. Sisa ruang (poster tegak di desktop) berlatar gelap.
+ */
+.poster {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 80vh;
+  object-fit: contain;
+  border-radius: var(--radius);
+  background: var(--c-ink-2);
+  margin-bottom: var(--space-6);
+}
+
+/* Kartu (daftar & kotak cabang) tetap di-crop 16:9, tetapi rata atas supaya judul poster lebih sering terlihat */
+.thumb {
+  object-position: top;
+}

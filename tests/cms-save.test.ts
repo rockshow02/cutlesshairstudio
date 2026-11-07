@@ -74,7 +74,7 @@ describe('simulasi simpan dari Pages CMS (tanpa perubahan)', () => {
     const fixtures: Record<string, Record<string, unknown>> = {
       Kabar: { ...dasar, kind: 'Kabar', branches: ['semua'] },
       'Promo cabang tertentu': { ...dasar, kind: 'Promo', branches: ['cibubur', 'bogor-bantarjati'], validFrom: '2026-12-01', validUntil: '2026-12-31', image: '/uploads/kabar/contoh.webp', imageAlt: 'Contoh gambar', waLabel: 'Ambil promo' },
-      'Acara Tempat lain': { ...dasar, kind: 'Acara', branches: ['semua'], startsAt: '2026-12-20T10:00', endsAt: '2026-12-20T12:00', locationType: 'Tempat lain', venueName: 'Balai Warga', venueAddress: 'Jl. Contoh No. 1', linkUrl: 'https://contoh.id/daftar' },
+      'Acara Tempat lain': { ...dasar, kind: 'Acara', branches: ['semua'], startsAt: '2026-12-20T10:00', endsAt: '2026-12-20T12:00', locationType: 'Tempat lain', venueName: 'Balai Warga', venueAddress: 'Jl. Contoh No. 1', performer: 'Band Contoh', linkUrl: 'https://contoh.id/daftar' },
     };
     for (const [nama, original] of Object.entries(fixtures)) {
       it(`${nama}: buka dan simpan ulang tanpa perubahan`, () => {
@@ -110,6 +110,7 @@ describe('simulasi simpan dari Pages CMS (tanpa perubahan)', () => {
       }
       // Pelanggaran yang sudah ditolak form: nama tempat 81 karakter, link bukan https
       expect(validateCmsContent(entry(), { ...fixtures['Acara Tempat lain'], venueName: 'x'.repeat(81) })[0]).toMatch(/lebih dari 80 karakter/);
+      expect(validateCmsContent(entry(), { ...fixtures['Acara Tempat lain'], performer: 'x'.repeat(81) })[0]).toMatch(/performer: lebih dari 80 karakter/);
       expect(validateCmsContent(entry(), { ...fixtures['Acara Tempat lain'], linkUrl: 'http://contoh.id' }).length).toBeGreaterThan(0);
     });
   });

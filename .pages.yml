@@ -1860,7 +1860,7 @@ content:
       - name: image
         label: Gambar
         type: image
-        description: "Opsional. Foto mendatar 16:9, minimal 1200 × 675 px, foto asli (bukan dari internet). Kompres di bawah 1 MB sebelum upload. Otomatis dikompres ke WebP maks. 1600 px. Format: JPG, PNG, atau WebP."
+        description: "Opsional. Foto mendatar 16:9 ATAU poster tegak (mis. 4:5 Instagram), minimal 1200 px sisi panjang, foto asli (bukan dari internet). Di halaman item gambar tampil utuh (poster tegak tidak dipotong); di daftar & kotak cabang dipotong ke 16:9 dari atas, jadi taruh judul poster di bagian atas. Kompres di bawah 1 MB sebelum upload. Otomatis dikompres ke WebP maks. 1600 px. Format: JPG, PNG, atau WebP."
         options:
           media: kabar
           extensions: [jpg, jpeg, png, webp]
@@ -1928,6 +1928,12 @@ content:
         description: "Hanya untuk Acara dengan lokasi Tempat lain, WAJIB. Maksimal 200 karakter."
         options:
           maxlength: 200
+      - name: performer
+        label: "Acara: pengisi acara"
+        type: string
+        description: "Hanya untuk jenis Acara. Opsional: nama band/pengisi acara, mis. HLMN. Tampil di halaman acara dan untuk Google. Kosongkan bila tidak ada. Maksimal 80 karakter."
+        options:
+          maxlength: 80
       - name: linkUrl
         label: "Acara: link pendaftaran/info"
         type: string
