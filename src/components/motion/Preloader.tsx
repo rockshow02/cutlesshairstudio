@@ -1,7 +1,8 @@
-import { createContext, useContext, useEffect, useRef, useState } from 'react';
+import { createContext, useContext, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import * as m from 'motion/react-m';
 import type { ImageAsset } from '@/types';
 import { asset } from '@/lib/asset';
+import { hasBootOverlay, removeBootOverlay } from '@/lib/bootOverlay';
 import { tween } from '@/lib/tween';
 import { matches, REDUCED_MOTION_QUERY } from '@/lib/useMediaQuery';
 import { DURATION, EASE, PRELOADER } from '@/styles/motion';
@@ -47,6 +48,8 @@ function markShown() {
 export function Preloader({ enabled, mark, video, onDone }: PreloaderProps) {
   const [show] = useState(() => enabled && !alreadyShown() && !matches(REDUCED_MOTION_QUERY));
   const [phase, setPhase] = useState<'count' | 'exit' | 'gone'>(show ? 'count' : 'gone');
+  // Overlay statis di HTML (src/lib/bootOverlay.ts) sudah menampilkan logo yang sama: logo tidak perlu muncul ulang dari balik garis
+  const [fromOverlay] = useState(hasBootOverlay);
   const counter = useRef<HTMLSpanElement>(null);
   const bar = useRef<HTMLSpanElement>(null);
   const done = useRef(false);
@@ -56,6 +59,11 @@ export function Preloader({ enabled, mark, video, onDone }: PreloaderProps) {
     done.current = true;
     onDone();
   };
+
+  // Serah-terima: overlay statis dilepas di commit yang sama dengan tirai ini (tampilan sama, tanpa kedip ganda)
+  useLayoutEffect(() => {
+    if (show) removeBootOverlay();
+  }, [show]);
 
   useEffect(() => {
     if (!show) {
@@ -123,7 +131,7 @@ export function Preloader({ enabled, mark, video, onDone }: PreloaderProps) {
                 width={mark.width}
                 height={mark.height}
                 alt=""
-                initial={{ y: '105%' }}
+                initial={fromOverlay ? false : { y: '105%' }}
                 animate={{ y: '0%' }}
                 transition={{ duration: DURATION.slow, ease: EASE.expo, delay: 0.05 }}
               />

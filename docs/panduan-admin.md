@@ -668,7 +668,7 @@ Klik **Pengaturan Situs**. Menu ini hanya berisi data merek. Alamat dan jam buka
 | Tampilkan section Testimoni / Produk / Before-After | Menyalakan atau menyembunyikan section itu (beserta menunya) | |
 | Tampilkan Tips & Trik | Halaman /tips/, menu Tips, & bagian Tips Terbaru di beranda (lihat [6a](#6a-tips--trik-artikel-di-tips)) | |
 | Tampilkan halaman layanan | Halaman /layanan/, menu Layanan → /layanan/, & link Selengkapnya di Daftar Harga dan Kartu Layanan (lihat [6b](#6b-halaman-layanan-layanan)) | |
-| Tampilkan animasi pembuka | Logo Cutless beranimasi saat website pertama kali dibuka (sekali per kunjungan). Matikan bila tidak diinginkan | |
+| Tampilkan animasi pembuka | Logo Cutless beranimasi saat website pertama kali dibuka (sekali per kunjungan), dan logo yang sama menutup halaman selama website dimuat. Matikan bila tidak diinginkan | |
 | Video animasi pembuka (opsional) | Video pendek pengganti animasi logo: MP4/WebM tanpa suara, ±1,5 detik. Kosongkan untuk memakai animasi logo | maks. 500 KB |
 
 ### Footer & kontak: di mana mengubahnya

@@ -12,6 +12,9 @@ Cara menaikkan versi & merilis: [CONTRIBUTING.md → Rilis versi](CONTRIBUTING.m
 
 ## [Belum dirilis]
 
+### Diperbaiki
+- **Teks polos tidak lagi sempat terlihat saat kunjungan pertama / hard refresh.** Ringkasan prerender (`<div class="prerender">`, font sistem) tergambar sebentar (±0,4–0,5 detik di Slow 4G dengan CPU 4× lebih lambat; sama di v1.4.2) sebelum React menggantinya, karena Preloader React baru ada setelah JS termuat dan font siap. Bila **Tampilkan animasi pembuka** aktif, semua halaman prerender kini memuat overlay statis (logo + latar sama dengan Preloader, CSS kritis inline kecil, `position: fixed`, tanpa JavaScript untuk tampil) yang menutup ringkasan sejak paint pertama. Dilepas mulus saat React siap: serah-terima langsung ke Preloader React bila tampil, atau pudar singkat bila tidak (sudah sekali per sesi / kurangi gerakan). Pengaman tanpa JS: overlay memudar sendiri ±3 detik lewat animasi CSS (≤ 4 detik) sehingga teks tetap terbaca; **kurangi gerakan** tanpa fade. Teks prerender tetap di HTML (SEO/GEO), tidak ada `<main>` tambahan, CLS tidak berubah, LCP tidak berubah bermakna. Animasi pembuka mati = tanpa overlay (perilaku lama). Tes: `tests/boot-overlay.test.ts`, `e2e/boot-overlay.spec.ts`.
+
 ## [1.5.0] - 2026-11-07
 
 ### Ditambahkan
