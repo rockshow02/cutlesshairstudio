@@ -71,7 +71,7 @@ import {
 } from './layanan';
 import { KABAR_PATH, bannerItem, branchBoxItems, kabarBannerVisible, kabarRedirects, kabarVisible, parseKabarPath, type KabarRoute, type KabarSummary } from '../src/content/kabarSeo';
 import { kabarCopy } from '../src/content/kabarCopy';
-import { branchBoxBody, kabarBannerBody, kabarBody, kabarDataTag, kabarHead, kabarIndexBody, kabarIndexHead, kabarLlmsLines, kabarSitemapEntries, kabarSummaryOf, processKabar, readKabarFiles, type KabarResult } from './kabar';
+import { branchBoxBody, kabarBannerBody, kabarBody, kabarDataTag, kabarHead, kabarIndexBody, kabarIndexHead, kabarLlmsLines, kabarPrepaintTag, kabarSitemapEntries, kabarSummaryOf, processKabar, readKabarFiles, type KabarResult } from './kabar';
 
 const VIRTUAL_ID = 'virtual:image-meta';
 const RESOLVED_ID = `\0${VIRTUAL_ID}`;
@@ -709,6 +709,8 @@ function fillHtml(html: string, bundle: ContentBundle | undefined, meta: ImageMe
     .replace('<!--cutless:org-jsonld-->', jsonLdTag(organizationJsonLd(bundle.settings)))
     .replace('<!--cutless:faq-jsonld-->', faqPageJsonLd(bundle.faq, `${siteUrl}/`) ? jsonLdTag(faqPageJsonLd(bundle.faq, `${siteUrl}/`)) : '')
     .replace('<!--cutless:home-body-->', homeBody(bundle, kabar, now))
+    // Saringan pra-paint kotak cabang & banner: di <head> sebelum stylesheet (lihat kabarPrepaintScript)
+    .replace('<!--cutless:kabar-prepaint-->', kabarVisible(bundle.settings) ? kabarPrepaintTag() : '')
     .replace('<!--cutless:hero-preload-->', heroPreload(bundle.hero, meta));
   // Halaman /cuci-sepatu/: title, meta, Open Graph & ringkasan dari Partner Cuci Sepatu
   if (out.includes('%PRIVACY_TITLE%')) return privacyFill(out, bundle);

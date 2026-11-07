@@ -3,6 +3,7 @@
  * daftar halaman klik WA, & /kabar(/*) 301 ke beranda; aktif → /kabar/ & detail ikut. Kotak "Promo & acara" di
  * ringkasan statis halaman cabang. Data uji saja (contentFixture + item ditulis di sini), bukan isi CMS.
  */
+import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { branchBody, homeBody, llmsTxt, sitemap, waClickAllowlist, withDisabledRedirects } from '../scripts/vite-content-plugin';
 import { kabarRedirects, type KabarSummary } from '../src/content/kabarSeo';
@@ -109,10 +110,10 @@ describe('kotak "Promo & acara" di ringkasan statis halaman cabang', () => {
     expect(branchBody(cibubur, bundle, [], [PROMO_BOGOR, PROMO_LEWAT], NOW)).not.toContain('<script>');
   });
 
-  it('saringan pra-paint tepat sesudah kotak, di dalam ringkasan statis', () => {
+  it('saringan pra-paint tidak di ringkasan statis (ada di <head>, lihat kabarPrepaintTag)', () => {
     const html = branchBody(cibubur, bundle, [], [PROMO_CIBUBUR], NOW);
-    expect(html).toMatch(/<\/section><script>[^<]+<\/script>/);
-    expect(html.match(/<script>/g)).toHaveLength(1);
+    expect(html).toContain('data-kabar-box');
+    expect(html).not.toContain('<script>');
   });
 });
 
@@ -133,13 +134,22 @@ describe('banner beranda di ringkasan statis (Tampilkan Kabar + Tampilkan banner
     expect(homeBody(bundle, [PROMO_LEWAT, KABAR_CIBUBUR], NOW)).toBe(homeBody(bundle));
   });
 
-  it('banner aktif: satu banner (item aktif pertama, tanpa saringan cabang) + saringan pra-paint, sesudah hero', () => {
+  it('banner aktif: satu banner (item aktif pertama, tanpa saringan cabang), sesudah hero', () => {
     const bundle = bundleWith(true, true);
     const html = homeBody(bundle, items, NOW);
     expect(html).toContain('data-kabar-banner');
     expect(html).toContain('href="/kabar/promo-bogor/"');
     expect(html).not.toContain('promo-lewat');
     expect(html.match(/data-kabar-banner/g)).toHaveLength(1);
-    expect(html).toMatch(/<\/h1>(<p>[^<]*<\/p>)?<p data-kabar-banner[^>]*>.*?<\/p><script>[^<]+<\/script>/);
+    expect(html).toMatch(/<\/h1>(<p>[^<]*<\/p>)?<p data-kabar-banner[^>]*>.*?<\/p>/);
+  });
+
+  it('saringan pra-paint: placeholder di <head> beranda & halaman cabang, sebelum stylesheet/skrip yang disuntik Vite', () => {
+    for (const file of ['index.html', 'cabang/index.html']) {
+      const html = readFileSync(file, 'utf8');
+      const at = html.indexOf('<!--cutless:kabar-prepaint-->');
+      expect(at, file).toBeGreaterThan(0);
+      expect(at, file).toBeLessThan(html.indexOf('</head>'));
+    }
   });
 });

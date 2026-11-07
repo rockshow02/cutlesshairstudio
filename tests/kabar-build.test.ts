@@ -3,7 +3,7 @@
  * Data uji saja (file ditulis di sini), tidak membaca src/content/kabar/ maupun data CMS.
  */
 import { describe, expect, it } from 'vitest';
-import { branchBoxBody, kabarBannerBody, kabarBody, kabarDataTag, kabarHead, kabarIndexBody, kabarIndexHead, kabarJsonLd, kabarLlmsLines, kabarPrepaintScript, kabarSitemapEntries, kabarSummaryOf, processKabar, readKabarFiles, type KabarFile } from '../scripts/kabar';
+import { branchBoxBody, kabarBannerBody, kabarBody, kabarDataTag, kabarHead, kabarIndexBody, kabarIndexHead, kabarJsonLd, kabarLlmsLines, kabarPrepaintScript, kabarPrepaintTag, kabarSitemapEntries, kabarSummaryOf, processKabar, readKabarFiles, type KabarFile } from '../scripts/kabar';
 import { kabarEndedAtMs, type KabarArticle } from '../src/content/kabarSeo';
 import { contentFixture } from './helpers/contentFixture';
 
@@ -261,8 +261,9 @@ describe('head & body', () => {
     expect(html).toContain('href="/kabar/promo-uji/"');
     // data-kabar-end = ms pertama berstatus berakhir (Promo: 00:00:00.000 WIB sesudah hari validUntil)
     expect(html).toContain(`data-kabar-end="${Date.parse('2027-01-01T00:00:00+07:00')}"`);
-    // Saringan pra-paint langsung sesudah kotak (jalan saat parsing, sebelum paint pertama)
-    expect(html.endsWith(`</section><script>${kabarPrepaintScript()}</script>`)).toBe(true);
+    // Saringan pra-paint ada di <head> (kabarPrepaintTag), bukan di fragmen
+    expect(html.endsWith('</section>')).toBe(true);
+    expect(html).not.toContain('<script');
   });
 
   it('kabarBannerBody: satu tautan ke detail, atribut pra-paint, label "Mulai" bila akan datang; tanpa item = ""', () => {
@@ -275,7 +276,7 @@ describe('head & body', () => {
     expect(html).toContain('Mulai 1 Desember 2026');
     expect(html).toContain(`data-kabar-end="${kabarEndedAtMs(promo)}"`);
     expect(html.match(/<a /g)).toHaveLength(1);
-    expect(html.endsWith(`<script>${kabarPrepaintScript()}</script>`)).toBe(true);
+    expect(html).not.toContain('<script');
     expect(kabarBannerBody(promo, Date.parse('2026-12-05T10:00:00+07:00'))).not.toContain('Mulai');
   });
 
@@ -298,6 +299,7 @@ describe('kabarPrepaintScript', () => {
     }
     getAttribute(n: string) { return this.attrs.get(n) ?? null; }
     setAttribute(n: string, v: string) { this.attrs.set(n, v); }
+    removeAttribute(n: string) { this.attrs.delete(n); }
     hasAttribute(n: string) { return this.attrs.has(n); }
     get hidden() { return this.attrs.has('hidden'); }
     all(): El[] { return this.children.flatMap((c) => [c, ...c.all()]); }
@@ -355,6 +357,17 @@ describe('kabarPrepaintScript', () => {
     }
   });
 
+  it('kotak yang baru sebagian ter-parse: tanpa <li> tidak disembunyikan; disembunyikan terlalu dini → dibuka lagi', () => {
+    const kosong = box();
+    run(END, kosong);
+    expect(kosong.hidden).toBe(false);
+    const aktif = li(END + 1000);
+    const k = box(li(END - 1000), aktif);
+    k.setAttribute('hidden', '');
+    run(END, k);
+    expect([aktif.hidden, k.hidden]).toEqual([false, false]);
+  });
+
   it('banner (tanpa kotak) disembunyikan bila lewat', () => {
     const banner = new El('p', { 'data-kabar-banner': '', 'data-kabar-end': END });
     run(END, banner);
@@ -365,6 +378,7 @@ describe('kabarPrepaintScript', () => {
     const js = kabarPrepaintScript();
     expect(js).toContain('data-kabar-end');
     expect(js).not.toMatch(/eval|innerHTML|Function|</);
-    expect(js.length).toBeLessThan(600);
+    expect(js.length).toBeLessThan(800);
+    expect(kabarPrepaintTag()).toBe(`<script>${js}</script>`);
   });
 });
