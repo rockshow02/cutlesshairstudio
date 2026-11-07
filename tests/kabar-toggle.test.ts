@@ -80,9 +80,9 @@ describe('Kabar aktif', () => {
     expect(llms).not.toContain('promo-lewat');
   });
 
-  it('menu memuat Kabar → /kabar/', () => {
+  it('menu memuat Kabar → /kabar/ (menu HP & footer saja: navbar desktop penuh)', () => {
     const settings = settingsSchema.parse({ ...rawFixture.settings, showKabar: true });
-    expect(buildSite(settings, baseSite, []).nav).toContainEqual(expect.objectContaining({ label: 'Kabar', href: '/kabar/' }));
+    expect(buildSite(settings, baseSite, []).nav).toContainEqual({ label: 'Kabar', href: '/kabar/', desktop: false });
   });
 
   it('_redirects tanpa aturan /kabar', () => {
