@@ -9,6 +9,7 @@ export default defineConfig({
       'virtual:image-meta': fileURLToPath(new URL('./tests/stubs/image-meta.ts', import.meta.url)),
       'virtual:tips': fileURLToPath(new URL('./tests/stubs/tips.ts', import.meta.url)),
       'virtual:layanan': fileURLToPath(new URL('./tests/stubs/layanan.ts', import.meta.url)),
+      'virtual:kabar': fileURLToPath(new URL('./tests/stubs/kabar.ts', import.meta.url)),
     },
   },
   test: {

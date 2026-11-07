@@ -1,0 +1,42 @@
+# Build harian (OPSIONAL): memicu build ulang Cloudflare setiap hari 00.05 WIB lewat Deploy Hook (Workers Builds).
+#
+# Untuk apa: promo/acara yang sudah lewat tanggalnya disembunyikan langsung oleh browser pengunjung (tanpa build).
+# Build harian menyegarkan HTML statis, JSON-LD, sitemap, dan llms.txt, yaitu yang dibaca mesin pencari/AI tanpa JS,
+# supaya paling lama 24 jam sudah ikut menyesuaikan. Panduan pemilik (2 langkah pemasangan + 1 uji): docs/build-harian-kabar.md
+#
+# Tanpa setelan apa pun workflow ini TIDAK merah: bila secret CF_DEPLOY_HOOK_URL belum dibuat, ia hanya mencetak
+# catatan (::notice::) lalu selesai. URL hook adalah rahasia: dibaca dari secret lewat env, tidak pernah dicetak.
+#
+# Jadwal GitHub hanya berjalan dari branch default (main), jadi baru aktif setelah rilis berikutnya masuk ke main.
+# GitHub menonaktifkan workflow terjadwal setelah 60 hari repo tanpa aktivitas (cara mengaktifkan lagi: lihat dokumen).
+name: Build harian
+
+on:
+  schedule:
+    - cron: '5 17 * * *' # 17.05 UTC = 00.05 WIB (tepat setelah hari WIB berganti)
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Picu build Cloudflare (Deploy Hook)
+        env:
+          HOOK: ${{ secrets.CF_DEPLOY_HOOK_URL }}
+        run: |
+          if [ -z "$HOOK" ]; then
+            echo "::notice title=Build harian dilewati::Deploy Hook belum disetel (secret CF_DEPLOY_HOOK_URL kosong). Tidak ada yang rusak; langkah pemasangan ada di docs/build-harian-kabar.md"
+            exit 0
+          fi
+          # Hanya kode HTTP dan id build yang dicetak, tidak pernah URL-nya maupun isi balasan mentah
+          code=$(curl --fail-with-body -sS --retry 2 --retry-delay 10 --retry-all-errors \
+            -o "$RUNNER_TEMP/hook.json" -w '%{http_code}' -X POST "$HOOK") || {
+            echo "::error title=Build harian gagal::Deploy Hook ditolak atau tidak terjangkau (HTTP ${code:-?}). Periksa hook di Cloudflare dan secret CF_DEPLOY_HOOK_URL."
+            head -c 300 "$RUNNER_TEMP/hook.json" 2>/dev/null || true
+            exit 1
+          }
+          id=$(jq -r '.result.build_uuid // .build_uuid // empty' "$RUNNER_TEMP/hook.json" 2>/dev/null || true)
+          echo "Build Cloudflare dipicu (HTTP $code${id:+, id build $id})"

@@ -82,6 +82,7 @@ import { srcSetOf } from './responsiveImage';
 import { PRICE_CATEGORIES, priceCategoryAnchor } from '@/content/priceCategories';
 import { availableAt, priceAt, samePricesEverywhere } from '@/content/branchPricing';
 import { SERVICES_PATH, sortFacilities } from '@/content/servicePages';
+import { kabarBannerVisible, kabarVisible } from '@/content/kabarSeo';
 import { activeFaqItems } from '@/content/faqSeo';
 import { activeVideoItems } from '@/content/instagram';
 import { formatNumber, formatPhoneDisplay, formatPriceText } from './format';
@@ -414,6 +415,8 @@ export function buildSite(s: SettingsEntry, base: SiteContent, branches: Branch[
     beforeAfter: s.showBeforeAfter,
     shoeCare: Boolean(extra.shoeCare),
     tips: Boolean(s.showTips),
+    kabar: kabarVisible(s),
+    kabarBanner: kabarBannerVisible(s),
     servicePages: Boolean(extra.servicePages),
   };
   return {
@@ -428,7 +431,8 @@ export function buildSite(s: SettingsEntry, base: SiteContent, branches: Branch[
         (item) =>
           !(item.href?.startsWith('/produk') && !features.products) &&
           !(item.href === SHOE_CARE_PAGE && !features.shoeCare) &&
-          !(item.href?.startsWith('/tips') && !features.tips),
+          !(item.href?.startsWith('/tips') && !features.tips) &&
+          !(item.href?.startsWith('/kabar') && !features.kabar),
       )
       // Menu "Layanan" (section #layanan) → halaman /layanan/ bila aktif: jumlah menu desktop tidak bertambah
       .map((item) => (item.sectionId === 'layanan' && features.servicePages ? { label: item.label, href: SERVICES_PATH } : item)),

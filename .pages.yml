@@ -114,6 +114,12 @@ media:
     output: /uploads/tips
     categories: [image]
     rename: safe
+  - name: kabar
+    label: Foto Kabar, Promo & Acara
+    input: public/uploads/kabar
+    output: /uploads/kabar
+    categories: [image]
+    rename: safe
   - name: layanan
     label: Foto Halaman Layanan
     input: public/uploads/layanan
@@ -1778,6 +1784,166 @@ content:
           media: tips
           extensions: [jpg, jpeg, png, webp]
 
+  # ------------------------------------------------------------------ Kabar, Promo & Acara
+  # Satu file Markdown per item di src/content/kabar/ (frontmatter + isi). Nama file dibuat dari judul saat item dibuat
+  # = alamat item (/kabar/<nama-file>/). Pages CMS tidak punya kolom kondisional: SEMUA kolom selalu tampil; kolom
+  # milik jenis lain diabaikan website (tidak ditolak). Panduan: docs/panduan-admin.md.
+  - name: kabar
+    label: Kabar, Promo & Acara
+    type: collection
+    path: src/content/kabar
+    format: yaml-frontmatter
+    filename:
+      template: "{title}.md"
+      field: create
+    exclude: [README.md]
+    view:
+      primary: title
+      fields: [title, kind, status, publishedAt]
+      sort: publishedAt
+      order: desc
+    fields:
+      - name: title
+        label: Judul
+        type: string
+        required: true
+        description: "Jelas & singkat, mis. Diskon Potong Rambut Akhir Tahun. Maksimal 80 karakter."
+        options:
+          maxlength: 80
+      - name: slug
+        label: Slug (alamat halaman)
+        type: string
+        description: "Opsional. Kosongkan = otomatis dari judul saat item dibuat (nama file). Huruf kecil, angka, dan strip, mis. diskon-akhir-tahun. Jangan diubah setelah terbit (link lama jadi mati). Maksimal 80 karakter."
+        pattern:
+          regex: "^([a-z0-9]+(-[a-z0-9]+)*)?$"
+          message: "Hanya huruf kecil, angka, dan strip, mis. diskon-akhir-tahun"
+        options:
+          maxlength: 80
+      - name: publishedAt
+        label: Tanggal terbit
+        type: date
+        required: true
+        description: "Tanggal item dibuat/diumumkan (urutan: terbaru di atas)."
+        options:
+          format: yyyy-MM-dd
+      - name: kind
+        label: Jenis
+        type: select
+        required: true
+        default: Kabar
+        description: "Kabar = pengumuman biasa. Promo = ada masa berlaku (isi Berlaku sampai). Acara = ada jadwal (isi Mulai, Selesai, dan Lokasi). Kolom milik jenis lain boleh dibiarkan terisi; website mengabaikannya."
+        options:
+          values: [Kabar, Promo, Acara]
+      - name: branches
+        label: Cabang
+        type: select
+        required: true
+        description: "Pilih Semua cabang, ATAU satu/beberapa cabang tertentu (jangan digabung dengan Semua cabang)."
+        options:
+          multiple: true
+          # @branch-options-start (diisi otomatis dari branches.json oleh scripts/sync-pages-config.mjs)
+          values:
+            - name: "bogor-bantarjati"
+              label: "Bogor Bantarjati"
+            - name: "cibubur"
+              label: "Cibubur"
+          # @branch-options-end
+            - name: semua
+              label: Semua cabang
+      - name: summary
+        label: Ringkasan
+        type: text
+        required: true
+        description: "1–2 kalimat inti kabar/promo/acara. Tampil di kartu & hasil Google (meta description). Maksimal 160 karakter."
+        options:
+          maxlength: 160
+      - name: image
+        label: Gambar
+        type: image
+        description: "Opsional. Foto mendatar 16:9, minimal 1200 × 675 px, foto asli (bukan dari internet). Kompres di bawah 1 MB sebelum upload. Otomatis dikompres ke WebP maks. 1600 px. Format: JPG, PNG, atau WebP."
+        options:
+          media: kabar
+          extensions: [jpg, jpeg, png, webp]
+      - name: imageAlt
+        label: Deskripsi gambar
+        type: string
+        description: "Wajib bila Gambar diisi. Apa yang terlihat di gambar, untuk pembaca layar & Google. Maksimal 150 karakter."
+        options:
+          maxlength: 150
+      - name: waLabel
+        label: Teks tombol WhatsApp
+        type: string
+        description: "Opsional. Kosongkan = teks bawaan. Maksimal 40 karakter."
+        options:
+          maxlength: 40
+      - name: status
+        label: Status
+        type: select
+        required: true
+        default: Draf
+        description: "Draf = tersimpan, belum tampil di website. Terbit = tampil (bila Tampilkan Kabar, Promo & Acara aktif di Pengaturan Situs)."
+        options:
+          values: [Draf, Terbit]
+      - name: validFrom
+        label: "Promo: berlaku mulai"
+        type: date
+        description: "Hanya untuk jenis Promo. Opsional; kosong = langsung berlaku."
+        options:
+          format: yyyy-MM-dd
+      - name: validUntil
+        label: "Promo: berlaku sampai"
+        type: date
+        description: "Hanya untuk jenis Promo, WAJIB. Promo berakhir setelah akhir hari ini (WIB)."
+        options:
+          format: yyyy-MM-dd
+      - name: startsAt
+        label: "Acara: mulai"
+        type: date
+        description: "Hanya untuk jenis Acara, WAJIB. Tanggal & jam mulai (WIB)."
+        options:
+          time: true
+          format: "yyyy-MM-dd'T'HH:mm"
+      - name: endsAt
+        label: "Acara: selesai"
+        type: date
+        description: "Hanya untuk jenis Acara, WAJIB. Tidak boleh sebelum waktu mulai (WIB)."
+        options:
+          time: true
+          format: "yyyy-MM-dd'T'HH:mm"
+      - name: locationType
+        label: "Acara: lokasi"
+        type: select
+        description: "Hanya untuk jenis Acara, WAJIB. Di cabang = di cabang yang dipilih di atas. Tempat lain = isi nama dan alamat tempat di bawah."
+        options:
+          values: [Di cabang, Tempat lain]
+      - name: venueName
+        label: "Acara: nama tempat"
+        type: string
+        description: "Hanya untuk Acara dengan lokasi Tempat lain, WAJIB. Maksimal 80 karakter."
+        options:
+          maxlength: 80
+      - name: venueAddress
+        label: "Acara: alamat tempat"
+        type: string
+        description: "Hanya untuk Acara dengan lokasi Tempat lain, WAJIB. Maksimal 200 karakter."
+        options:
+          maxlength: 200
+      - name: linkUrl
+        label: "Acara: link pendaftaran/info"
+        type: string
+        description: "Hanya untuk jenis Acara. Opsional, harus diawali https://."
+        pattern:
+          regex: "^(https://.+)?$"
+          message: Harus diawali https://
+      - name: body
+        label: Isi
+        type: rich-text
+        description: "Detail lengkap. Wajib diisi sebelum status Terbit."
+        options:
+          format: markdown
+          media: kabar
+          extensions: [jpg, jpeg, png, webp]
+
   # ------------------------------------------------------------------ Halaman Layanan
   - name: layanan
     label: Halaman Layanan
@@ -2299,6 +2465,16 @@ content:
         type: boolean
         default: false
         description: "Nyalakan setelah ada artikel berstatus Terbit di menu Tips & Trik. Mati = halaman /tips/, menu Tips, & bagian Tips Terbaru di beranda disembunyikan."
+      - name: showKabar
+        label: Tampilkan Kabar, Promo & Acara
+        type: boolean
+        default: false
+        description: "Nyalakan setelah ada item berstatus Terbit di menu Kabar, Promo & Acara. Mati = halaman /kabar/ dan kotak Kabar di halaman cabang disembunyikan (/kabar/ dialihkan ke beranda)."
+      - name: showKabarBanner
+        label: Tampilkan banner Kabar di beranda
+        type: boolean
+        default: false
+        description: "Hanya berlaku bila Tampilkan Kabar, Promo & Acara aktif. Banner di beranda menaut ke item aktif pertama."
       - name: showServicePages
         label: Tampilkan halaman layanan
         type: boolean

@@ -1,5 +1,5 @@
 import { expect } from '@playwright/test';
-import { E2E_BRANCHES, E2E_SERVICE_PAGES, E2E_TIPS } from './fixtures/content';
+import { E2E_BRANCHES, E2E_KABAR, E2E_SERVICE_PAGES, E2E_TIPS } from './fixtures/content';
 import { test } from './helpers';
 
 /**
@@ -23,6 +23,11 @@ const PAGES = [
   `${UNIFORM_URL}/tips/${E2E_TIPS.withToc.slug}/`,
   `${UNIFORM_URL}/layanan/`,
   `${UNIFORM_URL}/layanan/${E2E_SERVICE_PAGES.haircut.slug}/`,
+  // Kabar aktif (varian uniform): daftar, detail, halaman cabang dengan kotak "Promo & acara", beranda dengan banner
+  `${UNIFORM_URL}/kabar/`,
+  `${UNIFORM_URL}/kabar/${E2E_KABAR.acaraCabang.slug}/`,
+  `${UNIFORM_URL}/cabang/${E2E_BRANCHES.cibubur.slug}/`,
+  `${UNIFORM_URL}/`,
 ];
 
 for (const url of PAGES) {

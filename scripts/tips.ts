@@ -41,7 +41,7 @@ import { e2eTipFiles } from '../e2e/fixtures/content';
 
 export const TIPS_DIR = path.join('src', 'content', 'tips');
 
-const esc = (v: string) => v.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+export const esc = (v: string) => v.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 const toWebp = (src: string) => src.replace(/\.(jpe?g|png|gif|tiff?|avif)$/i, '.webp');
 /** File asli (jpg/png) yang sudah dikonversi ke .webp → pakai .webp */
 export const resolveImage = (src: string, meta: ImageMeta) => (meta[src] ? src : meta[toWebp(src)] ? toWebp(src) : src);
@@ -209,13 +209,13 @@ export const summaryOf = ({ html: _html, headings: _headings, keyPoints: _k, faq
 
 /* ---------- Head, JSON-LD, ringkasan statis ---------- */
 
-const jsonLdTag = (data: unknown) => `<script type="application/ld+json">${JSON.stringify(data).replace(/</g, '\\u003c')}</script>`;
+export const jsonLdTag = (data: unknown) => `<script type="application/ld+json">${JSON.stringify(data).replace(/</g, '\\u003c')}</script>`;
 const abs = (siteUrl: string, src: string) => `${siteUrl}${src}`;
 const ORG_LOGO = '/icon-512.png';
 
 type Site = Pick<ContentBundle['settings'], 'siteUrl' | 'siteName'>;
 
-const publisher = ({ siteUrl, siteName }: Site) => ({
+export const publisher = ({ siteUrl, siteName }: Site) => ({
   '@type': 'Organization',
   '@id': `${siteUrl}/#organization`,
   name: siteName,
@@ -223,7 +223,7 @@ const publisher = ({ siteUrl, siteName }: Site) => ({
   logo: { '@type': 'ImageObject', url: `${siteUrl}${ORG_LOGO}`, width: 512, height: 512 },
 });
 
-const breadcrumbJsonLd = (site: Site, items: { name: string; path: string }[]) => ({
+export const breadcrumbJsonLd = (site: Site, items: { name: string; path: string }[]) => ({
   '@context': 'https://schema.org',
   '@type': 'BreadcrumbList',
   itemListElement: items.map((it, i) => ({ '@type': 'ListItem', position: i + 1, name: it.name, item: `${site.siteUrl}${it.path}` })),
