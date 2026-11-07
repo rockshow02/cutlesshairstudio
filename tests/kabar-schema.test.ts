@@ -3,9 +3,9 @@
  * Kolom milik jenis lain DIABAIKAN (dibuang dari hasil), bukan ditolak: Pages CMS menampilkan semua kolom untuk semua
  * jenis, dan menolak berarti build produksi gagal tanpa admin tahu sebabnya. Data uji di sini, bukan isi CMS.
  */
-import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { CONTENT_FILES, kabarSchema } from '../src/content/schema';
+import { rawFixture } from './helpers/contentFixture';
 
 const kabar = () => ({
   title: 'Kabar Terbaru Studio',
@@ -246,11 +246,8 @@ describe('kabarSchema: kolom umum', () => {
 });
 
 describe('toggle Pengaturan Situs', () => {
-  it('showKabar dan showKabarBanner default false; settings.json memuat false', () => {
-    const s = JSON.parse(readFileSync('src/content/settings.json', 'utf8'));
-    const { showKabar, showKabarBanner, ...tanpa } = s;
-    expect(showKabar).toBe(false);
-    expect(showKabarBanner).toBe(false);
+  it('showKabar dan showKabarBanner default false bila kuncinya tidak ada', () => {
+    const { showKabar: _k, showKabarBanner: _b, ...tanpa } = { ...rawFixture.settings, showKabar: true, showKabarBanner: true };
     const parsed = (CONTENT_FILES['settings.json'] as unknown as { parse: (v: unknown) => Record<string, unknown> }).parse(tanpa);
     expect(parsed.showKabar).toBe(false);
     expect(parsed.showKabarBanner).toBe(false);
