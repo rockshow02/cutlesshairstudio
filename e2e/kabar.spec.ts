@@ -68,7 +68,12 @@ test('Tampilkan Kabar mati: /kabar* 301 ke beranda, tanpa menu, sitemap, llms.tx
   await open(page, '/', '');
   await expect(bannerOf(page)).toHaveCount(0);
   await expect(page.locator('footer').getByRole('link', { name: 'Kabar', exact: true })).toHaveCount(0);
-  if (isMobile) await page.getByRole('button', { name: 'Buka menu' }).click();
+  if (isMobile) {
+    // Wadah yang sama dengan tes toggle-aktif; harus terbuka dulu supaya pemeriksaan tidak lolos hampa
+    await page.getByRole('button', { name: 'Buka menu' }).click();
+    await expect(page.locator('#mobile-menu')).toBeVisible();
+    await expect(page.locator('#mobile-menu').getByRole('link', { name: 'Kabar', exact: true })).toHaveCount(0);
+  }
   await expect(page.getByRole('navigation', { name: 'Menu utama' }).getByRole('link', { name: 'Kabar', exact: true })).toHaveCount(0);
 
   await open(page, `/cabang/${E2E_BRANCHES.cibubur.slug}/`, '');

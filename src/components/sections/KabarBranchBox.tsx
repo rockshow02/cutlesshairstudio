@@ -3,7 +3,7 @@ import { getKabar, useNow } from '@/lib/kabar';
 import { branchBoxItems } from '@/content/kabarSeo';
 import { kabarCopy } from '@/content/kabarCopy';
 import { Section } from '@/components/ui/Section';
-import { KabarCard } from '@/components/pages/KabarPages';
+import { KabarCard } from '@/components/pages/KabarCard';
 import tips from '@/components/pages/TipsPages.module.css';
 import styles from './KabarBranchBox.module.css';
 

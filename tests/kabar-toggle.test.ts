@@ -150,6 +150,8 @@ describe('banner beranda di ringkasan statis (Tampilkan Kabar + Tampilkan banner
       const at = html.indexOf('<!--cutless:kabar-prepaint-->');
       expect(at, file).toBeGreaterThan(0);
       expect(at, file).toBeLessThan(html.indexOf('</head>'));
+      // Toggle mati: placeholder diganti '' dan tidak ada sisa (komentar dll.) yang menyebut kabar di keluaran
+      expect(html.replace('<!--cutless:kabar-prepaint-->', '').toLowerCase(), file).not.toContain('kabar');
     }
   });
 });
