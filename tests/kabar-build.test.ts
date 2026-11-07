@@ -38,9 +38,26 @@ describe('processKabar', () => {
     const ok = run([file('a.md', { ...KABAR, status: 'Draf' })]);
     expect(ok.published).toEqual([]);
     expect(ok.drafts).toBe(1);
-    const bad = run([file('b.md', { ...PROMO, status: 'Draf', validUntil: '' })]);
+    const bad = run([file('b.md', { ...PROMO, status: 'Draf', validUntil: 'ngawur' })]);
     expect(bad.errors.length).toBeGreaterThan(0);
     expect(bad.errors[0]).toContain('kabar/b.md');
+  });
+
+  it('Draf setengah terisi tidak menggagalkan build; Terbit dengan kolom wajib kosong gagal dengan pesan Indonesia', () => {
+    const setengah = [
+      file('p.md', { ...PROMO, slug: 'p', status: 'Draf', validUntil: '' }),
+      file('a.md', { ...ACARA, slug: 'a', status: 'Draf', startsAt: '', endsAt: '', locationType: '' }),
+      file('t.md', { ...ACARA_LAIN, slug: 't', status: 'Draf', venueName: '', venueAddress: '' }),
+    ];
+    const r = run(setengah);
+    expect(r.errors).toEqual([]);
+    expect(r.published).toEqual([]);
+    expect(r.drafts).toBe(3);
+    const terbit = run([file('p.md', { ...PROMO, slug: 'p', validUntil: '' }), file('a.md', { ...ACARA, slug: 'a', startsAt: '' }), file('t.md', { ...ACARA_LAIN, slug: 't', venueName: '' })]);
+    expect(terbit.errors.join('|')).toContain('kabar/p.md');
+    expect(terbit.errors.join('|')).toContain('Berlaku sampai wajib diisi untuk jenis Promo');
+    expect(terbit.errors.join('|')).toContain('Mulai wajib diisi untuk jenis Acara');
+    expect(terbit.errors.join('|')).toContain('Nama tempat wajib diisi untuk lokasi Tempat lain');
   });
 
   it('slug ganda ditolak; slug cadangan = nama file', () => {

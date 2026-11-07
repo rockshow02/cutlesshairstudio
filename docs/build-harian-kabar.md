@@ -14,7 +14,7 @@ Promo dan acara di bagian **Kabar, Promo & Acara** punya tanggal berakhir. Ada d
 
 Jujur soal batasnya: bila build harian **tidak** disetel, HTML statis (yang dilihat Google) dari promo yang sudah
 berakhir tetap seperti semula sampai ada build berikutnya. Build berikutnya terjadi setiap kali Anda menekan **Save**
-di CMS atau ada rilis baru. Pengunjung tetap tidak melihat promo kedaluwarsa karena browser menyembunyikannya.
+di CMS atau ada rilis baru. Pengunjung tetap tidak melihat promo kedaluwarsa karena browser menyembunyikannya. Catatan: kotak cabang dan banner disaring sebelum tampil, tetapi daftar /kabar/ dan halaman detail statis tidak disaring ulang di antara dua build (React memperbaikinya begitu halaman dimuat; build harian atau Save apa pun menyegarkan HTML statisnya).
 
 ## Cara kerja singkat
 

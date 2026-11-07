@@ -554,7 +554,7 @@ Item tampil di tiga tempat: halaman **/kabar/** (dan satu halaman per item), kot
 7. **Isi**: detail lengkap (wajib sebelum Terbit).
 8. **Gambar** (opsional) dan **Deskripsi gambar** (wajib bila ada gambar): foto asli mendatar 16:9, minimal 1200 × 675 px, format JPG, PNG, atau WebP. Otomatis dikompres.
 9. **Teks tombol WhatsApp** (opsional, maks. 40 karakter): kosong = "Booking via WhatsApp".
-10. **Save**. Status awal **Draf** (belum tampil).
+10. **Save**. Status awal **Draf** (belum tampil). Draf boleh disimpan dengan kolom wajib yang masih kosong (mis. **Promo: berlaku sampai** belum diisi): tidak ada yang diterbitkan, dan kelengkapannya baru diperiksa saat Status diganti menjadi **Terbit**. Kolom yang sudah terisi tetap diperiksa bentuknya (mis. tanggal dan jam harus utuh, link harus `https://`, waktu selesai tidak boleh sebelum waktu mulai).
 
 ### Contoh 1: promo untuk cabang tertentu
 
@@ -605,7 +605,7 @@ Tidak ada yang perlu diedit.
 - Halaman detailnya **tetap bisa dibuka** dengan label **Promo telah berakhir** / **Acara telah selesai**, tanpa tombol WhatsApp.
 - Di /kabar/ item pindah ke kelompok **Sudah berakhir**.
 
-Mesin pencari membaca HTML yang dibuat saat build, jadi pembaruan untuk mereka menunggu build berikutnya. Mau diperbarui otomatis tiap hari? Pasang build harian (opsional, gratis): [docs/build-harian-kabar.md](build-harian-kabar.md). Build harian menyegarkan HTML statis, data terstruktur, sitemap, dan `llms.txt`.
+Mesin pencari membaca HTML yang dibuat saat build, jadi pembaruan untuk mereka menunggu build berikutnya. Di antara dua build, daftar /kabar/ dan halaman detail statis tidak disaring ulang sebelum tampil (React memperbaikinya begitu halaman dimuat; build harian atau Save apa pun menyegarkan HTML statisnya). Mau diperbarui otomatis tiap hari? Pasang build harian (opsional, gratis): [docs/build-harian-kabar.md](build-harian-kabar.md). Build harian menyegarkan HTML statis, data terstruktur, sitemap, dan `llms.txt`.
 
 ### Tombol WhatsApp
 
@@ -631,6 +631,10 @@ Bila Save berhasil tetapi website tidak berubah, ada kolom wajib yang belum leng
 - *"semua" tidak boleh digabung dengan cabang lain*
 - *pilih minimal satu cabang, atau "Semua cabang"*
 - *selesai tidak boleh sebelum mulai* dan *mulai berlaku tidak boleh sesudah berlaku sampai*
+
+Pesan-pesan kolom wajib di atas hanya muncul untuk item berstatus **Terbit**. Saat Status diganti dari Draf ke **Terbit**, kolom wajib jenisnya harus sudah lengkap; bila belum, build gagal dengan pesan di atas sampai item diperbaiki.
+
+Bila sebuah cabang dihapus dari **Pengaturan Cabang** padahal masih ada item yang memilihnya, build gagal dengan pesan yang menyebut nama file item dan pilihan cabang yang ada, sampai item itu diedit (juga bila item itu sudah berakhir).
 
 Perbaiki kolomnya, **Save** lagi. Website lama tetap tayang selama itu (aman).
 

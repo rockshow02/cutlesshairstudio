@@ -108,6 +108,45 @@ describe('kabarSchema: pesan kolom wajib per jenis (bahasa Indonesia, label CMS)
   });
 });
 
+describe('kabarSchema: Draf boleh setengah terisi, Terbit wajib lengkap', () => {
+  const draf = { status: 'Draf' };
+  it('Draf Promo tanpa validUntil valid; Terbit tanpa validUntil ditolak dengan pesan Indonesia', () => {
+    expect(ok({ ...promo(), ...draf, validUntil: undefined })).toBe(true);
+    expect(messages({ ...promo(), validUntil: undefined })).toEqual(['validUntil: Berlaku sampai wajib diisi untuk jenis Promo']);
+  });
+  it('Draf Acara tanpa startsAt/endsAt/locationType valid; Terbit ditolak', () => {
+    const kosong = { startsAt: undefined, endsAt: null, locationType: '' };
+    expect(ok({ ...acara(), ...draf, ...kosong })).toBe(true);
+    expect(messages({ ...acara(), ...kosong })).toEqual([
+      'startsAt: Mulai wajib diisi untuk jenis Acara',
+      'endsAt: Selesai wajib diisi untuk jenis Acara',
+      'locationType: Lokasi wajib diisi untuk jenis Acara',
+    ]);
+  });
+  it('Draf Tempat lain tanpa venueName/venueAddress valid; Terbit ditolak', () => {
+    const kosong = { venueName: undefined, venueAddress: '' };
+    expect(ok({ ...tempatLain(), ...draf, ...kosong })).toBe(true);
+    expect(messages({ ...tempatLain(), ...kosong })).toEqual([
+      'venueName: Nama tempat wajib diisi untuk lokasi Tempat lain',
+      'venueAddress: Alamat tempat wajib diisi untuk lokasi Tempat lain',
+    ]);
+  });
+  it('Draf tetap memeriksa format/batas kolom yang terisi', () => {
+    expect(ok({ ...acara(), ...draf, startsAt: '2026-12-20' })).toBe(false);
+    expect(ok({ ...acara(), ...draf, endsAt: '2026-12-20T09:00' })).toBe(false);
+    expect(ok({ ...acara(), ...draf, endsAt: undefined, startsAt: '2026-12-20T10:00' })).toBe(true);
+    expect(ok({ ...promo(), ...draf, validFrom: '2027-01-01' })).toBe(false);
+    expect(ok({ ...promo(), ...draf, validUntil: 'ngawur' })).toBe(false);
+    expect(ok({ ...tempatLain(), ...draf, venueName: 'x'.repeat(81) })).toBe(false);
+    expect(ok({ ...acara(), ...draf, linkUrl: 'http://salah' })).toBe(false);
+  });
+  it('transform Draf tidak melempar dan tidak membawa kolom kosong', () => {
+    const r = kabarSchema.parse({ ...acara(), ...draf, startsAt: undefined, endsAt: undefined, locationType: undefined });
+    expect(r).not.toHaveProperty('startsAt');
+    expect(kabarSchema.parse({ ...promo(), ...draf, validUntil: undefined })).not.toHaveProperty('validUntil');
+  });
+});
+
 describe('kabarSchema: kolom jenis lain diabaikan', () => {
   const EVENT = ['startsAt', 'endsAt', 'locationType', 'venueName', 'venueAddress', 'linkUrl'];
   const PROMO = ['validFrom', 'validUntil'];

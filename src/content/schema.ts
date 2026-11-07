@@ -706,6 +706,11 @@ const foreign = z.unknown().optional();
 const filled = (v: unknown): v is string => typeof v === 'string' && v.trim() !== '';
 /** Terisi: teks tidak kosong, atau tanggal (YAML tanpa tanda kutip dibaca sebagai Date) */
 const present = (v: unknown): boolean => v instanceof Date || filled(v);
+/** Validasi hanya kolom skema yang terisi; kolom kosong (undefined, null, "") dilewati */
+const ownParse = (schema: z.ZodObject, raw: object) => {
+  const absent = Object.keys(schema.shape).filter((n) => !present((raw as Record<string, unknown>)[n]));
+  return schema.omit(Object.fromEntries(absent.map((n) => [n, true])) as never).safeParse(raw);
+};
 
 /** Aturan kolom WAJIB milik tiap jenis (dipakai superRefine & transform) */
 const promoFields = z.object({ validFrom: z.union([tipDate, z.literal('')]).nullish(), validUntil: tipDate });
@@ -752,46 +757,47 @@ export const kabarSchema = z
     body: z.string().nullish(),
   })
   .superRefine((k, ctx) => {
-    const check = (schema: z.ZodType, value: unknown, path: string[]) => {
-      const r = schema.safeParse(value);
-      if (!r.success) for (const i of r.error.issues) ctx.addIssue({ code: 'custom', path: [...path, ...i.path.map(String)], message: i.message });
-    };
     if (k.status === 'Terbit' && !k.body?.trim()) ctx.addIssue({ code: 'custom', path: ['body'], message: 'isi wajib diisi sebelum diterbitkan' });
     if (filled(k.image) && !k.imageAlt?.trim()) ctx.addIssue({ code: 'custom', path: ['imageAlt'], message: 'deskripsi gambar wajib diisi bila ada gambar' });
     if (k.branches.includes(KABAR_ALL_BRANCHES) && k.branches.length > 1) ctx.addIssue({ code: 'custom', path: ['branches'], message: `"${KABAR_ALL_BRANCHES}" tidak boleh digabung dengan cabang lain` });
-    /** Kolom wajib kosong → pesan Indonesia dengan label CMS; mengembalikan nama kolom yang kosong */
-    const missing = (fields: [name: string, label: string][], untuk: string) =>
-      fields.flatMap(([name, label]) => {
-        if (present((k as Record<string, unknown>)[name])) return [];
-        ctx.addIssue({ code: 'custom', path: [name], message: `${label} wajib diisi untuk ${untuk}` });
-        return [name];
-      });
-    const without = <S extends z.ZodObject>(schema: S, names: string[]) => schema.omit(Object.fromEntries(names.map((n) => [n, true])) as never);
+    /** Kolom wajib kosong → pesan Indonesia dengan label CMS, HANYA bila Terbit (Draf boleh setengah terisi) */
+    const terbit = k.status === 'Terbit';
+    const missing = (fields: [name: string, label: string][], untuk: string) => {
+      for (const [name, label] of fields) {
+        if (terbit && !present((k as Record<string, unknown>)[name])) ctx.addIssue({ code: 'custom', path: [name], message: `${label} wajib diisi untuk ${untuk}` });
+      }
+    };
+    /** Format & batas hanya kolom yang terisi (yang kosong sudah dilaporkan missing bila wajib) */
+    const checkFilled = (schema: z.ZodObject) => {
+      const r = ownParse(schema, k);
+      if (!r.success) for (const i of r.error.issues) ctx.addIssue({ code: 'custom', path: i.path.map(String), message: i.message });
+      return r.success ? (r.data as Record<string, string | undefined>) : undefined;
+    };
     if (k.kind === 'Promo') {
-      const gone = missing([['validUntil', 'Berlaku sampai']], 'jenis Promo');
-      check(without(promoFields, gone), k, []);
-      const p = promoFields.safeParse(k);
-      if (p.success && p.data.validFrom && p.data.validFrom > p.data.validUntil) ctx.addIssue({ code: 'custom', path: ['validFrom'], message: 'mulai berlaku tidak boleh sesudah berlaku sampai' });
+      missing([['validUntil', 'Berlaku sampai']], 'jenis Promo');
+      const p = checkFilled(promoFields);
+      if (p?.validFrom && p.validUntil && p.validFrom > p.validUntil) ctx.addIssue({ code: 'custom', path: ['validFrom'], message: 'mulai berlaku tidak boleh sesudah berlaku sampai' });
     }
     if (k.kind === 'Acara') {
-      const gone = missing([['startsAt', 'Mulai'], ['endsAt', 'Selesai'], ['locationType', 'Lokasi']], 'jenis Acara');
-      check(without(eventFields, gone), k, []);
-      if (k.locationType === 'Tempat lain') check(without(venueFields, missing([['venueName', 'Nama tempat'], ['venueAddress', 'Alamat tempat']], 'lokasi Tempat lain')), k, []);
-      const e = eventFields.safeParse(k);
-      if (e.success && parseWIB(e.data.endsAt) < parseWIB(e.data.startsAt)) ctx.addIssue({ code: 'custom', path: ['endsAt'], message: 'selesai tidak boleh sebelum mulai' });
+      missing([['startsAt', 'Mulai'], ['endsAt', 'Selesai'], ['locationType', 'Lokasi']], 'jenis Acara');
+      const e = checkFilled(eventFields);
+      if (k.locationType === 'Tempat lain') {
+        missing([['venueName', 'Nama tempat'], ['venueAddress', 'Alamat tempat']], 'lokasi Tempat lain');
+        checkFilled(venueFields);
+      }
+      if (e?.startsAt && e.endsAt && parseWIB(e.endsAt) < parseWIB(e.startsAt)) ctx.addIssue({ code: 'custom', path: ['endsAt'], message: 'selesai tidak boleh sebelum mulai' });
     }
   })
   .transform((k) => {
+    // Sudah divalidasi superRefine; hanya kolom milik jenisnya yang dibawa, dalam bentuk hasil parse (sudah di-trim).
+    // Draf boleh belum lengkap (tidak pernah diterbitkan), jadi kolom yang kosong tidak dibawa.
     const { validFrom, validUntil, startsAt, endsAt, locationType, venueName, venueAddress, linkUrl, ...common } = k;
-    // Sudah divalidasi superRefine; hanya kolom milik jenisnya yang dibawa, dalam bentuk hasil parse (sudah di-trim)
-    if (k.kind === 'Promo') {
-      const own = promoFields.parse({ validFrom, validUntil });
-      return { ...common, validUntil: own.validUntil, ...(own.validFrom && { validFrom: own.validFrom }) } as typeof common & { validFrom?: string; validUntil: string };
-    }
+    const own = (schema: z.ZodObject, raw: object) => ownParse(schema, raw).data as Record<string, string | undefined>;
+    if (k.kind === 'Promo') return { ...common, ...own(promoFields, { validFrom, validUntil }) } as typeof common & { validFrom?: string; validUntil: string };
     if (k.kind === 'Acara') {
-      const own = eventFields.parse({ startsAt, endsAt, locationType, linkUrl });
-      const venue = own.locationType === 'Tempat lain' ? venueFields.parse({ venueName, venueAddress }) : undefined;
-      return { ...common, startsAt: own.startsAt, endsAt: own.endsAt, locationType: own.locationType, ...venue, ...(own.linkUrl && { linkUrl: own.linkUrl }) } as typeof common & {
+      const event = own(eventFields, { startsAt, endsAt, locationType, linkUrl });
+      const venue = event.locationType === 'Tempat lain' ? own(venueFields, { venueName, venueAddress }) : undefined;
+      return { ...common, ...event, ...venue } as typeof common & {
         startsAt: string;
         endsAt: string;
         locationType: (typeof KABAR_LOCATION_TYPES)[number];
