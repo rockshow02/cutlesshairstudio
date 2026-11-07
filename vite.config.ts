@@ -14,7 +14,7 @@ export default defineConfig({
   build: {
     // Satu file CSS untuk semua halaman (lebih sedikit request yang memblokir render)
     cssCodeSplit: false,
-    // Multi-halaman statis: / (beranda), /produk/, /cuci-sepatu/, /cabang/ (+ /cabang/<slug>/ hasil prerender), /tips/, /layanan/
+    // Multi-halaman statis: / (beranda), /produk/, /cuci-sepatu/, /cabang/ (+ /cabang/<slug>/ hasil prerender), /tips/, /layanan/, /kabar/
     rollupOptions: {
       output: {
         // Library dipisah dari kode situs: chunk sendiri, bisa di-cache lama & tidak menumpuk di chunk section
@@ -37,6 +37,8 @@ export default defineConfig({
         tips: fileURLToPath(new URL('./tips/index.html', import.meta.url)),
         // Template halaman layanan: diprerender ke /layanan/ & /layanan/<slug>/ (dihapus bila dimatikan di CMS)
         layanan: fileURLToPath(new URL('./layanan/index.html', import.meta.url)),
+        // Template Kabar, Promo & Acara: diprerender ke /kabar/ & /kabar/<slug>/ (dihapus bila dimatikan di CMS)
+        kabar: fileURLToPath(new URL('./kabar/index.html', import.meta.url)),
         // Kebijakan Privasi (wajib untuk Google OAuth consent screen): selalu tampil, tanpa toggle
         kebijakanPrivasi: fileURLToPath(new URL('./kebijakan-privasi/index.html', import.meta.url)),
       },

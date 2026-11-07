@@ -7,9 +7,9 @@ import { readdirSync, readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { parse } from 'yaml';
 import type { z } from 'zod';
-import { CONTENT_FILES, tipSchema } from '../src/content/schema';
+import { CONTENT_FILES, kabarSchema, tipSchema } from '../src/content/schema';
 import { splitFrontmatter } from '../scripts/tips';
-import { sanitizeObject, setMedia, simulateCmsSave, type CmsField, type CmsMedia } from './helpers/pagesCms';
+import { sanitizeObject, setMedia, simulateCmsSave, validateCmsContent, type CmsField, type CmsMedia } from './helpers/pagesCms';
 
 const config = parse(readFileSync('.pages.yml', 'utf8')) as { media: CmsMedia[]; content: { name: string; path: string; list?: boolean; fields: CmsField[] }[] };
 setMedia(config.media);
@@ -66,6 +66,53 @@ describe('simulasi simpan dari Pages CMS (tanpa perubahan)', () => {
       expect(normalized(tipSchema, saved)).toEqual(normalized(tipSchema, original));
     });
   }
+
+  // Kabar, Promo & Acara: koleksi bisa kosong (hanya .gitkeep), jadi memakai fixture sebaris, bukan isi CMS
+  describe('kabar (fixture sebaris)', () => {
+    const entry = () => config.content.find((c) => c.path === 'src/content/kabar')!;
+    const dasar = { title: 'Contoh Item', publishedAt: '2026-11-01', summary: 'Ringkasan contoh.', status: 'Terbit', body: 'Isi contoh.' };
+    const fixtures: Record<string, Record<string, unknown>> = {
+      Kabar: { ...dasar, kind: 'Kabar', branches: ['semua'] },
+      'Promo cabang tertentu': { ...dasar, kind: 'Promo', branches: ['cibubur', 'bogor-bantarjati'], validFrom: '2026-12-01', validUntil: '2026-12-31', image: '/uploads/kabar/contoh.webp', imageAlt: 'Contoh gambar', waLabel: 'Ambil promo' },
+      'Acara Tempat lain': { ...dasar, kind: 'Acara', branches: ['semua'], startsAt: '2026-12-20T10:00', endsAt: '2026-12-20T12:00', locationType: 'Tempat lain', venueName: 'Balai Warga', venueAddress: 'Jl. Contoh No. 1', linkUrl: 'https://contoh.id/daftar' },
+    };
+    for (const [nama, original] of Object.entries(fixtures)) {
+      it(`${nama}: buka dan simpan ulang tanpa perubahan`, () => {
+        const { saved, errors } = simulateCmsSave(entry(), original);
+        expect(errors, 'Save akan ditolak form/server Pages CMS').toEqual([]);
+        const parsed = kabarSchema.safeParse(saved);
+        expect(parsed.success ? [] : parsed.error.issues.map((i) => `${i.path.join('.')}: ${i.message}`), 'hasil simpan ditolak Zod (build gagal)').toEqual([]);
+        expect(normalized(kabarSchema, saved)).toEqual(normalized(kabarSchema, original));
+      });
+    }
+
+    it('kolom jenis lain yang masih terisi: Save lolos form dan Zod, kolomnya dibuang dari hasil', () => {
+      const original = { ...fixtures.Kabar, startsAt: '2026-12-20T10:00', endsAt: '2026-12-19T10:00', validUntil: '2026-12-31', venueName: 'Sisa lama' };
+      const { saved, errors } = simulateCmsSave(entry(), original);
+      expect(errors).toEqual([]);
+      const parsed = kabarSchema.safeParse(saved);
+      expect(parsed.success).toBe(true);
+      expect(parsed.data).not.toHaveProperty('endsAt');
+    });
+
+    it('kombinasi salah ditolak form (validateCmsContent) atau Zod', () => {
+      const salah: Record<string, Record<string, unknown>> = {
+        'Promo tanpa validUntil': { ...fixtures['Promo cabang tertentu'], validUntil: undefined },
+        'Acara tanpa startsAt': { ...fixtures['Acara Tempat lain'], startsAt: undefined },
+        'Acara endsAt sebelum startsAt': { ...fixtures['Acara Tempat lain'], endsAt: '2026-12-20T09:00' },
+        'Tempat lain tanpa alamat': { ...fixtures['Acara Tempat lain'], venueAddress: undefined },
+        'Terbit tanpa isi': { ...fixtures.Kabar, body: '' },
+        'semua digabung cabang': { ...fixtures.Kabar, branches: ['semua', 'cibubur'] },
+      };
+      for (const [nama, isi] of Object.entries(salah)) {
+        const { saved, errors } = simulateCmsSave(entry(), isi);
+        expect(errors.length > 0 || !kabarSchema.safeParse(saved).success, nama).toBe(true);
+      }
+      // Pelanggaran yang sudah ditolak form: nama tempat 81 karakter, link bukan https
+      expect(validateCmsContent(entry(), { ...fixtures['Acara Tempat lain'], venueName: 'x'.repeat(81) })[0]).toMatch(/lebih dari 80 karakter/);
+      expect(validateCmsContent(entry(), { ...fixtures['Acara Tempat lain'], linkUrl: 'http://contoh.id' }).length).toBeGreaterThan(0);
+    });
+  });
 
   it('kata keluhan dikosongkan di CMS: Save lolos form dan Zod, hasilnya daftar kosong', () => {
     const entry = config.content.find((c) => c.path === 'src/content/reviewReplies.json')!;

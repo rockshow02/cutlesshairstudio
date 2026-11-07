@@ -1,0 +1,104 @@
+/* Tambahan halaman Kabar; kartu, judul, chip, artikel & prosa memakai TipsPages.module.css */
+
+/* Saringan sisi klien memakai atribut hidden: pastikan tidak tertimpa display dari kelas lain */
+.group[hidden],
+.group li[hidden] {
+  display: none;
+}
+
+/* ---------- Saringan cabang (select) & jenis (chip) ---------- */
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3) var(--space-5);
+  margin-bottom: var(--space-6);
+}
+.select {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+  color: var(--c-bone-dim);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+}
+.select select {
+  min-width: 0;
+  max-width: 100%;
+  min-height: 40px;
+  padding: 0 var(--space-3);
+  border: 1px solid var(--c-line-light);
+  border-radius: 999px;
+  background: var(--c-ink-2);
+  color: var(--c-bone);
+  font: inherit;
+}
+.kinds {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+.kinds button[aria-pressed='true'] {
+  background: var(--c-bone);
+  border-color: var(--c-bone);
+  color: var(--c-ink);
+}
+
+/* ---------- Grup ---------- */
+.group + .group {
+  margin-top: var(--space-8);
+}
+.group h2 {
+  margin-bottom: var(--space-5);
+}
+
+/* Periode/waktu & label status (kartu dan detail) */
+.period {
+  color: var(--c-bone-dim);
+  font-size: var(--fs-sm);
+}
+.status {
+  align-self: flex-start;
+  padding: 2px var(--space-3);
+  border: 1px solid var(--c-sand);
+  border-radius: 999px;
+  color: var(--c-sand-light);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+}
+
+/* ---------- Detail ---------- */
+.facts {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  color: var(--c-bone-dim);
+  font-size: var(--fs-sm);
+  overflow-wrap: anywhere;
+}
+.facts span:first-child {
+  color: var(--c-bone);
+  font-weight: 700;
+}
+.facts a {
+  color: var(--c-sand-light);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.places {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  margin-top: var(--space-1);
+  padding-left: 1.25rem;
+  list-style: disc;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  max-width: 65ch;
+  margin-top: var(--space-7);
+}

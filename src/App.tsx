@@ -2,6 +2,7 @@ import { lazy, Suspense } from 'react';
 import { SiteShell } from '@/components/layout/SiteShell';
 import { Hero } from '@/components/sections/Hero';
 import { Promo } from '@/components/sections/Promo';
+import { KabarBanner } from '@/components/sections/KabarBanner';
 import { About } from '@/components/sections/About';
 import { Showcase } from '@/components/sections/Showcase';
 import { Services } from '@/components/sections/Services';
@@ -39,6 +40,8 @@ export default function App() {
       <Hero />
       {/* Section di bawah layar dirender setelah hero tampil (tidak memblokir tampilan pertama) */}
       <Deferred>
+        {/* Banner Kabar: promo/acara aktif pertama; tidak dirender bila Kabar/banner mati atau tidak ada yang aktif */}
+        <KabarBanner />
         <Promo />
         <About />
         <Showcase />

@@ -12,6 +12,13 @@ Cara menaikkan versi & merilis: [CONTRIBUTING.md → Rilis versi](CONTRIBUTING.m
 
 ## [Belum dirilis]
 
+### Ditambahkan
+- **Kabar, Promo & Acara** (`/kabar/` & `/kabar/<slug>/`) dari Pages CMS (*Kabar, Promo & Acara*, satu file Markdown per item di `src/content/kabar/`, status Draf/Terbit). Tiga jenis: **Kabar** (pengumuman), **Promo** (wajib *berlaku sampai*, opsional *berlaku mulai*), **Acara** (mulai, selesai, lokasi *Di cabang* atau *Tempat lain* dengan nama & alamat tempat, link pendaftaran https opsional); kolom milik jenis lain diabaikan sehingga mengganti jenis aman. Cabang: *Semua cabang* atau satu/beberapa cabang. Tiga status (akan datang, berlangsung, berakhir), semua jam dalam WIB: promo aktif sampai 23.59 WIB hari terakhir, acara berakhir tepat di jam selesai. /kabar/ dikelompokkan *Sedang berlangsung & akan datang*, *Kabar terbaru*, *Sudah berakhir*, dengan saringan cabang & jenis. Kotak **Promo & acara** di halaman cabang dan **banner** di beranda (tanpa saringan cabang; hanya bila kedua toggle menyala). Tombol WhatsApp di halaman detail: satu tombol (pemilih cabang) untuk *Semua cabang*, satu tombol untuk satu cabang, satu per cabang untuk beberapa cabang; tanpa tombol setelah berakhir.
+- **Kedaluwarsa tanpa edit**: item yang lewat disembunyikan langsung oleh jam browser pengunjung (kotak cabang & banner, termasuk penyembunyian sebelum halaman tergambar), halaman detail tetap ada dengan label *Promo telah berakhir* / *Acara telah selesai*. HTML statis, JSON-LD, sitemap, dan `llms.txt` disegarkan saat build; **build harian opsional** (`.github/workflows/build-harian.yml`, 00.05 WIB lewat Deploy Hook Cloudflare; tanpa setelan tidak merah) dengan panduan `docs/build-harian-kabar.md`.
+- **SEO**: JSON-LD `BlogPosting` (Kabar/Promo), `Event` (Acara), `CollectionPage` + `ItemList` dan `BreadcrumbList`; `lastmod` di sitemap; item aktif di `llms.txt`. Panduan: *Menerbitkan kabar, promo & acara* di `docs/panduan-admin.md` (bagian 6c), batas karakter kolom baru ikut ditambahkan.
+- **Toggle default mati** di Pengaturan Situs: *Tampilkan Kabar, Promo & Acara* (mati → `/kabar*` 301 ke beranda, tanpa menu/sitemap/llms.txt/kotak cabang) dan *Tampilkan banner Kabar di beranda* (hanya berlaku bila yang pertama menyala). Menu **Kabar** ada di menu HP dan footer, tidak di menu atas desktop (tidak muat).
+- Hitungan klik WhatsApp: klik tombol dari halaman Kabar/Promo/Acara dicatat sebagai jenis *promo* (`docs/statistik-klik-wa.md`).
+
 ## [1.4.2] - 2026-11-07
 
 ### Diperbaiki

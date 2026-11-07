@@ -27,6 +27,9 @@ export const site: SiteContent = {
     { label: 'Produk', href: '/produk/' },
     // Halaman /tips/: hanya saat Tampilkan Tips & Trik aktif (buildSite)
     { label: 'Tips', href: '/tips/' },
+    // Halaman /kabar/: hanya saat Tampilkan Kabar aktif (buildSite). Hanya menu HP & footer: di navbar desktop 1280 px
+    // menu ke-9 ini membuat tombol cabang terpilih meluap dari kontainer (diukur e2e/kabar.spec.ts)
+    { label: 'Kabar', href: '/kabar/', desktop: false },
     { label: 'Lokasi', sectionId: 'lokasi' },
     { label: 'Kontak', sectionId: 'kontak' },
   ],
@@ -53,7 +56,7 @@ export const site: SiteContent = {
   email: '',
   // Diisi dari Pengaturan Situs (siteUrl & toggle section)
   siteUrl: '',
-  features: { testimonials: false, products: false, beforeAfter: false, shoeCare: false, tips: false, servicePages: false },
+  features: { testimonials: false, products: false, beforeAfter: false, shoeCare: false, tips: false, servicePages: false, kabar: false, kabarBanner: false },
   intro: { enabled: true },
   // TODO: sesuaikan dengan rentang harga asli
   priceRange: 'Rp60.000 - Rp450.000',
