@@ -7,7 +7,7 @@ branches:
 summary: "Malam soft opening Cutless Hair Studio Cibubur, 7 November 2026 pukul
   18.00–21.00 WIB: live music HLMN dan haircut 50K oleh hair artist Cutless
   Cibubur."
-image: /uploads/kabar/screenshot-2026-11-07-184827.png
+image: /uploads/kabar/screenshot-2026-11-07-184827.webp
 imageAlt: "Poster Special Soft Opening Cutless Hair Studio Cibubur: live music
   HLMN, haircut 50K, 7 November pukul 18.00–21.00"
 waLabel: Booking Haircut di Cibubur
