@@ -68,6 +68,41 @@ describe('processKabar', () => {
     expect(r.published[0].slug).toBe('promo-akhir-tahun');
   });
 
+  describe('bentrok slug: item kedua dicatat sebagai error dan TIDAK ikut published', () => {
+    it('dua slug eksplisit sama dengan nama file berbeda: hanya yang pertama terbit; pesan menyebut kedua nama file & slug', () => {
+      const r = run([file('a.md', KABAR), file('b.md', { ...PROMO, slug: 'kabar-uji' })]);
+      expect(r.published.map((p) => p.title)).toEqual(['Kabar Uji']);
+      expect(r.errors).toHaveLength(1);
+      expect(r.errors[0]).toContain('kabar/b.md');
+      expect(r.errors[0]).toContain('kabar/a.md');
+      expect(r.errors[0]).toContain('"kabar-uji"');
+    });
+
+    it('slug eksplisit bentrok dengan slug turunan nama file (urutan mana pun): tertangkap sama, hanya satu terbit', () => {
+      const turunanDulu = run([file('promo-uji.md', { ...KABAR, slug: '' }), file('x.md', { ...PROMO, slug: 'promo-uji' })]);
+      expect(turunanDulu.published.map((p) => p.title)).toEqual(['Kabar Uji']);
+      expect(turunanDulu.errors).toHaveLength(1);
+      expect(turunanDulu.errors[0]).toContain('kabar/x.md');
+      expect(turunanDulu.errors[0]).toContain('kabar/promo-uji.md');
+      expect(turunanDulu.errors[0]).toContain('"promo-uji"');
+      const eksplisitDulu = run([file('a.md', { ...PROMO, slug: 'promo-uji' }), file('promo-uji.md', { ...KABAR, slug: '' })]);
+      expect(eksplisitDulu.published.map((p) => p.title)).toEqual(['Promo Uji']);
+      expect(eksplisitDulu.errors).toHaveLength(1);
+      expect(eksplisitDulu.errors[0]).toContain('kabar/promo-uji.md');
+      expect(eksplisitDulu.errors[0]).toContain('kabar/a.md');
+    });
+
+    it('bentrok dengan Draf juga dilaporkan; tiga item satu slug → dua error, satu terbit', () => {
+      const draf = run([file('a.md', { ...KABAR, status: 'Draf' }), file('b.md', { ...PROMO, slug: 'kabar-uji' })]);
+      expect(draf.errors).toHaveLength(1);
+      expect(draf.published).toEqual([]);
+      const tiga = run([file('a.md', KABAR), file('b.md', { ...PROMO, slug: 'kabar-uji' }), file('c.md', { ...ACARA, slug: 'kabar-uji' })]);
+      expect(tiga.published).toHaveLength(1);
+      expect(tiga.errors).toHaveLength(2);
+      expect(tiga.errors.every((e) => e.includes('kabar/a.md'))).toBe(true);
+    });
+  });
+
   it('gambar tidak ada → error; ada → ikut di artikel', () => {
     const fm = { ...KABAR, image: '/uploads/kabar/x.webp', imageAlt: 'Foto uji' };
     expect(run([file('a.md', fm)], { exists: () => false }).errors.join('\n')).toContain('gambar tidak ditemukan di public/uploads/kabar/x.webp');

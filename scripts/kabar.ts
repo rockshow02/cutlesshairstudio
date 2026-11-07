@@ -126,8 +126,13 @@ export function processKabar(
       errors.push(`${at(file, 'slug')}: nama file "${file}" bukan slug yang valid; isi Slug (huruf kecil, angka, strip), mis. ${slugify(k.title) || 'promo-akhir-tahun'}`);
       continue;
     }
+    // Bentrok (slug eksplisit maupun turunan nama file): yang pertama dipertahankan, yang kedua dicatat sebagai error dan
+    // TIDAK diproses/diterbitkan, agar tidak ada dua halaman di satu alamat
     const other = bySlug.get(slug);
-    if (other) errors.push(`${at(file, 'slug')}: slug "${slug}" sudah dipakai kabar/${other}; ubah Slug salah satunya`);
+    if (other) {
+      errors.push(`${at(file, 'slug')}: slug "${slug}" sudah dipakai kabar/${other}; ${k.slug ? 'kabar/' + file + ' memakai slug yang sama' : 'slug kabar/' + file + ' berasal dari nama filenya'}. Ubah Slug salah satunya`);
+      continue;
+    }
     bySlug.set(slug, file);
     if (k.image && !exists(k.image)) errors.push(`${at(file, 'image')}: gambar tidak ditemukan di public${k.image}`);
     if (bundle) {
