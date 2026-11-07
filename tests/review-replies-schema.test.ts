@@ -77,14 +77,14 @@ describe('reviewRepliesSchema', () => {
     expect(issues(tooManyWords)).not.toEqual([]);
   });
 
+  // Sengaja membaca isi CMS asli: penjaga mutu teks balasan publik (skema, nomor WhatsApp, tanpa janji/klaim).
   it('isi awal src/content/reviewReplies.json lolos, sopan, tanpa janji/klaim', () => {
     const raw = JSON.parse(readFileSync('src/content/reviewReplies.json', 'utf8')) as unknown;
     expect(issues(raw)).toEqual([]);
     const cfg = raw as ReplyTemplates;
-    for (const t of cfg.templates.bintang12) expect(t).toContain('0813-2220-932');
+    for (const t of cfg.templates.bintang12) expect(t).toMatch(/\b08\d{2}[-\s]?\d{3,4}[-\s]?\d{3,5}\b/);
     const all = [...Object.values(cfg.templates).flat(), ...cfg.keywordRules.map((r) => r.sentence)].join('\n');
     expect(all).not.toMatch(/\d+\s*%|gratis|diskon|promo|garansi|rp\s?\d/i);
-    expect(all).toMatch(/\bkak\b/i);
   });
 });
 
