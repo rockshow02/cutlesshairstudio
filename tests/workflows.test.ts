@@ -20,6 +20,7 @@ describe('izin GITHUB_TOKEN (default repo tetap "Read"; izin tulis hanya eksplis
     'optimize-images.yml': { contents: 'write' },
     'sync-staging.yml': { contents: 'write', 'pull-requests': 'write' },
     'release.yml': { contents: 'write' },
+    'build-harian.yml': { contents: 'read' },
   };
 
   it('setiap workflow punya blok permissions eksplisit di tingkat workflow, persis set minimum', () => {
@@ -91,6 +92,33 @@ describe('workflow alur rilis', () => {
     // Langkah pemberitahuan adalah yang terakhir dan tidak menelan kegagalan (run tetap merah)
     expect(steps.at(-1)).toBe(notify);
     expect(notify.run).not.toMatch(/exit 0/);
+  });
+});
+
+describe('Build harian (opsional): menyegarkan HTML statis lewat Deploy Hook Cloudflare', () => {
+  const w = workflow('build-harian.yml') as Workflow & { on: { schedule?: { cron: string }[] } };
+  const steps = w.jobs.build.steps;
+  const step = steps.find((s) => s.run?.includes('curl'))!;
+
+  it('jadwal 00.05 WIB (cron 5 17 * * * UTC) + bisa dijalankan manual', () => {
+    expect(w.on.schedule).toEqual([{ cron: '5 17 * * *' }]);
+    expect(w.on).toHaveProperty('workflow_dispatch');
+    expect(steps).toHaveLength(1);
+  });
+
+  it('URL hook dibaca dari secret lewat env, tidak diselipkan atau dicetak di run', () => {
+    expect(step.env).toEqual({ HOOK: '${{ secrets.CF_DEPLOY_HOOK_URL }}' });
+    expect(step.run).not.toContain('${{');
+    expect(step.run).not.toMatch(/echo[^\n]*\$\{?HOOK/);
+    expect(step.run).toContain('curl --fail-with-body');
+    expect(step.run).toContain('-X POST "$HOOK"');
+  });
+
+  it('hook belum disetel → ::notice:: ke dokumen dan exit 0 (tidak merah sebelum pemilik menyetel)', () => {
+    expect(step.run).toMatch(/-z "\$HOOK"/);
+    expect(step.run).toContain('::notice');
+    expect(step.run).toContain('docs/build-harian-kabar.md');
+    expect(step.run).toMatch(/exit 0/);
   });
 });
 
