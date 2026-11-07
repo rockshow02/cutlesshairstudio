@@ -71,6 +71,8 @@ import {
 } from './layanan';
 import { KABAR_PATH, bannerItem, branchBoxItems, kabarBannerVisible, kabarRedirects, kabarVisible, parseKabarPath, type KabarRoute, type KabarSummary } from '../src/content/kabarSeo';
 import { kabarCopy } from '../src/content/kabarCopy';
+import { site } from '../src/content/site';
+import { bootOverlayEnabled, withBootOverlay } from './bootOverlay';
 import { branchBoxBody, kabarBannerBody, kabarBody, kabarDataTag, kabarHead, kabarIndexBody, kabarIndexHead, kabarLlmsLines, kabarPrepaintTag, kabarSitemapEntries, kabarSummaryOf, processKabar, readKabarFiles, type KabarResult } from './kabar';
 
 const VIRTUAL_ID = 'virtual:image-meta';
@@ -1115,7 +1117,8 @@ export function contentPlugin(): Plugin {
         // Dev server: /kabar/... memakai head & ringkasan halaman itu (build: closeBundle)
         const kabarRoute = !isBuild && out.includes('<!--cutless:kabar-data-->') ? parseKabarPath(ctx.originalUrl?.split(/[?#]/)[0] ?? '') : undefined;
         if (kabarRoute && bundle) out = kabarPage(out, kabarRoute) ?? out;
-        return applyEnv(out, appEnv, analyticsToken);
+        // Overlay statis penutup ringkasan prerender (hanya bila Tampilkan animasi pembuka aktif); semua halaman prerender berasal dari template ini
+        return withBootOverlay(applyEnv(out, appEnv, analyticsToken), { enabled: !!bundle && bootOverlayEnabled(bundle.settings), mark: site.logo.mark });
       },
     },
 
