@@ -114,6 +114,12 @@ describe('Build harian (opsional): menyegarkan HTML statis lewat Deploy Hook Clo
     expect(step.run).toContain('-X POST "$HOOK"');
   });
 
+  it('isi balasan tidak dicetak mentah: sukses hanya id build (jq), gagal paling banyak 300 byte', () => {
+    expect(step.run).not.toMatch(/\bcat\b/);
+    expect(step.run).toContain("jq -r '.result.build_uuid // .build_uuid // empty'");
+    expect(step.run).toContain('head -c 300');
+  });
+
   it('hook belum disetel → ::notice:: ke dokumen dan exit 0 (tidak merah sebelum pemilik menyetel)', () => {
     expect(step.run).toMatch(/-z "\$HOOK"/);
     expect(step.run).toContain('::notice');
