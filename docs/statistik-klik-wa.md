@@ -1,5 +1,7 @@
 # Memasang hitungan klik WhatsApp & halaman /statistik/ (Owner)
 
+> Klik tombol WhatsApp dari halaman Kabar, Promo & Acara (`/kabar/…`) dihitung sebagai jenis **"promo"**.
+
 Website mencatat setiap klik tombol WhatsApp (booking umum, tombol cabang, kapster, CTA artikel Tips, partner Cuci Sepatu, produk, promo) ke database Cloudflare **D1**, lalu menampilkannya di **https://cutlesshairstudio.com/statistik/**. Halaman itu dikunci **Cloudflare Access**: hanya email yang Anda daftarkan yang bisa membukanya (login dengan kode dari email).
 
 Semuanya gratis. Yang disimpan hanya: tanggal, jenis tombol, cabang, kapster, halaman asal, dan asal kunjungan (mis. Google, Instagram). **Tidak ada** IP, nomor HP, isi pesan, cookie, atau ID pengunjung.

@@ -531,6 +531,111 @@ Pesan `layanan/…md: "…" tidak ada di Daftar Harga` berarti item yang dipilih
 
 ---
 
+## 6c. Menerbitkan kabar, promo & acara (/kabar/)
+
+Satu tempat untuk pengumuman, promo bermasa-berlaku, dan acara. Menu CMS-nya **Kabar, Promo & Acara**. Satu item = satu file, ada tiga **Jenis**:
+
+- **Kabar**: pengumuman biasa (tanpa tanggal berakhir, tidak pernah dianggap kedaluwarsa).
+- **Promo**: ada masa berlaku; wajib mengisi **Promo: berlaku sampai**.
+- **Acara**: ada jadwal; wajib mengisi **Acara: mulai**, **Acara: selesai**, dan **Acara: lokasi**.
+
+Item tampil di tiga tempat: halaman **/kabar/** (dan satu halaman per item), kotak **Promo & acara** di halaman cabang yang bersangkutan, dan (bila dinyalakan) banner di beranda. Menu **Kabar** ada di menu HP dan footer, tidak di menu atas versi desktop (tidak muat). Selama **Tampilkan Kabar, Promo & Acara** mati, semua itu tersembunyi dan /kabar/ dialihkan ke beranda.
+
+> Bagian ini berbeda dari **4. Membuat promo** di atas (promo lama yang tampil di beranda). Keduanya bisa dipakai bersamaan.
+
+### Membuat item baru
+
+1. Klik **Kabar, Promo & Acara** → **Add an entry**.
+2. **Judul** (maks. 80 karakter) dan **Ringkasan** (maks. 160 karakter, 1–2 kalimat inti; tampil di kartu dan hasil Google). **Slug** boleh dikosongkan (dibuat otomatis dari judul); jangan diubah setelah terbit.
+3. **Tanggal terbit**: tanggal item diumumkan (item terbaru tampil paling atas).
+4. **Jenis**: pilih Kabar, Promo, atau Acara.
+5. **Cabang**: pilih **Semua cabang**, **atau** satu/beberapa cabang tertentu (boleh lebih dari satu). Jangan menggabungkan **Semua cabang** dengan cabang tertentu.
+6. Isi kolom milik jenisnya (lihat contoh di bawah). Kolom milik jenis lain **diabaikan** walau terisi, jadi mengganti Jenis di tengah jalan aman: tidak perlu mengosongkan apa pun.
+7. **Isi**: detail lengkap (wajib sebelum Terbit).
+8. **Gambar** (opsional) dan **Deskripsi gambar** (wajib bila ada gambar): foto asli mendatar 16:9, minimal 1200 × 675 px, format JPG, PNG, atau WebP. Otomatis dikompres.
+9. **Teks tombol WhatsApp** (opsional, maks. 40 karakter): kosong = "Booking via WhatsApp".
+10. **Save**. Status awal **Draf** (belum tampil).
+
+### Contoh 1: promo untuk cabang tertentu
+
+> Nilai di bawah hanya **contoh ilustrasi**, bukan isi yang harus dimasukkan. Isi dengan promo asli yang sudah pasti.
+
+| Kolom | Contoh isian |
+|---|---|
+| Judul | Contoh Promo Akhir Tahun Cibubur |
+| Jenis | Promo |
+| Cabang | Cibubur (saja) |
+| Ringkasan | Contoh: potongan harga haircut selama masa promo di cabang Cibubur. |
+| Promo: berlaku mulai | (kosong = langsung berlaku) |
+| Promo: berlaku sampai | 31 Desember 2026 |
+| Status | Terbit |
+
+Hasilnya: promo ini hanya tampil di halaman cabang Cibubur, dan tombol WhatsApp-nya langsung ke Cibubur.
+
+### Contoh 2: acara di tempat lain
+
+> Lagi-lagi **contoh ilustrasi** dengan data fiktif.
+
+| Kolom | Contoh isian |
+|---|---|
+| Judul | Contoh Workshop Potong Rambut |
+| Jenis | Acara |
+| Cabang | Semua cabang |
+| Acara: mulai | 20 Desember 2026, 10:00 |
+| Acara: selesai | 20 Desember 2026, 15:00 |
+| Acara: lokasi | Tempat lain |
+| Acara: nama tempat | Contoh Gedung Serbaguna |
+| Acara: alamat tempat | Contoh: Jl. Contoh No. 1, Kota Contoh |
+| Acara: link pendaftaran/info | https://contoh.example/daftar (opsional, wajib diawali `https://`) |
+
+Jam **mulai** dan **selesai** dibaca sebagai **WIB**. Bila **Acara: lokasi** = **Di cabang**, nama dan alamat tempat tidak perlu diisi: alamat diambil dari cabang yang dipilih.
+
+### Arti tanggal
+
+- **Promo: berlaku sampai** = promo masih aktif **sepanjang hari itu sampai pukul 23.59 WIB**, dan hilang mulai **pukul 00.00 hari berikutnya**.
+- **Promo: berlaku mulai** (opsional) dan **Acara: mulai**: sebelum waktunya, item tetap tampil dengan keterangan **Mulai <tanggal>** (status *akan datang*), bukan disembunyikan.
+- **Acara: selesai**: acara hilang **tepat pada jam itu**.
+
+### Setelah tanggalnya lewat
+
+Tidak ada yang perlu diedit.
+
+- Item hilang dari kotak halaman cabang dan dari banner. Di browser pengunjung ini terjadi **tepat waktu**, tanpa menunggu website dibangun ulang.
+- Item tidak lagi tercantum di `llms.txt` setelah website dibangun ulang berikutnya (tiap kali **Save**, atau otomatis tiap hari bila build harian dipasang).
+- Halaman detailnya **tetap bisa dibuka** dengan label **Promo telah berakhir** / **Acara telah selesai**, tanpa tombol WhatsApp.
+- Di /kabar/ item pindah ke kelompok **Sudah berakhir**.
+
+Mesin pencari membaca HTML yang dibuat saat build, jadi pembaruan untuk mereka menunggu build berikutnya. Mau diperbarui otomatis tiap hari? Pasang build harian (opsional, gratis): [docs/build-harian-kabar.md](build-harian-kabar.md). Build harian menyegarkan HTML statis, data terstruktur, sitemap, dan `llms.txt`.
+
+### Tombol WhatsApp
+
+Tombol ada di halaman detail item yang belum berakhir. Item untuk **Semua cabang**: satu tombol dengan pemilih cabang. Item untuk **satu** cabang: satu tombol langsung ke cabang itu. Item untuk **beberapa** cabang: satu tombol per cabang (cabang yang tidak menerima booking dilewati). Klik tombol ini dihitung di halaman /statistik/ sebagai jenis *promo*.
+
+### Menyalakan (urutan penting)
+
+1. Buat dan **terbitkan** (Status = **Terbit**) minimal satu item. Halaman /kabar/ yang kosong tetap masuk sitemap Google, jadi jangan menyalakannya sebelum ada isi.
+2. **Pengaturan Situs → Tampilkan Kabar, Promo & Acara** → nyalakan → **Save**.
+3. Opsional: nyalakan juga **Tampilkan banner Kabar di beranda**. Banner hanya muncul bila kedua pengaturan menyala; ia menaut ke satu item aktif (acara terdekat dulu, lalu promo) dan tidak disaring per cabang.
+
+Keduanya **mati** secara bawaan. Tampil setelah website dibangun ulang (±2 menit).
+
+### Pesan yang mungkin muncul
+
+Bila Save berhasil tetapi website tidak berubah, ada kolom wajib yang belum lengkap. Contoh pesan:
+
+- *Berlaku sampai wajib diisi untuk jenis Promo*
+- *Mulai wajib diisi untuk jenis Acara* (juga **Selesai** dan **Lokasi**)
+- *Nama tempat wajib diisi untuk lokasi Tempat lain* (juga **Alamat tempat**)
+- *isi wajib diisi sebelum diterbitkan*: item **Terbit** harus punya **Isi**
+- *deskripsi gambar wajib diisi bila ada gambar*
+- *"semua" tidak boleh digabung dengan cabang lain*
+- *pilih minimal satu cabang, atau "Semua cabang"*
+- *selesai tidak boleh sebelum mulai* dan *mulai berlaku tidak boleh sesudah berlaku sampai*
+
+Perbaiki kolomnya, **Save** lagi. Website lama tetap tayang selama itu (aman).
+
+---
+
 ## 7. Testimoni
 
 1. Klik **Testimoni** → **Add an entry**.
@@ -650,6 +755,13 @@ Form Pages CMS menolak isian yang melebihi batas, dan website memeriksa batas ya
 | Halaman Layanan | Durasi | 60 | opsional |
 | Halaman Layanan | Foto → Deskripsi foto | 150 | wajib per foto, maks. 6 foto |
 | Halaman Layanan | FAQ → Pertanyaan / Jawaban | 120 / 400 | opsional, maks. 5 |
+| Kabar, Promo & Acara | Judul | 80 | wajib |
+| Kabar, Promo & Acara | Slug | 80 | opsional |
+| Kabar, Promo & Acara | Ringkasan | 160 | wajib |
+| Kabar, Promo & Acara | Deskripsi gambar | 150 | wajib bila Gambar diisi |
+| Kabar, Promo & Acara | Teks tombol WhatsApp | 40 | opsional |
+| Kabar, Promo & Acara | Acara: nama tempat | 80 | wajib bila lokasi Tempat lain |
+| Kabar, Promo & Acara | Acara: alamat tempat | 200 | wajib bila lokasi Tempat lain |
 | Barber | Bio singkat | 200 | opsional |
 | Barber | Pengalaman | 60 | opsional |
 | Pengaturan Situs | Nama usaha | 80 | wajib |
