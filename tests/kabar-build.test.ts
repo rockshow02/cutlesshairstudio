@@ -6,6 +6,7 @@ import { describe, expect, it } from 'vitest';
 import { branchBoxBody, kabarBannerBody, kabarBody, kabarDataTag, kabarHead, kabarIndexBody, kabarIndexHead, kabarJsonLd, kabarLlmsLines, kabarPrepaintScript, kabarPrepaintTag, kabarSitemapEntries, kabarSummaryOf, processKabar, readKabarFiles, type KabarFile } from '../scripts/kabar';
 import { kabarEndedAtMs, type KabarArticle } from '../src/content/kabarSeo';
 import { contentFixture } from './helpers/contentFixture';
+import { requiredEventProps } from './helpers/eventJsonLd';
 
 const SITE = { siteUrl: 'https://cutlesshairstudio.com', siteName: 'Cutless Hair Studio' };
 const bundle = contentFixture();
@@ -31,20 +32,6 @@ const publish = (fm: Record<string, unknown>, body?: string): KabarArticle => {
   expect(r.errors).toEqual([]);
   return r.published[0];
 };
-
-/** Properti wajib Google untuk Event: name, startDate, location dengan name + address */
-function requiredEventProps(ld: Record<string, unknown>): string[] {
-  const missing: string[] = [];
-  if (!ld.name) missing.push('name');
-  if (!ld.startDate) missing.push('startDate');
-  const locations = ([] as Record<string, unknown>[]).concat((ld.location ?? []) as Record<string, unknown>[]);
-  if (!locations.length) missing.push('location');
-  locations.forEach((l, i) => {
-    if (!l.name) missing.push(`location[${i}].name`);
-    if (!l.address) missing.push(`location[${i}].address`);
-  });
-  return missing;
-}
 
 describe('processKabar', () => {
   it('Draf tidak masuk published tetapi tetap divalidasi', () => {

@@ -41,6 +41,8 @@ export const E2E_BRANCHES = {
     name: 'Bogor Bantarjati',
     city: 'Bogor',
     province: 'Jawa Barat',
+    // Alamat tetap (alamat Acara "Di cabang" & JSON-LD Event di e2e/kabar.spec.ts tidak ikut berubah dari CMS)
+    address: 'Jl. Uji Bogor No. 1, Kota Bogor, Jawa Barat 16152',
     whatsappNumber: '6281100000101',
     timezone: 'Asia/Jakarta',
     openingHours: openEveryDay,
@@ -53,6 +55,7 @@ export const E2E_BRANCHES = {
     name: 'Cibubur',
     city: 'Cibubur',
     province: 'Jawa Barat',
+    address: 'Jl. Uji Cibubur No. 2, Kota Depok, Jawa Barat 16454',
     whatsappNumber: '6281100000202',
     timezone: 'Asia/Jakarta',
     openingHours: openEveryDay,
@@ -424,7 +427,7 @@ export function applyE2EFixtures(file: string, data: unknown, variant?: string):
   if (file === 'hero.json') return { ...(data as Json), primaryCtaLabel: E2E_HERO_CTA };
   if (file === 'settings.json') {
     // Toggle & nama usaha tetap (tata letak beranda & selector tidak ikut berubah saat admin mengubahnya di CMS)
-    return { ...(data as Json), siteName: E2E_SITE_NAME, showProducts: variant === 'uniform', showTips: variant === 'uniform', showServicePages: variant === 'uniform', showTestimonials: false, showBeforeAfter: false, enablePreloader: true, preloaderVideo: '', reviewReplyMode: variant === 'uniform' ? 'Mati' : 'Aktif' };
+    return { ...(data as Json), siteName: E2E_SITE_NAME, showProducts: variant === 'uniform', showTips: variant === 'uniform', showServicePages: variant === 'uniform', showKabar: variant === 'uniform', showKabarBanner: variant === 'uniform', showTestimonials: false, showBeforeAfter: false, enablePreloader: true, preloaderVideo: '', reviewReplyMode: variant === 'uniform' ? 'Mati' : 'Aktif' };
   }
   // Promo bertanggal (tampil/tidak tergantung jam) → tidak ada di build uji. Pengumuman tanpa tanggal hanya di varian
   // uniform (e2e/announcement.spec.ts); build bawaan tanpa bar pengumuman.
@@ -444,7 +447,50 @@ export function applyE2EFixtures(file: string, data: unknown, variant?: string):
   return data;
 }
 
-/** Data uji build E2E untuk Kabar, Promo & Acara. Stub: Task 7 mengisinya. */
+/** Gambar kabar uji (e2e/fixtures/public, hanya disalin ke dist/ build E2E) */
+export const E2E_KABAR_IMAGE = '/uploads/kabar/gambar-uji.webp';
+
+/**
+ * Kabar, Promo & Acara uji (src/content/kabar/*.md diganti seluruhnya saat build E2E). Tampil hanya di varian uniform
+ * (Tampilkan Kabar & Tampilkan banner aktif); build bawaan: mati → /kabar/ 301 ke beranda. Tanggal tetap:
+ * 2020 = sudah berakhir, 2099 = aktif / akan datang (tidak pernah relatif terhadap hari ini).
+ * - `promoCibubur`: berlangsung, hanya Cibubur (satu tombol WhatsApp ke nomor Cibubur)
+ * - `promoDua`: berlangsung, Bogor + Cibubur (dua tombol)
+ * - `promoAkanDatang`: semua cabang, mulai 2099-01-01 ("Mulai …")
+ * - `acaraCabang`: Di cabang Bogor, 20 Desember 2099 (acara terdekat → urutan pertama & banner beranda)
+ * - `acaraTempatLain`: Tempat lain, semua cabang (pemilih cabang), tautan pendaftaran https
+ * - `promoLewat` (semua cabang) & `acaraLewat` (Bogor): berakhir 2020
+ * - `kabar` (tanpa gambar) & `kabarGambar` (gambar + alt): jenis Kabar, semua cabang
+ * - `draf`: Draf, tidak boleh tampil di mana pun
+ */
+export const E2E_KABAR = {
+  kabar: { slug: 'kabar-uji-biasa', title: 'Kabar Uji Biasa', summary: 'Ringkasan kabar uji biasa.', kind: 'Kabar', branches: ['semua'], publishedAt: '2026-10-01' },
+  kabarGambar: { slug: 'kabar-uji-bergambar', title: 'Kabar Uji Bergambar', summary: 'Ringkasan kabar uji bergambar.', kind: 'Kabar', branches: ['semua'], publishedAt: '2026-10-02', image: E2E_KABAR_IMAGE, imageAlt: 'Foto kabar uji' },
+  promoCibubur: { slug: 'promo-uji-cibubur', title: 'Promo Uji Cibubur', summary: 'Ringkasan promo uji khusus Cibubur.', kind: 'Promo', branches: ['cibubur'], publishedAt: '2026-10-03', validUntil: '2099-12-31' },
+  promoDua: { slug: 'promo-uji-dua-cabang', title: 'Promo Uji Dua Cabang', summary: 'Ringkasan promo uji dua cabang.', kind: 'Promo', branches: ['bogor-bantarjati', 'cibubur'], publishedAt: '2026-10-04', validFrom: '2026-10-01', validUntil: '2099-06-30' },
+  promoAkanDatang: { slug: 'promo-uji-akan-datang', title: 'Promo Uji Akan Datang', summary: 'Ringkasan promo uji akan datang.', kind: 'Promo', branches: ['semua'], publishedAt: '2026-10-05', validFrom: '2099-01-01', validUntil: '2099-12-31' },
+  promoLewat: { slug: 'promo-uji-lewat', title: 'Promo Uji Lewat', summary: 'Ringkasan promo uji yang sudah lewat.', kind: 'Promo', branches: ['semua'], publishedAt: '2019-12-01', validUntil: '2020-01-01' },
+  acaraCabang: { slug: 'acara-uji-di-cabang', title: 'Acara Uji Di Cabang', summary: 'Ringkasan acara uji di cabang Bogor.', kind: 'Acara', branches: ['bogor-bantarjati'], publishedAt: '2026-10-06', startsAt: '2099-12-20T10:00', endsAt: '2099-12-20T15:00', locationType: 'Di cabang' },
+  acaraTempatLain: {
+    slug: 'acara-uji-tempat-lain',
+    title: 'Acara Uji Tempat Lain',
+    summary: 'Ringkasan acara uji di tempat lain.',
+    kind: 'Acara',
+    branches: ['semua'],
+    publishedAt: '2026-10-07',
+    startsAt: '2099-12-27T09:00',
+    endsAt: '2099-12-27T12:00',
+    locationType: 'Tempat lain',
+    venueName: 'Gedung Uji',
+    venueAddress: 'Jl. Uji Raya No. 5, Kota Uji',
+    linkUrl: 'https://example.com/daftar-acara-uji',
+  },
+  acaraLewat: { slug: 'acara-uji-lewat', title: 'Acara Uji Lewat', summary: 'Ringkasan acara uji yang sudah selesai.', kind: 'Acara', branches: ['bogor-bantarjati'], publishedAt: '2020-12-01', startsAt: '2020-12-20T10:00', endsAt: '2020-12-20T15:00', locationType: 'Di cabang' },
+  draf: { slug: 'draf-kabar-uji', title: 'Draf Kabar Uji', summary: 'Draf kabar uji.', kind: 'Promo', branches: ['cibubur'], publishedAt: '2026-10-08', validUntil: '2099-12-31', status: 'Draf' },
+} as const;
+
 export function e2eKabarFiles(): { file: string; source: string }[] {
-  return [];
+  return Object.values(E2E_KABAR).map((k) =>
+    tipFile({ status: 'Terbit', ...k, branches: [...k.branches] }, `Isi uji ${k.title.toLowerCase()}.\n\n<script>window.__kabarXss = true</script>\n`),
+  );
 }
