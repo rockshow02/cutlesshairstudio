@@ -12,6 +12,8 @@ Cara menaikkan versi & merilis: [CONTRIBUTING.md → Rilis versi](CONTRIBUTING.m
 
 ## [Belum dirilis]
 
+## [1.5.0] - 2026-11-07
+
 ### Ditambahkan
 - **Kabar, Promo & Acara** (`/kabar/` & `/kabar/<slug>/`) dari Pages CMS (*Kabar, Promo & Acara*, satu file Markdown per item di `src/content/kabar/`, status Draf/Terbit). Tiga jenis: **Kabar** (pengumuman), **Promo** (wajib *berlaku sampai*, opsional *berlaku mulai*), **Acara** (mulai, selesai, lokasi *Di cabang* atau *Tempat lain* dengan nama & alamat tempat, link pendaftaran https opsional); kolom milik jenis lain diabaikan sehingga mengganti jenis aman. Cabang: *Semua cabang* atau satu/beberapa cabang. Tiga status (akan datang, berlangsung, berakhir), semua jam dalam WIB: promo aktif sampai 23.59 WIB hari terakhir, acara berakhir tepat di jam selesai. /kabar/ dikelompokkan *Sedang berlangsung & akan datang*, *Kabar terbaru*, *Sudah berakhir*, dengan saringan cabang & jenis. Kotak **Promo & acara** di halaman cabang dan **banner** di beranda (tanpa saringan cabang; hanya bila kedua toggle menyala). Tombol WhatsApp di halaman detail: satu tombol (pemilih cabang) untuk *Semua cabang*, satu tombol untuk satu cabang, satu per cabang untuk beberapa cabang; tanpa tombol setelah berakhir.
 - **Kedaluwarsa tanpa edit**: item yang lewat disembunyikan langsung oleh jam browser pengunjung (kotak cabang & banner, termasuk penyembunyian sebelum halaman tergambar), halaman detail tetap ada dengan label *Promo telah berakhir* / *Acara telah selesai*. HTML statis, JSON-LD, sitemap, dan `llms.txt` disegarkan saat build; **build harian opsional** (`.github/workflows/build-harian.yml`, 00.05 WIB lewat Deploy Hook Cloudflare; tanpa setelan tidak merah) dengan panduan `docs/build-harian-kabar.md`.
@@ -122,7 +124,8 @@ Launch https://cutlesshairstudio.com.
 - Halaman `/cuci-sepatu/` untuk partner cuci sepatu (layanan, harga, daftar menu PDF, galeri) dan teaser di beranda.
 - Validasi konten saat build (skema & aturan siap tayang), kompres gambar otomatis, SEO dasar (title/meta, JSON-LD, sitemap), staging terpisah, CI (typecheck, lint, tes, e2e).
 
-[Belum dirilis]: https://github.com/rockshow02/cutlesshairstudio/compare/v1.4.2...staging
+[Belum dirilis]: https://github.com/rockshow02/cutlesshairstudio/compare/v1.5.0...staging
+[1.5.0]: https://github.com/rockshow02/cutlesshairstudio/compare/v1.4.2...v1.5.0
 [1.4.2]: https://github.com/rockshow02/cutlesshairstudio/compare/v1.4.1...v1.4.2
 [1.4.1]: https://github.com/rockshow02/cutlesshairstudio/compare/v1.4.0...v1.4.1
 [1.4.0]: https://github.com/rockshow02/cutlesshairstudio/compare/v1.3.1...v1.4.0
