@@ -7,9 +7,6 @@ branches:
 summary: "Promo soft opening Cutless Hair Studio Cibubur: haircut 50K, berlaku
   25 Oktober–22 November 2026. Seberang Pom Bensin Shell, Jl. Alternatif
   Cibubur."
-image: /uploads/kabar/screenshot-2026-11-07-182709.webp
-imageAlt: "Poster Special Soft Opening Cutless Hair Studio Cibubur: Haircut 50K,
-  berlaku 25 Oktober–22 November 2026."
 waLabel: Booking Haircut 50K di Cibubur
 status: Terbit
 validFrom: 2026-10-25
@@ -23,7 +20,6 @@ Cutless Hair Studio cabang **Cibubur** resmi soft opening! Untuk merayakannya, a
 ## Haircut 50K
 
 - **Periode promo:** 25 Oktober – 22 November 2026
-
 - **Cabang:** Cutless Hair Studio Cibubur
 
 ## Lokasi
