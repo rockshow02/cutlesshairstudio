@@ -16,7 +16,7 @@ export function KabarCard({ item, now, hidden = false }: { item: KabarSummary; n
   return (
     <li className={tips.card} hidden={hidden}>
       <a className={tips.cardLink} href={pageUrl(kabarPath(item.slug))}>
-        {image && <ResponsiveImage className={tips.cardImage} image={image} />}
+        {image && <ResponsiveImage className={`${tips.cardImage} ${styles.thumb}`} image={image} />}
         <div className={tips.cardBody}>
           <p className={tips.category}>{item.kind}</p>
           <h3 className={tips.cardTitle}>{item.title}</h3>

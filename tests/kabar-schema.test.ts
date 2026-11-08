@@ -245,6 +245,26 @@ describe('kabarSchema: kolom umum', () => {
   });
 });
 
+describe('kabarSchema: pengisi acara (performer)', () => {
+  const parsed = (v: unknown) => kabarSchema.parse(v) as Record<string, unknown>;
+
+  it('Acara: opsional, di-trim, maksimal 80 karakter; kosong = tidak ada di hasil', () => {
+    expect(parsed({ ...acara(), performer: '  HLMN  ' }).performer).toBe('HLMN');
+    expect(parsed({ ...tempatLain(), performer: 'Band Uji' }).performer).toBe('Band Uji');
+    for (const kosong of [undefined, null, '', '   ']) expect(parsed({ ...acara(), performer: kosong }), String(kosong)).not.toHaveProperty('performer');
+    expect(parsed(acara())).not.toHaveProperty('performer');
+    expect(ok({ ...acara(), performer: 'x'.repeat(80) })).toBe(true);
+    expect(messages({ ...acara(), performer: 'x'.repeat(81) })).toEqual(['performer: maksimal 80 karakter']);
+  });
+
+  it('jenis lain (Kabar, Promo): diabaikan, tidak divalidasi, dibuang dari hasil', () => {
+    for (const lain of [kabar(), promo()]) {
+      expect(ok({ ...lain, performer: 'x'.repeat(200) })).toBe(true);
+      expect(parsed({ ...lain, performer: 'HLMN' })).not.toHaveProperty('performer');
+    }
+  });
+});
+
 describe('toggle Pengaturan Situs', () => {
   it('showKabar dan showKabarBanner default false bila kuncinya tidak ada', () => {
     const { showKabar: _k, showKabarBanner: _b, ...tanpa } = { ...rawFixture.settings, showKabar: true, showKabarBanner: true };

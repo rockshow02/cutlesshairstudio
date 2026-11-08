@@ -71,6 +71,8 @@ export interface KabarArticle extends KabarSummary {
   locationType?: KabarLocationType;
   venueName?: string;
   venueAddress?: string;
+  /** Acara: pengisi acara (opsional) */
+  performer?: string;
   linkUrl?: string;
 }
 

@@ -718,6 +718,8 @@ const eventFields = z.object({
   startsAt: kabarStamp,
   endsAt: kabarStamp,
   locationType: z.enum(KABAR_LOCATION_TYPES, { error: `lokasi harus salah satu: ${KABAR_LOCATION_TYPES.join(', ')}` }),
+  /** Pengisi acara (opsional): JSON-LD performer & baris di halaman detail */
+  performer: optionalText(80),
   linkUrl: optionalHttpsUrl,
 });
 const venueFields = z.object({ venueName: requiredText(80, 'nama tempat'), venueAddress: requiredText(200, 'alamat tempat') });
@@ -753,6 +755,7 @@ export const kabarSchema = z
     locationType: foreign,
     venueName: foreign,
     venueAddress: foreign,
+    performer: foreign,
     linkUrl: foreign,
     body: z.string().nullish(),
   })
@@ -791,11 +794,11 @@ export const kabarSchema = z
   .transform((k) => {
     // Sudah divalidasi superRefine; hanya kolom milik jenisnya yang dibawa, dalam bentuk hasil parse (sudah di-trim).
     // Draf boleh belum lengkap (tidak pernah diterbitkan), jadi kolom yang kosong tidak dibawa.
-    const { validFrom, validUntil, startsAt, endsAt, locationType, venueName, venueAddress, linkUrl, ...common } = k;
+    const { validFrom, validUntil, startsAt, endsAt, locationType, venueName, venueAddress, performer, linkUrl, ...common } = k;
     const own = (schema: z.ZodObject, raw: object) => ownParse(schema, raw).data as Record<string, string | undefined>;
     if (k.kind === 'Promo') return { ...common, ...own(promoFields, { validFrom, validUntil }) } as typeof common & { validFrom?: string; validUntil: string };
     if (k.kind === 'Acara') {
-      const event = own(eventFields, { startsAt, endsAt, locationType, linkUrl });
+      const event = own(eventFields, { startsAt, endsAt, locationType, performer, linkUrl });
       const venue = event.locationType === 'Tempat lain' ? own(venueFields, { venueName, venueAddress }) : undefined;
       return { ...common, ...event, ...venue } as typeof common & {
         startsAt: string;
@@ -803,6 +806,7 @@ export const kabarSchema = z
         locationType: (typeof KABAR_LOCATION_TYPES)[number];
         venueName?: string;
         venueAddress?: string;
+        performer?: string;
         linkUrl?: string;
       };
     }

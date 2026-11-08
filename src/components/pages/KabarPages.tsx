@@ -171,6 +171,11 @@ export function KabarDetail({ item }: { item: KabarArticle }) {
                   )}
                 </div>
               ))}
+            {item.kind === 'Acara' && item.performer && (
+              <p>
+                <span>{l.performer}</span> {item.performer}
+              </p>
+            )}
             <p>
               <span>{l.branches}</span> {names.join(', ')}
             </p>
@@ -180,7 +185,7 @@ export function KabarDetail({ item }: { item: KabarArticle }) {
           </div>
         </header>
 
-        {image && <ResponsiveImage className={tips.cover} image={image} priority />}
+        {image && <ResponsiveImage className={styles.poster} image={image} priority />}
 
         {/* HTML hasil render Markdown saat build (scripts/kabar.ts): HTML mentah dari CMS sudah di-escape */}
         <div className={tips.prose} dangerouslySetInnerHTML={{ __html: item.html }} />

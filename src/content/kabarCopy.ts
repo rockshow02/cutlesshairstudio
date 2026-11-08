@@ -24,6 +24,7 @@ export const kabarCopy = {
     period: 'Periode',
     time: 'Waktu',
     location: 'Lokasi',
+    performer: 'Pengisi acara',
     openMap: 'Lihat di peta',
     eventLink: 'Buka tautan acara',
     empty: 'Belum ada kabar, promo, atau acara.',
