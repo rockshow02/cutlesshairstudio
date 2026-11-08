@@ -1,5 +1,6 @@
 import { OTHER_PAGE, SOURCE_LABELS, WA_CLICK_KINDS, dayWIB, type WaClickAllowlist } from '../src/content/waClicks';
 import { isAccessAllowed } from './access';
+import { nowOf } from './clock';
 import type { D1Database, Env } from './env';
 import { loadAllowlist } from './waClicks';
 
@@ -265,7 +266,7 @@ export async function handleStats(request: Request, env: Env, options: { now?: n
   const url = new URL(request.url);
   if (url.pathname !== STATS_PATH) return Response.redirect(new URL(`${STATS_PATH}${url.search}`, url).toString(), 301);
   if (!env.DB) return message(503, 'Statistik belum aktif', 'Database cutless-analytics belum terhubung ke website (lihat docs/statistik-klik-wa.md).');
-  const today = dayWIB(options.now ?? Date.now());
+  const today = dayWIB(options.now ?? nowOf(request, env));
   const range = parseRange(url, today);
   const [records, allow] = await Promise.all([fetchClicks(env.DB, range.from, range.to), loadAllowlist(env, request.url, options.now)]);
   if (url.searchParams.get('format') === 'csv') {

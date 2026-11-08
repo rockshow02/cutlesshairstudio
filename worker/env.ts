@@ -33,4 +33,6 @@ export interface Env {
   GBP_CLIENT_ID?: string;
   GBP_CLIENT_SECRET?: string;
   GBP_REFRESH_TOKEN?: string;
+  /** Hanya Worker uji e2e (npm run e2e:server): "1" = header x-e2e-now mengatur jam sekarang (worker/clock.ts). Tidak ada di produksi/staging. */
+  E2E_CLOCK?: string;
 }

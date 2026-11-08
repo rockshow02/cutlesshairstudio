@@ -12,6 +12,10 @@ Cara menaikkan versi & merilis: [CONTRIBUTING.md → Rilis versi](CONTRIBUTING.m
 
 ## [Belum dirilis]
 
+### Diperbaiki
+- **Dua tes rapuh distabilkan** (tanpa mengubah perilaku situs). (1) `tests/syncStaging.test.ts` kadang gagal di `npm test` penuh dengan `Hook timed out in 10000ms`: setup `beforeEach` (12 proses git) bernilai median 2,7 dtk sendirian tetapi median 6,9 dtk (maks. 35 dtk) saat CPU dibebani, melewati batas hook bawaan 10 dtk (`{ timeout: 60_000 }` pada `describe` hanya berlaku untuk tes). Repo contoh kini dibangun sekali per file dan disalin per tes (2 proses git). (2) `e2e/wa-clicks.spec.ts › statistik › JWT valid` gagal bila run melewati tengah malam WIB: CSV statistik punya satu baris per hari dan tes hanya membaca baris pertama. Tes kini menjumlahkan semua baris dan memalsukan jam 23.59 / 00.01 WIB.
+- Perubahan kode Worker (tanpa efek di produksi/staging): `worker/clock.ts` membaca header `x-e2e-now` hanya bila Worker uji berjalan dengan var `E2E_CLOCK=1` (`npm run e2e:server`); selain itu selalu `Date.now()`. Dipakai `handleWaClick` & `handleStats` untuk menentukan hari (WIB); verifikasi JWT Access tetap memakai jam sungguhan.
+
 ## [1.6.0] - 2026-11-08
 
 ### Ditambahkan

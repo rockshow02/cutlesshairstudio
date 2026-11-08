@@ -1,4 +1,5 @@
 import { dayWIB, validateWaClick, WA_CLICK_ALLOWLIST_PATH, WA_CLICK_MAX_BYTES, type WaClickAllowlist, type WaClickRow } from '../src/content/waClicks';
+import { nowOf } from './clock';
 import type { D1Database, Env } from './env';
 
 /**
@@ -60,7 +61,7 @@ export async function handleWaClick(request: Request, env: Env): Promise<Respons
   if (!row) return empty(400);
   if (!env.DB) return empty(503);
   try {
-    await recordClick(env.DB, row);
+    await recordClick(env.DB, row, nowOf(request, env));
   } catch {
     return empty(500);
   }

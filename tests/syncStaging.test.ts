@@ -4,10 +4,10 @@
  * diganti skrip kecil yang bisa disetel lolos / gagal / gagal sekali.
  */
 import { execFileSync, spawnSync } from 'node:child_process';
-import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { copyFileSync, cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 // @ts-expect-error modul JS tanpa deklarasi tipe
 import { MERGE_MESSAGE, reasonOf, sync } from '../scripts/sync-staging.mjs';
 
@@ -40,23 +40,40 @@ const logs: string[] = [];
 const run = (opts: Record<string, unknown> = {}): Promise<Result> =>
   sync({ cwd: work, checks: [], wait: () => {}, log: (l: string) => logs.push(l), ...opts });
 
-beforeEach(() => {
-  dir = mkdtempSync(path.join(tmpdir(), 'sync-staging-'));
-  logs.length = 0;
-  origin = path.join(dir, 'origin.git');
-  const seed = path.join(dir, 'seed');
-  git(dir, 'init', '--quiet', '--bare', '--initial-branch=main', origin);
-  git(dir, 'clone', '--quiet', origin, seed);
+/**
+ * Repo contoh dibangun SEKALI per file (12 proses git berurutan: init, clone, commit, push, clone). Setiap tes hanya menyalin
+ * foldernya dan mengarahkan ulang remote (2 proses git). Dulu 12 proses git dijalankan di setiap beforeEach: median 2,7 dtk
+ * sendirian, tetapi median 6,9 dtk & maks. 35 dtk saat CPU dibebani, melewati batas hook bawaan Vitest 10 dtk
+ * ("Hook timed out in 10000ms"; `{ timeout }` pada describe hanya berlaku untuk tes, bukan hook).
+ */
+const HOOK_TIMEOUT = 60_000; // sama dengan batas tes di bawah; setup sekali ini diukur ≤ 35 dtk di bawah beban CPU penuh
+let template: string;
+beforeAll(() => {
+  template = mkdtempSync(path.join(tmpdir(), 'sync-staging-template-'));
+  const originRepo = path.join(template, 'origin.git');
+  const seed = path.join(template, 'seed');
+  git(template, 'init', '--quiet', '--bare', '--initial-branch=main', originRepo);
+  git(template, 'clone', '--quiet', originRepo, seed);
   commit(seed, 'konten.json', '{"v":1}\n');
   git(seed, 'push', '--quiet', 'origin', 'HEAD:main');
   git(seed, 'switch', '--quiet', '-c', 'staging');
   commit(seed, 'fitur.ts', 'export const a = 1;\n');
   git(seed, 'push', '--quiet', 'origin', 'staging');
+  git(template, 'clone', '--quiet', '--branch', 'staging', originRepo, path.join(template, 'work'));
+  git(template, 'clone', '--quiet', originRepo, path.join(template, 'other'));
+  rmSync(seed, { recursive: true, force: true });
+}, HOOK_TIMEOUT);
+afterAll(() => rmSync(template, { recursive: true, force: true }));
+
+beforeEach(() => {
+  dir = mkdtempSync(path.join(tmpdir(), 'sync-staging-'));
+  logs.length = 0;
+  cpSync(template, dir, { recursive: true });
+  origin = path.join(dir, 'origin.git');
   work = path.join(dir, 'work');
   other = path.join(dir, 'other');
-  git(dir, 'clone', '--quiet', '--branch', 'staging', origin, work);
-  git(dir, 'clone', '--quiet', origin, other);
-});
+  for (const clone of [work, other]) git(clone, 'remote', 'set-url', 'origin', origin);
+}, HOOK_TIMEOUT);
 afterEach(() => rmSync(dir, { recursive: true, force: true }));
 
 /** Edit konten di main (seperti Pages CMS) */
