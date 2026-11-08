@@ -14,6 +14,7 @@ validUntil: 2026-11-07
 startsAt: 2026-11-07T18:00
 endsAt: 2026-11-07T21:00
 locationType: Di cabang
+performer: HLMN
 ---
 Malam spesial untuk merayakan **soft opening Cutless Hair Studio Cibubur**.
 
