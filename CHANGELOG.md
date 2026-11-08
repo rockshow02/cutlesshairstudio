@@ -12,6 +12,8 @@ Cara menaikkan versi & merilis: [CONTRIBUTING.md → Rilis versi](CONTRIBUTING.m
 
 ## [Belum dirilis]
 
+## [1.6.0] - 2026-11-08
+
 ### Ditambahkan
 - **Kabar, Promo & Acara: kolom opsional "Acara: pengisi acara"** (Pages CMS, teks maks. 80 karakter, hanya untuk jenis Acara; diabaikan untuk jenis lain seperti kolom Acara lainnya). Bila terisi: baris **Pengisi acara** di halaman acara (HTML statis dan React) dan `performer` (`PerformingGroup`) di JSON-LD `Event`; kosong = tidak ada performer. Tanpa `offers` (tidak ada data harga tiket).
 
@@ -134,7 +136,8 @@ Launch https://cutlesshairstudio.com.
 - Halaman `/cuci-sepatu/` untuk partner cuci sepatu (layanan, harga, daftar menu PDF, galeri) dan teaser di beranda.
 - Validasi konten saat build (skema & aturan siap tayang), kompres gambar otomatis, SEO dasar (title/meta, JSON-LD, sitemap), staging terpisah, CI (typecheck, lint, tes, e2e).
 
-[Belum dirilis]: https://github.com/rockshow02/cutlesshairstudio/compare/v1.5.0...staging
+[Belum dirilis]: https://github.com/rockshow02/cutlesshairstudio/compare/v1.6.0...staging
+[1.6.0]: https://github.com/rockshow02/cutlesshairstudio/compare/v1.5.0...v1.6.0
 [1.5.0]: https://github.com/rockshow02/cutlesshairstudio/compare/v1.4.2...v1.5.0
 [1.4.2]: https://github.com/rockshow02/cutlesshairstudio/compare/v1.4.1...v1.4.2
 [1.4.1]: https://github.com/rockshow02/cutlesshairstudio/compare/v1.4.0...v1.4.1
