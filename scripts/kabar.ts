@@ -89,6 +89,7 @@ type Parsed = {
   locationType?: KabarLocationType;
   venueName?: string;
   venueAddress?: string;
+  performer?: string;
   linkUrl?: string;
 };
 
@@ -165,6 +166,7 @@ export function processKabar(
             endsAt: k.endsAt,
             locationType: k.locationType,
             ...(k.locationType === 'Tempat lain' ? { venueName: k.venueName, venueAddress: k.venueAddress } : {}),
+            ...(k.performer ? { performer: k.performer } : {}),
             ...(k.linkUrl ? { linkUrl: k.linkUrl } : {}),
           }
         : {}),
@@ -234,6 +236,8 @@ export function kabarJsonLd(a: KabarArticle, site: Site, branches: BranchInfo[],
           ? { '@type': 'Place', name: a.venueName, address: { '@type': 'PostalAddress', streetAddress: a.venueAddress } }
           : places.map((b) => branchPlace(b, site)),
       organizer: { '@type': 'Organization', '@id': `${site.siteUrl}/#organization`, name: site.siteName, url: `${site.siteUrl}/` },
+      // Pengisi acara hanya bila diisi. Tanpa offers: tidak ada data harga tiket.
+      ...(a.performer ? { performer: { '@type': 'PerformingGroup', name: a.performer } } : {}),
       inLanguage: 'id-ID',
       ...image,
     };
@@ -246,8 +250,10 @@ export function kabarJsonLd(a: KabarArticle, site: Site, branches: BranchInfo[],
     url,
     headline: a.title,
     description: a.summary,
-    datePublished: a.publishedAt,
+    // Tanggal terbit (YYYY-MM-DD) ditulis lengkap dengan zona waktu WIB; Kabar tidak punya tanggal diperbarui (tanpa dateModified)
+    datePublished: `${a.publishedAt}T00:00:00+07:00`,
     inLanguage: 'id-ID',
+    author: { '@type': 'Organization', '@id': `${site.siteUrl}/#organization`, name: site.siteName },
     publisher: publisher(site),
     ...image,
   };
@@ -387,6 +393,7 @@ export function kabarBody(a: KabarArticle, branches: Pick<BranchInfo, 'slug' | '
     status ? `<p>${esc(status)}</p>` : '',
     period ? `<p><span>${esc(a.kind === 'Acara' ? l.time : l.period)}</span> ${esc(period)}</p>` : '',
     place,
+    a.kind === 'Acara' && a.performer ? `<p><span>${esc(l.performer)}</span> ${esc(a.performer)}</p>` : '',
     `<p><span>${esc(l.branches)}</span> ${esc(names.join(', '))}</p>`,
     `<p><span>${esc(l.published)}</span> <time datetime="${a.publishedAt}">${formatKabarDate(a.publishedAt)}</time></p>`,
     a.kind === 'Acara' && a.linkUrl ? `<p><a href="${esc(a.linkUrl)}" target="_blank" rel="noopener noreferrer">${esc(l.eventLink)}</a></p>` : '',

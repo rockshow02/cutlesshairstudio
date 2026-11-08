@@ -1,5 +1,6 @@
 import { lazy, Suspense, useCallback, useEffect, useState, type ReactNode } from 'react';
 import { getAnnouncements, getBranchCopy, getBranches, getSite, getSocials, FATAL_ERROR_MESSAGE } from '@/lib/content';
+import { fadeOutBootOverlay } from '@/lib/bootOverlay';
 import { useContent } from '@/lib/useContent';
 import { SiteProvider } from '@/lib/SiteContext';
 import { BranchProvider } from '@/lib/BranchContext';
@@ -42,6 +43,11 @@ export function SiteShell({ children, pageBranchSlug }: SiteShellProps) {
   const states = [siteState, socialsState, branchesState, branchCopyState, announcementsState];
   const ready = states.every((st) => st.status === 'success');
   const failed = states.some((st) => st.status === 'error');
+
+  // Overlay statis di HTML prerender: bila Preloader React tidak tampil, pudar saat konten siap (atau pesan gagal tampil)
+  useEffect(() => {
+    if (ready || failed) fadeOutBootOverlay();
+  }, [ready, failed]);
 
   // Title/meta/canonical tiap halaman ditulis statis saat build dari data CMS (scripts/vite-content-plugin.ts)
   // Link dari halaman lain ke section (mis. /produk/ → /#harga)

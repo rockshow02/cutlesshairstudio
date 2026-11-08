@@ -12,6 +12,18 @@ Cara menaikkan versi & merilis: [CONTRIBUTING.md → Rilis versi](CONTRIBUTING.m
 
 ## [Belum dirilis]
 
+## [1.6.0] - 2026-11-08
+
+### Ditambahkan
+- **Kabar, Promo & Acara: kolom opsional "Acara: pengisi acara"** (Pages CMS, teks maks. 80 karakter, hanya untuk jenis Acara; diabaikan untuk jenis lain seperti kolom Acara lainnya). Bila terisi: baris **Pengisi acara** di halaman acara (HTML statis dan React) dan `performer` (`PerformingGroup`) di JSON-LD `Event`; kosong = tidak ada performer. Tanpa `offers` (tidak ada data harga tiket).
+
+### Diubah
+- **Gambar di halaman item Kabar/Promo/Acara tampil utuh**, tidak lagi dipotong ke 16:9: poster tegak (mis. 4:5 Instagram) terlihat penuh, selebar kolom, tinggi maks. 80vh (`object-fit: contain`), tanpa layout shift (`width`/`height` asli dari pipeline gambar). Kartu di /kabar/ dan kotak cabang tetap dipotong 16:9 tetapi rata atas (`object-position: top`) supaya judul poster lebih sering terlihat. Deskripsi kolom **Gambar** di Pages CMS dan panduan admin diperbarui (poster tegak didukung, minimal 1200 px sisi panjang).
+- JSON-LD `BlogPosting` (Kabar/Promo), temuan Rich Results Test: `datePublished` lengkap dengan zona waktu WIB (mis. `2026-11-07T00:00:00+07:00`) dan `author` = Organization yang sama dengan `publisher` (`#organization`). Kabar tidak punya tanggal diperbarui, jadi tanpa `dateModified`.
+
+### Diperbaiki
+- **Teks polos tidak lagi sempat terlihat saat kunjungan pertama / hard refresh.** Ringkasan prerender (`<div class="prerender">`, font sistem) tergambar sebentar (±0,4–0,5 detik di Slow 4G dengan CPU 4× lebih lambat; sama di v1.4.2) sebelum React menggantinya, karena Preloader React baru ada setelah JS termuat dan font siap. Bila **Tampilkan animasi pembuka** aktif, semua halaman prerender kini memuat overlay statis (logo + latar sama dengan Preloader, CSS kritis inline kecil, `position: fixed`, tanpa JavaScript untuk tampil) yang menutup ringkasan sejak paint pertama. Dilepas mulus saat React siap: serah-terima langsung ke Preloader React bila tampil, atau pudar singkat bila tidak (sudah sekali per sesi / kurangi gerakan). Pengaman tanpa JS: overlay memudar sendiri ±3 detik lewat animasi CSS (≤ 4 detik) sehingga teks tetap terbaca; **kurangi gerakan** tanpa fade. Teks prerender tetap di HTML (SEO/GEO), tidak ada `<main>` tambahan, CLS tidak berubah, LCP tidak berubah bermakna. Animasi pembuka mati = tanpa overlay (perilaku lama). Tes: `tests/boot-overlay.test.ts`, `e2e/boot-overlay.spec.ts`.
+
 ## [1.5.0] - 2026-11-07
 
 ### Ditambahkan
@@ -124,7 +136,8 @@ Launch https://cutlesshairstudio.com.
 - Halaman `/cuci-sepatu/` untuk partner cuci sepatu (layanan, harga, daftar menu PDF, galeri) dan teaser di beranda.
 - Validasi konten saat build (skema & aturan siap tayang), kompres gambar otomatis, SEO dasar (title/meta, JSON-LD, sitemap), staging terpisah, CI (typecheck, lint, tes, e2e).
 
-[Belum dirilis]: https://github.com/rockshow02/cutlesshairstudio/compare/v1.5.0...staging
+[Belum dirilis]: https://github.com/rockshow02/cutlesshairstudio/compare/v1.6.0...staging
+[1.6.0]: https://github.com/rockshow02/cutlesshairstudio/compare/v1.5.0...v1.6.0
 [1.5.0]: https://github.com/rockshow02/cutlesshairstudio/compare/v1.4.2...v1.5.0
 [1.4.2]: https://github.com/rockshow02/cutlesshairstudio/compare/v1.4.1...v1.4.2
 [1.4.1]: https://github.com/rockshow02/cutlesshairstudio/compare/v1.4.0...v1.4.1

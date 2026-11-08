@@ -42,3 +42,6 @@ Belum tertulis di CONTRIBUTING.md:
 - **Tugas kecil** (konten, teks, satu file, perbaikan kecil): pakai executing-plans inline atau langsung kerjakan.
   subagent-driven-development hanya untuk fitur besar.
 - **TDD** tetap memakai fixture, bukan data CMS asli.
+- **Worktree dengan junction `node_modules`:** JANGAN pernah `git worktree remove --force`. Lepas dulu junction
+  (`cmd /c rmdir <worktree>\node_modules`, tanpa /s), matikan server dev/preview yang berjalan dari worktree itu, lalu
+  `git worktree remove` tanpa --force.

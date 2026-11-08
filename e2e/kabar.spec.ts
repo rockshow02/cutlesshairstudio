@@ -420,6 +420,9 @@ test('JSON-LD: Event (Acara) lengkap tanpa offers, BlogPosting (Promo/Kabar), Co
     expect(ld.eventStatus).toBe('https://schema.org/EventScheduled');
     expect(ld.eventAttendanceMode).toBe('https://schema.org/OfflineEventAttendanceMode');
     expect(ld).not.toHaveProperty('offers');
+    // Pengisi acara hanya bila diisi (acaraTempatLain: ya; acaraCabang: tidak)
+    if ('performer' in a) expect(ld.performer).toEqual({ '@type': 'PerformingGroup', name: a.performer });
+    else expect(ld).not.toHaveProperty('performer');
     expect(ld.organizer).toMatchObject({ '@type': 'Organization', name: 'Cutless Hair Studio' });
     const places = ([] as Record<string, Record<string, unknown>>[]).concat(ld.location as never);
     for (const p of places) {
@@ -436,7 +439,10 @@ test('JSON-LD: Event (Acara) lengkap tanpa offers, BlogPosting (Promo/Kabar), Co
 
   for (const k of [K.promoDua, K.promoCibubur, K.kabarGambar]) {
     const ld = (await jsonLdOf(page, detail(k))).find((x) => x['@type'] === 'BlogPosting')!;
-    expect(ld, k.slug).toMatchObject({ headline: k.title, description: k.summary, datePublished: k.publishedAt, url: `${UNIFORM_URL}${detail(k)}` });
+    // datePublished lengkap dengan zona waktu WIB; author = Organization yang sama dengan publisher
+    expect(ld, k.slug).toMatchObject({ headline: k.title, description: k.summary, datePublished: `${k.publishedAt}T00:00:00+07:00`, url: `${UNIFORM_URL}${detail(k)}` });
+    expect(ld.author).toMatchObject({ '@type': 'Organization', name: 'Cutless Hair Studio' });
+    expect((ld.author as Record<string, unknown>)['@id']).toBe((ld.publisher as Record<string, unknown>)['@id']);
     expect(ld).toHaveProperty('publisher');
     expect(ld).not.toHaveProperty('offers');
   }
@@ -448,4 +454,90 @@ test('JSON-LD: Event (Acara) lengkap tanpa offers, BlogPosting (Promo/Kabar), Co
   expect(list.numberOfItems).toBe(PUBLISHED.length);
   expect(list.itemListElement.map((i) => i.url)).not.toContain(`${UNIFORM_URL}${detail(K.draf)}`);
   expect(index.map((x) => x['@type'])).toContain('BreadcrumbList');
+});
+
+/* ---------- Gambar utuh di detail, kartu rata atas, pengisi acara ---------- */
+
+/** Porsi piksel PNG yang mendekati warna (toleransi per kanal); PNG didekode di halaman kosong terpisah */
+async function colorShare(page: Page, png: Buffer, rgb: number[], tolerance = 60): Promise<number> {
+  const tool = await page.context().newPage();
+  try {
+    return await tool.evaluate(
+      async ({ b64, rgb, tolerance }) => {
+        const img = new Image();
+        img.src = `data:image/png;base64,${b64}`;
+        await img.decode();
+        const canvas = document.createElement('canvas');
+        canvas.width = img.width;
+        canvas.height = img.height;
+        const ctx = canvas.getContext('2d')!;
+        ctx.drawImage(img, 0, 0);
+        const d = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+        let hit = 0;
+        for (let i = 0; i < d.length; i += 4) if (rgb.every((v, c) => Math.abs(d[i + c] - v) <= tolerance)) hit++;
+        return hit / (d.length / 4);
+      },
+      { b64: png.toString('base64'), rgb, tolerance },
+    );
+  } finally {
+    await tool.close();
+  }
+}
+
+test('detail: poster tegak tampil utuh (tidak dipotong), selebar kolom, tinggi ≤ 80vh, tanpa CLS', async ({ page }) => {
+  await page.goto(`${UNIFORM_URL}${detail(K.promoCibubur)}`, { waitUntil: 'load' });
+  await expect(page.locator('.prerender')).toHaveCount(0, { timeout: 20_000 });
+  const img = page.getByRole('img', { name: K.promoCibubur.imageAlt });
+  await expect(img).toBeVisible();
+  await expect.poll(() => img.evaluate((e: HTMLImageElement) => e.complete && e.naturalWidth > 0)).toBe(true);
+  // Ukuran asli dari pipeline gambar (bukan cadangan 1600 × 900): rasio 4:5 terpasang sebelum gambar termuat
+  await expect(img).toHaveAttribute('width', '800');
+  await expect(img).toHaveAttribute('height', '1000');
+  const m = await img.evaluate((e) => {
+    const r = e.getBoundingClientRect();
+    return { fit: getComputedStyle(e).objectFit, w: r.width, h: r.height, column: e.closest('article')!.getBoundingClientRect().width, vh: innerHeight };
+  });
+  expect(m.fit).toBe('contain');
+  expect(m.w).toBeLessThanOrEqual(m.column + 0.5);
+  expect(m.h).toBeLessThanOrEqual(m.vh * 0.8 + 1);
+  // Pita magenta (tepi atas) & cyan (tepi bawah) poster hanya terlihat bila gambar tidak dipotong
+  const shot = await img.screenshot();
+  expect(await colorShare(page, shot, [255, 0, 255])).toBeGreaterThan(0.02);
+  expect(await colorShare(page, shot, [0, 255, 255])).toBeGreaterThan(0.02);
+  await expectNoScrollX(page);
+  expect(await clsOf(page)).toBeLessThan(0.005);
+});
+
+test('detail: gambar mendatar 16:9 tetap utuh sesuai rasio aslinya', async ({ page }) => {
+  await open(page, detail(K.kabarGambar));
+  const img = page.getByRole('img', { name: K.kabarGambar.imageAlt });
+  await expect(img).toHaveAttribute('width', '1200');
+  await expect(img).toHaveAttribute('height', '675');
+  const m = await img.evaluate((e) => {
+    const r = e.getBoundingClientRect();
+    return { fit: getComputedStyle(e).objectFit, ratio: r.width / r.height };
+  });
+  expect(m.fit).toBe('contain');
+  expect(Math.abs(m.ratio - 1200 / 675)).toBeLessThan(0.02);
+});
+
+test('kartu di /kabar/ dan kotak cabang boleh di-crop tetapi rata atas (judul poster lebih sering terlihat)', async ({ page }) => {
+  await open(page, '/kabar/');
+  const positions = await page.locator('main li img').evaluateAll((els) => els.map((e) => getComputedStyle(e).objectPosition));
+  expect(positions.length).toBeGreaterThanOrEqual(2);
+  for (const p of positions) expect(p).toBe('50% 0%');
+  await open(page, `/cabang/${E2E_BRANCHES.cibubur.slug}/`);
+  const box = await page.locator('#promo-acara img').evaluateAll((els) => els.map((e) => getComputedStyle(e).objectPosition));
+  expect(box.length).toBeGreaterThanOrEqual(1);
+  for (const p of box) expect(p).toBe('50% 0%');
+});
+
+test('Pengisi acara tampil di halaman detail Acara hanya bila diisi', async ({ page }) => {
+  await open(page, detail(K.acaraTempatLain));
+  await expect(page.locator('main article header').getByText('Pengisi acara', { exact: true })).toBeVisible();
+  await expect(page.locator('main article header')).toContainText(`Pengisi acara ${K.acaraTempatLain.performer}`);
+  await open(page, detail(K.acaraCabang));
+  await expect(page.locator('main')).not.toContainText('Pengisi acara');
+  await open(page, detail(K.promoDua));
+  await expect(page.locator('main')).not.toContainText('Pengisi acara');
 });

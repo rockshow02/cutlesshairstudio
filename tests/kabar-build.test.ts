@@ -196,6 +196,19 @@ describe('kabarJsonLd', () => {
     expect(requiredEventProps(e)).toEqual([]);
   });
 
+  it('Event: performer (PerformingGroup) hanya bila Pengisi acara terisi; tanpa offers', () => {
+    const dengan = ld(publish({ ...ACARA, performer: 'HLMN' }));
+    expect(dengan['@type']).toBe('Event');
+    expect(dengan.performer).toEqual({ '@type': 'PerformingGroup', name: 'HLMN' });
+    expect(dengan).not.toHaveProperty('offers');
+    expect(requiredEventProps(dengan)).toEqual([]);
+    expect(ld(publish({ ...ACARA_LAIN, performer: 'Band Uji' })).performer).toEqual({ '@type': 'PerformingGroup', name: 'Band Uji' });
+    expect(ld(publish(ACARA))).not.toHaveProperty('performer');
+    for (const kosong of ['', '   ']) expect(ld(publish({ ...ACARA, performer: kosong })), JSON.stringify(kosong)).not.toHaveProperty('performer');
+    // Kolom milik Acara: Kabar/Promo mengabaikannya (tetap BlogPosting tanpa performer)
+    expect(ld(publish({ ...PROMO, performer: 'HLMN' }))).not.toHaveProperty('performer');
+  });
+
   it('gambar ikut hanya bila ada', () => {
     expect(ld(publish(ACARA))).not.toHaveProperty('image');
     const e = ld(publish({ ...ACARA, image: '/uploads/kabar/x.webp', imageAlt: 'Foto' }));
@@ -207,8 +220,13 @@ describe('kabarJsonLd', () => {
       const b = ld(publish(fm));
       expect(b['@type']).toBe('BlogPosting');
       expect(b.headline).toBe(fm.title);
-      expect(b.datePublished).toBe('2026-11-01');
+      // Tanggal terbit lengkap dengan zona waktu (WIB), bukan tanggal saja (temuan Rich Results Test)
+      expect(b.datePublished).toBe('2026-11-01T00:00:00+07:00');
+      expect(b).not.toHaveProperty('dateModified');
       expect(b.publisher['@type']).toBe('Organization');
+      // author = Organization yang sama dengan publisher (@id #organization)
+      expect(b.author).toEqual({ '@type': 'Organization', '@id': 'https://cutlesshairstudio.com/#organization', name: 'Cutless Hair Studio' });
+      expect(b.author['@id']).toBe(b.publisher['@id']);
       expect(b).not.toHaveProperty('image');
       expect(b).not.toHaveProperty('offers');
     }
@@ -219,7 +237,16 @@ describe('kabarJsonLd', () => {
 describe('head & body', () => {
   const list = [publish(ACARA), publish(PROMO), publish(KABAR)].map(kabarSummaryOf);
 
+  it('Pengisi acara tampil di ringkasan statis halaman detail Acara saja (kosong = tidak ada barisnya)', () => {
+    const body = (fm: Record<string, unknown>) => kabarBody(publish(fm), bundle.branches, NOW);
+    expect(body({ ...ACARA, performer: 'HLMN' })).toContain('<p><span>Pengisi acara</span> HLMN</p>');
+    expect(body({ ...ACARA, performer: '<b>X</b>' })).toContain('<span>Pengisi acara</span> &lt;b&gt;X&lt;/b&gt;');
+    expect(body(ACARA)).not.toContain('Pengisi acara');
+    expect(body({ ...PROMO, performer: 'HLMN' })).not.toContain('Pengisi acara');
+  });
+
   it('kabarSummaryOf membuang isi dan kolom detail', () => {
+    expect(kabarSummaryOf(publish({ ...ACARA, performer: 'HLMN' }))).not.toHaveProperty('performer');
     const s = kabarSummaryOf(publish(ACARA_LAIN, 'Isi'));
     expect(s).not.toHaveProperty('html');
     expect(s).not.toHaveProperty('venueName');

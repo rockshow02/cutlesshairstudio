@@ -467,16 +467,18 @@ export function applyE2EFixtures(file: string, data: unknown, variant?: string):
 
 /** Gambar kabar uji (e2e/fixtures/public, hanya disalin ke dist/ build E2E) */
 export const E2E_KABAR_IMAGE = '/uploads/kabar/gambar-uji.webp';
+/** Poster tegak 4:5 (800 × 1000): pita magenta di tepi atas, cyan di tepi bawah (terlihat hanya bila gambar tidak dipotong) */
+export const E2E_KABAR_POSTER = '/uploads/kabar/poster-tegak-uji.webp';
 
 /**
  * Kabar, Promo & Acara uji (src/content/kabar/*.md diganti seluruhnya saat build E2E). Tampil hanya di varian uniform
  * (Tampilkan Kabar & Tampilkan banner aktif); build bawaan: mati → /kabar/ 301 ke beranda. Tanggal tetap:
  * 2020 = sudah berakhir, 2099 = aktif / akan datang (tidak pernah relatif terhadap hari ini).
  * - `promoCibubur`: berlangsung, hanya Cibubur (satu tombol WhatsApp ke nomor Cibubur)
- * - `promoDua`: berlangsung, Bogor + Cibubur (dua tombol)
+ * - `promoCibubur`: dengan poster TEGAK 4:5 (E2E_KABAR_POSTER); `promoDua`: berlangsung, Bogor + Cibubur (dua tombol)
  * - `promoAkanDatang`: semua cabang, mulai 2099-01-01 ("Mulai …")
  * - `acaraCabang`: Di cabang Bogor, 20 Desember 2099 (acara terdekat → urutan pertama & banner beranda)
- * - `acaraTempatLain`: Tempat lain, semua cabang (pemilih cabang), tautan pendaftaran https
+ * - `acaraTempatLain`: Tempat lain, semua cabang (pemilih cabang), pengisi acara (performer), tautan pendaftaran https
  * - `promoLewat` (semua cabang) & `acaraLewat` (Bogor): berakhir 2020
  * - `kabar` (tanpa gambar) & `kabarGambar` (gambar + alt): jenis Kabar, semua cabang
  * - `draf`: Draf, tidak boleh tampil di mana pun
@@ -484,7 +486,7 @@ export const E2E_KABAR_IMAGE = '/uploads/kabar/gambar-uji.webp';
 export const E2E_KABAR = {
   kabar: { slug: 'kabar-uji-biasa', title: 'Kabar Uji Biasa', summary: 'Ringkasan kabar uji biasa.', kind: 'Kabar', branches: ['semua'], publishedAt: '2026-10-01' },
   kabarGambar: { slug: 'kabar-uji-bergambar', title: 'Kabar Uji Bergambar', summary: 'Ringkasan kabar uji bergambar.', kind: 'Kabar', branches: ['semua'], publishedAt: '2026-10-02', image: E2E_KABAR_IMAGE, imageAlt: 'Foto kabar uji' },
-  promoCibubur: { slug: 'promo-uji-cibubur', title: 'Promo Uji Cibubur', summary: 'Ringkasan promo uji khusus Cibubur.', kind: 'Promo', branches: ['cibubur'], publishedAt: '2026-10-03', validUntil: '2099-12-31' },
+  promoCibubur: { slug: 'promo-uji-cibubur', title: 'Promo Uji Cibubur', summary: 'Ringkasan promo uji khusus Cibubur.', kind: 'Promo', branches: ['cibubur'], publishedAt: '2026-10-03', validUntil: '2099-12-31', image: E2E_KABAR_POSTER, imageAlt: 'Poster promo uji (tegak)' },
   promoDua: { slug: 'promo-uji-dua-cabang', title: 'Promo Uji Dua Cabang', summary: 'Ringkasan promo uji dua cabang.', kind: 'Promo', branches: ['bogor-bantarjati', 'cibubur'], publishedAt: '2026-10-04', validFrom: '2026-10-01', validUntil: '2099-06-30' },
   promoAkanDatang: { slug: 'promo-uji-akan-datang', title: 'Promo Uji Akan Datang', summary: 'Ringkasan promo uji akan datang.', kind: 'Promo', branches: ['semua'], publishedAt: '2026-10-05', validFrom: '2099-01-01', validUntil: '2099-12-31' },
   promoLewat: { slug: 'promo-uji-lewat', title: 'Promo Uji Lewat', summary: 'Ringkasan promo uji yang sudah lewat.', kind: 'Promo', branches: ['semua'], publishedAt: '2019-12-01', validUntil: '2020-01-01' },
@@ -501,6 +503,7 @@ export const E2E_KABAR = {
     locationType: 'Tempat lain',
     venueName: 'Gedung Uji',
     venueAddress: 'Jl. Uji Raya No. 5, Kota Uji',
+    performer: 'Band Uji',
     linkUrl: 'https://example.com/daftar-acara-uji',
   },
   acaraLewat: { slug: 'acara-uji-lewat', title: 'Acara Uji Lewat', summary: 'Ringkasan acara uji yang sudah selesai.', kind: 'Acara', branches: ['bogor-bantarjati'], publishedAt: '2020-12-01', startsAt: '2020-12-20T10:00', endsAt: '2020-12-20T15:00', locationType: 'Di cabang' },

@@ -552,7 +552,7 @@ Item tampil di tiga tempat: halaman **/kabar/** (dan satu halaman per item), kot
 5. **Cabang**: pilih **Semua cabang**, **atau** satu/beberapa cabang tertentu (boleh lebih dari satu). Jangan menggabungkan **Semua cabang** dengan cabang tertentu.
 6. Isi kolom milik jenisnya (lihat contoh di bawah). Kolom milik jenis lain **diabaikan** walau terisi, jadi mengganti Jenis di tengah jalan aman: tidak perlu mengosongkan apa pun.
 7. **Isi**: detail lengkap (wajib sebelum Terbit).
-8. **Gambar** (opsional) dan **Deskripsi gambar** (wajib bila ada gambar): foto asli mendatar 16:9, minimal 1200 × 675 px, format JPG, PNG, atau WebP. Otomatis dikompres.
+8. **Gambar** (opsional) dan **Deskripsi gambar** (wajib bila ada gambar): foto asli mendatar 16:9 **atau poster tegak** (mis. 4:5 Instagram), minimal **1200 px** sisi panjang, format JPG, PNG, atau WebP. Otomatis dikompres. Di halaman item gambar tampil **utuh** (poster tegak tidak dipotong); di daftar dan kotak cabang gambar dipotong ke 16:9 **dari atas**, jadi taruh judul poster di bagian atas.
 9. **Teks tombol WhatsApp** (opsional, maks. 40 karakter): kosong = "Booking via WhatsApp".
 10. **Save**. Status awal **Draf** (belum tampil). Draf boleh disimpan dengan kolom wajib yang masih kosong (mis. **Promo: berlaku sampai** belum diisi): tidak ada yang diterbitkan, dan kelengkapannya baru diperiksa saat Status diganti menjadi **Terbit**. Kolom yang sudah terisi tetap diperiksa bentuknya (mis. tanggal dan jam harus utuh, link harus `https://`, waktu selesai tidak boleh sebelum waktu mulai).
 
@@ -586,6 +586,7 @@ Hasilnya: promo ini hanya tampil di halaman cabang Cibubur, dan tombol WhatsApp-
 | Acara: lokasi | Tempat lain |
 | Acara: nama tempat | Contoh Gedung Serbaguna |
 | Acara: alamat tempat | Contoh: Jl. Contoh No. 1, Kota Contoh |
+| Acara: pengisi acara | Contoh Band (opsional, maks. 80 karakter; tampil di halaman acara dan untuk Google) |
 | Acara: link pendaftaran/info | https://contoh.example/daftar (opsional, wajib diawali `https://`) |
 
 Jam **mulai** dan **selesai** dibaca sebagai **WIB**. Bila **Acara: lokasi** = **Di cabang**, nama dan alamat tempat tidak perlu diisi: alamat diambil dari cabang yang dipilih.
@@ -668,7 +669,7 @@ Klik **Pengaturan Situs**. Menu ini hanya berisi data merek. Alamat dan jam buka
 | Tampilkan section Testimoni / Produk / Before-After | Menyalakan atau menyembunyikan section itu (beserta menunya) | |
 | Tampilkan Tips & Trik | Halaman /tips/, menu Tips, & bagian Tips Terbaru di beranda (lihat [6a](#6a-tips--trik-artikel-di-tips)) | |
 | Tampilkan halaman layanan | Halaman /layanan/, menu Layanan → /layanan/, & link Selengkapnya di Daftar Harga dan Kartu Layanan (lihat [6b](#6b-halaman-layanan-layanan)) | |
-| Tampilkan animasi pembuka | Logo Cutless beranimasi saat website pertama kali dibuka (sekali per kunjungan). Matikan bila tidak diinginkan | |
+| Tampilkan animasi pembuka | Logo Cutless beranimasi saat website pertama kali dibuka (sekali per kunjungan), dan logo yang sama menutup halaman selama website dimuat. Matikan bila tidak diinginkan | |
 | Video animasi pembuka (opsional) | Video pendek pengganti animasi logo: MP4/WebM tanpa suara, ±1,5 detik. Kosongkan untuk memakai animasi logo | maks. 500 KB |
 
 ### Footer & kontak: di mana mengubahnya

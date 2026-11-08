@@ -200,8 +200,10 @@ describe('.pages.yml sejalan dengan skema Zod', () => {
     expect(field('locationType').options?.values).toEqual([...KABAR_LOCATION_TYPES]);
     expect(field('body')).toMatchObject({ type: 'rich-text', options: { format: 'markdown', media: 'kabar' } });
     // Kolom jenis lain tidak wajib di form (kolom WAJIB per jenis dijaga Zod), batas karakter sama dengan Zod
-    for (const name of ['validFrom', 'validUntil', 'startsAt', 'endsAt', 'locationType', 'venueName', 'venueAddress', 'linkUrl']) expect(field(name).required, name).not.toBe(true);
+    for (const name of ['validFrom', 'validUntil', 'startsAt', 'endsAt', 'locationType', 'venueName', 'venueAddress', 'performer', 'linkUrl']) expect(field(name).required, name).not.toBe(true);
     expect(field('venueName').options?.maxlength).toBe(80);
+    expect(field('performer')).toMatchObject({ label: 'Acara: pengisi acara', type: 'string', options: { maxlength: 80 } });
+    expect(field('image').description).toMatch(/poster tegak.*4:5.*1200 px sisi panjang/i);
     expect(field('venueAddress').options?.maxlength).toBe(200);
     expect(field('startsAt').options).toMatchObject({ time: true, format: "yyyy-MM-dd'T'HH:mm" });
     expect(field('endsAt').options).toMatchObject({ time: true, format: "yyyy-MM-dd'T'HH:mm" });
