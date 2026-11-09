@@ -111,6 +111,33 @@ describe('rentang /statistik/ mengikuti jam yang diatur (handleStats)', () => {
     expect(clicksInCsv(r.csv, { kind: 'Booking kapster', barber: 'Barber Uji', source: 'TikTok' })).toBe(3);
   });
 
+  it('E2E_CLOCK=1 pun: verifikasi JWT Access tetap memakai jam SUNGGUHAN (token kedaluwarsa / belum berlaku ditolak walau header memalsukan jam)', async () => {
+    const hour = 3_600_000;
+    const tokenWith = async (claims: Record<string, unknown>) => {
+      const head = b64url(JSON.stringify({ alg: 'RS256', kid: 'k1', typ: 'JWT' }));
+      const body = b64url(JSON.stringify({ aud: [AUD], iss: TEAM, ...claims }));
+      const sig = await crypto.subtle.sign('RSASSA-PKCS1-v1_5', keys.privateKey, new TextEncoder().encode(`${head}.${body}`));
+      return `${head}.${body}.${b64url(sig)}`;
+    };
+    const status = async (token: string, forcedNow: number) => {
+      const { env } = clickEnv('1');
+      const res = await handleStats(new Request(`${ORIGIN}/statistik/?format=csv`, { headers: { 'Cf-Access-Jwt-Assertion': token, [E2E_NOW_HEADER]: String(forcedNow) } }), { ...env, ACCESS_TEAM_DOMAIN: TEAM, ACCESS_AUD: AUD } as Env, {
+        accessFetcher: async (u) => (u === `${TEAM}/cdn-cgi/access/certs` ? Response.json(jwks) : new Response('', { status: 404 })),
+      });
+      return res.status;
+    };
+    const now = Date.now();
+    // Kedaluwarsa 1 jam lalu (jam sungguhan); header memalsukan jam ke 2 jam lalu, saat token masih "berlaku" → tetap 403
+    const expired = await tokenWith({ exp: (now - hour) / 1000 });
+    expect(await status(expired, now - 2 * hour)).toBe(403);
+    // Belum berlaku (nbf 1 jam lagi); header memalsukan jam ke 2 jam lagi, saat token sudah "berlaku" → tetap 403
+    const notYet = await tokenWith({ exp: (now + 2 * hour) / 1000, nbf: (now + hour) / 1000 });
+    expect(await status(notYet, now + 2 * hour)).toBe(403);
+    // Kontrol: token yang berlaku menurut jam sungguhan diterima dengan header yang sama
+    const valid = await tokenWith({ exp: (now + hour) / 1000 });
+    expect(await status(valid, now - 2 * hour)).toBe(200);
+  });
+
   it('tanpa E2E_CLOCK: header diabaikan → rentang berakhir hari sungguhan, data 2099 tidak ikut', async () => {
     const r = await csvAt(undefined, T0001);
     expect(r.status).toBe(200);
