@@ -7,6 +7,8 @@ branches:
 summary: "Promo soft opening Cutless Hair Studio Cibubur: haircut 50K, berlaku
   25 Oktober–22 November 2026. Seberang Pom Bensin Shell, Jl. Alternatif
   Cibubur."
+image: /uploads/kabar/whatsapp-image-2026-11-08-at-222816.jpeg
+imageAlt: Hairstylist merapikan pompadour pelanggan di kursi barber
 waLabel: Booking Haircut 50K di Cibubur
 status: Terbit
 validFrom: 2026-10-25
