@@ -1,7 +1,9 @@
 import { createServer, type Server } from 'node:http';
-import { expect, type Page, type Request as PwRequest } from '@playwright/test';
+import { expect, type APIRequestContext, type Page, type Request as PwRequest } from '@playwright/test';
 import { E2E_BARBERS, E2E_BRANCHES, E2E_HERO_CTA } from './fixtures/content';
 import { parseWa, test } from './helpers';
+import { clicksInCsv } from '../tests/helpers/waCsv';
+import { E2E_NOW_HEADER } from '../worker/clock';
 
 /**
  * Hitungan klik WhatsApp (Worker lokal + D1 lokal, npm run e2e:server):
@@ -144,32 +146,64 @@ test.describe('statistik', () => {
     await expect(page.getByRole('heading', { name: 'Akses ditolak' })).toBeVisible();
   });
 
-  test('JWT valid: angka bertambah tepat sesuai klik uji, noindex, ramah HP, CSV', async ({ request, page }) => {
-    const auth = { 'Cf-Access-Jwt-Assertion': await accessJwt() };
-    const csvCount = async () => {
-      const res = await request.get('/statistik/?format=csv', { headers: auth });
-      expect(res.status()).toBe(200);
-      const row = (await res.text()).split('\r\n').find((l) => l.includes('"Booking kapster"') && l.includes(`"${barber.name}"`) && l.includes('"TikTok"'));
-      return row ? Number(row.split(',').pop()!.replace(/"/g, '')) : 0;
-    };
-    const before = await csvCount();
-    const click = JSON.stringify({ k: 'kapster', b: barber.branchSlug, s: barberKey, p: '/', r: 'www.tiktok.com' });
-    for (let i = 0; i < 3; i++) {
-      expect((await request.post(ENDPOINT, { headers: { Origin: ORIGIN, 'Content-Type': 'text/plain' }, data: click })).status()).toBe(204);
+  /**
+   * Hari klik (WIB) ikut jam sekarang, jadi satu kunci bisa menjadi DUA baris CSV bila run melewati tengah malam (dan DB lokal
+   * dipakai bersama project hp & desktop). Tes tidak boleh bergantung pada tanggal saat ini: jumlah dihitung dari SEMUA baris
+   * (tests/helpers/waCsv.ts), dan jam diatur lewat header x-e2e-now (Worker uji, var E2E_CLOCK=1) ke hari yang jauh di depan
+   * (2099) supaya terpisah dari klik tes lain yang memakai jam sungguhan.
+   */
+  const T2359 = Date.parse('2099-06-15T23:59:30+07:00');
+  const T0001 = Date.parse('2099-06-16T00:01:00+07:00');
+  const match = { kind: 'Booking kapster', barber: barber.name, source: 'TikTok' };
+  const clock = (t: number | undefined): Record<string, string> => (t === undefined ? {} : { [E2E_NOW_HEADER]: String(t) });
+  const click = JSON.stringify({ k: 'kapster', b: barber.branchSlug, s: barberKey, p: '/', r: 'www.tiktok.com' });
+  const postClicks = async (request: APIRequestContext, n: number, t?: number) => {
+    for (let i = 0; i < n; i++) {
+      expect((await request.post(ENDPOINT, { headers: { Origin: ORIGIN, 'Content-Type': 'text/plain', ...clock(t) }, data: click })).status()).toBe(204);
     }
-    expect(await csvCount()).toBe(before + 3);
+  };
+  const csvAt = async (request: APIRequestContext, t?: number) => {
+    const res = await request.get('/statistik/?format=csv', { headers: { 'Cf-Access-Jwt-Assertion': await accessJwt(), ...clock(t) } });
+    expect(res.status()).toBe(200);
+    return res.text();
+  };
 
-    await page.setExtraHTTPHeaders(auth);
-    const res = await page.goto('/statistik/');
-    expect(res?.status()).toBe(200);
-    expect(res?.headers()['x-robots-tag']).toBe('noindex, nofollow');
-    await expect(page.getByRole('heading', { name: 'Statistik klik WhatsApp' })).toBeVisible();
-    await expect(page.locator('[data-table="kapster"]')).toContainText(barber.name);
-    await expect(page.locator('[data-table="asal"]')).toContainText('TikTok');
-    expect(Number(await page.locator('[data-stat="last7"]').textContent())).toBeGreaterThanOrEqual(3);
-    const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
-    expect(overflow).toBeLessThanOrEqual(0);
-    // Tidak masuk sitemap & llms.txt
-    for (const file of ['/sitemap.xml', '/llms.txt']) expect(await (await request.get(file)).text()).not.toContain('statistik');
+  for (const [label, t] of [['jam sungguhan', undefined], ['23.59 WIB (jam dipalsukan)', T2359], ['00.01 WIB (jam dipalsukan)', T0001]] as const) {
+    test(`JWT valid, ${label}: angka bertambah tepat sesuai klik uji, noindex, ramah HP, CSV`, async ({ request, page }) => {
+      const auth = { 'Cf-Access-Jwt-Assertion': await accessJwt(), ...clock(t) };
+      const before = clicksInCsv(await csvAt(request, t), match);
+      await postClicks(request, 3, t);
+      expect(clicksInCsv(await csvAt(request, t), match)).toBe(before + 3);
+
+      await page.setExtraHTTPHeaders(auth);
+      const res = await page.goto('/statistik/');
+      expect(res?.status()).toBe(200);
+      expect(res?.headers()['x-robots-tag']).toBe('noindex, nofollow');
+      await expect(page.getByRole('heading', { name: 'Statistik klik WhatsApp' })).toBeVisible();
+      await expect(page.locator('[data-table="kapster"]')).toContainText(barber.name);
+      await expect(page.locator('[data-table="asal"]')).toContainText('TikTok');
+      expect(Number(await page.locator('[data-stat="last7"]').textContent())).toBeGreaterThanOrEqual(3);
+      const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+      expect(overflow).toBeLessThanOrEqual(0);
+      // Tidak masuk sitemap & llms.txt
+      for (const file of ['/sitemap.xml', '/llms.txt']) expect(await (await request.get(file)).text()).not.toContain('statistik');
+    });
+  }
+
+  test('JWT valid, melewati tengah malam WIB: klik 23.59 dan 00.01 tercatat di dua hari, jumlah tetap tepat', async ({ request, page }) => {
+    await postClicks(request, 3, T2359);
+    // Snapshot dengan rentang yang sama dengan pembacaan akhir (jam 00.01): rentang CSV berakhir di "hari ini" menurut jam
+    const before = clicksInCsv(await csvAt(request, T0001), match);
+    await postClicks(request, 3, T0001);
+    const after = await csvAt(request, T0001);
+    expect(clicksInCsv(after, match)).toBe(before + 3);
+    // Dua baris (satu per hari) untuk kunci yang sama: masing-masing berisi klik hari itu
+    expect(clicksInCsv(after, { ...match, day: '2099-06-15' })).toBeGreaterThanOrEqual(3);
+    expect(clicksInCsv(after, { ...match, day: '2099-06-16' })).toBeGreaterThanOrEqual(3);
+
+    // Halaman statistik pada 00.02 WIB (hari kedua): 7 hari terakhir memuat klik kedua hari
+    await page.setExtraHTTPHeaders({ 'Cf-Access-Jwt-Assertion': await accessJwt(), ...clock(Date.parse('2099-06-16T00:02:00+07:00')) });
+    expect((await page.goto('/statistik/'))?.status()).toBe(200);
+    expect(Number(await page.locator('[data-stat="last7"]').textContent())).toBeGreaterThanOrEqual(6);
   });
 });
