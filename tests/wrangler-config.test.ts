@@ -25,6 +25,15 @@ describe('wrangler.jsonc', () => {
     expect(config.env.staging.vars.ACCESS_AUD).toBe('');
   });
 
+  it('E2E_CLOCK (jam uji e2e, worker/clock.ts) TIDAK ada di vars wrangler.jsonc: produksi, staging, maupun env lain', () => {
+    // Hanya `npm run e2e:server` yang memasangnya lewat --var; di konfigurasi deploy header x-e2e-now harus selalu diabaikan
+    const all = config as unknown as { vars: Record<string, unknown>; env: Record<string, { vars?: Record<string, unknown> }> };
+    expect(Object.keys(all.vars)).not.toContain('E2E_CLOCK');
+    for (const [name, env] of Object.entries(all.env)) expect(Object.keys(env.vars ?? {}), `env.${name}`).not.toContain('E2E_CLOCK');
+    const scripts = (JSON.parse(readFileSync('package.json', 'utf8')) as { scripts: Record<string, string> }).scripts;
+    expect(Object.entries(scripts).filter(([, cmd]) => cmd.includes('E2E_CLOCK')).map(([name]) => name)).toEqual(['e2e:server']);
+  });
+
   it('database D1 produksi & staging terpisah, ID terisi', () => {
     const [prod] = config.d1_databases;
     const [staging] = config.env.staging.d1_databases;

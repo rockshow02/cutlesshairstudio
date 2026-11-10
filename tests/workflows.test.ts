@@ -224,3 +224,114 @@ describe('langkah sinkron di workflow (repo uji, staging tanpa skrip sinkron)', 
     }
   });
 });
+
+/**
+ * Sinkron konten, langkah "Commit hasil": Pages CMS bisa mem-push di antara pull dan push (run 9 Nov 2026, job 128944668346:
+ * "! [rejected] main -> main (fetch first)"). Push diulang maksimal 3×, tidak pernah --force, rebase bentrok dibatalkan.
+ */
+describe('sinkron konten: push dengan percobaan ulang (repo uji, remote bare)', { timeout: 120_000 }, () => {
+  const step = workflow('optimize-images.yml').jobs.sync.steps.find((s) => s.name?.startsWith('Commit hasil'))!;
+  const git = (cwd: string, ...args: string[]) =>
+    execFileSync('git', ['-c', 'user.name=Uji', '-c', 'user.email=uji@example.com', '-c', 'core.autocrlf=false', ...args], {
+      cwd,
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'pipe'],
+    }).trim();
+  const bash =
+    process.platform === 'win32' ? path.resolve(execFileSync('git', ['--exec-path'], { encoding: 'utf8' }).trim(), '../../../bin/bash.exe') : 'bash';
+  const posix = (p: string) => p.replace(/\\/g, '/');
+
+  it('teks langkah: ulang maksimal 3×, jeda 5 lalu 10 dtk, tanpa --force, rebase bentrok di-abort', () => {
+    expect(step.run).toMatch(/for attempt in 1 2 3; do/);
+    expect(step.run).toContain('git pull --rebase --autostash');
+    expect(step.run).toContain('git rebase --abort');
+    expect(step.run).toContain('::error title=Sinkron konten gagal::push ditolak 3×');
+    expect(step.run).not.toMatch(/--force|--force-with-lease|\s-f\b|push\s+\S*\s*\+/);
+  });
+
+  /**
+   * origin (bare, main) ← workspace berisi hasil kompres yang belum di-commit. Hook pre-push di workspace
+   * menyela: sebanyak `interferences` kali, klon lain mem-push dulu (file `file`) sebelum push langkah ini.
+   */
+  function setup(interferences: number, file: string) {
+    const dir = mkdtempSync(path.join(tmpdir(), 'sinkron-konten-'));
+    const origin = path.join(dir, 'origin.git');
+    const seed = path.join(dir, 'seed');
+    const workspace = path.join(dir, 'workspace');
+    git(dir, 'init', '--quiet', '--bare', '--initial-branch=main', origin);
+    git(dir, 'clone', '--quiet', origin, seed);
+    mkdirSync(path.join(seed, 'src/content'), { recursive: true });
+    mkdirSync(path.join(seed, 'public/uploads'), { recursive: true });
+    writeFileSync(path.join(seed, 'src/content/a.json'), '{"v":1}\n');
+    writeFileSync(path.join(seed, 'public/uploads/.gitkeep'), '');
+    writeFileSync(path.join(seed, '.pages.yml'), 'media: []\n');
+    git(seed, 'add', '.');
+    git(seed, 'commit', '--quiet', '-m', 'awal');
+    git(seed, 'push', '--quiet', 'origin', 'HEAD:main');
+    git(dir, 'clone', '--quiet', origin, workspace);
+    writeFileSync(path.join(workspace, 'src/content/a.json'), '{"v":"hasil sinkron"}\n'); // perubahan workflow
+    const counter = path.join(dir, 'count');
+    writeFileSync(counter, '0');
+    writeFileSync(
+      path.join(workspace, '.git/hooks/pre-push'),
+      `#!/bin/sh
+unset GIT_DIR GIT_WORK_TREE GIT_INDEX_FILE
+n=$(cat "${posix(counter)}")
+[ "$n" -ge ${interferences} ] && exit 0
+echo $((n + 1)) > "${posix(counter)}"
+cd "${posix(seed)}"
+git pull --quiet --rebase origin main
+echo "{\\"cms\\":$n}" > ${file}
+git add .
+git -c user.name=CMS -c user.email=cms@example.com commit --quiet -m "cms $n"
+git push --quiet origin HEAD:main
+`,
+      { mode: 0o755 },
+    );
+    const env = { ...process.env, GITHUB_REF_NAME: 'main', RETRY_SLEEP_UNIT: '0' };
+    const run = () => spawnSync(bash, ['-e', '-c', step.run!], { cwd: workspace, env, encoding: 'utf8' });
+    return { dir, origin, workspace, counter, run };
+  }
+  const subjects = (origin: string) => git(origin, 'log', '--format=%s', 'main').split('\n');
+
+  it('push ditolak sekali (CMS mem-push di antara pull dan push) → diulang dan berhasil, commit CMS tetap ada', () => {
+    const t = setup(1, 'src/content/b.json');
+    try {
+      const r = t.run();
+      expect(r.status, r.stdout + r.stderr).toBe(0);
+      expect(r.stdout).toContain('::warning title=Sinkron konten: push ditolak');
+      expect(readFileSync(t.counter, 'utf8').trim()).toBe('1');
+      expect(subjects(t.origin)).toEqual(['chore(cms): sinkron gambar & pilihan cabang', 'cms 0', 'awal']);
+      expect(git(t.origin, 'show', 'main:src/content/a.json')).toBe('{"v":"hasil sinkron"}');
+    } finally {
+      rmSync(t.dir, { recursive: true, force: true });
+    }
+  });
+
+  it('push ditolak terus (3×) → exit 1 dengan ::error, commit CMS tidak tertimpa (tanpa force)', () => {
+    const t = setup(3, 'src/content/b.json');
+    try {
+      const r = t.run();
+      expect(r.status).toBe(1);
+      expect(r.stdout).toContain('::error title=Sinkron konten gagal::push ditolak 3×');
+      expect(readFileSync(t.counter, 'utf8').trim()).toBe('3');
+      expect(subjects(t.origin)).toEqual(['cms 2', 'cms 1', 'cms 0', 'awal']);
+    } finally {
+      rmSync(t.dir, { recursive: true, force: true });
+    }
+  });
+
+  it('rebase bentrok → git rebase --abort, exit 1 dengan ::error, tidak ada rebase tertinggal, origin tidak berubah', () => {
+    const t = setup(1, 'src/content/a.json'); // CMS mengubah file yang sama
+    try {
+      const r = t.run();
+      expect(r.status).toBe(1);
+      expect(r.stdout).toContain('::error title=Sinkron konten gagal::rebase bentrok');
+      expect(existsSync(path.join(t.workspace, '.git/rebase-merge'))).toBe(false);
+      expect(existsSync(path.join(t.workspace, '.git/rebase-apply'))).toBe(false);
+      expect(subjects(t.origin)).toEqual(['cms 0', 'awal']);
+    } finally {
+      rmSync(t.dir, { recursive: true, force: true });
+    }
+  });
+});
